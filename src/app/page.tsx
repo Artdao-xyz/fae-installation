@@ -55,20 +55,6 @@ export default async function Home() {
           </div>
         )}
 
-        {/* Raw Data Display for Debugging */}
-        {!error && (
-          <div className="mb-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">
-              Raw API Response (Debug)
-            </h2>
-            <div className="bg-gray-100 rounded-lg p-4 overflow-auto">
-              <pre className="text-sm text-gray-800 whitespace-pre-wrap">
-                {JSON.stringify(dataPoints, null, 2)}
-              </pre>
-            </div>
-          </div>
-        )}
-
         {/* Publications List with Suspense for loading state */}
         <Suspense fallback={<LoadingSkeleton />}>
           {!error && dataPoints && Array.isArray(dataPoints) && dataPoints.length > 0 && (
@@ -85,46 +71,6 @@ export default async function Home() {
             </div>
           )}
         </Suspense>
-
-        {/* Stats Summary */}
-        {!error && dataPoints && dataPoints.length > 0 && (
-          <div className="mt-8">
-            <StatsGrid
-              stats={[
-                {
-                  title: 'Total Publications',
-                  value: dataPoints.length,
-                  icon: (
-                    <svg fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  ),
-                  color: 'blue'
-                },
-                {
-                  title: 'Categories',
-                  value: new Set(dataPoints.map(point => point.Category).filter(Boolean)).size,
-                  icon: (
-                    <svg fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                    </svg>
-                  ),
-                  color: 'green'
-                },
-                {
-                  title: 'Years Covered',
-                  value: new Set(dataPoints.map(point => point.Year).filter(Boolean)).size,
-                  icon: (
-                    <svg fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
-                    </svg>
-                  ),
-                  color: 'purple'
-                }
-              ]}
-            />
-          </div>
-        )}
     </MainLayout>
   );
 }

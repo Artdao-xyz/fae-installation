@@ -1,12 +1,28 @@
 'use client';
 
+import { useState } from 'react';
 import { DataPoint } from '@/lib/api';
+import { Drawer, PublicationDetails } from '@/components';
 
 interface DataPointsListProps {
   dataPoints: DataPoint[];
 }
 
 export function DataPointsList({ dataPoints }: DataPointsListProps) {
+  const [selectedPublication, setSelectedPublication] = useState<DataPoint | null>(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
+  const handlePublicationClick = (publication: DataPoint) => {
+    console.log('Publication clicked:', publication); 
+    setSelectedPublication(publication);
+    setIsDrawerOpen(true);
+  };
+
+  const handleCloseDrawer = () => {
+    setIsDrawerOpen(false);
+    setSelectedPublication(null);
+  };
+
   // Function to get engagement color classes and icon
   const getEngagementStyle = (engagement: string) => {
     switch (engagement.toLowerCase()) {
@@ -86,7 +102,8 @@ export function DataPointsList({ dataPoints }: DataPointsListProps) {
         {dataPoints.map((publication) => (
           <div
             key={publication.id}
-            className="rounded-lg shadow-md overflow-hidden border border-gray-200 hover:shadow-lg transition-shadow duration-200"
+            className="rounded-lg shadow-md overflow-hidden border border-gray-200 hover:shadow-lg transition-shadow duration-200 cursor-pointer"
+            onClick={() => handlePublicationClick(publication)}
           >
             {/* Image */}
             {publication.Image && publication.Image.trim() !== '' ? (
@@ -201,6 +218,15 @@ export function DataPointsList({ dataPoints }: DataPointsListProps) {
           </div>
         ))}
       </div>
+
+      {/* Drawer */}
+      <Drawer
+        isOpen={isDrawerOpen}
+        onClose={handleCloseDrawer}
+        title={selectedPublication?.Title || 'Publication Details'}
+      >
+        {selectedPublication && <PublicationDetails publication={selectedPublication} />}
+      </Drawer>
     </div>
   );
 }

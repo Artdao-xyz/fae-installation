@@ -6,9 +6,6 @@ export function Footer() {
           <p className="text-gray-600 text-sm">
             © 2024 Future Art Ecosystems. All rights reserved.
           </p>
-          <p className="text-gray-500 text-xs mt-2">
-            Built with Next.js and Tailwind CSS
-          </p>
         </div>
       </div>
     </footer>
