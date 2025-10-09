@@ -1,7 +1,6 @@
 import { Suspense } from 'react';
 import { fetchDataPoints } from '@/lib/api';
-import { DataPointsList } from '@/components/DataPointsList';
-import { LoadingSkeleton } from '@/components/LoadingSkeleton';
+import { DataPointsList, LoadingSkeleton, MainLayout, StatsGrid } from '@/components';
 
 /**
  * Main page component that fetches and displays data points
@@ -26,17 +25,16 @@ export default async function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Future Art Ecosystems
-          </h1>
-          <p className="mt-2 text-gray-600 dark:text-gray-400">
-            Publications and resources from the Future Art Ecosystems project
-          </p>
-        </div>
+    <MainLayout>
+      {/* Page Header */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+          Publications
+        </h1>
+        <p className="mt-2 text-gray-600 dark:text-gray-400">
+          Discover publications and resources from the Future Art Ecosystems project
+        </p>
+      </div>
 
         {/* Simple Error Display */}
         {error && (
@@ -90,63 +88,43 @@ export default async function Home() {
 
         {/* Stats Summary */}
         {!error && dataPoints && dataPoints.length > 0 && (
-          <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <div className="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center">
-                    <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+          <div className="mt-8">
+            <StatsGrid
+              stats={[
+                {
+                  title: 'Total Publications',
+                  value: dataPoints.length,
+                  icon: (
+                    <svg fill="currentColor" viewBox="0 0 20 20">
                       <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                  </div>
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Publications</p>
-                  <p className="text-2xl font-semibold text-gray-900 dark:text-white">
-                    {dataPoints.length}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <div className="w-8 h-8 bg-green-500 rounded-md flex items-center justify-center">
-                    <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  ),
+                  color: 'blue'
+                },
+                {
+                  title: 'Categories',
+                  value: new Set(dataPoints.map(point => point.Category).filter(Boolean)).size,
+                  icon: (
+                    <svg fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                     </svg>
-                  </div>
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Categories</p>
-                  <p className="text-2xl font-semibold text-gray-900 dark:text-white">
-                    {new Set(dataPoints.map(point => point.Category).filter(Boolean)).size}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <div className="w-8 h-8 bg-purple-500 rounded-md flex items-center justify-center">
-                    <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  ),
+                  color: 'green'
+                },
+                {
+                  title: 'Years Covered',
+                  value: new Set(dataPoints.map(point => point.Year).filter(Boolean)).size,
+                  icon: (
+                    <svg fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
                     </svg>
-                  </div>
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Years Covered</p>
-                  <p className="text-2xl font-semibold text-gray-900 dark:text-white">
-                    {new Set(dataPoints.map(point => point.Year).filter(Boolean)).size}
-                  </p>
-                </div>
-              </div>
-            </div>
+                  ),
+                  color: 'purple'
+                }
+              ]}
+            />
           </div>
         )}
-      </div>
-    </div>
+    </MainLayout>
   );
 }
