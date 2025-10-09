@@ -21,7 +21,7 @@ export function StatsGrid({ stats }: StatsGridProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       {stats.map((stat, index) => (
-        <div key={index} className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <div key={index} className="rounded-lg shadow p-6">
           <div className="flex items-center">
             <div className="flex-shrink-0">
               <div className={`w-8 h-8 ${colorClasses[stat.color]} rounded-md flex items-center justify-center`}>
@@ -31,10 +31,10 @@ export function StatsGrid({ stats }: StatsGridProps) {
               </div>
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+              <p className="text-sm font-medium text-gray-500">
                 {stat.title}
               </p>
-              <p className="text-2xl font-semibold text-gray-900 dark:text-white">
+              <p className="text-2xl font-semibold text-gray-900">
                 {stat.value}
               </p>
             </div>
