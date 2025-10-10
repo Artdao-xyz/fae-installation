@@ -2,9 +2,11 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const pathname = usePathname();
   
   const navigationItems = [
     { name: 'Home', href: '/' },
@@ -15,7 +17,7 @@ export function Header() {
   ];
 
   return (
-    <header className="border-b border-gray-200 bg-transparent">
+    <header className="backdrop-blur-xl bg-white/60">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center py-4">
           {/* Left side - Logo and Navigation */}
@@ -26,7 +28,9 @@ export function Header() {
                 <Link
                   key={item.name}
                   href={item.href}
-                  className="text-gray-700 hover:text-gray-900 font-medium transition-colors duration-200"
+                  className={`text-black text-xs font-normal font-['Geist_Mono'] leading-3 hover:text-gray-900 transition-colors duration-200 px-5 py-2.5 ${
+                    pathname === item.href ? 'bg-white outline outline-black rounded-100px' : ''
+                  }`}
                 >
                   {item.name}
                 </Link>
@@ -37,7 +41,9 @@ export function Header() {
           <div className="hidden md:block">
             <Link
               href="/about"
-              className="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white font-medium transition-colors duration-200"
+              className={`text-black text-xs font-normal font-['Geist_Mono'] leading-3 hover:text-gray-900 transition-colors duration-200 px-5 py-2.5 ${
+                pathname === '/about' ? 'bg-white outline outline-black rounded-100px' : ''
+              }`}
             >
               About
             </Link>
@@ -68,7 +74,9 @@ export function Header() {
                 <Link
                   key={item.name}
                   href={item.href}
-                  className="text-gray-700 hover:text-gray-900 font-medium transition-colors duration-200"
+                  className={`text-black text-xs font-normal font-['Geist_Mono'] leading-3 hover:text-gray-900 transition-colors duration-200 px-5 py-2.5 ${
+                    pathname === item.href ? 'bg-white outline outline-black rounded-100px' : ''
+                  }`}
                   onClick={() => setIsMenuOpen(false)}
                 >
                   {item.name}
@@ -77,7 +85,9 @@ export function Header() {
               <div className="border-t border-gray-200 pt-4">
                 <Link
                   href="/about"
-                  className="text-gray-700 hover:text-gray-900 font-medium transition-colors duration-200"
+                  className={`text-black text-xs font-normal font-['Geist_Mono'] leading-3 hover:text-gray-900 transition-colors duration-200 px-5 py-2.5 ${
+                    pathname === '/about' ? 'bg-white outline outline-black rounded-100px' : ''
+                  }`}
                   onClick={() => setIsMenuOpen(false)}
                 >
                   About

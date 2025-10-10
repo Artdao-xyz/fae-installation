@@ -16,7 +16,7 @@ export function DataPoint({ dataPoint, onClick, position }: DataPointProps) {
   
   return (
     <div 
-      className={`absolute transition-all duration-300 hover:z-10 hover:scale-105 overflow-hidden cursor-pointer shadow-md hover:shadow-lg ${!hasImage ? 'border border-red-500' : ''}`}
+      className={`absolute transition-all duration-300 hover:z-10 hover:scale-105 overflow-hidden cursor-pointer drop-shadow-md hover:drop-shadow-lg ${!hasImage ? 'border border-red-500' : ''}`}
       style={{ 
         left: `${position.x}px`,
         top: `${position.y}px`,
@@ -48,7 +48,7 @@ export function DataPoint({ dataPoint, onClick, position }: DataPointProps) {
           </div>
         ) : (
           // Title only - single line with max width md
-          <div className="flex items-center justify-center p-4 max-w-sm">
+          <div className="bg-white/60 flex items-center justify-center p-4 max-w-sm">
             <h3 className="text-black text-base font-medium whitespace-nowrap overflow-hidden text-ellipsis text-center">
               {dataPoint.Title}
             </h3>

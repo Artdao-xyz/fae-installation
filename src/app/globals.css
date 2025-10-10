@@ -1,7 +1,19 @@
 @import "tailwindcss";
 
+@layer utilities {
+  .rounded-100px {
+    border-radius: 100px;
+  }
+}
+
 body {
-  background: #ffffff;
+  background-color: #99c7ff;
+  background-image:
+    radial-gradient(at 17% 98%, hsla(139,80%,55%,0.72) 0px, transparent 50%),
+    radial-gradient(at 100% 98%, hsla(266,43%,58%,1) 0px, transparent 50%),
+    radial-gradient(at 98% 4%, hsla(0,0%,100%,0.69) 0px, transparent 50%),
+    radial-gradient(at 52% 66%, hsla(145,72%,61%,1) 0px, transparent 50%),
+    radial-gradient(at 10% 23%, hsla(235,65%,64%,1) 0px, transparent 50%);
   color: #171717;
   font-family: Arial, Helvetica, sans-serif;
 }

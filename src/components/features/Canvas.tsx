@@ -74,7 +74,7 @@ export function Canvas({ dataPoints }: CanvasProps) {
       {/* Canvas Container */}
       <div 
         ref={canvasRef}
-        className="flex-1 relative overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 border border-red-500 min-h-[600px]"
+        className="flex-1 relative overflow-hidden min-h-[600px]"
         style={{ position: 'relative' }}
       >
 
@@ -100,7 +100,7 @@ export function Canvas({ dataPoints }: CanvasProps) {
               setPositionedDataPoints(positioned);
             }
           }}
-          className="absolute top-4 right-4 bg-white hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-lg shadow-md border border-gray-200 transition-colors duration-200 flex items-center space-x-2"
+          className="absolute top-4 right-4 bg-white hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-lg shadow-md transition-colors duration-200 flex items-center space-x-2"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
