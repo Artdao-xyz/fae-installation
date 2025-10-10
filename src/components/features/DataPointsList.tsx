@@ -39,8 +39,8 @@ export function DataPointsList({ dataPoints }: DataPointsListProps) {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+    <div className="h-full w-full flex flex-col border border-red-500">
+      <div className="flex-1 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6 border border-blue-500">
         {dataPoints.map((publication) => (
           <DataPointComponent
             key={publication.id}

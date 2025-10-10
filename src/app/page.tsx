@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 import { fetchDataPoints } from '@/lib/api';
-import { DataPointsList, LoadingSkeleton, MainLayout, StatsGrid } from '@/components';
+import { Canvas, LoadingSkeleton, MainLayout, StatsGrid } from '@/components';
 
 /**
  * Main page component that fetches and displays data points
@@ -25,14 +25,13 @@ export default async function Home() {
   }
 
   return (
-    <MainLayout>
-      
-        {/* Publications List with Suspense for loading state */}
+    <>
+        {/* Canvas with random positioned data points */}
         <Suspense fallback={<LoadingSkeleton />}>
           {!error && dataPoints && Array.isArray(dataPoints) && dataPoints.length > 0 && (
-              <DataPointsList dataPoints={dataPoints} />
+              <Canvas dataPoints={dataPoints} />
           )}
         </Suspense>
-    </MainLayout>
+        </>
   );
 }
