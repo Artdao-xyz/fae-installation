@@ -1,46 +1,59 @@
 import { DataPoint as DataPointType } from '@/lib/api';
 
+interface Position {
+  x: number;
+  y: number;
+}
+
 interface DataPointProps {
   dataPoint: DataPointType;
   onClick: (dataPoint: DataPointType) => void;
+  position: Position;
 }
 
-export function DataPoint({ dataPoint, onClick }: DataPointProps) {
+export function DataPoint({ dataPoint, onClick, position }: DataPointProps) {
+  const hasImage = dataPoint.Image && dataPoint.Image.trim() !== '';
+  
   return (
-    <div
-      className="rounded-lg overflow-hidden cursor-pointer border border-red-500 h-full flex flex-col"
+    <div 
+      className={`absolute transition-all duration-300 hover:z-10 hover:scale-105 overflow-hidden cursor-pointer shadow-md hover:shadow-lg ${!hasImage ? 'border border-red-500' : ''}`}
+      style={{ 
+        left: `${position.x}px`,
+        top: `${position.y}px`,
+      }}
       onClick={() => onClick(dataPoint)}
     >
-      {/* Image */}
-      {dataPoint.Image && dataPoint.Image.trim() !== '' ? (
-        <div className="flex-1 overflow-hidden">
-          <img
-            src={dataPoint.Image}
-            alt={dataPoint.Title}
-            className="w-full h-full object-cover hover:scale-105 transition-transform duration-200"
-            onError={(e) => {
-              // Hide image if it fails to load
-              e.currentTarget.style.display = 'none';
-            }}
-          />
-        </div>
-      ) : (
-        <div className="flex-1 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-          <div className="text-center text-gray-400">
-            <svg className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 mx-auto mb-1 sm:mb-2" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
-            </svg>
-            <p className="text-xs sm:text-sm font-medium">No Image</p>
+        {hasImage ? (
+          // Image only - fixed height h-64
+          <div className="h-64 w-full max-w-sm overflow-hidden">
+            <img
+              src={dataPoint.Image}
+              alt={dataPoint.Title}
+              className="w-full h-full object-cover rounded-md hover:scale-105 transition-transform duration-200"
+              onError={(e) => {
+                // Hide image if it fails to load and show title instead
+                e.currentTarget.style.display = 'none';
+                const titleDiv = e.currentTarget.nextElementSibling as HTMLElement;
+                if (titleDiv) {
+                  titleDiv.style.display = 'flex';
+                }
+              }}
+            />
+            {/* Hidden title that shows if image fails to load */}
+            <div className="hidden w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 items-center justify-center p-4">
+              <h3 className="text-black text-base font-medium line-clamp-2 leading-tight text-center">
+                {dataPoint.Title}
+              </h3>
+            </div>
           </div>
-        </div>
-      )}
-
-      {/* Title */}
-      <div className="p-2 sm:p-3 lg:p-4 flex-shrink-0">
-        <h3 className="text-sm sm:text-base lg:text-lg font-semibold text-gray-900 line-clamp-2 leading-tight">
-          {dataPoint.Title}
-        </h3>
-      </div>
+        ) : (
+          // Title only - single line with max width md
+          <div className="flex items-center justify-center p-4 max-w-sm">
+            <h3 className="text-black text-base font-medium whitespace-nowrap overflow-hidden text-ellipsis text-center">
+              {dataPoint.Title}
+            </h3>
+          </div>
+        )}
     </div>
   );
 }

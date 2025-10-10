@@ -5,16 +5,12 @@ import { DataPoint } from '@/lib/api';
 import { Drawer } from '@/components';
 import { DataPoint as DataPointComponent } from './DataPoint';
 import { PublicationList } from './PublicationList';
+import { generateRandomPositions, PositionedDataPoint } from '@/utils/canvas';
 
 interface CanvasProps {
   dataPoints: DataPoint[];
 }
 
-interface PositionedDataPoint extends DataPoint {
-  x: number;
-  y: number;
-  rotation: number;
-}
 
 export function Canvas({ dataPoints }: CanvasProps) {
   const [selectedPublication, setSelectedPublication] = useState<DataPoint | null>(null);
@@ -23,60 +19,6 @@ export function Canvas({ dataPoints }: CanvasProps) {
   const canvasRef = useRef<HTMLDivElement>(null);
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
 
-  // Generate random positions for data points with minimum distance
-  const generateRandomPositions = (dataPoints: DataPoint[], canvasWidth: number, canvasHeight: number) => {
-    const itemWidth = 200;
-    const itemHeight = 250;
-    const margin = 20;
-    const minDistance = 300; // Minimum distance between centers of data points
-    const maxAttempts = 100; // Maximum attempts to find a valid position
-    
-    const positionedItems: Array<{ x: number; y: number; width: number; height: number }> = [];
-    
-    return dataPoints.map((dataPoint) => {
-      let attempts = 0;
-      let x: number = 0;
-      let y: number = 0;
-      let validPosition = false;
-      
-      // Try to find a position that maintains minimum distance from other items
-      do {
-        x = Math.random() * (canvasWidth - itemWidth - margin * 2) + margin;
-        y = Math.random() * (canvasHeight - itemHeight - margin * 2) + margin;
-        
-        // Check if this position maintains minimum distance from existing items
-        validPosition = positionedItems.every(existingItem => {
-          const centerX1 = x + itemWidth / 2;
-          const centerY1 = y + itemHeight / 2;
-          const centerX2 = existingItem.x + existingItem.width / 2;
-          const centerY2 = existingItem.y + existingItem.height / 2;
-          
-          const distance = Math.sqrt(
-            Math.pow(centerX1 - centerX2, 2) + Math.pow(centerY1 - centerY2, 2)
-          );
-          
-          return distance >= minDistance;
-        });
-        
-        attempts++;
-      } while (!validPosition && attempts < maxAttempts);
-      
-      // If we couldn't find a valid position, use the last attempted position
-      if (!validPosition) {
-        console.warn(`Could not find valid position for item ${dataPoint.id} after ${maxAttempts} attempts`);
-      }
-      
-      // Add this item to the positioned items list
-      positionedItems.push({ x, y, width: itemWidth, height: itemHeight });
-      
-      return {
-        ...dataPoint,
-        x,
-        y,
-        rotation: (Math.random() - 0.5) * 30, // Random rotation between -15 and 15 degrees
-      };
-    });
-  };
 
   // Update canvas size and regenerate positions when window resizes
   useEffect(() => {
@@ -135,39 +77,19 @@ export function Canvas({ dataPoints }: CanvasProps) {
         className="flex-1 relative overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 border border-red-500 min-h-[600px]"
         style={{ position: 'relative' }}
       >
-        {/* Background Pattern (optional) */}
-        <div className="absolute inset-0 opacity-5">
-          <div className="absolute inset-0" style={{
-            backgroundImage: `radial-gradient(circle at 25% 25%, #3b82f6 2px, transparent 2px),
-                             radial-gradient(circle at 75% 75%, #8b5cf6 2px, transparent 2px)`,
-            backgroundSize: '50px 50px',
-            backgroundPosition: '0 0, 25px 25px'
-          }} />
-        </div>
+
 
         {/* Positioned Data Points */}
         {positionedDataPoints.map((positionedDataPoint) => (
-          <div
+          <DataPointComponent
             key={positionedDataPoint.id}
-            className="absolute transition-all duration-300 hover:z-10"
-            style={{
-              left: `${positionedDataPoint.x}px`,
-              top: `${positionedDataPoint.y}px`,
-              transform: `rotate(${positionedDataPoint.rotation}deg)`,
-              width: '200px',
-              height: '250px',
+            dataPoint={positionedDataPoint}
+            onClick={handlePublicationClick}
+            position={{
+              x: positionedDataPoint.x,
+              y: positionedDataPoint.y
             }}
-          >
-            <div 
-              className="w-full h-full hover:scale-105 transition-transform duration-200"
-              style={{ transform: `rotate(${-positionedDataPoint.rotation}deg)` }}
-            >
-              <DataPointComponent
-                dataPoint={positionedDataPoint}
-                onClick={handlePublicationClick}
-              />
-            </div>
-          </div>
+          />
         ))}
 
         {/* Regenerate Button */}

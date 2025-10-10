@@ -1,5 +1,4 @@
 // Feature Components - Specific to application features
-export { DataPointsList } from './DataPointsList';
 export { Canvas } from './Canvas';
 export { DataPoint } from './DataPoint';
 export { PublicationList } from './PublicationList';
