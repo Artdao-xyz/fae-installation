@@ -6,6 +6,10 @@
   }
 }
 
+* {
+  overscroll-behavior: none;
+}
+
 body {
   background-color: #99c7ff;
   background-image:

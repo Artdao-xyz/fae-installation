@@ -18,7 +18,8 @@ export default async function Home() {
   let error: Error | null = null;
 
   try {
-    const response = await fetchDataPoints(apiToken);
+    // Use multiplier of 5 to prototype with 5 times the amount of data
+    const response = await fetchDataPoints(apiToken, 5);
     dataPoints = response.data;
   } catch (err) {
     error = err instanceof Error ? err : new Error('Unknown error occurred');
