@@ -6,6 +6,7 @@ import { Drawer } from '@/components';
 import { DataPoint as DataPointComponent } from './DataPoint';
 import { PublicationList } from './PublicationList';
 import { generateRandomPositions, PositionedDataPoint } from '@/utils/canvas';
+import { Search } from './Search';
 
 interface CanvasProps {
   dataPoints: DataPoint[];
@@ -108,6 +109,8 @@ export function Canvas({ dataPoints }: CanvasProps) {
           <span className="text-sm font-medium">Shuffle</span>
         </button>
       </div>
+
+      <Search/>
 
       {/* Drawer */}
       <Drawer

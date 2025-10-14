@@ -4,6 +4,6 @@ export { Button } from './Button';
 export { Card, CardHeader, CardContent, CardFooter } from './Card';
 export { Badge } from './Badge';
 export { Drawer } from './Drawer';
-export { ToggleButton } from './ToggleButton';
+
 export { SearchBar } from './SearchBar';
 export { SuggestionFilter } from './SuggestionFilter';

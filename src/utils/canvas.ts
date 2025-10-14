@@ -1,4 +1,5 @@
 import { DataPoint } from '@/lib/api';
+import { DATAPOINT_DIMENSIONS, getDataPointDimensions } from '@/constants/datapoint';
 
 export interface ItemDimensions {
   width: number;
@@ -22,10 +23,7 @@ export interface PositionedDataPoint extends DataPoint {
  */
 export const getItemDimensions = (dataPoint: DataPoint): ItemDimensions => {
   const hasImage = dataPoint.Image && dataPoint.Image.trim() !== '';
-  return {
-    width: 384, // max-w-sm for both types
-    height: hasImage ? 256 : 60 // h-64 for images, ~60px for text
-  };
+  return getDataPointDimensions(!!hasImage);
 };
 
 /**
@@ -42,7 +40,7 @@ export const checkRectCollision = (rect1: PositionedItem, rect2: PositionedItem)
  * Generate random positions for data points with improved collision detection
  */
 export const generateRandomPositions = (dataPoints: DataPoint[], canvasWidth: number, canvasHeight: number): PositionedDataPoint[] => {
-  const margin = 20;
+  const margin = DATAPOINT_DIMENSIONS.MARGIN;
   const maxAttempts = 100; // Maximum attempts to find a valid position
   
   const positionedItems: PositionedItem[] = [];

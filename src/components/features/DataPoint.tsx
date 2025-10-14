@@ -1,4 +1,5 @@
 import { DataPoint as DataPointType } from '@/lib/api';
+import { getDataPointDimensions } from '@/constants/datapoint';
 
 interface Position {
   x: number;
@@ -13,6 +14,7 @@ interface DataPointProps {
 
 export function DataPoint({ dataPoint, onClick, position }: DataPointProps) {
   const hasImage = dataPoint.Image && dataPoint.Image.trim() !== '';
+  const dims = getDataPointDimensions(!!hasImage);
   
   return (
     <div 
@@ -20,12 +22,14 @@ export function DataPoint({ dataPoint, onClick, position }: DataPointProps) {
       style={{ 
         left: `${position.x}px`,
         top: `${position.y}px`,
+        width: `${dims.width}px`,
+        height: `${dims.height}px`,
       }}
       onClick={() => onClick(dataPoint)}
     >
         {hasImage ? (
           // Image only - fixed height h-64
-          <div className="h-64 w-full max-w-sm overflow-hidden">
+          <div className="overflow-hidden" style={{ width: `${dims.width}px`, height: `${dims.height}px` }}>
             <img
               src={dataPoint.Image}
               alt={dataPoint.Title}
@@ -48,7 +52,7 @@ export function DataPoint({ dataPoint, onClick, position }: DataPointProps) {
           </div>
         ) : (
           // Title only - single line with max width md
-          <div className="bg-white/60 flex items-center justify-center p-4 max-w-sm">
+          <div className="bg-white/60 flex items-center justify-center p-4" style={{ width: `${dims.width}px`, height: `${dims.height}px` }}>
             <h3 className="text-black text-base font-medium whitespace-nowrap overflow-hidden text-ellipsis text-center">
               {dataPoint.Title}
             </h3>
