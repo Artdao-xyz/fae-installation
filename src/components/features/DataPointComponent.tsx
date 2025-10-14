@@ -10,9 +10,10 @@ interface DataPointProps {
   dataPoint: DataPointType;
   onClick: (dataPoint: DataPointType) => void;
   position: Position;
+  isActive?: boolean;
 }
 
-export function DataPointComponent({ dataPoint, onClick, position }: DataPointProps) {
+export function DataPointComponent({ dataPoint, onClick, position, isActive = true }: DataPointProps) {
   const hasImage = dataPoint.Image && dataPoint.Image.trim() !== '';
   const dims = hasImage
     ? { width: DATAPOINT_DIMENSIONS.SQUARE.WIDTH, height: DATAPOINT_DIMENSIONS.SQUARE.HEIGHT }
@@ -20,7 +21,7 @@ export function DataPointComponent({ dataPoint, onClick, position }: DataPointPr
   
   return (
     <div 
-      className={`absolute transition-all duration-300 hover:z-10 hover:scale-105 overflow-hidden cursor-pointer drop-shadow-md hover:drop-shadow-lg ${!hasImage ? 'border border-red-500' : ''}`}
+      className={`absolute transition-all duration-300 hover:z-10 hover:scale-105 overflow-hidden cursor-pointer drop-shadow-md hover:drop-shadow-lg ${!hasImage ? 'border border-red-500' : ''} ${!isActive ? 'blur-sm opacity-50' : ''}`}
       style={{ 
         left: `${position.x}px`,
         top: `${position.y}px`,

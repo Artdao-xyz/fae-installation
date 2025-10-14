@@ -1,3 +1,5 @@
+import React from 'react';
+
 export function SuggestionFilter() {
 
         const suggestions = [
@@ -9,12 +11,12 @@ export function SuggestionFilter() {
                 <span className="text-black/60 text-xs">Suggestions:</span>
                 <ul className="flex gap-2">
                         {suggestions.map((suggestion, index) => (
-                                <>
+                                <React.Fragment key={index}>
                                 <button className="text-black/40 cursor-pointer">
                                         {suggestion}
                                 </button>
                                 {index < suggestions.length - 1 && <span className="text-black/40"> / </span>}
-                                </>
+                                </React.Fragment>
                         ))}
                 </ul>
         </div>

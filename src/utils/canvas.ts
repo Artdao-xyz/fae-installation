@@ -198,3 +198,14 @@ export const computePositions = (
   return generateNonOverlappingPositions(canvasWidth, canvasHeight, count, getItemSizeAt, gap);
 };
 
+export const getSelectedGroupIndices = (totalItems: number, selectedGroup: number): Set<number> => {
+  if (selectedGroup === 0) {
+    // All items are selected
+    return new Set(Array.from({ length: totalItems }, (_, index) => index));
+  }
+  // Get 6 items per group
+  const startIndex = (selectedGroup - 1) * 6;
+  const endIndex = startIndex + 6;
+  return new Set(Array.from({ length: endIndex - startIndex }, (_, i) => startIndex + i));
+};
+
