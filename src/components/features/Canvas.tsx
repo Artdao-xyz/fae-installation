@@ -1,54 +1,71 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { DataPoint } from '@/lib/api';
 import { Drawer } from '@/components';
-import { DataPoint as DataPointComponent } from './DataPoint';
 import { PublicationList } from './PublicationList';
-import { generateRandomPositions, PositionedDataPoint } from '@/utils/canvas';
 import { Search } from './Search';
+import { DATAPOINT_DIMENSIONS } from '@/constants/datapoint';
+import { CANVAS_EDGE_MARGIN, CANVAS_GAP, CANVAS_MAX_ITEMS, CANVAS_USE_RANDOM_WALKER } from '@/constants/canvas';
+import { computePositions, PositionedItem } from '@/utils/canvas';
+import { DataPointComponent } from './DataPointComponent';
+
 
 interface CanvasProps {
   dataPoints: DataPoint[];
 }
 
-
 export function Canvas({ dataPoints }: CanvasProps) {
   const [selectedPublication, setSelectedPublication] = useState<DataPoint | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [positionedDataPoints, setPositionedDataPoints] = useState<PositionedDataPoint[]>([]);
-  const canvasRef = useRef<HTMLDivElement>(null);
-  const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
+  const containerRef = useRef<HTMLDivElement | null>(null);
 
+  const [items, setItems] = useState<PositionedItem[]>([]);
 
-  // Update canvas size and regenerate positions when window resizes
+  const MAX_ITEMS = CANVAS_MAX_ITEMS;
+  const USE_RANDOM_WALKER = CANVAS_USE_RANDOM_WALKER;
+  const GAP = CANVAS_GAP;
+  const EDGE_MARGIN = CANVAS_EDGE_MARGIN;
+
+  
+
   useEffect(() => {
-    const updateCanvasSize = () => {
-      if (canvasRef.current) {
-        const rect = canvasRef.current.getBoundingClientRect();
-        setCanvasSize({ width: rect.width, height: rect.height });
-      }
+    const measureAndPlace = () => {
+      const el = containerRef.current;
+      if (!el) return;
+      const width = el.clientWidth;
+      const height = el.clientHeight;
+      // Reserve 100px bottom space for the Search component
+      const adjustedHeight = Math.max(0, height - 120);
+      const innerWidth = Math.max(0, width - EDGE_MARGIN * 2);
+      const innerHeight = Math.max(0, adjustedHeight - EDGE_MARGIN * 2);
+      if (innerWidth <= 0 || innerHeight <= 0) return;
+      const count = Math.min(MAX_ITEMS, Array.isArray(dataPoints) ? dataPoints.length : 0);
+      // Size resolver based on API item: with image -> square, without -> rect
+      const getItemSizeAt = (i: number) => {
+        const dp = dataPoints[i];
+        const hasImage = !!(dp && dp.Image && dp.Image.trim() !== '');
+        return hasImage
+          ? { width: DATAPOINT_DIMENSIONS.SQUARE.WIDTH, height: DATAPOINT_DIMENSIONS.SQUARE.HEIGHT }
+          : { width: DATAPOINT_DIMENSIONS.RECT.WIDTH, height: DATAPOINT_DIMENSIONS.RECT.HEIGHT };
+      };
+
+      const positions = computePositions(innerWidth, innerHeight, {
+        count,
+        gap: GAP,
+        algorithm: USE_RANDOM_WALKER ? 'walker' : 'random',
+        getItemSizeAt,
+      }).map(p => ({ ...p, x: p.x + EDGE_MARGIN, y: p.y + EDGE_MARGIN }));
+      setItems(positions);
     };
 
-    // Initial size
-    updateCanvasSize();
-
-    // Add resize listener
-    window.addEventListener('resize', updateCanvasSize);
-    
-    return () => window.removeEventListener('resize', updateCanvasSize);
-  }, []);
-
-  // Generate positions when canvas size changes or data points change
-  useEffect(() => {
-    if (canvasSize.width > 0 && canvasSize.height > 0 && dataPoints.length > 0) {
-      const positioned = generateRandomPositions(dataPoints, canvasSize.width, canvasSize.height);
-      setPositionedDataPoints(positioned);
-    }
-  }, [canvasSize, dataPoints]);
+    measureAndPlace();
+    const onResize = () => measureAndPlace();
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, [dataPoints]);
 
   const handlePublicationClick = (publication: DataPoint) => {
-    console.log('Publication clicked:', publication);
     setSelectedPublication(publication);
     setIsDrawerOpen(true);
   };
@@ -58,7 +75,6 @@ export function Canvas({ dataPoints }: CanvasProps) {
     setSelectedPublication(null);
   };
 
-  // Safety checks
   if (!dataPoints || !Array.isArray(dataPoints) || dataPoints.length === 0) {
     return (
       <div className="text-center py-8">
@@ -71,48 +87,25 @@ export function Canvas({ dataPoints }: CanvasProps) {
   }
 
   return (
-    <div className="h-full w-full flex flex-col">
-      {/* Canvas Container */}
-      <div 
-        ref={canvasRef}
-        className="flex-1 relative overflow-hidden min-h-[600px]"
-        style={{ position: 'relative' }}
-      >
+    <div className="h-full w-full flex flex-col overflow-x-hidden">
+      {/* Masonry grid using CSS columns */}
 
-
-        {/* Positioned Data Points */}
-        {positionedDataPoints.map((positionedDataPoint) => (
-          <DataPointComponent
-            key={positionedDataPoint.id}
-            dataPoint={positionedDataPoint}
-            onClick={handlePublicationClick}
-            position={{
-              x: positionedDataPoint.x,
-              y: positionedDataPoint.y
-            }}
-          />
-        ))}
-
-        {/* Regenerate Button */}
-        <button
-          onClick={() => {
-            if (canvasSize.width > 0 && canvasSize.height > 0) {
-              const positioned = generateRandomPositions(dataPoints, canvasSize.width, canvasSize.height);
-              setPositionedDataPoints(positioned);
-            }
-          }}
-          className="absolute top-4 right-4 bg-white hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-lg shadow-md transition-colors duration-200 flex items-center space-x-2"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-          </svg>
-          <span className="text-sm font-medium">Shuffle</span>
-        </button>
+      <div ref={containerRef} className='flex-1 relative border-2 border-red-500 overflow-hidden'>
+        {items.map((it, idx) => {
+          const dp = dataPoints[idx];
+          return (
+            <DataPointComponent
+              key={idx}
+              dataPoint={dp}
+              onClick={() => dp && handlePublicationClick(dp)}
+              position={{ x: it.x, y: it.y }}
+            />
+          );
+        })}
       </div>
 
-      <Search/>
+      <Search />
 
-      {/* Drawer */}
       <Drawer
         isOpen={isDrawerOpen}
         onClose={handleCloseDrawer}

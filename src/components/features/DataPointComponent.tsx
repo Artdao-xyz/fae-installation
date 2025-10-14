@@ -1,5 +1,5 @@
 import { DataPoint as DataPointType } from '@/lib/api';
-import { getDataPointDimensions } from '@/constants/datapoint';
+import { DATAPOINT_DIMENSIONS } from '@/constants/datapoint';
 
 interface Position {
   x: number;
@@ -12,9 +12,11 @@ interface DataPointProps {
   position: Position;
 }
 
-export function DataPoint({ dataPoint, onClick, position }: DataPointProps) {
+export function DataPointComponent({ dataPoint, onClick, position }: DataPointProps) {
   const hasImage = dataPoint.Image && dataPoint.Image.trim() !== '';
-  const dims = getDataPointDimensions(!!hasImage);
+  const dims = hasImage
+    ? { width: DATAPOINT_DIMENSIONS.SQUARE.WIDTH, height: DATAPOINT_DIMENSIONS.SQUARE.HEIGHT }
+    : { width: DATAPOINT_DIMENSIONS.RECT.WIDTH, height: DATAPOINT_DIMENSIONS.RECT.HEIGHT };
   
   return (
     <div 
