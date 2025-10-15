@@ -23,7 +23,7 @@ export function Header() {
           {/* Left side - Logo and Navigation */}
             
             {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center space-x-6">
+            <nav className="hidden md:flex items-center gap-5">
               {navigationItems.map((item) => (
                 <Link
                   key={item.name}
