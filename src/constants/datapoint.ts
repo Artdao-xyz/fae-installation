@@ -1,6 +1,6 @@
 export const DATAPOINT_DIMENSIONS = {
   SQUARE: { WIDTH: 180, HEIGHT: 180 },
-  RECT: { WIDTH: 180, HEIGHT: 60 },
+  RECT: { WIDTH: 180, HEIGHT: 40 },
 } as const;
 
 export type Dimensions = { width: number; height: number };

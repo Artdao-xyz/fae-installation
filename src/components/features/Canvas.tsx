@@ -51,14 +51,52 @@ export function Canvas({ dataPoints }: CanvasProps) {
         ? { width: DATAPOINT_DIMENSIONS.SQUARE.WIDTH, height: DATAPOINT_DIMENSIONS.SQUARE.HEIGHT }
         : { width: DATAPOINT_DIMENSIONS.RECT.WIDTH, height: DATAPOINT_DIMENSIONS.RECT.HEIGHT };
     };
-    const positions = computePositions(innerWidth, innerHeight, {
-      count,
-      gap: GAP,
-      algorithm: USE_RANDOM_WALKER ? 'walker' : 'random',
-      getItemSizeAt,
-    }).map(p => ({ ...p, x: p.x + EDGE_MARGIN, y: p.y + EDGE_MARGIN }));
+
+    let positions: PositionedItem[];
+    
+    if (selectedGroup === 0) {
+      // All items: use normal positioning
+      positions = computePositions(innerWidth, innerHeight, {
+        count,
+        gap: GAP,
+        algorithm: USE_RANDOM_WALKER ? 'walker' : 'random',
+        getItemSizeAt,
+      }).map(p => ({ ...p, x: p.x + EDGE_MARGIN, y: p.y + EDGE_MARGIN }));
+    } else {
+      // Group selection: cluster selected items in center, keep others in original positions
+      const groupIndices = Array.from(selectedGroupIndices);
+      
+      // First, generate all positions normally
+      const allPositions = computePositions(innerWidth, innerHeight, {
+        count,
+        gap: GAP,
+        algorithm: USE_RANDOM_WALKER ? 'walker' : 'random',
+        getItemSizeAt,
+      }).map(p => ({ ...p, x: p.x + EDGE_MARGIN, y: p.y + EDGE_MARGIN }));
+      
+      // Generate cluster positions for selected items using the same algorithm
+      const clusterPositions = computePositions(innerWidth, innerHeight, {
+        count: groupIndices.length,
+        gap: GAP,
+        algorithm: USE_RANDOM_WALKER ? 'walker' : 'random',
+        getItemSizeAt: (i) => getItemSizeAt(groupIndices[i]),
+      }).map(p => ({ ...p, x: p.x + EDGE_MARGIN, y: p.y + EDGE_MARGIN }));
+      
+      // Create final positions array
+      positions = Array.from({ length: count }, (_, i) => {
+        if (selectedGroupIndices.has(i)) {
+          // This item is in the selected group, use cluster position
+          const groupIndex = groupIndices.indexOf(i);
+          return clusterPositions[groupIndex] || allPositions[i];
+        } else {
+          // This item is not selected, use original position
+          return allPositions[i];
+        }
+      });
+    }
+    
     setItems(positions);
-  }, [dataPoints, EDGE_MARGIN, GAP, MAX_ITEMS, USE_RANDOM_WALKER]);
+  }, [dataPoints, EDGE_MARGIN, GAP, MAX_ITEMS, USE_RANDOM_WALKER, selectedGroup, selectedGroupIndices]);
 
   useEffect(() => {
     measureAndPlace();
@@ -94,10 +132,14 @@ export function Canvas({ dataPoints }: CanvasProps) {
     <div className="h-full w-full flex flex-col overflow-x-hidden">
       {/* Masonry grid using CSS columns */}
 
-      <div ref={containerRef} className='flex-1 relative border-2 border-red-500 overflow-hidden'>
+      <div ref={containerRef} className='flex-1 relative overflow-hidden'>
         {items.map((it, idx) => {
           const dp = dataPoints[idx];
           const isSelected = selectedGroupIndices.has(idx);
+          
+          // Safety check: ensure item and dataPoint exist
+          if (!it || !dp) return null;
+          
           return (
             <DataPointComponent
               key={idx}
@@ -105,6 +147,7 @@ export function Canvas({ dataPoints }: CanvasProps) {
               onClick={() => dp && handlePublicationClick(dp)}
               position={{ x: it.x, y: it.y }}
               isActive={isSelected}
+              index={idx}
             />
           );
         })}

@@ -11,17 +11,22 @@ interface DataPointProps {
   onClick: (dataPoint: DataPointType) => void;
   position: Position;
   isActive?: boolean;
+  index?: number; // Add index for random color generation
 }
 
-export function DataPointComponent({ dataPoint, onClick, position, isActive = true }: DataPointProps) {
+export function DataPointComponent({ dataPoint, onClick, position, isActive = true, index = 0 }: DataPointProps) {
   const hasImage = dataPoint.Image && dataPoint.Image.trim() !== '';
   const dims = hasImage
     ? { width: DATAPOINT_DIMENSIONS.SQUARE.WIDTH, height: DATAPOINT_DIMENSIONS.SQUARE.HEIGHT }
     : { width: DATAPOINT_DIMENSIONS.RECT.WIDTH, height: DATAPOINT_DIMENSIONS.RECT.HEIGHT };
   
+  // Generate consistent random color based on index
+  const borderColors = ['border-red-500', 'border-green-500', 'border-blue-500'];
+  const borderColor = borderColors[index % 3];
+  
   return (
     <div 
-      className={`absolute transition-all duration-300 hover:z-10 hover:scale-105 overflow-hidden cursor-pointer drop-shadow-md hover:drop-shadow-lg ${!hasImage ? 'border border-red-500' : ''} ${!isActive ? 'blur-sm opacity-50' : ''}`}
+      className={`absolute transition-all duration-300 hover:z-10 hover:scale-105 overflow-hidden cursor-pointer drop-shadow-md hover:drop-shadow-lg ${!hasImage ? `border ${borderColor}` : ''} ${!isActive ? 'blur-sm opacity-50' : ''}`}
       style={{ 
         left: `${position.x}px`,
         top: `${position.y}px`,
@@ -55,7 +60,7 @@ export function DataPointComponent({ dataPoint, onClick, position, isActive = tr
           </div>
         ) : (
           // Title only - single line with max width md
-          <div className="bg-white/60 flex items-center justify-center p-4" style={{ width: `${dims.width}px`, height: `${dims.height}px` }}>
+          <div className="bg-white/60 flex items-center justify-center p-3" style={{ width: `${dims.width}px`, height: `${dims.height}px` }}>
             <h3 className="text-black text-base font-medium whitespace-nowrap overflow-hidden text-ellipsis text-center">
               {dataPoint.Title}
             </h3>
