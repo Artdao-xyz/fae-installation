@@ -1,4 +1,5 @@
 import { DataPoint } from '@/lib/api';
+import { EmblaCarousel } from '@/components/ui/EmblaCarousel';
 
 interface PublicationListProps {
   publication: DataPoint;
@@ -74,6 +75,8 @@ export function PublicationList({ publication }: PublicationListProps) {
           <h3 className="text-lg font-semibold text-gray-900 line-clamp-2 mb-2">
             {publication.Title}
           </h3>
+            {/* Cada hijo es un slide a 100% del ancho */}
+
           <div className="flex flex-wrap gap-2">
             {publication.Category && (
               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
@@ -89,6 +92,8 @@ export function PublicationList({ publication }: PublicationListProps) {
           </div>
         </div>
       </div>
+
+      <EmblaCarousel className="w-full" options={{ loop: true }}/>
 
       {/* Description */}
       {publication.Description && (
