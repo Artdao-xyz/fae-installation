@@ -38,7 +38,7 @@ export function Search() {
     <div 
       ref={searchRef}
       onClick={handleContainerClick}
-      className="font-geist font-medium font-xs fixed bottom-11 -translate-x-1/2 left-1/2 w-full max-w-7xl flex flex-col justify-center px-10 py-5 gap-6 bg-white/60 rounded-t-xl backdrop-blur-lg z-40 cursor-pointer hover:bg-white/70 transition-colors"
+      className="font-geist-sans font-medium font-xs fixed bottom-11 -translate-x-1/2 left-1/2 w-full max-w-7xl flex flex-col justify-center px-10 py-5 gap-6 bg-white/60 rounded-t-xl backdrop-blur-lg z-40 cursor-pointer hover:bg-white/70 transition-colors"
     >
 
         <SearchBar />

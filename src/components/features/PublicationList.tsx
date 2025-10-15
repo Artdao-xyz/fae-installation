@@ -68,7 +68,7 @@ export function PublicationList({ publication }: PublicationListProps) {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="font-geist-mono font-medium space-y-6">
       {/* Header */}
       <div className="flex items-start justify-between mb-4">
         <div className="flex-1">

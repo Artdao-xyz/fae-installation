@@ -28,7 +28,7 @@ export function Header() {
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`text-black text-xs font-normal font-['Geist_Mono'] leading-3 hover:text-gray-900 transition-colors duration-200 px-5 py-2.5 ${
+                  className={`text-black text-xs font-normal font-geist-mono leading-3 hover:text-gray-900 transition-colors duration-200 px-5 py-2.5 ${
                     pathname === item.href ? 'bg-white outline outline-black rounded-100px' : ''
                   }`}
                 >
@@ -41,7 +41,7 @@ export function Header() {
           <div className="hidden md:block">
             <Link
               href="/about"
-              className={`text-black text-xs font-normal font-['Geist_Mono'] leading-3 hover:text-gray-900 transition-colors duration-200 px-5 py-2.5 ${
+              className={`text-black text-xs font-normal font-geist-mono leading-3 hover:text-gray-900 transition-colors duration-200 px-5 py-2.5 ${
                 pathname === '/about' ? 'bg-white outline outline-black rounded-100px' : ''
               }`}
             >
@@ -74,7 +74,7 @@ export function Header() {
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`text-black text-xs font-normal font-['Geist_Mono'] leading-3 hover:text-gray-900 transition-colors duration-200 px-5 py-2.5 ${
+                  className={`text-black text-xs font-normal font-geist-mono leading-3 hover:text-gray-900 transition-colors duration-200 px-5 py-2.5 ${
                     pathname === item.href ? 'bg-white outline outline-black rounded-100px' : ''
                   }`}
                   onClick={() => setIsMenuOpen(false)}
@@ -85,7 +85,7 @@ export function Header() {
               <div className="border-t border-gray-200 pt-4">
                 <Link
                   href="/about"
-                  className={`text-black text-xs font-normal font-['Geist_Mono'] leading-3 hover:text-gray-900 transition-colors duration-200 px-5 py-2.5 ${
+                  className={`text-black text-xs font-normal font-geist-mono leading-3 hover:text-gray-900 transition-colors duration-200 px-5 py-2.5 ${
                     pathname === '/about' ? 'bg-white outline outline-black rounded-100px' : ''
                   }`}
                   onClick={() => setIsMenuOpen(false)}

@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+@theme inline {
+  /* Exponer variables de Next.js directamente para usarlas sin utilidades Tailwind */
+  --font-geist-sans: var(--font-geist-sans);
+  --font-geist-mono: var(--font-geist-mono);
+}
+
 @layer utilities {
   .rounded-100px {
     border-radius: 100px;
@@ -19,5 +25,4 @@ body {
     radial-gradient(at 52% 66%, hsla(145,72%,61%,1) 0px, transparent 50%),
     radial-gradient(at 10% 23%, hsla(235,65%,64%,1) 0px, transparent 50%);
   color: #171717;
-  font-family: Arial, Helvetica, sans-serif;
 }

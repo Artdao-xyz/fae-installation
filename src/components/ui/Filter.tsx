@@ -25,7 +25,7 @@ export function Filter({ title, type }: { title: string; type: FilterType }) {
   const colors = typeColors[type];
   
   return (
-        <div className="flex items-stretch font-medium font-geist font-xs gap-1 leading-3">
+        <div className="flex items-stretch font-xs gap-1 leading-3">
                 <button className="text-left flex-1 py-2.5 bg-[#F5F5F5] px-2.5 rounded-md">{title}</button>
                 <button 
                   onClick={() => setIsVisible(!isVisible)}
