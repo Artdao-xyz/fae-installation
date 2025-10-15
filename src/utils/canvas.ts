@@ -104,6 +104,35 @@ export const generateRandomWalkerPositions = (
     return a;
   };
 
+  // Helper function to get center-biased seed selection
+  const getCenterBiasedSeed = (placed: PositionedItem[]): PositionedItem => {
+    if (placed.length === 0) return null as any;
+    
+    // For few items, prefer seeds closer to center
+    if (numItems <= 6) {
+      const centerX = canvasWidth / 2;
+      const centerY = canvasHeight / 2;
+      
+      // Sort by distance to center and pick from closest 50%
+      const sortedByDistance = placed
+        .map(item => ({
+          item,
+          distance: Math.sqrt(
+            Math.pow(item.x + item.width/2 - centerX, 2) + 
+            Math.pow(item.y + item.height/2 - centerY, 2)
+          )
+        }))
+        .sort((a, b) => a.distance - b.distance);
+      
+      const topHalf = Math.max(1, Math.ceil(sortedByDistance.length / 2));
+      const candidates = sortedByDistance.slice(0, topHalf);
+      return candidates[Math.floor(Math.random() * candidates.length)].item;
+    }
+    
+    // For many items, use random selection
+    return placed[Math.floor(Math.random() * placed.length)];
+  };
+
   // seed center
   const firstSize = getItemSizeAt(0);
   const center = sampleBiasedPoint(canvasWidth, canvasHeight, firstSize.width, firstSize.height);
@@ -112,14 +141,18 @@ export const generateRandomWalkerPositions = (
   const directions: Array<'right' | 'left' | 'down' | 'up'> = ['right', 'left', 'down', 'up'];
   let safety = numItems * 100;
   while (placed.length < numItems && safety-- > 0) {
-    const seed = placed[Math.floor(Math.random() * placed.length)];
+    const seed = getCenterBiasedSeed(placed);
     const dirs = shuffle(directions);
     let placedThis = false;
     for (const dir of dirs) {
       const nextIndex = placed.length;
       const { width: iw, height: ih } = getItemSizeAt(nextIndex);
-      const orthoMax = Math.max(0, Math.max(seed.height, ih) - 1);
+      
+      // Reduce jitter for few items to keep them closer together
+      const jitterReduction = numItems <= 6 ? 0.3 : 1.0;
+      const orthoMax = Math.max(0, Math.max(seed.height, ih) - 1) * jitterReduction;
       const orthoOffset = orthoMax > 0 ? Math.round(Math.random() * (2 * orthoMax) - orthoMax) : 0;
+      
       let x = seed.x;
       let y = seed.y;
       if (dir === 'right') {
