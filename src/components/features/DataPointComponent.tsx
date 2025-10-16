@@ -1,5 +1,6 @@
 import { DataPoint as DataPointType } from '@/lib/api';
 import { DATAPOINT_DIMENSIONS } from '@/constants/datapoint';
+import { DataPointGlyph } from './DataPointGlyph';
 
 interface Position {
   x: number;
@@ -26,22 +27,20 @@ export function DataPointComponent({ dataPoint, onClick, position, isActive = tr
   
   return (
     <div 
-      className={`absolute transition-all duration-300 hover:z-10 hover:scale-105 overflow-hidden cursor-pointer drop-shadow-md hover:drop-shadow-lg ${!hasImage ? `border ${borderColor}` : ''} ${!isActive ? 'blur-sm opacity-50' : ''}`}
+      className={`absolute transition-all duration-300 hover:z-10 hover:scale-105 cursor-pointer drop-shadow-md hover:drop-shadow-lg ${!isActive ? 'blur-sm opacity-50' : ''}`}
       style={{ 
         left: `${position.x}px`,
         top: `${position.y}px`,
-        width: `${dims.width}px`,
-        height: `${dims.height}px`,
       }}
       onClick={() => onClick(dataPoint)}
     >
         {hasImage ? (
           // Image only - fixed height h-64
-          <div className="overflow-hidden" style={{ width: `${dims.width}px`, height: `${dims.height}px` }}>
+          <div className="overflow-hidden rounded-md hover:bg-white/20 transition-colors duration-200 p-4" style={{ width: `${dims.width}px`, height: `${dims.height}px` }}>
             <img
               src={dataPoint.Image}
               alt={dataPoint.Title}
-              className="w-full h-full object-cover rounded-md hover:scale-105 transition-transform duration-200"
+              className="h-full object-cover rounded-md hover:scale-105 transition-transform duration-200"
               onError={(e) => {
                 // Hide image if it fails to load and show title instead
                 e.currentTarget.style.display = 'none';
@@ -59,11 +58,16 @@ export function DataPointComponent({ dataPoint, onClick, position, isActive = tr
             </div>
           </div>
         ) : (
-          // Title only - single line with max width md
-          <div className="bg-white/60 flex items-center justify-center p-3" style={{ width: `${dims.width}px`, height: `${dims.height}px` }}>
-            <h3 className="text-black text-base font-medium whitespace-nowrap overflow-hidden text-ellipsis text-center">
-              {dataPoint.Title}
-            </h3>
+          // Title with glyph outside - flex row layout
+          <div className="flex items-center">
+            <div className={`rounded-full border ${borderColor} bg-white/80 p-2 flex items-center justify-center`}>
+              <DataPointGlyph category={dataPoint.Category} size={20} />
+            </div>
+            <div className={`bg-white/60 border ${borderColor} flex items-center justify-center p-3`} style={{ width: `${dims.width}px`, height: `${dims.height}px` }}>
+              <h3 className="text-black text-base font-medium whitespace-nowrap overflow-hidden text-ellipsis text-center">
+                {dataPoint.Title}
+              </h3>
+            </div>
           </div>
         )}
     </div>

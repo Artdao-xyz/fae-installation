@@ -1,11 +1,11 @@
 export const DATAPOINT_DIMENSIONS = {
   SQUARE: { WIDTH: 180, HEIGHT: 180 },
-  RECT: { WIDTH: 180, HEIGHT: 40 },
+  RECT: { WIDTH: 240, HEIGHT: 40 }, // Increased width to accommodate glyph + gap + title
 } as const;
 
 export type Dimensions = { width: number; height: number };
 
-export const BASE_ITEM_SIZE = 180;
+export const BASE_ITEM_SIZE = 240; // Updated to match RECT width for collision detection
 
 export const getDataPointDimensions = (index: number): Dimensions => {
   const isSquare = index % 2 === 0;
