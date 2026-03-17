@@ -2,23 +2,78 @@
  * API utility functions for data fetching
  */
 
+export interface Thumbnail {
+  id: number;
+  documentId: string;
+  name: string;
+  alternativeText: string | null;
+  caption: string | null;
+  width: number;
+  height: number;
+  formats?: {
+    thumbnail?: { url: string; width: number; height: number };
+    small?: { url: string; width: number; height: number };
+    medium?: { url: string; width: number; height: number };
+    large?: { url: string; width: number; height: number };
+  };
+  hash: string;
+  ext: string;
+  mime: string;
+  size: number;
+  url: string;
+  previewUrl: string | null;
+  provider: string;
+  createdAt: string;
+  updatedAt: string;
+  publishedAt: string;
+}
+
 export interface DataPoint {
   id: number;
   documentId: string;
   Title: string;
-  Description: string;
+  Description: string | null;
   createdAt: string;
   updatedAt: string;
   publishedAt: string;
-  CurrentFormat: string;
-  Text: string;
+  CurrentFormat?: string;
+  Text?: string;
   Network: string | null;
-  Year: number;
-  Image: string;
-  Links: string;
+  Year: number | string;
+  Image?: string | null;
+  Thumbnail?: Thumbnail | null;
+  Links?: string;
   Category: string;
   Engagement: string;
   Enumeration: string | null;
+}
+
+/**
+ * Helper function to get image URL from a DataPoint
+ * Checks both Image (string) and Thumbnail (object) fields
+ */
+export function getImageUrl(dataPoint: DataPoint, baseUrl?: string): string | null {
+  const apiBaseUrl = baseUrl || process.env.API_BASE_URL || 'http://localhost:1337';
+  
+  // Check Thumbnail first (object with url)
+  if (dataPoint.Thumbnail?.url) {
+    // If url starts with /, prepend base URL
+    if (dataPoint.Thumbnail.url.startsWith('/')) {
+      return `${apiBaseUrl}${dataPoint.Thumbnail.url}`;
+    }
+    return dataPoint.Thumbnail.url;
+  }
+  
+  // Check Image (string)
+  if (dataPoint.Image && dataPoint.Image.trim() !== '' && dataPoint.Image !== 'null') {
+    // If url starts with /, prepend base URL
+    if (dataPoint.Image.startsWith('/')) {
+      return `${apiBaseUrl}${dataPoint.Image}`;
+    }
+    return dataPoint.Image;
+  }
+  
+  return null;
 }
 
 export interface ApiResponse {

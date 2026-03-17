@@ -6,3 +6,4 @@ export { PublicationList } from './PublicationList';
 export { StatsGrid } from './StatsGrid';
 export { PublicationDetails } from './PublicationDetails';
 export { Search } from './Search';
+export { SearchTest } from './SearchTest';

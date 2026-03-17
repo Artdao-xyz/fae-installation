@@ -1,4 +1,4 @@
-import { DataPoint as DataPointType } from '@/lib/api';
+import { DataPoint as DataPointType, getImageUrl } from '@/lib/api';
 import { DATAPOINT_DIMENSIONS } from '@/constants/datapoint';
 import { DataPointGlyph } from './DataPointGlyph';
 
@@ -16,7 +16,8 @@ interface DataPointProps {
 }
 
 export function DataPointComponent({ dataPoint, onClick, position, isActive = true, index = 0 }: DataPointProps) {
-  const hasImage = dataPoint.Image && dataPoint.Image.trim() !== '';
+  const imageUrl = getImageUrl(dataPoint);
+  const hasImage = imageUrl !== null;
   const dims = hasImage
     ? { width: DATAPOINT_DIMENSIONS.SQUARE.WIDTH, height: DATAPOINT_DIMENSIONS.SQUARE.HEIGHT }
     : { width: DATAPOINT_DIMENSIONS.RECT.WIDTH, height: DATAPOINT_DIMENSIONS.RECT.HEIGHT };
@@ -34,13 +35,13 @@ export function DataPointComponent({ dataPoint, onClick, position, isActive = tr
       }}
       onClick={() => onClick(dataPoint)}
     >
-        {hasImage ? (
+        {hasImage && imageUrl ? (
           // Image only - fixed height h-64
           <div className="overflow-hidden rounded-md hover:bg-white/20 transition-colors duration-200 p-4" style={{ width: `${dims.width}px`, height: `${dims.height}px` }}>
             <img
-              src={dataPoint.Image}
+              src={imageUrl}
               alt={dataPoint.Title}
-              className="h-full object-cover rounded-md hover:scale-105 transition-transform duration-200"
+              className="h-full w-full object-cover rounded-md hover:scale-105 transition-transform duration-200"
               onError={(e) => {
                 // Hide image if it fails to load and show title instead
                 e.currentTarget.style.display = 'none';
