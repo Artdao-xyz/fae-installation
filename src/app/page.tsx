@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { listContent } from "@/lib/content-repository";
+import type { ContentFixtureRow } from "@/data/content-fixture";
 
 const GRID_SIZE = 13;
 const TOTAL_IMAGES = GRID_SIZE * GRID_SIZE;
@@ -21,6 +23,7 @@ type ImagePoint = {
   z0: number;
   speed: number;
   src: string;
+  title: string;
 };
 
 type Mode = "optimized" | "snappy";
@@ -43,12 +46,59 @@ export default function Home() {
   const [loadedCount, setLoadedCount] = useState(0);
   const [errorCount, setErrorCount] = useState(0);
   const [loadDurationMs, setLoadDurationMs] = useState<number | null>(null);
+  const [contentRows, setContentRows] = useState<ContentFixtureRow[]>([]);
+  const [contentTotal, setContentTotal] = useState<number>(0);
+  const [fetchDurationMs, setFetchDurationMs] = useState<number | null>(null);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+  const [showInfo, setShowInfo] = useState(true);
   const preloadStartedRef = useRef(false);
   const snappyStartedAtRef = useRef<number | null>(null);
   const snappyHandledRef = useRef<number[]>(Array(TOTAL_IMAGES).fill(0));
   const imageRefs = useRef<(HTMLImageElement | null)[]>([]);
   const scrollYRef = useRef(0);
   const isOptimizedMode = mode === "optimized";
+
+  useEffect(() => {
+    if (!mounted) {
+      return;
+    }
+
+    let cancelled = false;
+    setFetchError(null);
+    setFetchDurationMs(null);
+
+    const loadContent = async () => {
+      try {
+        const response = await listContent({
+          limit: TOTAL_IMAGES,
+          offset: 0,
+          latencyMs: isOptimizedMode ? 180 : 80,
+        });
+
+        if (cancelled) {
+          return;
+        }
+
+        setContentRows(response.rows);
+        setContentTotal(response.total);
+        setFetchDurationMs(response.durationMs);
+      } catch (error) {
+        if (cancelled) {
+          return;
+        }
+
+        setFetchError(error instanceof Error ? error.message : "Unknown data error");
+        setContentRows([]);
+        setContentTotal(0);
+      }
+    };
+
+    void loadContent();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isOptimizedMode, mounted]);
 
   const images = useMemo<ImagePoint[]>(() => {
     const spacing = 160;
@@ -57,6 +107,9 @@ export default function Home() {
     return Array.from({ length: TOTAL_IMAGES }, (_, index) => {
       const row = Math.floor(index / GRID_SIZE);
       const col = index % GRID_SIZE;
+      const contentRow = contentRows[index];
+      const paddedId = String(index + 1).padStart(3, "0");
+      const fallbackTitle = `FAE Content Title ${paddedId}`;
 
       return {
         id: index,
@@ -64,10 +117,13 @@ export default function Home() {
         y: (row - half) * spacing,
         z0: MIN_Z + pseudoRandom(index + 1) * (MAX_Z - MIN_Z),
         speed: 70 + pseudoRandom(index + 10_001) * 120,
-        src: `https://picsum.photos/seed/fae-${index}/${FETCHED_WIDTH}/${FETCHED_HEIGHT}.webp`,
+        src:
+          contentRow?.imageUrl ??
+          `https://picsum.photos/seed/content-${paddedId}/${FETCHED_WIDTH}/${FETCHED_HEIGHT}.webp`,
+        title: contentRow?.title ?? fallbackTitle,
       };
     });
-  }, []);
+  }, [contentRows]);
 
   useEffect(() => {
     setMounted(true);
@@ -338,52 +394,80 @@ export default function Home() {
     }
   };
 
+  const handleImageClick = (
+    event: React.MouseEvent<HTMLImageElement>,
+    title: string
+  ) => {
+    event.stopPropagation();
+    console.log("[image-test] title:", title);
+  };
+
   return (
     <main className="relative min-h-[180vh] bg-[radial-gradient(circle_at_20%_20%,#0d2141_0%,#050711_45%,#02030a_100%)] p-5 text-[#e9f6ff]">
       <section className="fixed left-5 top-5 z-[5] w-[min(420px,calc(100vw-40px))] rounded-sm border border-white/35 bg-[rgba(8,17,39,0.72)] px-4 py-[14px] backdrop-blur-md">
-        <h1 className="mb-2 text-[1.2rem]">169 image load test</h1>
-        <p className="my-1.5 font-mono text-[0.88rem]">
-          Mode: {isOptimizedMode ? "Optimized/Scalable" : "Snappy"}
-        </p>
-        <div className="my-[10px] flex gap-2" role="group" aria-label="Rendering mode">
-          <button
-            type="button"
-            aria-pressed={isOptimizedMode}
-            onClick={() => setMode("optimized")}
-            className={`cursor-pointer rounded-md border px-[10px] py-1.5 font-mono text-[0.82rem] tracking-[0.02em] transition-all duration-150 ${
-              isOptimizedMode
-                ? "border-[#84c0ff] bg-gradient-to-br from-[#2a7fe3] to-[#57a4ff] text-[#f4faff] shadow-[0_0_0_1px_rgba(132,192,255,0.25)]"
-                : "border-white/35 bg-white/10 text-[#dcecff] hover:border-[#8dd2ff] hover:bg-[#63b8ff33]"
-            }`}
-          >
-            Optimized
-          </button>
-          <button
-            type="button"
-            aria-pressed={!isOptimizedMode}
-            onClick={() => setMode("snappy")}
-            className={`cursor-pointer rounded-md border px-[10px] py-1.5 font-mono text-[0.82rem] tracking-[0.02em] transition-all duration-150 ${
-              !isOptimizedMode
-                ? "border-[#84c0ff] bg-gradient-to-br from-[#2a7fe3] to-[#57a4ff] text-[#f4faff] shadow-[0_0_0_1px_rgba(132,192,255,0.25)]"
-                : "border-white/35 bg-white/10 text-[#dcecff] hover:border-[#8dd2ff] hover:bg-[#63b8ff33]"
-            }`}
-          >
-            Snappy
-          </button>
-        </div>
-        <p className="my-1.5 font-mono text-[0.88rem]">
-          Loaded: {loadedCount}/{TOTAL_IMAGES} | Errors: {errorCount}
-        </p>
-        <p className="my-1.5 font-mono text-[0.88rem]">
-          Total load time: {loadDurationMs !== null ? `${loadDurationMs} ms` : "loading..."}
-        </p>
-        <p className="my-1.5 font-mono text-[0.88rem]">
-          Fetched size each: {FETCHED_WIDTH}x{FETCHED_HEIGHT}px ({fetchedPixelsPerImage.toLocaleString()} px)
-        </p>
-        <p className="my-1.5 font-mono text-[0.88rem]">
-          Displayed size each: {DISPLAYED_WIDTH}x{DISPLAYED_HEIGHT}px ({displayedPixelsPerImage.toLocaleString()} px)
-        </p>
-        {loadDone && <p className="my-1.5 font-mono text-[0.88rem]">All image requests completed.</p>}
+        <h1 className="mb-2 text-[1.2rem]">{TOTAL_IMAGES} image load test</h1>
+        <button
+          type="button"
+          onClick={() => setShowInfo((prev) => !prev)}
+          className="cursor-pointer rounded-md border border-white/35 bg-white/10 px-[10px] py-1.5 font-mono text-[0.82rem] tracking-[0.02em] text-[#dcecff] transition-all duration-150 hover:border-[#8dd2ff] hover:bg-[#63b8ff33]"
+        >
+          {showInfo ? "Collapse info" : "Show info"}
+        </button>
+        {showInfo && (
+          <>
+            <p className="my-1.5 font-mono text-[0.88rem]">
+              Mode: {isOptimizedMode ? "Optimized/Scalable" : "Snappy"}
+            </p>
+            <div className="my-[10px] flex gap-2" role="group" aria-label="Rendering mode">
+              <button
+                type="button"
+                aria-pressed={isOptimizedMode}
+                onClick={() => setMode("optimized")}
+                className={`cursor-pointer rounded-md border px-[10px] py-1.5 font-mono text-[0.82rem] tracking-[0.02em] transition-all duration-150 ${
+                  isOptimizedMode
+                    ? "border-[#84c0ff] bg-gradient-to-br from-[#2a7fe3] to-[#57a4ff] text-[#f4faff] shadow-[0_0_0_1px_rgba(132,192,255,0.25)]"
+                    : "border-white/35 bg-white/10 text-[#dcecff] hover:border-[#8dd2ff] hover:bg-[#63b8ff33]"
+                }`}
+              >
+                Optimized
+              </button>
+              <button
+                type="button"
+                aria-pressed={!isOptimizedMode}
+                onClick={() => setMode("snappy")}
+                className={`cursor-pointer rounded-md border px-[10px] py-1.5 font-mono text-[0.82rem] tracking-[0.02em] transition-all duration-150 ${
+                  !isOptimizedMode
+                    ? "border-[#84c0ff] bg-gradient-to-br from-[#2a7fe3] to-[#57a4ff] text-[#f4faff] shadow-[0_0_0_1px_rgba(132,192,255,0.25)]"
+                    : "border-white/35 bg-white/10 text-[#dcecff] hover:border-[#8dd2ff] hover:bg-[#63b8ff33]"
+                }`}
+              >
+                Snappy
+              </button>
+            </div>
+            <p className="my-1.5 font-mono text-[0.88rem]">
+              Loaded: {loadedCount}/{TOTAL_IMAGES} | Errors: {errorCount}
+            </p>
+            <p className="my-1.5 font-mono text-[0.88rem]">
+              Data rows: {contentRows.length}/{contentTotal || TOTAL_IMAGES}
+              {fetchDurationMs !== null ? ` | Simulated fetch: ${fetchDurationMs} ms` : " | fetching..."}
+            </p>
+            {fetchError && (
+              <p className="my-1.5 font-mono text-[0.88rem] text-[#ff9c9c]">Data error: {fetchError}</p>
+            )}
+            <p className="my-1.5 font-mono text-[0.88rem]">
+              Total load time: {loadDurationMs !== null ? `${loadDurationMs} ms` : "loading..."}
+            </p>
+            <p className="my-1.5 font-mono text-[0.88rem]">
+              Fetched size each: {FETCHED_WIDTH}x{FETCHED_HEIGHT}px ({fetchedPixelsPerImage.toLocaleString()} px)
+            </p>
+            <p className="my-1.5 font-mono text-[0.88rem]">
+              Displayed size each: {DISPLAYED_WIDTH}x{DISPLAYED_HEIGHT}px ({displayedPixelsPerImage.toLocaleString()} px)
+            </p>
+            {loadDone && (
+              <p className="my-1.5 font-mono text-[0.88rem]">All image requests completed.</p>
+            )}
+          </>
+        )}
       </section>
 
       <section
@@ -405,7 +489,8 @@ export default function Home() {
                 imageRefs.current[image.id] = element;
               }}
               src={image.src}
-              alt={`Random image ${image.id + 1}`}
+              alt={image.title}
+              title={image.title}
               width={FETCHED_WIDTH}
               height={FETCHED_HEIGHT}
               className="absolute left-1/2 top-1/2 border border-white/30 object-cover shadow-[0_18px_32px_rgba(0,0,0,0.36)] [border-radius:2px] [transform-style:preserve-3d] [will-change:transform,opacity]"
@@ -415,6 +500,7 @@ export default function Home() {
                 transform: `translate3d(${image.x}px, ${image.y}px, ${zForRender.toFixed(2)}px)`,
                 opacity,
               }}
+              onClick={(event) => handleImageClick(event, image.title)}
               onLoad={() => handleSnappyImageResult(image.id, false)}
               onError={() => handleSnappyImageResult(image.id, true)}
             />
