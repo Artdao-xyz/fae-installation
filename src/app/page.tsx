@@ -3,14 +3,14 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { listContent } from "@/lib/content-repository";
 import type { ContentFixtureRow } from "@/data/content-fixture";
+import { ImageTestDebugPanel } from "@/components/debug/ImageTestDebugPanel";
 
-const GRID_SIZE = 13;
-const TOTAL_IMAGES = GRID_SIZE * GRID_SIZE;
 const MIN_Z = -1200;
 const MAX_Z = 500;
 const SPEED_FACTOR = 0.5;
 const MODE_STORAGE_KEY = "fae-image-test-mode";
 const RES_MULTIPLIER = 1;
+const IMAGE_SPACING = 160;
 const FETCHED_WIDTH = 440 * RES_MULTIPLIER;
 const FETCHED_HEIGHT = 440 * RES_MULTIPLIER;
 const DISPLAYED_WIDTH = 110 * RES_MULTIPLIER;
@@ -50,10 +50,9 @@ export default function Home() {
   const [contentTotal, setContentTotal] = useState<number>(0);
   const [fetchDurationMs, setFetchDurationMs] = useState<number | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
-  const [showInfo, setShowInfo] = useState(true);
   const preloadStartedRef = useRef(false);
   const snappyStartedAtRef = useRef<number | null>(null);
-  const snappyHandledRef = useRef<number[]>(Array(TOTAL_IMAGES).fill(0));
+  const snappyHandledRef = useRef<number[]>([]);
   const imageRefs = useRef<(HTMLImageElement | null)[]>([]);
   const scrollYRef = useRef(0);
   const isOptimizedMode = mode === "optimized";
@@ -70,7 +69,6 @@ export default function Home() {
     const loadContent = async () => {
       try {
         const response = await listContent({
-          limit: TOTAL_IMAGES,
           offset: 0,
           latencyMs: isOptimizedMode ? 180 : 80,
         });
@@ -101,26 +99,21 @@ export default function Home() {
   }, [isOptimizedMode, mounted]);
 
   const images = useMemo<ImagePoint[]>(() => {
-    const spacing = 160;
-    const half = (GRID_SIZE - 1) / 2;
+    const gridColumns = Math.max(1, Math.ceil(Math.sqrt(contentRows.length || 1)));
+    const half = (gridColumns - 1) / 2;
 
-    return Array.from({ length: TOTAL_IMAGES }, (_, index) => {
-      const row = Math.floor(index / GRID_SIZE);
-      const col = index % GRID_SIZE;
-      const contentRow = contentRows[index];
-      const paddedId = String(index + 1).padStart(3, "0");
-      const fallbackTitle = `FAE Content Title ${paddedId}`;
+    return contentRows.map((contentRow, index) => {
+      const row = Math.floor(index / gridColumns);
+      const col = index % gridColumns;
 
       return {
         id: index,
-        x: (col - half) * spacing,
-        y: (row - half) * spacing,
+        x: (col - half) * IMAGE_SPACING,
+        y: (row - half) * IMAGE_SPACING,
         z0: MIN_Z + pseudoRandom(index + 1) * (MAX_Z - MIN_Z),
         speed: 70 + pseudoRandom(index + 10_001) * 120,
-        src:
-          contentRow?.imageUrl ??
-          `https://picsum.photos/seed/content-${paddedId}/${FETCHED_WIDTH}/${FETCHED_HEIGHT}.webp`,
-        title: contentRow?.title ?? fallbackTitle,
+        src: contentRow.imageUrl,
+        title: contentRow.title,
       };
     });
   }, [contentRows]);
@@ -158,11 +151,11 @@ export default function Home() {
     setSnappyScrollY(0);
     preloadStartedRef.current = false;
     snappyStartedAtRef.current = null;
-    snappyHandledRef.current = Array(TOTAL_IMAGES).fill(0);
-  }, [mode]);
+    snappyHandledRef.current = Array(images.length).fill(0);
+  }, [images.length, mode]);
 
   useEffect(() => {
-    if (!mounted || !isOptimizedMode) {
+    if (!mounted || !isOptimizedMode || images.length === 0) {
       return;
     }
 
@@ -183,7 +176,7 @@ export default function Home() {
       flushQueued = false;
       setLoadedCount(loaded);
       setErrorCount(errors);
-      if (handled >= TOTAL_IMAGES) {
+      if (handled >= images.length) {
         setLoadDurationMs(Math.round(performance.now() - startedAt));
       }
     };
@@ -256,7 +249,7 @@ export default function Home() {
     let loaded = 0;
     let errors = 0;
 
-    for (let index = 0; index < TOTAL_IMAGES; index += 1) {
+    for (let index = 0; index < images.length; index += 1) {
       const imageElement = imageRefs.current[index];
       if (!imageElement) {
         continue;
@@ -285,10 +278,10 @@ export default function Home() {
     setLoadedCount(loaded);
     setErrorCount(errors);
 
-    if (loaded + errors >= TOTAL_IMAGES && snappyStartedAtRef.current !== null) {
+    if (loaded + errors >= images.length && snappyStartedAtRef.current !== null) {
       setLoadDurationMs(Math.round(performance.now() - snappyStartedAtRef.current));
     }
-  }, [isOptimizedMode, mounted]);
+  }, [images.length, isOptimizedMode, mounted]);
 
   useEffect(() => {
     if (!mounted) {
@@ -358,10 +351,9 @@ export default function Home() {
     return () => window.cancelAnimationFrame(animationFrameId);
   }, [isOptimizedMode, mounted]);
 
+  const totalImages = images.length;
   const handledCount = loadedCount + errorCount;
-  const loadDone = handledCount >= TOTAL_IMAGES;
-  const fetchedPixelsPerImage = FETCHED_WIDTH * FETCHED_HEIGHT;
-  const displayedPixelsPerImage = DISPLAYED_WIDTH * DISPLAYED_HEIGHT;
+  const loadDone = totalImages > 0 && handledCount >= totalImages;
 
   const handleSnappyImageResult = (imageId: number, hasError: boolean) => {
     if (isOptimizedMode) {
@@ -389,7 +381,7 @@ export default function Home() {
       0
     );
 
-    if (totalHandled >= TOTAL_IMAGES && snappyStartedAtRef.current !== null) {
+    if (totalHandled >= images.length && snappyStartedAtRef.current !== null) {
       setLoadDurationMs(Math.round(performance.now() - snappyStartedAtRef.current));
     }
   };
@@ -404,71 +396,23 @@ export default function Home() {
 
   return (
     <main className="relative min-h-[180vh] bg-[radial-gradient(circle_at_20%_20%,#0d2141_0%,#050711_45%,#02030a_100%)] p-5 text-[#e9f6ff]">
-      <section className="fixed left-5 top-5 z-[5] w-[min(420px,calc(100vw-40px))] rounded-sm border border-white/35 bg-[rgba(8,17,39,0.72)] px-4 py-[14px] backdrop-blur-md">
-        <h1 className="mb-2 text-[1.2rem]">{TOTAL_IMAGES} image load test</h1>
-        <button
-          type="button"
-          onClick={() => setShowInfo((prev) => !prev)}
-          className="cursor-pointer rounded-md border border-white/35 bg-white/10 px-[10px] py-1.5 font-mono text-[0.82rem] tracking-[0.02em] text-[#dcecff] transition-all duration-150 hover:border-[#8dd2ff] hover:bg-[#63b8ff33]"
-        >
-          {showInfo ? "Collapse info" : "Show info"}
-        </button>
-        {showInfo && (
-          <>
-            <p className="my-1.5 font-mono text-[0.88rem]">
-              Mode: {isOptimizedMode ? "Optimized/Scalable" : "Snappy"}
-            </p>
-            <div className="my-[10px] flex gap-2" role="group" aria-label="Rendering mode">
-              <button
-                type="button"
-                aria-pressed={isOptimizedMode}
-                onClick={() => setMode("optimized")}
-                className={`cursor-pointer rounded-md border px-[10px] py-1.5 font-mono text-[0.82rem] tracking-[0.02em] transition-all duration-150 ${
-                  isOptimizedMode
-                    ? "border-[#84c0ff] bg-gradient-to-br from-[#2a7fe3] to-[#57a4ff] text-[#f4faff] shadow-[0_0_0_1px_rgba(132,192,255,0.25)]"
-                    : "border-white/35 bg-white/10 text-[#dcecff] hover:border-[#8dd2ff] hover:bg-[#63b8ff33]"
-                }`}
-              >
-                Optimized
-              </button>
-              <button
-                type="button"
-                aria-pressed={!isOptimizedMode}
-                onClick={() => setMode("snappy")}
-                className={`cursor-pointer rounded-md border px-[10px] py-1.5 font-mono text-[0.82rem] tracking-[0.02em] transition-all duration-150 ${
-                  !isOptimizedMode
-                    ? "border-[#84c0ff] bg-gradient-to-br from-[#2a7fe3] to-[#57a4ff] text-[#f4faff] shadow-[0_0_0_1px_rgba(132,192,255,0.25)]"
-                    : "border-white/35 bg-white/10 text-[#dcecff] hover:border-[#8dd2ff] hover:bg-[#63b8ff33]"
-                }`}
-              >
-                Snappy
-              </button>
-            </div>
-            <p className="my-1.5 font-mono text-[0.88rem]">
-              Loaded: {loadedCount}/{TOTAL_IMAGES} | Errors: {errorCount}
-            </p>
-            <p className="my-1.5 font-mono text-[0.88rem]">
-              Data rows: {contentRows.length}/{contentTotal || TOTAL_IMAGES}
-              {fetchDurationMs !== null ? ` | Simulated fetch: ${fetchDurationMs} ms` : " | fetching..."}
-            </p>
-            {fetchError && (
-              <p className="my-1.5 font-mono text-[0.88rem] text-[#ff9c9c]">Data error: {fetchError}</p>
-            )}
-            <p className="my-1.5 font-mono text-[0.88rem]">
-              Total load time: {loadDurationMs !== null ? `${loadDurationMs} ms` : "loading..."}
-            </p>
-            <p className="my-1.5 font-mono text-[0.88rem]">
-              Fetched size each: {FETCHED_WIDTH}x{FETCHED_HEIGHT}px ({fetchedPixelsPerImage.toLocaleString()} px)
-            </p>
-            <p className="my-1.5 font-mono text-[0.88rem]">
-              Displayed size each: {DISPLAYED_WIDTH}x{DISPLAYED_HEIGHT}px ({displayedPixelsPerImage.toLocaleString()} px)
-            </p>
-            {loadDone && (
-              <p className="my-1.5 font-mono text-[0.88rem]">All image requests completed.</p>
-            )}
-          </>
-        )}
-      </section>
+      <ImageTestDebugPanel
+        mode={mode}
+        onModeChange={setMode}
+        loadedCount={loadedCount}
+        errorCount={errorCount}
+        totalImages={totalImages}
+        contentRowsCount={contentRows.length}
+        contentTotal={contentTotal}
+        fetchDurationMs={fetchDurationMs}
+        fetchError={fetchError}
+        loadDurationMs={loadDurationMs}
+        fetchedWidth={FETCHED_WIDTH}
+        fetchedHeight={FETCHED_HEIGHT}
+        displayedWidth={DISPLAYED_WIDTH}
+        displayedHeight={DISPLAYED_HEIGHT}
+        loadDone={loadDone}
+      />
 
       <section
         className="fixed left-0 top-0 h-full w-full overflow-hidden [perspective:1200px] [perspective-origin:50%_45%] [transform-style:preserve-3d]"
