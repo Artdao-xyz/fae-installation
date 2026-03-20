@@ -1,20 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
+import { useEffect, useRef, useState } from "react";
 import { listContent } from "@/lib/content-repository";
 import type { ContentFixtureRow } from "@/data/content-fixture";
 
 type Mode = "optimized" | "snappy";
-
-type ImagePoint = {
-  id: number;
-  x: number;
-  y: number;
-  z0: number;
-  speed: number;
-  src: string;
-  title: string;
-};
 
 export type ImageWallStats = {
   loadedCount: number;
@@ -39,18 +29,76 @@ type ImageWallProps = {
   onStatsChange: (stats: ImageWallStats) => void;
 };
 
-const MIN_Z = -1200;
-const MAX_Z = 500;
-const IMAGE_SPACING = 160;
+const MORPH_DURATION_MS = 500;
+const AUTO_REVEAL_DELAY_MS = 1000;
+const MAX_SCATTER_FRAGMENTS = 9;
 
-function pseudoRandom(seed: number) {
+type ScatterFragment = {
+  id: string;
+  text: string;
+  leftPx: number;
+  topPx: number;
+  rotateDeg: number;
+  fontSizePx: number;
+  opacity: number;
+};
+
+function seededUnit(seed: number) {
   const value = Math.sin(seed * 9999.91) * 43758.5453;
   return value - Math.floor(value);
 }
 
-function wrapDepth(z: number) {
-  const range = MAX_Z - MIN_Z;
-  return ((((z - MIN_Z) % range) + range) % range) + MIN_Z;
+function scrambleTitle(title: string, seed: number) {
+  const chars = title.replace(/\s+/g, "").split("");
+  for (let i = chars.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(seededUnit(seed + i * 1.73) * (i + 1));
+    const temp = chars[i];
+    chars[i] = chars[j];
+    chars[j] = temp;
+  }
+
+  return chars.join("").slice(0, 40);
+}
+
+function makeScatterFragments(
+  scrambled: string,
+  seed: number,
+  tileWidth: number,
+  tileHeight: number
+): ScatterFragment[] {
+  if (!scrambled) {
+    return [];
+  }
+
+  const fragmentCount = Math.min(MAX_SCATTER_FRAGMENTS, Math.max(4, Math.ceil(scrambled.length / 4)));
+  const chunkSize = Math.max(1, Math.ceil(scrambled.length / fragmentCount));
+  const fragments: ScatterFragment[] = [];
+
+  for (let index = 0; index < fragmentCount; index += 1) {
+    const start = index * chunkSize;
+    const text = scrambled.slice(start, start + chunkSize);
+    if (!text) {
+      continue;
+    }
+
+    const leftPx = Math.floor(seededUnit(seed + index * 1.19) * Math.max(1, tileWidth - 30) + 6);
+    const topPx = Math.floor(seededUnit(seed + index * 2.41) * Math.max(1, tileHeight - 20) + 4);
+    const rotateDeg = (seededUnit(seed + index * 3.71) - 0.5) * 28;
+    const fontSizePx = 8 + Math.floor(seededUnit(seed + index * 5.03) * 5);
+    const opacity = 0.45 + seededUnit(seed + index * 6.17) * 0.5;
+
+    fragments.push({
+      id: `${seed}-${index}`,
+      text,
+      leftPx,
+      topPx,
+      rotateDeg,
+      fontSizePx,
+      opacity,
+    });
+  }
+
+  return fragments;
 }
 
 export function ImageWall({
@@ -60,35 +108,20 @@ export function ImageWall({
   fetchedHeight,
   displayedWidth,
   displayedHeight,
-  speedFactor,
+  speedFactor: _speedFactor,
   onStatsChange,
 }: ImageWallProps) {
-  const [mounted, setMounted] = useState(false);
-  const [timeSec, setTimeSec] = useState(0);
-  const [snappyScrollY, setSnappyScrollY] = useState(0);
-  const [loadedCount, setLoadedCount] = useState(0);
-  const [errorCount, setErrorCount] = useState(0);
-  const [loadDurationMs, setLoadDurationMs] = useState<number | null>(null);
   const [contentRows, setContentRows] = useState<ContentFixtureRow[]>([]);
   const [contentTotal, setContentTotal] = useState<number>(0);
   const [fetchDurationMs, setFetchDurationMs] = useState<number | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
-  const preloadStartedRef = useRef(false);
-  const snappyStartedAtRef = useRef<number | null>(null);
-  const snappyHandledRef = useRef<number[]>([]);
-  const imageRefs = useRef<(HTMLImageElement | null)[]>([]);
-  const scrollYRef = useRef(0);
-  const isOptimizedMode = mode === "optimized";
+  const [loadedCount, setLoadedCount] = useState(0);
+  const [errorCount, setErrorCount] = useState(0);
+  const [loadDurationMs, setLoadDurationMs] = useState<number | null>(null);
+  const [revealedIds, setRevealedIds] = useState<Set<number>>(new Set());
+  const loadStartAtRef = useRef<number | null>(null);
 
   useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (!mounted) {
-      return;
-    }
-
     let cancelled = false;
     setFetchError(null);
     setFetchDurationMs(null);
@@ -98,7 +131,7 @@ export function ImageWall({
         const response = await listContent({
           limit: imageLimit,
           offset: 0,
-          latencyMs: isOptimizedMode ? 180 : 80,
+          latencyMs: mode === "optimized" ? 180 : 80,
         });
 
         if (cancelled) {
@@ -120,79 +153,26 @@ export function ImageWall({
     };
 
     void loadContent();
-
     return () => {
       cancelled = true;
     };
-  }, [imageLimit, isOptimizedMode, mounted]);
-
-  const images = useMemo<ImagePoint[]>(() => {
-    const gridColumns = Math.max(1, Math.ceil(Math.sqrt(contentRows.length || 1)));
-    const half = (gridColumns - 1) / 2;
-
-    return contentRows.map((contentRow, index) => {
-      const row = Math.floor(index / gridColumns);
-      const col = index % gridColumns;
-
-      return {
-        id: index,
-        x: (col - half) * IMAGE_SPACING,
-        y: (row - half) * IMAGE_SPACING,
-        z0: MIN_Z + pseudoRandom(index + 1) * (MAX_Z - MIN_Z),
-        speed: 70 + pseudoRandom(index + 10_001) * 120,
-        src: contentRow.imageUrl,
-        title: contentRow.title,
-      };
-    });
-  }, [contentRows]);
+  }, [imageLimit, mode]);
 
   useEffect(() => {
+    setRevealedIds(new Set());
     setLoadedCount(0);
     setErrorCount(0);
     setLoadDurationMs(null);
-    setTimeSec(0);
-    setSnappyScrollY(0);
-    preloadStartedRef.current = false;
-    snappyStartedAtRef.current = null;
-    snappyHandledRef.current = Array(images.length).fill(0);
-    imageRefs.current = Array(images.length).fill(null);
-  }, [images.length, mode]);
 
-  useEffect(() => {
-    if (!mounted || !isOptimizedMode || images.length === 0) {
+    if (contentRows.length === 0) {
       return;
     }
 
-    if (preloadStartedRef.current) {
-      return;
-    }
-
-    preloadStartedRef.current = true;
-    const startedAt = performance.now();
     let cancelled = false;
-    let handled = 0;
     let loaded = 0;
     let errors = 0;
-    let flushAnimationFrameId = 0;
-    let flushQueued = false;
-
-    const flushStats = () => {
-      flushQueued = false;
-      setLoadedCount(loaded);
-      setErrorCount(errors);
-      if (handled >= images.length) {
-        setLoadDurationMs(Math.round(performance.now() - startedAt));
-      }
-    };
-
-    const queueFlush = () => {
-      if (flushQueued || cancelled) {
-        return;
-      }
-
-      flushQueued = true;
-      flushAnimationFrameId = window.requestAnimationFrame(flushStats);
-    };
+    let handled = 0;
+    loadStartAtRef.current = performance.now();
 
     const markHandled = (hasError: boolean) => {
       if (cancelled) {
@@ -206,10 +186,15 @@ export function ImageWall({
         loaded += 1;
       }
 
-      queueFlush();
+      setLoadedCount(loaded);
+      setErrorCount(errors);
+
+      if (handled >= contentRows.length && loadStartAtRef.current !== null) {
+        setLoadDurationMs(Math.round(performance.now() - loadStartAtRef.current));
+      }
     };
 
-    for (const image of images) {
+    for (const row of contentRows) {
       const preload = new window.Image();
       let settled = false;
 
@@ -217,7 +202,6 @@ export function ImageWall({
         if (settled) {
           return;
         }
-
         settled = true;
         preload.onload = null;
         preload.onerror = null;
@@ -226,7 +210,7 @@ export function ImageWall({
 
       preload.onload = () => settleOnce(false);
       preload.onerror = () => settleOnce(true);
-      preload.src = image.src;
+      preload.src = row.imageUrl;
 
       if (preload.complete) {
         settleOnce(preload.naturalWidth === 0);
@@ -235,127 +219,10 @@ export function ImageWall({
 
     return () => {
       cancelled = true;
-      if (flushAnimationFrameId) {
-        window.cancelAnimationFrame(flushAnimationFrameId);
-      }
     };
-  }, [images, isOptimizedMode, mounted]);
+  }, [contentRows]);
 
-  useEffect(() => {
-    if (!mounted || isOptimizedMode) {
-      return;
-    }
-
-    if (snappyStartedAtRef.current === null) {
-      snappyStartedAtRef.current = performance.now();
-    }
-
-    let loaded = 0;
-    let errors = 0;
-
-    for (let index = 0; index < images.length; index += 1) {
-      const imageElement = imageRefs.current[index];
-      if (!imageElement) {
-        continue;
-      }
-
-      if (snappyHandledRef.current[index] !== 0) {
-        if (snappyHandledRef.current[index] === 1) {
-          loaded += 1;
-        } else if (snappyHandledRef.current[index] === 2) {
-          errors += 1;
-        }
-        continue;
-      }
-
-      if (imageElement.complete) {
-        if (imageElement.naturalWidth > 0) {
-          snappyHandledRef.current[index] = 1;
-          loaded += 1;
-        } else {
-          snappyHandledRef.current[index] = 2;
-          errors += 1;
-        }
-      }
-    }
-
-    setLoadedCount(loaded);
-    setErrorCount(errors);
-
-    if (loaded + errors >= images.length && snappyStartedAtRef.current !== null) {
-      setLoadDurationMs(Math.round(performance.now() - snappyStartedAtRef.current));
-    }
-  }, [images.length, isOptimizedMode, mounted]);
-
-  useEffect(() => {
-    if (!mounted) {
-      return;
-    }
-
-    const onScroll = () => {
-      const currentScrollY = window.scrollY || 0;
-      scrollYRef.current = currentScrollY;
-      if (!isOptimizedMode) {
-        setSnappyScrollY(currentScrollY);
-      }
-    };
-
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, [isOptimizedMode, mounted]);
-
-  useEffect(() => {
-    if (!mounted || !isOptimizedMode) {
-      return;
-    }
-
-    let animationFrameId = 0;
-    const startedAt = performance.now();
-
-    const tick = (now: number) => {
-      const elapsedSeconds = (now - startedAt) / 1000;
-      const speedBoost = 1 + Math.min(scrollYRef.current / 900, 2);
-
-      for (const image of images) {
-        const imageElement = imageRefs.current[image.id];
-        if (!imageElement) {
-          continue;
-        }
-
-        const z = wrapDepth(image.z0 + image.speed * speedBoost * speedFactor * elapsedSeconds);
-        const normalized = (z - MIN_Z) / (MAX_Z - MIN_Z);
-        const opacity = 0.12 + normalized * 0.88;
-
-        imageElement.style.transform = `translate3d(${image.x}px, ${image.y}px, ${z.toFixed(2)}px)`;
-        imageElement.style.opacity = opacity.toFixed(3);
-      }
-
-      animationFrameId = window.requestAnimationFrame(tick);
-    };
-
-    animationFrameId = window.requestAnimationFrame(tick);
-    return () => window.cancelAnimationFrame(animationFrameId);
-  }, [images, isOptimizedMode, mounted, speedFactor]);
-
-  useEffect(() => {
-    if (!mounted || isOptimizedMode) {
-      return;
-    }
-
-    let animationFrameId = 0;
-    const startedAt = performance.now();
-
-    const tick = (now: number) => {
-      setTimeSec((now - startedAt) / 1000);
-      animationFrameId = window.requestAnimationFrame(tick);
-    };
-
-    animationFrameId = window.requestAnimationFrame(tick);
-    return () => window.cancelAnimationFrame(animationFrameId);
-  }, [isOptimizedMode, mounted]);
-
-  const totalImages = images.length;
+  const totalImages = contentRows.length;
   const handledCount = loadedCount + errorCount;
   const loadDone = totalImages > 0 && handledCount >= totalImages;
 
@@ -384,81 +251,93 @@ export function ImageWall({
     totalImages,
   ]);
 
-  const handleSnappyImageResult = (imageId: number, hasError: boolean) => {
-    if (isOptimizedMode) {
+  useEffect(() => {
+    setRevealedIds(new Set());
+
+    if (contentRows.length === 0) {
       return;
     }
 
-    if (snappyHandledRef.current[imageId] !== 0) {
-      return;
-    }
+    const timerId = window.setTimeout(() => {
+      setRevealedIds(new Set(contentRows.map((_, index) => index)));
+    }, AUTO_REVEAL_DELAY_MS);
 
-    if (snappyStartedAtRef.current === null) {
-      snappyStartedAtRef.current = performance.now();
-    }
-
-    snappyHandledRef.current[imageId] = hasError ? 2 : 1;
-
-    if (hasError) {
-      setErrorCount((previous) => previous + 1);
-    } else {
-      setLoadedCount((previous) => previous + 1);
-    }
-
-    const totalHandled = snappyHandledRef.current.reduce(
-      (count, status) => count + (status === 0 ? 0 : 1),
-      0
-    );
-
-    if (totalHandled >= images.length && snappyStartedAtRef.current !== null) {
-      setLoadDurationMs(Math.round(performance.now() - snappyStartedAtRef.current));
-    }
-  };
-
-  const handleImageClick = (event: MouseEvent<HTMLImageElement>, title: string) => {
-    event.stopPropagation();
-    console.log("[image-test] title:", title);
-  };
+    return () => window.clearTimeout(timerId);
+  }, [contentRows]);
 
   return (
-    <section
-      className="fixed left-0 top-0 h-full w-full overflow-hidden [perspective:1200px] [perspective-origin:50%_45%] [transform-style:preserve-3d]"
-      aria-label="3D animated image wall"
-    >
-      {(isOptimizedMode ? mounted : true) &&
-        images.map((image) => {
-          const snappySpeedBoost = 1 + Math.min(snappyScrollY / 900, 2);
-          const snappyZ = wrapDepth(
-            image.z0 + image.speed * snappySpeedBoost * speedFactor * timeSec
+    <section className="fixed inset-0 overflow-hidden" aria-label="Title to image morph wall">
+      <div className="relative h-screen w-screen">
+        {contentRows.map((row, index) => {
+          const isRevealed = revealedIds.has(index);
+          const leftFactor = seededUnit(index + 11).toFixed(5);
+          const topFactor = seededUnit(index + 17).toFixed(5);
+          const rotate = (seededUnit(index + 29) - 0.5) * 18;
+          const scrambledTitle = scrambleTitle(row.title, index + 41);
+          const scatterFragments = makeScatterFragments(
+            scrambledTitle,
+            index + 53,
+            displayedWidth,
+            displayedHeight
           );
-          const zForRender = isOptimizedMode ? image.z0 : snappyZ;
-          const normalized = (zForRender - MIN_Z) / (MAX_Z - MIN_Z);
-          const opacity = 0.12 + normalized * 0.88;
 
           return (
-            <img
-              key={image.id}
-              ref={(element) => {
-                imageRefs.current[image.id] = element;
-              }}
-              src={image.src}
-              alt={image.title}
-              title={image.title}
-              width={fetchedWidth}
-              height={fetchedHeight}
-              className="absolute left-1/2 top-1/2 border border-white/30 object-cover shadow-[0_18px_32px_rgba(0,0,0,0.36)] [border-radius:2px] [transform-style:preserve-3d] [will-change:transform,opacity]"
+            <div
+              key={row.id}
+              className="absolute overflow-hidden bg-transparent text-left [border-radius:2px]"
               style={{
                 width: `${displayedWidth}px`,
                 height: `${displayedHeight}px`,
-                transform: `translate3d(${image.x}px, ${image.y}px, ${zForRender.toFixed(2)}px)`,
-                opacity,
+                left: `calc(${leftFactor} * (100vw - ${displayedWidth + 16}px) + 8px)`,
+                top: `calc(${topFactor} * (100vh - ${displayedHeight + 16}px) + 8px)`,
+                transform: `rotate(${rotate.toFixed(2)}deg)`,
               }}
-              onClick={(event) => handleImageClick(event, image.title)}
-              onLoad={() => handleSnappyImageResult(image.id, false)}
-              onError={() => handleSnappyImageResult(image.id, true)}
-            />
+            >
+              <div
+                className={`pointer-events-none absolute inset-0 flex items-center justify-center p-2 font-mono text-[0.66rem] leading-tight text-[#eaf4ff] transition-all motion-reduce:transition-none`}
+                style={{
+                  transitionDuration: `${MORPH_DURATION_MS}ms`,
+                  opacity: isRevealed ? 0 : 1,
+                  transform: isRevealed ? "scale(0.94)" : "scale(1)",
+                }}
+              >
+                <div className="relative h-full w-full">
+                  {scatterFragments.map((fragment) => (
+                    <span
+                      key={fragment.id}
+                      className="absolute whitespace-nowrap"
+                      style={{
+                        left: `${fragment.leftPx}px`,
+                        top: `${fragment.topPx}px`,
+                        transform: `translate(-50%, -50%) rotate(${fragment.rotateDeg.toFixed(2)}deg)`,
+                        fontSize: `${fragment.fontSizePx}px`,
+                        opacity: fragment.opacity,
+                      }}
+                    >
+                      {fragment.text}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <img
+                src={row.imageUrl}
+                alt={row.title}
+                title={row.title}
+                width={fetchedWidth}
+                height={fetchedHeight}
+                className="pointer-events-none absolute inset-0 h-full w-full object-cover transition-all motion-reduce:transition-none"
+                style={{
+                  transitionDuration: `${MORPH_DURATION_MS}ms`,
+                  opacity: isRevealed ? 1 : 0,
+                  transform: isRevealed ? "scale(1)" : "scale(1.04)",
+                }}
+                draggable={false}
+              />
+            </div>
           );
         })}
+      </div>
     </section>
   );
 }

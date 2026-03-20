@@ -5,7 +5,8 @@ import { ImageTestDebugPanel } from "@/components/debug/ImageTestDebugPanel";
 import {
   ImageWall,
   type ImageWallStats,
-} from "@/components/image-test/ImageWall";
+} from "../components/image-test/ImageWall";
+import { IMAGE_FETCH_LIMIT } from "../components/image-test/config";
 
 type Mode = "optimized" | "snappy";
 
@@ -16,9 +17,6 @@ const FETCHED_WIDTH = 440 * RES_MULTIPLIER;
 const FETCHED_HEIGHT = 440 * RES_MULTIPLIER;
 const DISPLAYED_WIDTH = 110 * RES_MULTIPLIER;
 const DISPLAYED_HEIGHT = 110 * RES_MULTIPLIER;
-
-// Set this to an integer to limit rows/images. Use 0 to fetch all rows.
-export const IMAGE_FETCH_LIMIT = 1;
 
 const EMPTY_STATS: ImageWallStats = {
   loadedCount: 0,

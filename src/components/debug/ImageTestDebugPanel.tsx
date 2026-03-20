@@ -39,7 +39,7 @@ export function ImageTestDebugPanel({
   displayedHeight,
   loadDone,
 }: ImageTestDebugPanelProps) {
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(true);
   const isOptimizedMode = mode === "optimized";
   const fetchedPixelsPerImage = fetchedWidth * fetchedHeight;
   const displayedPixelsPerImage = displayedWidth * displayedHeight;
