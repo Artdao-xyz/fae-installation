@@ -1,6 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type PointerEvent as ReactPointerEvent,
+} from "react";
 import { listContent } from "@/lib/content-repository";
 import type { ContentFixtureRow } from "@/data/content-fixture";
 
@@ -33,6 +41,11 @@ const MORPH_LOOP_DURATION_MIN_MS = 10000;
 const MORPH_LOOP_DURATION_VAR_MS = 0;
 const ORBIT_DURATION_MIN_MS = 18000;
 const ORBIT_DURATION_VAR_MS = 12000;
+const INTRO_EXPLODE_DURATION_MS = 1250;
+const INTRO_EXPLODE_DURATION_VAR_MS = 420;
+const INTRO_STAGGER_MAX_MS = 520;
+const REPEL_RADIUS_PX = 220;
+const REPEL_MAX_PX = 24;
 const VIEWPORT_PADDING_RATIO = 0.0;
 const ELLIPSE_TILT_DEG = -18;
 const ELLIPSE_ASPECT_X = 1.16;
@@ -238,6 +251,7 @@ export function ImageWall({
   const [loadDurationMs, setLoadDurationMs] = useState<number | null>(null);
   const [viewport, setViewport] = useState({ width: 1440, height: 900 });
   const loadStartAtRef = useRef<number | null>(null);
+  const repelLayerRefs = useRef<Array<HTMLDivElement | null>>([]);
 
   useEffect(() => {
     const updateViewport = () => {
@@ -471,9 +485,52 @@ export function ImageWall({
     }));
   }, [contentRows, displayedHeight, displayedWidth, viewport.height, viewport.width]);
 
+  const handlePointerMove = useCallback((event: ReactPointerEvent<HTMLElement>) => {
+    const pointerX = event.clientX;
+    const pointerY = event.clientY;
+
+    for (const node of repelLayerRefs.current) {
+      if (!node) {
+        continue;
+      }
+
+      const rect = node.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+      const dx = centerX - pointerX;
+      const dy = centerY - pointerY;
+      const distance = Math.hypot(dx, dy) || 0.0001;
+
+      if (distance >= REPEL_RADIUS_PX) {
+        node.style.transform = "translate3d(0px, 0px, 0)";
+        continue;
+      }
+
+      const falloff = 1 - distance / REPEL_RADIUS_PX;
+      const strength = REPEL_MAX_PX * falloff * falloff;
+      const repelX = (dx / distance) * strength;
+      const repelY = (dy / distance) * strength;
+      node.style.transform = `translate3d(${repelX.toFixed(2)}px, ${repelY.toFixed(2)}px, 0)`;
+    }
+  }, []);
+
+  const handlePointerLeave = useCallback(() => {
+    for (const node of repelLayerRefs.current) {
+      if (!node) {
+        continue;
+      }
+      node.style.transform = "translate3d(0px, 0px, 0)";
+    }
+  }, []);
+
   return (
     <>
-      <section className="fixed inset-0 overflow-hidden" aria-label="Title to image morph wall">
+      <section
+        className="fixed inset-0 overflow-hidden"
+        aria-label="Title to image morph wall"
+        onPointerMove={handlePointerMove}
+        onPointerLeave={handlePointerLeave}
+      >
         <div className="relative h-screen w-screen">
         {contentRows.map((row, index) => {
           const placement = orbitPlacements[index];
@@ -491,7 +548,15 @@ export function ImageWall({
           const morphLoopDelayMs = -Math.floor(seededUnit(index + 211.7) * morphLoopDurationMs);
           const orbitDurationMs =
             ORBIT_DURATION_MIN_MS + Math.floor(seededUnit(index + 631.9) * ORBIT_DURATION_VAR_MS);
-          const orbitDelayMs = -Math.floor(seededUnit(index + 643.1) * orbitDurationMs);
+          const introStaggerMs = Math.floor(seededUnit(index + 701.7) * INTRO_STAGGER_MAX_MS);
+          const introDurationMs =
+            INTRO_EXPLODE_DURATION_MS +
+            Math.floor(seededUnit(index + 709.9) * INTRO_EXPLODE_DURATION_VAR_MS);
+          const orbitStartDelayMs = introStaggerMs + introDurationMs;
+          const orbitStartRad = (orbitStartDeg * Math.PI) / 180;
+          const introCurveRadius = 10 + seededUnit(index + 719.3) * 22;
+          const introCurveX = Math.cos(orbitStartRad + Math.PI / 2) * introCurveRadius;
+          const introCurveY = Math.sin(orbitStartRad + Math.PI / 2) * introCurveRadius;
           const scatterFragments = makeScatterFragments(
             row.title,
             index + 53,
@@ -505,10 +570,24 @@ export function ImageWall({
                 className="absolute left-0 top-0 [transform-style:preserve-3d]"
                 style={
                   {
+                    "--intro-from-x": `${(-Math.cos(orbitStartRad) * orbitRadius).toFixed(2)}px`,
+                    "--intro-from-y": `${(-Math.sin(orbitStartRad) * orbitRadius).toFixed(2)}px`,
+                    "--intro-curve-x": `${introCurveX.toFixed(2)}px`,
+                    "--intro-curve-y": `${introCurveY.toFixed(2)}px`,
+                    animation: `imageWallIntroExplode ${introDurationMs}ms cubic-bezier(0.18, 0.9, 0.24, 1) both`,
+                    animationDelay: `${introStaggerMs}ms`,
+                  } as CSSProperties
+                }
+              >
+                <div
+                  className="absolute left-0 top-0 [transform-style:preserve-3d]"
+                  style={
+                    {
                     "--orbit-start": `${orbitStartDeg.toFixed(3)}deg`,
                     "--orbit-radius": `${orbitRadius.toFixed(2)}px`,
                     animation: `imageWallOrbitClockwise ${orbitDurationMs}ms linear infinite`,
-                    animationDelay: `${orbitDelayMs}ms`,
+                    animationDelay: `${orbitStartDelayMs}ms`,
+                    animationFillMode: "both",
                   } as CSSProperties
                 }
               >
@@ -517,10 +596,21 @@ export function ImageWall({
                   style={
                     {
                       animation: `imageWallOrbitCounter ${orbitDurationMs}ms linear infinite`,
-                      animationDelay: `${orbitDelayMs}ms`,
+                      animationDelay: `${orbitStartDelayMs}ms`,
+                      animationFillMode: "both",
                     } as CSSProperties
                   }
                 >
+                  <div
+                    className="absolute left-0 top-0 [transform-style:preserve-3d]"
+                    ref={(node) => {
+                      repelLayerRefs.current[index] = node;
+                    }}
+                    style={{
+                      transform: "translate3d(0px, 0px, 0)",
+                      transition: "transform 130ms cubic-bezier(0.22, 1, 0.36, 1)",
+                    }}
+                  >
                   <div
                     className="absolute bg-transparent text-left"
                     style={{
@@ -584,7 +674,13 @@ export function ImageWall({
                         </div>
                       </div>
 
-                      <div className="absolute inset-0 overflow-hidden [border-radius:4px]">
+                      <div
+                        className="absolute inset-0 overflow-hidden [border-radius:4px]"
+                        style={{
+                          border: "1px solid rgba(255, 255, 255, 0.22)",
+                          boxShadow: "0 8px 18px rgba(0, 0, 0, 0.2)",
+                        }}
+                      >
                         <img
                           src={row.imageUrl}
                           alt={row.title}
@@ -595,15 +691,17 @@ export function ImageWall({
                           style={{
                             animation: `imageWallImageCycle ${morphLoopDurationMs}ms linear infinite`,
                             animationDelay: `${morphLoopDelayMs}ms`,
-                            filter: "drop-shadow(0 8px 14px rgba(0, 0, 0, 0.26))",
+                          filter: "drop-shadow(0 8px 14px rgba(0, 0, 0, 0.24)) drop-shadow(0 2px 6px rgba(0, 0, 0, 0.18))",
                           }}
                           draggable={false}
                         />
                       </div>
                     </div>
                   </div>
+                  </div>
                 </div>
               </div>
+            </div>
             </div>
           );
         })}
@@ -611,6 +709,33 @@ export function ImageWall({
       </section>
 
       <style jsx global>{`
+        @keyframes imageWallIntroExplode {
+          0% {
+            transform: translate3d(var(--intro-from-x), var(--intro-from-y), 0);
+            opacity: 0.2;
+          }
+          58% {
+            transform: translate3d(
+              calc(var(--intro-from-x) * 0.16 + var(--intro-curve-x)),
+              calc(var(--intro-from-y) * 0.16 + var(--intro-curve-y)),
+              0
+            );
+            opacity: 1;
+          }
+          84% {
+            transform: translate3d(
+              calc(var(--intro-from-x) * 0.04 + var(--intro-curve-x) * 0.2),
+              calc(var(--intro-from-y) * 0.04 + var(--intro-curve-y) * 0.2),
+              0
+            );
+            opacity: 1;
+          }
+          100% {
+            transform: translate3d(0, 0, 0);
+            opacity: 1;
+          }
+        }
+
         @keyframes imageWallCardScaleCycle {
           0% {
             transform: scale(0.12);
