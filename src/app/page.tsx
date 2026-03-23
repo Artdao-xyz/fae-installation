@@ -15,8 +15,8 @@ const MODE_STORAGE_KEY = "fae-image-test-mode";
 const RES_MULTIPLIER = 1;
 const FETCHED_WIDTH = 440 * RES_MULTIPLIER;
 const FETCHED_HEIGHT = 440 * RES_MULTIPLIER;
-const DISPLAYED_WIDTH = 110 * RES_MULTIPLIER;
-const DISPLAYED_HEIGHT = 110 * RES_MULTIPLIER;
+const DISPLAYED_WIDTH = 75 * RES_MULTIPLIER;
+const DISPLAYED_HEIGHT = 75 * RES_MULTIPLIER;
 
 const EMPTY_STATS: ImageWallStats = {
   loadedCount: 0,
@@ -52,7 +52,7 @@ export default function Home() {
   }, []);
 
   return (
-    <main className="relative min-h-[180vh] bg-[radial-gradient(circle_at_20%_20%,#0d2141_0%,#050711_45%,#02030a_100%)] p-5 text-[#e9f6ff]">
+    <main className="relative min-h-[180vh] bg-[#E8E8E8] p-5 text-black">
       <ImageTestDebugPanel
         mode={mode}
         onModeChange={setMode}
