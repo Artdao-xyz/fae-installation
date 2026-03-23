@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { listContent } from "@/lib/content-repository";
 import type { ContentFixtureRow } from "@/data/content-fixture";
 
@@ -29,31 +29,42 @@ type ImageWallProps = {
   onStatsChange: (stats: ImageWallStats) => void;
 };
 
-const MORPH_DURATION_MS = 500;
-const AUTO_REVEAL_DELAY_MS = 650;
-const MAX_SCATTER_FRAGMENTS = 9;
+const MORPH_LOOP_DURATION_MIN_MS = 10000;
+const MORPH_LOOP_DURATION_VAR_MS = 0;
+const ORBIT_DURATION_MIN_MS = 18000;
+const ORBIT_DURATION_VAR_MS = 12000;
 const VIEWPORT_PADDING_RATIO = 0.0;
-const ENABLE_MORPH_ANIMATION = true;
-const MAX_STAGGER_DELAY_MS = 900;
-const TEXT_CASCADE_STEP_MS = 46;
 const ELLIPSE_TILT_DEG = -18;
 const ELLIPSE_ASPECT_X = 1.16;
 const ELLIPSE_ASPECT_Y = 0.82;
-const EDGE_INSET_PX = 0;
 const DEPTH_MAX_Z = 320;
 const DEPTH_MIN_Z = -240;
 const DENSITY_CLUSTER_BIAS = 0.36;
 const DENSITY_CLUSTER_SPREAD = 0.62;
 const DENSITY_CLUSTER_CENTERS = [-2.15, 0.35, 2.25] as const;
 const DENSITY_CLUSTER_WEIGHTS = [0.4, 0.35, 0.25] as const;
+const TILE_SEPARATION_GAP_PX = 16;
+const TILE_RELAXATION_STEPS = 8;
 
 type ScatterFragment = {
   id: string;
   text: string;
-  leftPx: number;
-  topPx: number;
+  startDxPx: number;
+  startDyPx: number;
+  endDxPx: number;
+  endDyPx: number;
+  exitDxPx: number;
+  exitDyPx: number;
   fontSizePx: number;
-  opacity: number;
+  maxOpacity: number;
+  delayMs: number;
+};
+
+type OrbitPlacement = {
+  tileWidth: number;
+  tileHeight: number;
+  orbitRadius: number;
+  orbitStartDeg: number;
 };
 
 function seededUnit(seed: number) {
@@ -71,10 +82,6 @@ function scrambleTitle(title: string, seed: number) {
   }
 
   return chars.join("").slice(0, 40);
-}
-
-function clamp(value: number, min: number, max: number) {
-  return Math.min(max, Math.max(min, value));
 }
 
 function normalizeAngle(angle: number) {
@@ -100,39 +107,113 @@ function weightedIndex(unitValue: number, weights: readonly number[]) {
 }
 
 function makeScatterFragments(
-  scrambled: string,
+  title: string,
   seed: number,
   tileWidth: number,
   tileHeight: number
 ): ScatterFragment[] {
-  if (!scrambled) {
+  const normalizedTitle = title.replace(/\s+/g, " ").trim() || "UNTITLED";
+  const titleCharsNoSpace = normalizedTitle.replace(/\s+/g, "");
+
+  if (titleCharsNoSpace.length === 0) {
     return [];
   }
 
-  const fragmentCount = Math.min(MAX_SCATTER_FRAGMENTS, Math.max(4, Math.ceil(scrambled.length / 4)));
-  const chunkSize = Math.max(1, Math.ceil(scrambled.length / fragmentCount));
-  const fragments: ScatterFragment[] = [];
+  const wrapWords = (source: string, maxChars: number) => {
+    const words = source.split(" ");
+    const out: string[] = [];
+    let line = "";
+    for (const word of words) {
+      const candidate = line ? `${line} ${word}` : word;
+      if (candidate.length <= maxChars) {
+        line = candidate;
+        continue;
+      }
 
-  for (let index = 0; index < fragmentCount; index += 1) {
-    const start = index * chunkSize;
-    const text = scrambled.slice(start, start + chunkSize);
-    if (!text) {
-      continue;
+      if (line) {
+        out.push(line);
+        line = word;
+      } else {
+        let cursor = word;
+        while (cursor.length > maxChars) {
+          out.push(cursor.slice(0, maxChars));
+          cursor = cursor.slice(maxChars);
+        }
+        line = cursor;
+      }
     }
+    if (line) {
+      out.push(line);
+    }
+    return out;
+  };
 
-    const leftPx = Math.floor(seededUnit(seed + index * 1.19) * Math.max(1, tileWidth - 30) + 6);
-    const topPx = Math.floor(seededUnit(seed + index * 2.41) * Math.max(1, tileHeight - 20) + 4);
-    const fontSizePx = 8 + Math.floor(seededUnit(seed + index * 5.03) * 5);
-    const opacity = 0.45 + seededUnit(seed + index * 6.17) * 0.5;
+  let fontSizePx = Math.min(12, Math.max(6, Math.floor(tileHeight / 6)));
+  let lines: string[] = [];
+  while (fontSizePx >= 5) {
+    const charAdvance = Math.max(4, Math.round(fontSizePx * 0.62));
+    const maxCharsPerLine = Math.max(6, Math.floor((tileWidth - 10) / charAdvance));
+    const candidateLines = wrapWords(normalizedTitle, maxCharsPerLine);
+    const lineHeight = Math.max(fontSizePx + 1, Math.round(fontSizePx * 1.22));
+    const totalHeight = candidateLines.length * lineHeight;
+    if (totalHeight <= tileHeight - 8) {
+      lines = candidateLines;
+      break;
+    }
+    fontSizePx -= 1;
+  }
 
-    fragments.push({
-      id: `${seed}-${index}`,
-      text,
-      leftPx,
-      topPx,
-      fontSizePx,
-      opacity,
-    });
+  if (lines.length === 0) {
+    const charAdvance = Math.max(4, Math.round(fontSizePx * 0.62));
+    const maxCharsPerLine = Math.max(6, Math.floor((tileWidth - 10) / charAdvance));
+    lines = wrapWords(normalizedTitle, maxCharsPerLine);
+  }
+
+  const charAdvance = Math.max(5, Math.round(fontSizePx * 0.5));
+  const lineHeight = Math.max(fontSizePx + 1, Math.round(fontSizePx * 1.22));
+  const totalTextHeight = lines.length * lineHeight;
+  const topBase = (tileHeight - totalTextHeight) / 2 + lineHeight * 0.52;
+
+  const fragments: ScatterFragment[] = [];
+  let letterCursor = 0;
+  for (let lineIndex = 0; lineIndex < lines.length; lineIndex += 1) {
+    const line = lines[lineIndex];
+    const lineWidth = line.length * charAdvance;
+    const lineStart = (tileWidth - lineWidth) / 2;
+
+    for (let charIndex = 0; charIndex < line.length; charIndex += 1) {
+      const lineChar = line[charIndex];
+      if (lineChar === " ") {
+        continue;
+      }
+
+      // Always use the target character for this final slot.
+      // Only the starting position is scrambled, so the ending word is always correct.
+      const textChar = lineChar;
+      const endX = lineStart + charIndex * charAdvance + charAdvance / 2;
+      const endY = topBase + lineIndex * lineHeight;
+      const startX = seededUnit(seed + letterCursor * 1.19) * Math.max(12, tileWidth - 12) + 6;
+      const startY = seededUnit(seed + letterCursor * 2.41) * Math.max(12, tileHeight - 12) + 6;
+      const exitX = seededUnit(seed + letterCursor * 3.67) * Math.max(12, tileWidth - 12) + 6;
+      const exitY = seededUnit(seed + letterCursor * 4.93) * Math.max(12, tileHeight - 12) + 6;
+      const maxOpacity = 1;
+      const delayMs = Math.floor(seededUnit(seed + letterCursor * 7.39) * 180);
+
+      fragments.push({
+        id: `${seed}-${letterCursor}`,
+        text: textChar,
+        startDxPx: startX - tileWidth / 2,
+        startDyPx: startY - tileHeight / 2,
+        endDxPx: endX - tileWidth / 2,
+        endDyPx: endY - tileHeight / 2,
+        exitDxPx: exitX - tileWidth / 2,
+        exitDyPx: exitY - tileHeight / 2,
+        fontSizePx,
+        maxOpacity,
+        delayMs,
+      });
+      letterCursor += 1;
+    }
   }
 
   return fragments;
@@ -155,8 +236,6 @@ export function ImageWall({
   const [loadedCount, setLoadedCount] = useState(0);
   const [errorCount, setErrorCount] = useState(0);
   const [loadDurationMs, setLoadDurationMs] = useState<number | null>(null);
-  const [revealedIds, setRevealedIds] = useState<Set<number>>(new Set());
-  const [textCascadeOn, setTextCascadeOn] = useState(false);
   const [viewport, setViewport] = useState({ width: 1440, height: 900 });
   const loadStartAtRef = useRef<number | null>(null);
 
@@ -208,7 +287,6 @@ export function ImageWall({
   }, [imageLimit, mode]);
 
   useEffect(() => {
-    setRevealedIds(new Set());
     setLoadedCount(0);
     setErrorCount(0);
     setLoadDurationMs(null);
@@ -300,177 +378,362 @@ export function ImageWall({
     totalImages,
   ]);
 
-  useEffect(() => {
-    setTextCascadeOn(false);
+  const orbitPlacements = useMemo<OrbitPlacement[]>(() => {
+    const minDimension = Math.min(viewport.width, viewport.height);
+    const radialPaddingPx = minDimension * VIEWPORT_PADDING_RATIO;
+    const tiltRad = (ELLIPSE_TILT_DEG * Math.PI) / 180;
 
-    if (contentRows.length === 0) {
-      return;
-    }
+    const entries = contentRows.map((_, index) => {
+      const sizeScale = 0.68 + seededUnit(index + 101.9) * 0.82;
+      const aspectJitter = 0.9 + seededUnit(index + 109.1) * 0.22;
+      const tileWidth = Math.round(displayedWidth * sizeScale);
+      const tileHeight = Math.round(displayedHeight * sizeScale * aspectJitter);
 
-    const rafId = window.requestAnimationFrame(() => {
-      setTextCascadeOn(true);
+      const baseRadius = Math.max(
+        90,
+        minDimension / 2 - radialPaddingPx - Math.max(tileWidth, tileHeight) / 2
+      );
+      const ellipseRadiusX = baseRadius * ELLIPSE_ASPECT_X;
+      const ellipseRadiusY = baseRadius * ELLIPSE_ASPECT_Y;
+      const ringRadius = 0.78 + (seededUnit(index + 7.13) - 0.5) * 0.72;
+
+      const useCluster = seededUnit(index + 311.7) < DENSITY_CLUSTER_BIAS;
+      const angle = useCluster
+        ? (() => {
+            const clusterId = weightedIndex(seededUnit(index + 329.1), DENSITY_CLUSTER_WEIGHTS);
+            const center = DENSITY_CLUSTER_CENTERS[clusterId];
+            const n1 = seededUnit(index + 347.9);
+            const n2 = seededUnit(index + 359.3);
+            const localOffset = (n1 + n2 - 1) * DENSITY_CLUSTER_SPREAD * 1.7;
+            return normalizeAngle(center + localOffset);
+          })()
+        : normalizeAngle(index * 2.3999632297 + seededUnit(index + 13.37) * 0.9);
+
+      const jitterX = (seededUnit(index + 19.17) - 0.5) * 52;
+      const jitterY = (seededUnit(index + 23.91) - 0.5) * 52;
+      const localX = Math.cos(angle) * ellipseRadiusX * ringRadius + jitterX;
+      const localY = Math.sin(angle) * ellipseRadiusY * ringRadius + jitterY;
+
+      return {
+        index,
+        tileWidth,
+        tileHeight,
+        x: localX * Math.cos(tiltRad) - localY * Math.sin(tiltRad),
+        y: localX * Math.sin(tiltRad) + localY * Math.cos(tiltRad),
+      };
     });
 
-    return () => window.cancelAnimationFrame(rafId);
-  }, [contentRows]);
+    const maxOrbitFor = (tileWidth: number, tileHeight: number) =>
+      Math.max(24, Math.min(viewport.width - tileWidth, viewport.height - tileHeight) / 2 - 12);
 
-  useEffect(() => {
-    if (!ENABLE_MORPH_ANIMATION) {
-      setRevealedIds(new Set());
-      return;
+    for (let step = 0; step < TILE_RELAXATION_STEPS; step += 1) {
+      for (let i = 0; i < entries.length; i += 1) {
+        for (let j = i + 1; j < entries.length; j += 1) {
+          const a = entries[i];
+          const b = entries[j];
+          const dx = b.x - a.x;
+          const dy = b.y - a.y;
+          const distance = Math.hypot(dx, dy) || 0.0001;
+          const minDistance =
+            ((Math.max(a.tileWidth, a.tileHeight) + Math.max(b.tileWidth, b.tileHeight)) * 0.5) * 0.82 +
+            TILE_SEPARATION_GAP_PX;
+
+          if (distance >= minDistance) {
+            continue;
+          }
+
+          const push = (minDistance - distance) * 0.5;
+          const ux = dx / distance;
+          const uy = dy / distance;
+          a.x -= ux * push;
+          a.y -= uy * push;
+          b.x += ux * push;
+          b.y += uy * push;
+        }
+      }
+
+      for (const entry of entries) {
+        const radius = Math.hypot(entry.x, entry.y) || 0.0001;
+        const maxOrbit = maxOrbitFor(entry.tileWidth, entry.tileHeight);
+        if (radius > maxOrbit) {
+          const ratio = maxOrbit / radius;
+          entry.x *= ratio;
+          entry.y *= ratio;
+        }
+      }
     }
 
-    setRevealedIds(new Set());
-
-    if (contentRows.length === 0) {
-      return;
-    }
-
-    const timerId = window.setTimeout(() => {
-      setRevealedIds(new Set(contentRows.map((_, index) => index)));
-    }, AUTO_REVEAL_DELAY_MS);
-
-    return () => window.clearTimeout(timerId);
-  }, [contentRows]);
+    return entries.map((entry) => ({
+      tileWidth: entry.tileWidth,
+      tileHeight: entry.tileHeight,
+      orbitRadius: Math.max(24, Math.hypot(entry.x, entry.y)),
+      orbitStartDeg: (Math.atan2(entry.y, entry.x) * 180) / Math.PI,
+    }));
+  }, [contentRows, displayedHeight, displayedWidth, viewport.height, viewport.width]);
 
   return (
-    <section className="fixed inset-0 overflow-hidden" aria-label="Title to image morph wall">
-      <div className="relative h-screen w-screen">
+    <>
+      <section className="fixed inset-0 overflow-hidden" aria-label="Title to image morph wall">
+        <div className="relative h-screen w-screen">
         {contentRows.map((row, index) => {
-          const isRevealed = ENABLE_MORPH_ANIMATION && revealedIds.has(index);
-          const sizeScale = 0.68 + seededUnit(index + 101.9) * 0.82;
-          const aspectJitter = 0.9 + seededUnit(index + 109.1) * 0.22;
-          const tileWidth = Math.round(displayedWidth * sizeScale);
-          const tileHeight = Math.round(displayedHeight * sizeScale * aspectJitter);
-          const centerX = viewport.width / 2;
-          const centerY = viewport.height / 2;
-          const minDimension = Math.min(viewport.width, viewport.height);
-          const radialPaddingPx = minDimension * VIEWPORT_PADDING_RATIO;
-          const baseRadius = Math.max(
-            90,
-            minDimension / 2 - radialPaddingPx - Math.max(tileWidth, tileHeight) / 2
-          );
-          const ellipseRadiusX = baseRadius * ELLIPSE_ASPECT_X;
-          const ellipseRadiusY = baseRadius * ELLIPSE_ASPECT_Y;
-          const tiltRad = (ELLIPSE_TILT_DEG * Math.PI) / 180;
-          const ringRadius = 0.78 + (seededUnit(index + 7.13) - 0.5) * 0.72;
-          const useCluster = seededUnit(index + 311.7) < DENSITY_CLUSTER_BIAS;
-          const angle = useCluster
-            ? (() => {
-                const clusterId = weightedIndex(
-                  seededUnit(index + 329.1),
-                  DENSITY_CLUSTER_WEIGHTS
-                );
-                const center = DENSITY_CLUSTER_CENTERS[clusterId];
-                const n1 = seededUnit(index + 347.9);
-                const n2 = seededUnit(index + 359.3);
-                const localOffset = (n1 + n2 - 1) * DENSITY_CLUSTER_SPREAD * 1.7;
-                return normalizeAngle(center + localOffset);
-              })()
-            : normalizeAngle(index * 2.3999632297 + seededUnit(index + 13.37) * 0.9);
-          const jitterX = (seededUnit(index + 19.17) - 0.5) * 52;
-          const jitterY = (seededUnit(index + 23.91) - 0.5) * 52;
-          const localX = Math.cos(angle) * ellipseRadiusX * ringRadius + jitterX;
-          const localY = Math.sin(angle) * ellipseRadiusY * ringRadius + jitterY;
-          const rotatedX = localX * Math.cos(tiltRad) - localY * Math.sin(tiltRad);
-          const rotatedY = localX * Math.sin(tiltRad) + localY * Math.cos(tiltRad);
-          const rawX = centerX + rotatedX - tileWidth / 2;
-          const rawY = centerY + rotatedY - tileHeight / 2;
-          const leftPx = clamp(rawX, EDGE_INSET_PX, viewport.width - tileWidth - EDGE_INSET_PX);
-          const topPx = clamp(rawY, EDGE_INSET_PX, viewport.height - tileHeight - EDGE_INSET_PX);
+          const placement = orbitPlacements[index];
+          if (!placement) {
+            return null;
+          }
+          const { tileWidth, tileHeight, orbitRadius, orbitStartDeg } = placement;
           const depthUnit = seededUnit(index + 401.3);
           const zDepth = DEPTH_MIN_Z + depthUnit * (DEPTH_MAX_Z - DEPTH_MIN_Z);
           const depthAlpha = 0.72 + depthUnit * 0.28;
-          const scrambledTitle = scrambleTitle(row.title, index + 41);
           const isDarkTextCard = seededUnit(index + 151.3) > 0.47;
-          const transitionDelayMs = Math.floor(seededUnit(index + 211.7) * MAX_STAGGER_DELAY_MS);
-          const transitionDurationMs =
-            MORPH_DURATION_MS + Math.floor(seededUnit(index + 233.9) * 180) - 90;
+          const morphLoopDurationMs =
+            MORPH_LOOP_DURATION_MIN_MS +
+            Math.floor(seededUnit(index + 233.9) * MORPH_LOOP_DURATION_VAR_MS);
+          const morphLoopDelayMs = -Math.floor(seededUnit(index + 211.7) * morphLoopDurationMs);
+          const orbitDurationMs =
+            ORBIT_DURATION_MIN_MS + Math.floor(seededUnit(index + 631.9) * ORBIT_DURATION_VAR_MS);
+          const orbitDelayMs = -Math.floor(seededUnit(index + 643.1) * orbitDurationMs);
           const scatterFragments = makeScatterFragments(
-            scrambledTitle,
+            row.title,
             index + 53,
             tileWidth,
             tileHeight
           );
 
           return (
-            <div
-              key={row.id}
-              className="absolute overflow-hidden bg-transparent text-left [border-radius:2px]"
-              style={{
-                width: `${tileWidth}px`,
-                height: `${tileHeight}px`,
-                left: `${leftPx}px`,
-                top: `${topPx}px`,
-                zIndex: Math.round(depthUnit * 100),
-                opacity: depthAlpha,
-                transform: `translate3d(0, 0, ${zDepth.toFixed(2)}px)`,
-              }}
-            >
+            <div key={row.id} className="absolute left-1/2 top-1/2 [transform-style:preserve-3d]">
               <div
-                className="pointer-events-none absolute inset-0 flex items-center justify-center p-2 font-mono text-[0.66rem] leading-tight transition-all motion-reduce:transition-none"
-                style={{
-                  transitionDuration: ENABLE_MORPH_ANIMATION ? `${transitionDurationMs}ms` : "0ms",
-                  transitionDelay: ENABLE_MORPH_ANIMATION ? `${transitionDelayMs}ms` : "0ms",
-                  opacity: isRevealed ? 0 : 1,
-                  transform: isRevealed ? "scale(0.94)" : "scale(1)",
-                  fontFamily: "var(--font-geist-mono), monospace",
-                }}
+                className="absolute left-0 top-0 [transform-style:preserve-3d]"
+                style={
+                  {
+                    "--orbit-start": `${orbitStartDeg.toFixed(3)}deg`,
+                    "--orbit-radius": `${orbitRadius.toFixed(2)}px`,
+                    animation: `imageWallOrbitClockwise ${orbitDurationMs}ms linear infinite`,
+                    animationDelay: `${orbitDelayMs}ms`,
+                  } as CSSProperties
+                }
               >
-                <div className="relative h-full w-full">
-                  {scatterFragments.map((fragment, fragmentIndex) => {
-                    const fragmentCascadeDelayMs =
-                      Math.floor(seededUnit(index + 271.1) * 220) +
-                      fragmentIndex * TEXT_CASCADE_STEP_MS;
-
-                    return (
-                      <span
-                        key={fragment.id}
-                        className="absolute whitespace-nowrap rounded-[2px]"
+                <div
+                  className="absolute left-0 top-0 [transform-style:preserve-3d]"
+                  style={
+                    {
+                      animation: `imageWallOrbitCounter ${orbitDurationMs}ms linear infinite`,
+                      animationDelay: `${orbitDelayMs}ms`,
+                    } as CSSProperties
+                  }
+                >
+                  <div
+                    className="absolute bg-transparent text-left"
+                    style={{
+                      width: `${tileWidth}px`,
+                      height: `${tileHeight}px`,
+                      marginLeft: `${-tileWidth / 2}px`,
+                      marginTop: `${-tileHeight / 2}px`,
+                      zIndex: Math.round(depthUnit * 100),
+                      opacity: depthAlpha,
+                      transform: `translate3d(0, 0, ${zDepth.toFixed(2)}px)`,
+                    }}
+                  >
+                    <div
+                      className="absolute inset-0"
+                      style={{
+                        animation: `imageWallCardScaleCycle ${morphLoopDurationMs}ms linear infinite`,
+                        animationDelay: `${morphLoopDelayMs}ms`,
+                      }}
+                    >
+                      <div
+                        className="pointer-events-none absolute inset-0 flex items-center justify-center p-2 font-mono text-[0.66rem] leading-tight transition-all motion-reduce:transition-none"
                         style={{
-                          left: `${fragment.leftPx}px`,
-                          top: `${fragment.topPx}px`,
-                          transform: textCascadeOn
-                            ? "translate(-50%, -50%)"
-                            : "translate(-50%, -38%)",
-                          fontSize: `${fragment.fontSizePx}px`,
-                          opacity: textCascadeOn ? fragment.opacity : 0,
-                          color: isDarkTextCard ? "#ffffff" : "#111111",
-                          backgroundColor: isDarkTextCard ? "rgba(0, 0, 0, 0.86)" : "transparent",
-                          padding: isDarkTextCard ? "1px 3px" : "0px",
+                          animation: `imageWallTextCycle ${morphLoopDurationMs}ms linear infinite`,
+                          animationDelay: `${morphLoopDelayMs}ms`,
                           fontFamily: "var(--font-geist-mono), monospace",
-                          transitionProperty: "opacity, transform",
-                          transitionDuration: "380ms",
-                          transitionDelay: `${fragmentCascadeDelayMs}ms`,
-                          transitionTimingFunction: "cubic-bezier(0.22, 1, 0.36, 1)",
                         }}
                       >
-                        {fragment.text}
-                      </span>
-                    );
-                  })}
+                        <div className="relative h-full w-full">
+                          {scatterFragments.map((fragment) => {
+                            return (
+                              <span
+                                key={fragment.id}
+                                className="absolute whitespace-nowrap rounded-[2px]"
+                                style={
+                                  {
+                                    left: "50%",
+                                    top: "50%",
+                                    transform: `translate(${fragment.startDxPx.toFixed(2)}px, ${fragment.startDyPx.toFixed(2)}px)`,
+                                    fontSize: `${fragment.fontSizePx}px`,
+                                    opacity: 0,
+                                    color: isDarkTextCard ? "#ffffff" : "#111111",
+                                    backgroundColor: isDarkTextCard ? "#000000" : "transparent",
+                                    padding: "0px",
+                                    fontFamily: "var(--font-geist-mono), monospace",
+                                    animation: `imageWallTextRearrange ${morphLoopDurationMs}ms linear infinite`,
+                                    animationDelay: `${morphLoopDelayMs + fragment.delayMs}ms`,
+                                    "--tx0": `${fragment.startDxPx.toFixed(2)}px`,
+                                    "--ty0": `${fragment.startDyPx.toFixed(2)}px`,
+                                    "--tx1": `${fragment.endDxPx.toFixed(2)}px`,
+                                    "--ty1": `${fragment.endDyPx.toFixed(2)}px`,
+                                    "--tx2": `${fragment.exitDxPx.toFixed(2)}px`,
+                                    "--ty2": `${fragment.exitDyPx.toFixed(2)}px`,
+                                    "--frag-opacity": `${fragment.maxOpacity.toFixed(3)}`,
+                                  } as CSSProperties
+                                }
+                              >
+                                {fragment.text}
+                              </span>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      <div className="absolute inset-0 overflow-hidden [border-radius:4px]">
+                        <img
+                          src={row.imageUrl}
+                          alt={row.title}
+                          title={row.title}
+                          width={fetchedWidth}
+                          height={fetchedHeight}
+                          className="pointer-events-none absolute inset-0 h-full w-full object-cover transition-all motion-reduce:transition-none"
+                          style={{
+                            animation: `imageWallImageCycle ${morphLoopDurationMs}ms linear infinite`,
+                            animationDelay: `${morphLoopDelayMs}ms`,
+                            filter: "drop-shadow(0 8px 14px rgba(0, 0, 0, 0.26))",
+                          }}
+                          draggable={false}
+                        />
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
-
-              <img
-                src={row.imageUrl}
-                alt={row.title}
-                title={row.title}
-                width={fetchedWidth}
-                height={fetchedHeight}
-                className="pointer-events-none absolute inset-0 h-full w-full object-cover transition-all motion-reduce:transition-none"
-                style={{
-                  transitionDuration: ENABLE_MORPH_ANIMATION ? `${transitionDurationMs}ms` : "0ms",
-                  transitionDelay: ENABLE_MORPH_ANIMATION ? `${transitionDelayMs}ms` : "0ms",
-                  opacity: isRevealed ? 1 : 0,
-                  transform: isRevealed ? "scale(1)" : "scale(0.52)",
-                }}
-                draggable={false}
-              />
             </div>
           );
         })}
-      </div>
-    </section>
+        </div>
+      </section>
+
+      <style jsx global>{`
+        @keyframes imageWallCardScaleCycle {
+          0% {
+            transform: scale(0.12);
+          }
+          18% {
+            transform: scale(1.2);
+          }
+          38% {
+            transform: scale(1.2);
+          }
+          48% {
+            transform: scale(0.12);
+          }
+          52% {
+            transform: scale(0.12);
+          }
+          68% {
+            transform: scale(1.2);
+          }
+          88% {
+            transform: scale(1.2);
+          }
+          98% {
+            transform: scale(0.12);
+          }
+          100% {
+            transform: scale(0.12);
+          }
+        }
+
+        @keyframes imageWallOrbitClockwise {
+          0% {
+            transform: rotate(var(--orbit-start)) translateX(var(--orbit-radius));
+          }
+          100% {
+            transform: rotate(calc(var(--orbit-start) + 1turn)) translateX(var(--orbit-radius));
+          }
+        }
+
+        @keyframes imageWallOrbitCounter {
+          0% {
+            transform: rotate(calc(var(--orbit-start) * -1));
+          }
+          100% {
+            transform: rotate(calc((var(--orbit-start) + 1turn) * -1));
+          }
+        }
+
+        @keyframes imageWallTextCycle {
+          0% {
+            opacity: 0;
+          }
+          4% {
+            opacity: 1;
+          }
+          18% {
+            opacity: 1;
+          }
+          38% {
+            opacity: 1;
+          }
+          48% {
+            opacity: 1;
+          }
+          52%,
+          100% {
+            opacity: 0;
+          }
+        }
+
+        @keyframes imageWallTextRearrange {
+          0% {
+            opacity: 0;
+            transform: translate(var(--tx0), var(--ty0));
+          }
+          4% {
+            opacity: var(--frag-opacity);
+            transform: translate(var(--tx0), var(--ty0));
+          }
+          18% {
+            opacity: var(--frag-opacity);
+            transform: translate(var(--tx1), var(--ty1));
+          }
+          38% {
+            opacity: var(--frag-opacity);
+            transform: translate(var(--tx1), var(--ty1));
+          }
+          48% {
+            opacity: var(--frag-opacity);
+            transform: translate(var(--tx2), var(--ty2));
+          }
+          52% {
+            opacity: 0;
+            transform: translate(var(--tx2), var(--ty2));
+          }
+          100% {
+            opacity: 0;
+            transform: translate(var(--tx0), var(--ty0));
+          }
+        }
+
+        @keyframes imageWallImageCycle {
+          0%,
+          48% {
+            opacity: 0;
+          }
+          52% {
+            opacity: 1;
+          }
+          68% {
+            opacity: 1;
+          }
+          88% {
+            opacity: 1;
+          }
+          98% {
+            opacity: 1;
+          }
+          100% {
+            opacity: 0;
+          }
+        }
+      `}</style>
+    </>
   );
 }
