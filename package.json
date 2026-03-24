@@ -11,7 +11,7 @@
     "embla-carousel-react": "^8.6.0",
     "leva": "^0.10.0",
     "lucide-react": "^0.545.0",
-    "next": "15.5.4",
+    "next": "^15.5.8",
     "prop-types": "^15.8.1",
     "react": "19.1.0",
     "react-dom": "19.1.0",
@@ -19,6 +19,7 @@
     "react-responsive-masonry": "^2.7.1"
   },
   "devDependencies": {
+    "@netlify/plugin-nextjs": "^5.15.9",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
