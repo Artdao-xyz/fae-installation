@@ -3,9 +3,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { ImageTestDebugPanel } from "@/components/debug/ImageTestDebugPanel";
 import {
-  ImageWall,
-  type ImageWallStats,
-} from "../components/image-test/ImageWall";
+  ImageParticleSimulation,
+  type ImageParticleSimulationStats,
+} from "../components/image-test/ImageParticleSimulation";
 import { IMAGE_FETCH_LIMIT } from "../components/image-test/config";
 
 type Mode = "optimized" | "snappy";
@@ -18,7 +18,7 @@ const FETCHED_HEIGHT = 440 * RES_MULTIPLIER;
 const DISPLAYED_WIDTH = 75 * RES_MULTIPLIER;
 const DISPLAYED_HEIGHT = 75 * RES_MULTIPLIER;
 
-const EMPTY_STATS: ImageWallStats = {
+const EMPTY_STATS: ImageParticleSimulationStats = {
   loadedCount: 0,
   errorCount: 0,
   loadDurationMs: null,
@@ -32,7 +32,7 @@ const EMPTY_STATS: ImageWallStats = {
 
 export default function Home() {
   const [mode, setMode] = useState<Mode>("optimized");
-  const [stats, setStats] = useState<ImageWallStats>(EMPTY_STATS);
+  const [stats, setStats] = useState<ImageParticleSimulationStats>(EMPTY_STATS);
   const imageLimit = IMAGE_FETCH_LIMIT > 0 ? IMAGE_FETCH_LIMIT : undefined;
 
   useEffect(() => {
@@ -47,12 +47,12 @@ export default function Home() {
     console.log("[image-test] mode:", mode);
   }, [mode]);
 
-  const handleStatsChange = useCallback((nextStats: ImageWallStats) => {
+  const handleStatsChange = useCallback((nextStats: ImageParticleSimulationStats) => {
     setStats(nextStats);
   }, []);
 
   return (
-    <main className="relative min-h-[180vh] bg-[#E8E8E8] p-5 text-black">
+    <main className="relative min-h-screen bg-[#0a0a0f] p-5 text-white">
       <ImageTestDebugPanel
         mode={mode}
         onModeChange={setMode}
@@ -71,7 +71,7 @@ export default function Home() {
         loadDone={stats.loadDone}
       />
 
-      <ImageWall
+      <ImageParticleSimulation
         mode={mode}
         imageLimit={imageLimit}
         fetchedWidth={FETCHED_WIDTH}
