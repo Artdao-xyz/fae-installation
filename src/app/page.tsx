@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { ImageTestDebugPanel } from "@/components/debug/ImageTestDebugPanel";
+import { PlaceholderSidebar } from "@/components/debug/PlaceholderSidebar";
+import { PlaceholderBottomBar } from "@/components/debug/PlaceholderBottomBar";
 import {
   ImageParticleSimulation,
   type ImageParticleSimulationStats,
@@ -52,7 +54,10 @@ export default function Home() {
   }, []);
 
   return (
-    <main className="relative min-h-screen bg-[#0a0a0f] p-5 text-white">
+    <main className="relative min-h-screen bg-[#161616] p-5 text-white">
+
+      <img src="/title.svg" alt="Image Test" className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-24 objec-fit invert" />
+
       <ImageTestDebugPanel
         mode={mode}
         onModeChange={setMode}
@@ -70,6 +75,9 @@ export default function Home() {
         displayedHeight={DISPLAYED_HEIGHT}
         loadDone={stats.loadDone}
       />
+
+      <PlaceholderSidebar />
+      <PlaceholderBottomBar />
 
       <ImageParticleSimulation
         mode={mode}
