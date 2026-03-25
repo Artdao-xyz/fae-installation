@@ -54,9 +54,18 @@ export default function Home() {
   }, []);
 
   return (
-    <main className="relative min-h-screen bg-[#161616] p-5 text-white">
-
-      <img src="/title.svg" alt="Image Test" className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-24 objec-fit invert" />
+    <main
+      className="relative min-h-screen p-5 text-[#303030]"
+      style={{
+        background:
+          "linear-gradient(to bottom right, #E1E1E1 0%, #FFFFFF 50%, #E1E1E1 100%)",
+      }}
+    >
+      <img
+        src="/title.svg"
+        alt="Image Test"
+        className="absolute left-1/2 top-1/2 h-24 -translate-x-1/2 -translate-y-1/2 object-contain"
+      />
 
       <ImageTestDebugPanel
         mode={mode}

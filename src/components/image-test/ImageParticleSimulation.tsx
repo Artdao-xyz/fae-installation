@@ -757,7 +757,7 @@ export function ImageParticleSimulation({
         node.style.transform = `translate3d(${p.pos.x.toFixed(1)}px, ${p.pos.y.toFixed(1)}px, 0px) scale(${finalScale.toFixed(4)})`;
         node.style.opacity = clamp(p.opacity, 0, 1).toFixed(3);
         node.style.zIndex = String(zIndex);
-        node.style.filter = `blur(${p.blur.toFixed(1)}px) drop-shadow(0 3px 6px rgba(0,0,0,0.2))`;
+        node.style.filter = `blur(${p.blur.toFixed(1)}px) drop-shadow(0 1px 3px rgba(0,0,0,0.1))`;
 
         if (p.isText) {
           const textEl = textRefs.current[i];
@@ -892,7 +892,7 @@ export function ImageParticleSimulation({
               className="absolute inset-0 overflow-hidden rounded-xs"
               style={{
                 border: "1px solid rgba(255,255,255,0.3)",
-                boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
+                boxShadow: "0 3px 10px rgba(0,0,0,0.18)",
               }}
               >
                 <img
