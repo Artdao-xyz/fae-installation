@@ -57,29 +57,32 @@ function v3Sub(a: Vec3, b: Vec3): Vec3 {
 }
 
 // ---------------------------------------------------------------------------
-// Text chunk extraction
+// Text chunk extraction + font variants
 // ---------------------------------------------------------------------------
 
-const FILLER_WORDS = new Set([
-  "a", "an", "the", "of", "in", "on", "at", "to", "for", "and", "or",
-  "is", "as", "by", "vs", "x",
-]);
+const PIXEL_FONT_VARIANTS = ["square", "grid", "circle", "triangle", "line"] as const;
+type PixelFontVariant = (typeof PIXEL_FONT_VARIANTS)[number];
+
+function fontFamilyForVariant(variant: PixelFontVariant) {
+  if (variant === "square") return "var(--font-geist-pixel-square), monospace";
+  if (variant === "grid") return "var(--font-geist-pixel-grid), monospace";
+  if (variant === "circle") return "var(--font-geist-pixel-circle), monospace";
+  if (variant === "triangle") return "var(--font-geist-pixel-triangle), monospace";
+  return "var(--font-geist-pixel-line), monospace";
+}
 
 function extractTextChunks(titles: string[]): string[] {
   const chunks: string[] = [];
 
   for (const title of titles) {
-    const words = title.split(/\s+/).filter(Boolean);
-    if (words.length === 0) continue;
+    const words = title
+      .split(/\s+/)
+      .map((word) => word.replace(/^[^a-zA-Z0-9]+|[^a-zA-Z0-9]+$/g, ""))
+      .filter(Boolean);
 
-    for (let start = 0; start < words.length; start++) {
-      if (FILLER_WORDS.has(words[start].toLowerCase())) continue;
-      const len = 1 + Math.floor(seededRand(start * 3.7 + title.length * 1.3) * 3);
-      const slice = words.slice(start, start + len);
-      if (slice.length > 0 && !slice.every((w) => FILLER_WORDS.has(w.toLowerCase()))) {
-        chunks.push(slice.join(" "));
-      }
-      start += len - 1;
+    // Keep only full words.
+    for (const word of words) {
+      chunks.push(word);
     }
   }
 
@@ -90,7 +93,7 @@ function extractTextChunks(titles: string[]): string[] {
 // Defaults (also used as leva initial values)
 // ---------------------------------------------------------------------------
 
-const TEXT_PARTICLE_RATIO = 0.2;
+const TEXT_PARTICLE_RATIO = 0.5;
 
 const DEFAULTS = {
   perspective: 1000,
@@ -148,6 +151,48 @@ function clamp(v: number, min: number, max: number) {
   return Math.min(max, Math.max(min, v));
 }
 
+const SCRAMBLE_ALPHABET =
+  "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=[]{}|;:',.<>/?`~\\\"\\\\¡¿§¶¢£¥©®™†‡•…∞≈≠±÷√∑∏∆ΩΨЖЯ中々";
+const SCRAMBLE_BASE_PERIOD_SEC = 4.2;
+const SCRAMBLE_PERIOD_VARIANCE_SEC = 3.0;
+
+function scrambleWord(word: string, seed: number, time: number): string {
+  if (!word) return word;
+  const period =
+    SCRAMBLE_BASE_PERIOD_SEC +
+    seededRand(seed * 0.73) * SCRAMBLE_PERIOD_VARIANCE_SEC;
+  const phase = seededRand(seed * 1.91) * Math.PI * 2;
+
+  // Pulse between calm and scramble states over time.
+  const wave = Math.max(0, Math.sin((time / period) * Math.PI * 2 + phase));
+  const intensity = Math.pow(wave, 3.2);
+  if (intensity < 0.18) return word;
+
+  const timeStep = Math.floor(time * 12);
+
+  let output = "";
+  for (let i = 0; i < word.length; i++) {
+    const char = word[i];
+    if (!/[a-zA-Z0-9]/.test(char)) {
+      output += char;
+      continue;
+    }
+
+    // Random character positions get scrambled, no directional reveal.
+    const slotRand = seededRand(seed * 17.3 + i * 11.7 + timeStep * 3.1);
+    if (slotRand < intensity * 0.95) {
+      const rand = seededRand(seed * 23.9 + i * 19.1 + timeStep * 5.7);
+      const randomChar =
+        SCRAMBLE_ALPHABET[Math.floor(rand * SCRAMBLE_ALPHABET.length)];
+      output += randomChar;
+    } else {
+      output += char;
+    }
+  }
+
+  return output;
+}
+
 // ---------------------------------------------------------------------------
 // Particle
 // ---------------------------------------------------------------------------
@@ -176,6 +221,7 @@ type Particle = {
   imageIndex: number;
   textChunkIndex: number;
   textVariant: "light" | "dark";
+  textFont: PixelFontVariant;
   seed: number;
 };
 
@@ -189,6 +235,7 @@ class ParticleSystem {
   private textChunkCount = 0;
   private nextImageCursor = 0;
   private nextTextCursor = 0;
+  private nextTextFontCursor = 0;
   private viewW = 1440;
   private viewH = 900;
   private textIndices = new Set<number>();
@@ -205,6 +252,7 @@ class ParticleSystem {
     this.textChunkCount = textChunkCount;
     this.nextImageCursor = 0;
     this.nextTextCursor = 0;
+    this.nextTextFontCursor = 0;
     this.viewW = viewW;
     this.viewH = viewH;
     this.particles = [];
@@ -241,6 +289,13 @@ class ParticleSystem {
     const idx = this.nextTextCursor % this.textChunkCount;
     this.nextTextCursor++;
     return idx;
+  }
+
+  private pickNextTextFont(): PixelFontVariant {
+    const variant =
+      PIXEL_FONT_VARIANTS[this.nextTextFontCursor % PIXEL_FONT_VARIANTS.length];
+    this.nextTextFontCursor++;
+    return variant;
   }
 
   private spawn(seed: number, isText: boolean): Particle {
@@ -301,6 +356,7 @@ class ParticleSystem {
       imageIndex: isText ? -1 : this.pickNextImage(),
       textChunkIndex: isText ? this.pickNextTextChunk() : -1,
       textVariant: r(30.7) > 0.5 ? "light" : "dark",
+      textFont: isText ? this.pickNextTextFont() : "circle",
       seed,
     };
   }
@@ -650,6 +706,17 @@ export function ImageParticleSimulation({
       viewport.width,
       viewport.height
     );
+
+    // Debug: inspect per-text-particle font variant assignments.
+    const textFontAssignments = sys.particles
+      .map((particle, index) => ({ particle, index }))
+      .filter(({ particle }) => particle.isText)
+      .map(({ particle, index }) => ({
+        particleIndex: index,
+        fontVariant: particle.textFont,
+      }));
+    console.log("[ImageParticleSimulation] text font assignments", textFontAssignments);
+
     systemRef.current = sys;
   }, [contentRows, viewport.width, viewport.height]);
 
@@ -694,11 +761,21 @@ export function ImageParticleSimulation({
 
         if (p.isText) {
           const textEl = textRefs.current[i];
-          if (textEl && textEl.dataset.idx !== String(p.textChunkIndex)) {
+          if (textEl) {
             const chunk = chunks[p.textChunkIndex];
             if (chunk != null) {
-              textEl.textContent = chunk;
-              textEl.dataset.idx = String(p.textChunkIndex);
+              const targetWord = chunk;
+              const scrambled = scrambleWord(targetWord, p.seed, globalTime);
+              if (textEl.textContent !== scrambled) {
+                textEl.textContent = scrambled;
+              }
+              if (textEl.dataset.idx !== String(p.textChunkIndex)) {
+                textEl.dataset.idx = String(p.textChunkIndex);
+              }
+              if (textEl.dataset.font !== p.textFont) {
+                textEl.dataset.font = p.textFont;
+                textEl.style.fontFamily = fontFamilyForVariant(p.textFont);
+              }
             }
           }
         } else {
@@ -753,7 +830,9 @@ export function ImageParticleSimulation({
 
           if (isText) {
             const isDark = seededRand(i + 30.7) > 0.5;
-            const chunk = textChunks[i % textChunks.length] ?? row.title.split(" ").slice(0, 2).join(" ");
+            const chunk = textChunks[i % textChunks.length] ?? row.title.split(/\s+/)[0] ?? "TEXT";
+            const textFont =
+              PIXEL_FONT_VARIANTS[Math.floor(seededRand(i + 41.9) * PIXEL_FONT_VARIANTS.length)];
 
             return (
               <div
@@ -770,10 +849,8 @@ export function ImageParticleSimulation({
                 <div
                   className="inline-flex items-center justify-center gap-2.5 px-2.5 py-[5px]"
                   style={{
-                    backgroundColor: isDark ? "#303030" : "#e7e7e7",
-                    borderTop: `0.5px solid ${isDark ? "#999" : "#6b6b6b"}`,
-                    borderRight: `0.5px solid ${isDark ? "#999" : "#6b6b6b"}`,
-                    borderLeft: `0.5px solid ${isDark ? "#999" : "#6b6b6b"}`,
+                    backgroundColor: isDark ? "#212121" : "#E8E8E8",
+                    border: `0.5px solid ${isDark ? "#999" : "#6b6b6b"}`,
                   }}
                 >
                   <span
@@ -781,10 +858,11 @@ export function ImageParticleSimulation({
                       textRefs.current[i] = el;
                     }}
                     data-idx="-1"
-                    className="whitespace-nowrap text-[8px] font-medium leading-[10px]"
+                    data-font={textFont}
+                    className="whitespace-nowrap text-[12px] font-semibold leading-[15px]"
                     style={{
-                      color: isDark ? "#e7e7e7" : "#303030",
-                      fontFamily: "var(--font-geist-mono), monospace",
+                      color: isDark ? "#E8E8E8" : "#212121",
+                      fontFamily: fontFamilyForVariant(textFont),
                     }}
                   >
                     {chunk}
