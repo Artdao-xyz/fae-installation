@@ -44,33 +44,8 @@ const ACTIVITY_TYPE_LABELS = [
   "Lab",
 ] as const;
 
-/** Figma 2446:10637 — corner bracket + bordered label */
-function FocusAreaPill({ label }: { label: string }) {
-  const cap = (
-    <div
-      className="flex h-[26px] w-[2px] shrink-0 flex-col justify-between border-[0.5px] border-solid border-[#414141] py-px"
-      aria-hidden
-    >
-      <div className="h-[2px] w-full bg-[#414141]" />
-      <div className="h-[2px] w-full bg-[#414141]" />
-    </div>
-  );
-
-  return (
-    <div className="flex items-center pr-px">
-      {cap}
-      <div className="-mr-px flex items-center justify-center border-[0.5px] border-solid border-[#414141] px-2 py-[5px]">
-        <span className="font-mono text-[10px] font-normal leading-[14px] text-[#414141] whitespace-nowrap">
-          {label}
-        </span>
-      </div>
-      {cap}
-    </div>
-  );
-}
-
-/** Figma 2446:10657 — outer #414141 frame, inner rounded chip */
-function ActivityTypePill({ label }: { label: string }) {
+/** Figma 2446:10657 — outer #414141 frame, inner rounded chip (both filter rows) */
+function FilterPill({ label }: { label: string }) {
   return (
     <div className="flex items-center border-[0.5px] border-solid border-[#414141] bg-[#414141]">
       <div className="flex items-center justify-center rounded bg-[#E8E8E8] px-2.5 py-[5px]">
@@ -118,7 +93,7 @@ export function PlaceholderSidebar() {
       <FilterBlock title="Focus Areas / Themes">
         <div className="flex w-full flex-wrap content-center items-center gap-[5px]">
           {FOCUS_AREA_LABELS.map((label) => (
-            <FocusAreaPill key={label} label={label} />
+            <FilterPill key={label} label={label} />
           ))}
         </div>
       </FilterBlock>
@@ -126,7 +101,7 @@ export function PlaceholderSidebar() {
       <FilterBlock title="Activity Type">
         <div className="flex w-full flex-wrap content-center items-center gap-[5px]">
           {ACTIVITY_TYPE_LABELS.map((label) => (
-            <ActivityTypePill key={label} label={label} />
+            <FilterPill key={label} label={label} />
           ))}
         </div>
       </FilterBlock>
