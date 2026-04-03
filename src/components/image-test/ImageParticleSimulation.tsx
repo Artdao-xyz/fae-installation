@@ -117,8 +117,13 @@ const DEFAULTS = {
   birthPhase: 0.06,
   deathPhaseStart: 0.92,
 
-  /** Max CSS blur (px) at zFar; falls off toward zNear (sharper when "closer"). */
-  blurMax: 4,
+  /** Max CSS blur (px) for the farthest/smallest tiles (see blurFarGate). */
+  blurMax: 3.25,
+  /**
+   * Normalized on-screen size `sizeT` (0 = smallest): blur ramps in below this.
+   * ~0.33 ≈ middle ground — only noticeably far/small tiles blur; foreground stays clean.
+   */
+  blurFarGate: 0.33,
 
   baseScaleMin: 0.6,
   baseScaleMax: 1.4,
@@ -524,7 +529,13 @@ export function ImageParticleSimulation({
       deathPhaseStart: { value: DEFAULTS.deathPhaseStart, min: 0.5, max: 0.99, step: 0.01 },
     }),
     "Visual": folder({
-      blurMax: { value: DEFAULTS.blurMax, min: 0, max: 16, step: 0.5 },
+      blurMax: { value: DEFAULTS.blurMax, min: 0, max: 12, step: 0.25 },
+      blurFarGate: {
+        value: DEFAULTS.blurFarGate,
+        min: 0.08,
+        max: 0.55,
+        step: 0.01,
+      },
       baseScaleMin: { value: DEFAULTS.baseScaleMin, min: 0.2, max: 2, step: 0.1 },
       baseScaleMax: { value: DEFAULTS.baseScaleMax, min: 0.3, max: 3, step: 0.1 },
     }),
@@ -733,21 +744,23 @@ export function ImageParticleSimulation({
           ((p.pos.z - c.zFar) / zRange) * 1000
         );
 
-        // Blur tracks on-screen size (z depth × particle scale × breathe). Farther/smaller
-        // → more blur; large “close” thumbnails stay sharp.
+        // Blur from on-screen size: gated ramp (sizeT above blurFarGate → no blur).
+        // Quadratic farBlend = visible mid-distance haze; cubic was too subtle.
         const psFar = c.perspective / (c.perspective - c.zFar);
         const psNear = c.perspective / (c.perspective - c.zNear);
         const apparentMin = c.baseScaleMin * psFar;
         const apparentMax = c.baseScaleMax * psNear * 1.12;
         const span = Math.max(1e-4, apparentMax - apparentMin);
         const sizeT = clamp((finalScale - apparentMin) / span, 0, 1);
-        const blurPx = c.blurMax * (1 - sizeT) * (1 - sizeT);
+        const gate = Math.max(1e-4, c.blurFarGate);
+        const farBlend = clamp((gate - sizeT) / gate, 0, 1);
+        const blurPx = c.blurMax * farBlend * farBlend;
 
         node.style.transform = `translate3d(${p.pos.x.toFixed(1)}px, ${p.pos.y.toFixed(1)}px, 0px) scale(${finalScale.toFixed(4)})`;
         node.style.opacity = clamp(p.opacity, 0, 1).toFixed(3);
         node.style.zIndex = String(zIndex);
         node.style.filter =
-          blurPx < 0.05 ? "none" : `blur(${blurPx.toFixed(2)}px)`;
+          blurPx < 0.03 ? "none" : `blur(${blurPx.toFixed(2)}px)`;
 
         if (p.isText) {
           const textEl = textRefs.current[i];
