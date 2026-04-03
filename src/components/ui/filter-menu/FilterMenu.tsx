@@ -42,7 +42,7 @@ export function FilterMenu() {
       }`}
     >
       <aside
-        className={`flex h-full flex-col overflow-hidden border-r-[0.5px] border-solid border-text-primary bg-white-fae ${
+        className={`z-50 flex h-full flex-col overflow-hidden border-r-[0.5px] border-solid border-text-primary bg-white-fae ${
           filtersOpen ? columnWidth : "w-[35px] shrink-0"
         } ${filtersOpen && anySubpanelOpen ? "border-r-0" : ""}`}
         aria-label="Filters and navigation"
