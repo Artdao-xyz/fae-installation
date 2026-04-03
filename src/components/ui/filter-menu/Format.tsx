@@ -1,12 +1,34 @@
-import { FORMAT_LABELS } from "./constants";
-import { FilterPill } from "./FilterPill";
+"use client";
+
+import { useCallback, useState } from "react";
 import { FilterMenuSection } from "./FilterMenuSection";
+import { FormatIconButton } from "./format/FormatIconButton";
+import { FORMAT_ICON_ITEMS } from "./format/formatItems";
 
 export function Format() {
+  const [selected, setSelected] = useState<Set<string>>(() => new Set());
+
+  const toggle = useCallback((id: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const clearAll = useCallback(() => setSelected(new Set()), []);
+
   return (
-    <FilterMenuSection title="Format">
-      {FORMAT_LABELS.map((label) => (
-        <FilterPill key={label} label={label} />
+    <FilterMenuSection title="Format" onClearAll={clearAll}>
+      {FORMAT_ICON_ITEMS.map(({ id, label, Icon }) => (
+        <FormatIconButton
+          key={id}
+          label={label}
+          Icon={Icon}
+          selected={selected.has(id)}
+          onPress={() => toggle(id)}
+        />
       ))}
     </FilterMenuSection>
   );

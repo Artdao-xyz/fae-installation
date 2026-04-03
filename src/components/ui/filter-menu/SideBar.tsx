@@ -14,11 +14,11 @@ export function SideBar({
   filterPanelId,
 }: SideBarProps) {
   return (
-    <div className="flex min-h-0 w-[30px] shrink-0 flex-col border-r-[0.5px] border-solid border-text-primary bg-white-fae">
+    <div className="flex min-h-0 w-[35px] shrink-0 flex-col border-r-[0.5px] border-solid border-text-primary bg-white-fae">
       <button
         type="button"
         onClick={onToggleFilters}
-        className="flex h-[30px] w-full shrink-0 items-center justify-center text-text-primary hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-text-primary"
+        className="flex h-[35px] w-full shrink-0 items-center justify-center text-text-primary hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-text-primary"
         aria-expanded={filtersOpen}
         aria-controls={filterPanelId}
         aria-label={filtersOpen ? "Collapse filters" : "Expand filters"}

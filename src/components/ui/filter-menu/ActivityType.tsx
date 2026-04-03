@@ -20,7 +20,11 @@ export function ActivityType() {
   const clearAll = useCallback(() => setSelected(new Set()), []);
 
   return (
-    <FilterMenuSection title="Activity Type" onClearAll={clearAll}>
+    <FilterMenuSection
+      title="Activity Type"
+      onClearAll={clearAll}
+      scrollBody
+    >
       {ACTIVITY_TYPE_LABELS.map((label) => (
         <FilterPill
           key={label}

@@ -1,6 +1,6 @@
 export function Search() {
   return (
-    <div className="bg-white-fae px-3 py-3">
+    <div className="shrink-0 bg-white-fae px-3 py-3">
       <label className="sr-only" htmlFor="filter-search">
         Search
       </label>

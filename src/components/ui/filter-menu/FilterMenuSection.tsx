@@ -7,17 +7,22 @@ export function FilterMenuSection({
   title,
   children,
   onClearAll,
+  scrollBody = false,
+  bodyMaxClassName = "max-h-[min(28dvh,260px)]",
 }: {
   title: string;
   children: ReactNode;
   onClearAll?: () => void;
+  /** Focus / Activity: pills area scrolls; header stays fixed. */
+  scrollBody?: boolean;
+  bodyMaxClassName?: string;
 }) {
   return (
     <section
-      className="border-t-[0.5px] border-solid border-text-primary bg-white-fae"
+      className="shrink-0 border-t-[0.5px] border-solid border-text-primary bg-white-fae"
       aria-label={title}
     >
-      <header className="flex items-center justify-between gap-2 px-3 py-2">
+      <header className="flex shrink-0 items-center justify-between gap-2 px-3 py-2">
         <h2 className="min-w-0 flex-1 font-[ui-serif,Georgia,Cambria,Times_New_Roman,serif] text-sm font-normal text-text-body">
           {title}
         </h2>
@@ -31,7 +36,13 @@ export function FilterMenuSection({
           </button>
         ) : null}
       </header>
-      <div className="flex flex-wrap gap-[5px] px-3 py-3">
+      <div
+        className={`flex flex-wrap gap-[5px] px-3 py-3 ${
+          scrollBody
+            ? `scrollbar-hide min-h-0 overflow-x-hidden overflow-y-auto ${bodyMaxClassName}`
+            : ""
+        }`}
+      >
         {children}
       </div>
     </section>

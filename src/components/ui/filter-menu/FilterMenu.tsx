@@ -36,7 +36,7 @@ export function FilterMenu() {
     <div
       className={`flex h-screen shrink-0 overflow-hidden transition-[width] duration-200 ease-out ${
         !filtersOpen
-          ? "w-[30px]"
+          ? "w-[35px]"
           : anySubpanelOpen
             ? "w-[640px]"
             : "w-[320px]"
@@ -44,7 +44,7 @@ export function FilterMenu() {
     >
       <aside
         className={`flex h-full shrink-0 flex-col overflow-hidden border-r-[0.5px] border-solid border-text-primary bg-white-fae transition-[width] duration-200 ease-out ${
-          filtersOpen ? "w-[320px]" : "w-[30px]"
+          filtersOpen ? "w-[320px]" : "w-[35px]"
         } ${filtersOpen && anySubpanelOpen ? "border-r-0" : ""}`}
         aria-label="Filters and navigation"
       >
@@ -52,8 +52,8 @@ export function FilterMenu() {
         <div
           className={`grid min-h-0 min-w-0 flex-1 overflow-hidden ${
             filtersOpen
-              ? "grid-cols-[30px_minmax(0,1fr)]"
-              : "grid-cols-[30px]"
+              ? "grid-cols-[35px_minmax(0,1fr)]"
+              : "grid-cols-[35px]"
           }`}
         >
           <SideBar
@@ -64,26 +64,31 @@ export function FilterMenu() {
           {filtersOpen ? (
             <div
               id={panelId}
-              className="min-h-0 overflow-y-auto"
+              className="flex min-h-0 flex-1 flex-col overflow-hidden"
               role="region"
               aria-label="Filter options"
             >
               <Search />
-              <FocusAreas />
-              <ActivityType />
-              <Format />
-              <FAEBriefingsMenu
-                subpanelOpen={briefingsSubpanelOpen}
-                onToggleSubpanel={() => setBriefingsSubpanelOpen((o) => !o)}
-              />
-              <FellowshipsMenu />
-              <RDProjectsMenu
-                subpanelOpen={rdSubpanelOpen}
-                onToggleSubpanel={() => setRdSubpanelOpen((o) => !o)}
-              />
-              <EditorialMenu />
-              <ArtistsMenu />
-              <NetworkMenu />
+              <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+                <FocusAreas />
+                <ActivityType />
+                <div className="min-h-0 min-w-0 flex-1" aria-hidden />
+              </div>
+              <div className="shrink-0">
+                <Format />
+                <FAEBriefingsMenu
+                  subpanelOpen={briefingsSubpanelOpen}
+                  onToggleSubpanel={() => setBriefingsSubpanelOpen((o) => !o)}
+                />
+                <FellowshipsMenu />
+                <RDProjectsMenu
+                  subpanelOpen={rdSubpanelOpen}
+                  onToggleSubpanel={() => setRdSubpanelOpen((o) => !o)}
+                />
+                <EditorialMenu />
+                <ArtistsMenu />
+                <NetworkMenu />
+              </div>
             </div>
           ) : null}
         </div>
@@ -96,7 +101,7 @@ export function FilterMenu() {
           }`}
           aria-hidden={!anySubpanelOpen}
         >
-          <div className="flex min-h-0 w-full max-h-full flex-1 flex-col justify-end overflow-y-auto">
+          <div className="scrollbar-hide flex min-h-0 w-full max-h-full flex-1 flex-col justify-end overflow-y-auto">
             {briefingsSubpanelOpen ? (
               <BriefingsSubpanelColumn
                 mergeBottomBorder={rdSubpanelOpen}

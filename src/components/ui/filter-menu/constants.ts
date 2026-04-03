@@ -47,6 +47,7 @@ export const ACTIVITY_TYPE_LABELS = [
   "Strategy",
 ] as const;
 
+/** Text labels for non-icon contexts; Format UI uses `format/formatItems.ts` (5 icon buttons). */
 export const FORMAT_LABELS = [
   "Long-form",
   "Short-form",

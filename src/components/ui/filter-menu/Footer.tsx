@@ -1,6 +1,6 @@
 export function Footer() {
   return (
-    <footer className="flex justify-between items-center shrink-0 border-t-[0.5px] border-solid border-text-primary bg-white-fae px-3 py-2">
+    <footer className="flex justify-between items-center shrink-0 border-t-[0.5px] border-solid border-text-primary bg-white-fae px-3 py-2 h-[40px]">
       {/* add serpentine logo svg */}
       <img
         src="/svg/serpentine.svg"

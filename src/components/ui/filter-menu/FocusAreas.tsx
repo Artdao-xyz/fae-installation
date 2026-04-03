@@ -20,7 +20,11 @@ export function FocusAreas() {
   const clearAll = useCallback(() => setSelected(new Set()), []);
 
   return (
-    <FilterMenuSection title="Focus Areas" onClearAll={clearAll}>
+    <FilterMenuSection
+      title="Focus Areas"
+      onClearAll={clearAll}
+      scrollBody
+    >
       {FOCUS_AREA_LABELS.map((label) => (
         <FilterPill
           key={label}

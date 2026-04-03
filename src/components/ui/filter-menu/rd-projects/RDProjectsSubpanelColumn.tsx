@@ -23,7 +23,7 @@ export function RDProjectsSubpanelColumn({
       aria-label="R&D Projects filters"
     >
       <SubpanelCloseBar onClose={onClose} />
-      <div className="min-h-0 flex-1 overflow-y-auto">
+      <div className="scrollbar-hide min-h-0 flex-1 overflow-y-auto">
         <RDProjectsDropdownPanel variant="subcolumn" onClearAll={onClearAll} />
       </div>
     </div>
