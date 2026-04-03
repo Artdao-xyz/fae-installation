@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { ImageTestDebugPanel } from "@/components/debug/ImageTestDebugPanel";
-import { PlaceholderSidebar } from "@/components/debug/PlaceholderSidebar";
 import { PlaceholderBottomBar } from "@/components/debug/PlaceholderBottomBar";
 import {
   ImageParticleSimulation,
@@ -85,7 +84,6 @@ export default function Home() {
         loadDone={stats.loadDone}
       />
 
-      <PlaceholderSidebar />
       <PlaceholderBottomBar />
 
       <ImageParticleSimulation

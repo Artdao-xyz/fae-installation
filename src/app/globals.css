@@ -21,8 +21,52 @@
   --font-geist-sans: var(--font-geist-sans);
   --font-geist-mono: var(--font-geist-mono);
   
-  --color-white-fae: #E8E8E8;
+  --color-white-fae: #e8e8e8;
   --color-black-fae: #212121;
+  /* UI chrome: borders, icons, mono chips frame */
   --color-text-primary: #414141;
+  /* Body copy, inputs, sidebar labels (use text-body/60 for de-emphasized) */
+  --color-text-body: #303030;
+  /* Fine print (e.g. footer copyright) */
+  --color-text-caption: #363636;
+  /* Raised / inset surfaces */
+  --color-surface-muted: #ececec;
+  --color-surface-hover: #e0e0e0;
+
+  /* Filter menu category accents (3px rail + marker SVG) */
+  --color-filter-category-fae-briefings: var(--color-text-primary);
+  --color-filter-category-fellowships: #0000ff;
+  --color-filter-category-rd: #9005cc;
+  --color-filter-category-editorial: #b22fb6;
+  --color-filter-category-artists: #5e1937;
+  --color-filter-category-network: #0cdc2a;
   --shadow-fae-thumbnail: 0 0 40px 0 rgb(0 0 0 / 0.3);
+}
+
+/* Global scrollbars: thin black line (track stays transparent) */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #000 transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 2px;
+  height: 2px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: #000;
+  border-radius: 0;
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+button {
+  cursor: pointer;
 }
