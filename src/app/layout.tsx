@@ -20,8 +20,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Image Load Test",
-  description: "3D image wall loading benchmark",
+  title: "Future Art Ecosystems",
+  description: "Cultural Infrastructure Research",
 };
 
 export default function RootLayout({
