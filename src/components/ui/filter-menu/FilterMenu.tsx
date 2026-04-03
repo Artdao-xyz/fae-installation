@@ -72,7 +72,6 @@ export function FilterMenu() {
               <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
                 <FocusAreas />
                 <ActivityType />
-                <div className="min-h-0 min-w-0 flex-1" aria-hidden />
               </div>
               <div className="shrink-0">
                 <Format />

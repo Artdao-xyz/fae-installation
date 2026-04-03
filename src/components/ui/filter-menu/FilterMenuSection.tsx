@@ -8,18 +8,21 @@ export function FilterMenuSection({
   children,
   onClearAll,
   scrollBody = false,
-  bodyMaxClassName = "max-h-[min(28dvh,260px)]",
+  bodyMaxClassName,
 }: {
   title: string;
   children: ReactNode;
   onClearAll?: () => void;
-  /** Focus / Activity: pills area scrolls; header stays fixed. */
+  /** Focus / Activity: share vertical space, pills scroll inside. */
   scrollBody?: boolean;
+  /** Optional cap, e.g. `max-h-[200px]` — default uses flex-1 only. */
   bodyMaxClassName?: string;
 }) {
   return (
     <section
-      className="shrink-0 border-t-[0.5px] border-solid border-text-primary bg-white-fae"
+      className={`flex flex-col border-t-[0.5px] border-solid border-text-primary bg-white-fae ${
+        scrollBody ? "min-h-0 flex-1" : "shrink-0"
+      }`}
       aria-label={title}
     >
       <header className="flex shrink-0 items-center justify-between gap-2 px-3 py-2">
@@ -37,11 +40,15 @@ export function FilterMenuSection({
         ) : null}
       </header>
       <div
-        className={`flex flex-wrap gap-[5px] px-3 py-3 ${
+        className={[
+          "flex flex-wrap content-start gap-[5px] border-t-[0.5px] border-solid border-text-primary px-3 py-3",
           scrollBody
-            ? `scrollbar-hide min-h-0 overflow-x-hidden overflow-y-auto ${bodyMaxClassName}`
-            : ""
-        }`}
+            ? "scrollbar-hide min-h-0 flex-1 overflow-x-hidden overflow-y-auto"
+            : "",
+          bodyMaxClassName ?? "",
+        ]
+          .filter(Boolean)
+          .join(" ")}
       >
         {children}
       </div>
