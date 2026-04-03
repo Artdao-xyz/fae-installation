@@ -117,6 +117,9 @@ const DEFAULTS = {
   birthPhase: 0.06,
   deathPhaseStart: 0.92,
 
+  /** Max CSS blur (px) at zFar; falls off toward zNear (sharper when "closer"). */
+  blurMax: 4,
+
   baseScaleMin: 0.6,
   baseScaleMax: 1.4,
 };
@@ -521,6 +524,7 @@ export function ImageParticleSimulation({
       deathPhaseStart: { value: DEFAULTS.deathPhaseStart, min: 0.5, max: 0.99, step: 0.01 },
     }),
     "Visual": folder({
+      blurMax: { value: DEFAULTS.blurMax, min: 0, max: 16, step: 0.5 },
       baseScaleMin: { value: DEFAULTS.baseScaleMin, min: 0.2, max: 2, step: 0.1 },
       baseScaleMax: { value: DEFAULTS.baseScaleMax, min: 0.3, max: 3, step: 0.1 },
     }),
@@ -729,10 +733,21 @@ export function ImageParticleSimulation({
           ((p.pos.z - c.zFar) / zRange) * 1000
         );
 
+        // Blur tracks on-screen size (z depth × particle scale × breathe). Farther/smaller
+        // → more blur; large “close” thumbnails stay sharp.
+        const psFar = c.perspective / (c.perspective - c.zFar);
+        const psNear = c.perspective / (c.perspective - c.zNear);
+        const apparentMin = c.baseScaleMin * psFar;
+        const apparentMax = c.baseScaleMax * psNear * 1.12;
+        const span = Math.max(1e-4, apparentMax - apparentMin);
+        const sizeT = clamp((finalScale - apparentMin) / span, 0, 1);
+        const blurPx = c.blurMax * (1 - sizeT) * (1 - sizeT);
+
         node.style.transform = `translate3d(${p.pos.x.toFixed(1)}px, ${p.pos.y.toFixed(1)}px, 0px) scale(${finalScale.toFixed(4)})`;
         node.style.opacity = clamp(p.opacity, 0, 1).toFixed(3);
         node.style.zIndex = String(zIndex);
-        node.style.filter = "none";
+        node.style.filter =
+          blurPx < 0.05 ? "none" : `blur(${blurPx.toFixed(2)}px)`;
 
         if (p.isText) {
           const textEl = textRefs.current[i];
@@ -812,7 +827,7 @@ export function ImageParticleSimulation({
                 ref={(el) => {
                   nodeRefs.current[i] = el;
                 }}
-                className="absolute left-1/2 top-1/2 will-change-[transform,opacity]"
+                className="absolute left-1/2 top-1/2 will-change-[transform,opacity,filter]"
                 style={{
                   opacity: 0,
                   transform: "translate3d(0,0,0) scale(0)",
@@ -838,7 +853,7 @@ export function ImageParticleSimulation({
               ref={(el) => {
                 nodeRefs.current[i] = el;
               }}
-              className="absolute left-1/2 top-1/2 will-change-[transform,opacity]"
+              className="absolute left-1/2 top-1/2 will-change-[transform,opacity,filter]"
               style={{
                 width: `${thumbnailFramePx}px`,
                 height: `${thumbnailFramePx}px`,
