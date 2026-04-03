@@ -1,6 +1,28 @@
 @import "tailwindcss";
 
+/* install SuisseIntl-Medium.woff2 and SuisseIntl-Regular.woff2 from publi/font folder */
+
+@font-face {
+  font-family: "SuisseIntl";
+  src: url("/fonts/SuisseIntl-Medium.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+}
+
+
+@font-face {
+  font-family: "SuisseIntl";
+  src: url("/fonts/SuisseIntl-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+}
+
 @theme inline {
   --font-geist-sans: var(--font-geist-sans);
   --font-geist-mono: var(--font-geist-mono);
+  
+  --color-white-fae: #E8E8E8;
+  --color-black-fae: #212121;
+  --color-text-primary: #414141;
+  --shadow-fae-thumbnail: 0 0 40px 0 rgb(0 0 0 / 0.3);
 }
