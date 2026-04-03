@@ -4,6 +4,11 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useControls, folder } from "leva";
 import { listContent } from "@/lib/content-repository";
 import type { ContentFixtureRow } from "@/data/content-fixture";
+import {
+  Thumbnail,
+  getThumbnailFramePx,
+  type ThumbnailSize,
+} from "@/components/ui/thumbnail-full";
 
 // ---------------------------------------------------------------------------
 // Public types
@@ -57,19 +62,8 @@ function v3Sub(a: Vec3, b: Vec3): Vec3 {
 }
 
 // ---------------------------------------------------------------------------
-// Text chunk extraction + font variants
+// Text chunk extraction
 // ---------------------------------------------------------------------------
-
-const PIXEL_FONT_VARIANTS = ["square", "grid", "circle", "triangle", "line"] as const;
-type PixelFontVariant = (typeof PIXEL_FONT_VARIANTS)[number];
-
-function fontFamilyForVariant(variant: PixelFontVariant) {
-  if (variant === "square") return "var(--font-geist-pixel-square), monospace";
-  if (variant === "grid") return "var(--font-geist-pixel-grid), monospace";
-  if (variant === "circle") return "var(--font-geist-pixel-circle), monospace";
-  if (variant === "triangle") return "var(--font-geist-pixel-triangle), monospace";
-  return "var(--font-geist-pixel-line), monospace";
-}
 
 function extractTextChunks(titles: string[]): string[] {
   const chunks: string[] = [];
@@ -123,7 +117,6 @@ const DEFAULTS = {
   birthPhase: 0.06,
   deathPhaseStart: 0.92,
 
-  blurMax: 4,
   baseScaleMin: 0.6,
   baseScaleMax: 1.4,
 };
@@ -215,13 +208,10 @@ type Particle = {
   scale: number;
   baseScale: number;
   opacity: number;
-  blur: number;
 
   isText: boolean;
   imageIndex: number;
   textChunkIndex: number;
-  textVariant: "light" | "dark";
-  textFont: PixelFontVariant;
   seed: number;
 };
 
@@ -235,7 +225,6 @@ class ParticleSystem {
   private textChunkCount = 0;
   private nextImageCursor = 0;
   private nextTextCursor = 0;
-  private nextTextFontCursor = 0;
   private viewW = 1440;
   private viewH = 900;
   private textIndices = new Set<number>();
@@ -252,7 +241,6 @@ class ParticleSystem {
     this.textChunkCount = textChunkCount;
     this.nextImageCursor = 0;
     this.nextTextCursor = 0;
-    this.nextTextFontCursor = 0;
     this.viewW = viewW;
     this.viewH = viewH;
     this.particles = [];
@@ -289,13 +277,6 @@ class ParticleSystem {
     const idx = this.nextTextCursor % this.textChunkCount;
     this.nextTextCursor++;
     return idx;
-  }
-
-  private pickNextTextFont(): PixelFontVariant {
-    const variant =
-      PIXEL_FONT_VARIANTS[this.nextTextFontCursor % PIXEL_FONT_VARIANTS.length];
-    this.nextTextFontCursor++;
-    return variant;
   }
 
   private spawn(seed: number, isText: boolean): Particle {
@@ -351,12 +332,9 @@ class ParticleSystem {
         ? 1.0
         : c.baseScaleMin + r(8.1) * (c.baseScaleMax - c.baseScaleMin),
       opacity: 0,
-      blur: c.blurMax,
       isText,
       imageIndex: isText ? -1 : this.pickNextImage(),
       textChunkIndex: isText ? this.pickNextTextChunk() : -1,
-      textVariant: r(30.7) > 0.5 ? "light" : "dark",
-      textFont: isText ? this.pickNextTextFont() : "circle",
       seed,
     };
   }
@@ -475,9 +453,7 @@ class ParticleSystem {
         1 + Math.sin(globalTime * 2.1 + p.seed * 7.7) * 0.08;
       p.scale = p.baseScale * lifeFactor * breathe;
 
-      const depthUnit = (p.pos.z - c.zFar) / zRange;
       p.opacity = lifeFactor;
-      p.blur = c.blurMax * (1 - depthUnit) * (1 - depthUnit);
 
       if (p.life >= 1) {
         const respawned = this.spawn(
@@ -545,7 +521,6 @@ export function ImageParticleSimulation({
       deathPhaseStart: { value: DEFAULTS.deathPhaseStart, min: 0.5, max: 0.99, step: 0.01 },
     }),
     "Visual": folder({
-      blurMax: { value: DEFAULTS.blurMax, min: 0, max: 16, step: 0.5 },
       baseScaleMin: { value: DEFAULTS.baseScaleMin, min: 0.2, max: 2, step: 0.1 },
       baseScaleMax: { value: DEFAULTS.baseScaleMax, min: 0.3, max: 3, step: 0.1 },
     }),
@@ -566,9 +541,19 @@ export function ImageParticleSimulation({
     [contentRows]
   );
 
+  const thumbnailSize = useMemo<ThumbnailSize>(() => {
+    const d = Math.min(displayedWidth, displayedHeight);
+    return d <= 80 ? "sm" : d <= 130 ? "md" : "lg";
+  }, [displayedWidth, displayedHeight]);
+
+  const thumbnailFramePx = useMemo(
+    () => getThumbnailFramePx(thumbnailSize),
+    [thumbnailSize]
+  );
+
   const nodeRefs = useRef<Array<HTMLDivElement | null>>([]);
   const imgRefs = useRef<Array<HTMLImageElement | null>>([]);
-  const textRefs = useRef<Array<HTMLSpanElement | null>>([]);
+  const textRefs = useRef<Array<HTMLParagraphElement | null>>([]);
   const systemRef = useRef<ParticleSystem | null>(null);
   const configRef = useRef<SimConfig>(config);
   configRef.current = config;
@@ -707,16 +692,6 @@ export function ImageParticleSimulation({
       viewport.height
     );
 
-    // Debug: inspect per-text-particle font variant assignments.
-    const textFontAssignments = sys.particles
-      .map((particle, index) => ({ particle, index }))
-      .filter(({ particle }) => particle.isText)
-      .map(({ particle, index }) => ({
-        particleIndex: index,
-        fontVariant: particle.textFont,
-      }));
-    console.log("[ImageParticleSimulation] text font assignments", textFontAssignments);
-
     systemRef.current = sys;
   }, [contentRows, viewport.width, viewport.height]);
 
@@ -757,7 +732,7 @@ export function ImageParticleSimulation({
         node.style.transform = `translate3d(${p.pos.x.toFixed(1)}px, ${p.pos.y.toFixed(1)}px, 0px) scale(${finalScale.toFixed(4)})`;
         node.style.opacity = clamp(p.opacity, 0, 1).toFixed(3);
         node.style.zIndex = String(zIndex);
-        node.style.filter = `blur(${p.blur.toFixed(1)}px) drop-shadow(0 1px 3px rgba(0,0,0,0.1))`;
+        node.style.filter = "none";
 
         if (p.isText) {
           const textEl = textRefs.current[i];
@@ -771,10 +746,6 @@ export function ImageParticleSimulation({
               }
               if (textEl.dataset.idx !== String(p.textChunkIndex)) {
                 textEl.dataset.idx = String(p.textChunkIndex);
-              }
-              if (textEl.dataset.font !== p.textFont) {
-                textEl.dataset.font = p.textFont;
-                textEl.style.fontFamily = fontFamilyForVariant(p.textFont);
               }
             }
           }
@@ -830,9 +801,10 @@ export function ImageParticleSimulation({
 
           if (isText) {
             const isDark = seededRand(i + 30.7) > 0.5;
-            const chunk = textChunks[i % textChunks.length] ?? row.title.split(/\s+/)[0] ?? "TEXT";
-            const textFont =
-              PIXEL_FONT_VARIANTS[Math.floor(seededRand(i + 41.9) * PIXEL_FONT_VARIANTS.length)];
+            const chunk =
+              textChunks[i % textChunks.length] ??
+              row.title.split(/\s+/)[0] ??
+              "TEXT";
 
             return (
               <div
@@ -840,34 +812,22 @@ export function ImageParticleSimulation({
                 ref={(el) => {
                   nodeRefs.current[i] = el;
                 }}
-                className="absolute left-1/2 top-1/2 will-change-[transform,opacity,filter]"
+                className="absolute left-1/2 top-1/2 will-change-[transform,opacity]"
                 style={{
                   opacity: 0,
                   transform: "translate3d(0,0,0) scale(0)",
                 }}
               >
-                <div
-                  className="inline-flex items-center justify-center gap-2.5 px-2.5 py-[5px]"
-                  style={{
-                    backgroundColor: isDark ? "#212121" : "#E8E8E8",
-                    border: `0.5px solid ${isDark ? "#999" : "#6b6b6b"}`,
+                <Thumbnail
+                  variant="text"
+                  size={thumbnailSize}
+                  label={chunk}
+                  chipTone={isDark ? "dark" : "light"}
+                  labelRef={(el) => {
+                    textRefs.current[i] = el;
                   }}
-                >
-                  <span
-                    ref={(el) => {
-                      textRefs.current[i] = el;
-                    }}
-                    data-idx="-1"
-                    data-font={textFont}
-                    className="whitespace-nowrap text-[12px] font-semibold leading-[15px]"
-                    style={{
-                      color: isDark ? "#E8E8E8" : "#212121",
-                      fontFamily: fontFamilyForVariant(textFont),
-                    }}
-                  >
-                    {chunk}
-                  </span>
-                </div>
+                  accessibilityLabel={chunk}
+                />
               </div>
             );
           }
@@ -878,37 +838,28 @@ export function ImageParticleSimulation({
               ref={(el) => {
                 nodeRefs.current[i] = el;
               }}
-              className="absolute left-1/2 top-1/2 will-change-[transform,opacity,filter]"
+              className="absolute left-1/2 top-1/2 will-change-[transform,opacity]"
               style={{
-                width: `${displayedWidth}px`,
-                height: `${displayedHeight}px`,
-                marginLeft: `${-displayedWidth / 2}px`,
-                marginTop: `${-displayedHeight / 2}px`,
+                width: `${thumbnailFramePx}px`,
+                height: `${thumbnailFramePx}px`,
+                marginLeft: `${-thumbnailFramePx / 2}px`,
+                marginTop: `${-thumbnailFramePx / 2}px`,
                 opacity: 0,
                 transform: "translate3d(0,0,0) scale(0)",
               }}
             >
-              <div
-              className="absolute inset-0 overflow-hidden rounded-xs"
-              style={{
-                border: "1px solid rgba(255,255,255,0.3)",
-                boxShadow: "0 3px 10px rgba(0,0,0,0.18)",
-              }}
-              >
-                <img
-                  ref={(el) => {
-                    imgRefs.current[i] = el;
-                  }}
-                  src={row.imageUrl}
-                  alt={row.title}
-                  title={row.title}
-                  data-idx={String(i)}
-                  width={fetchedWidth}
-                  height={fetchedHeight}
-                  className="pointer-events-none absolute inset-0 h-full w-full object-cover"
-                  draggable={false}
-                />
-              </div>
+              <Thumbnail
+                variant="image"
+                size={thumbnailSize}
+                label={row.title}
+                imageSrc={row.imageUrl}
+                imageAlt={row.title}
+                imageRef={(el) => {
+                  imgRefs.current[i] = el;
+                }}
+                imageWidth={fetchedWidth}
+                imageHeight={fetchedHeight}
+              />
             </div>
           );
         })}
