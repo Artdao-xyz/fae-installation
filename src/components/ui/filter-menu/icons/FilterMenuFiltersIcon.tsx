@@ -1,4 +1,3 @@
-/** Custom mark — vector: `icons/filters.svg` (mirror `public/svg/filters.svg` for runtime). */
 export function FilterMenuFiltersIcon({ className }: { className?: string }) {
   return (
     <img
