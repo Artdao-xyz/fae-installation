@@ -32,19 +32,18 @@ export function FilterMenu() {
     }
   }, [filtersOpen]);
 
+  const columnWidth =
+    "w-[18vw] min-w-[320px] max-w-[18vw] shrink-0 transition-[width] duration-200 ease-out";
+
   return (
     <div
-      className={`flex h-screen shrink-0 overflow-hidden transition-[width] duration-200 ease-out ${
-        !filtersOpen
-          ? "w-[35px]"
-          : anySubpanelOpen
-            ? "w-[640px]"
-            : "w-[320px]"
+      className={`flex h-screen shrink-0 overflow-hidden ${
+        filtersOpen ? "w-auto min-w-0" : "w-[35px]"
       }`}
     >
       <aside
-        className={`flex h-full shrink-0 flex-col overflow-hidden border-r-[0.5px] border-solid border-text-primary bg-white-fae transition-[width] duration-200 ease-out ${
-          filtersOpen ? "w-[320px]" : "w-[35px]"
+        className={`flex h-full flex-col overflow-hidden border-r-[0.5px] border-solid border-text-primary bg-white-fae ${
+          filtersOpen ? columnWidth : "w-[35px] shrink-0"
         } ${filtersOpen && anySubpanelOpen ? "border-r-0" : ""}`}
         aria-label="Filters and navigation"
       >
@@ -95,8 +94,8 @@ export function FilterMenu() {
       </aside>
       {filtersOpen ? (
         <div
-          className={`flex h-full min-h-0 shrink-0 flex-col overflow-hidden transition-[width] duration-200 ease-out ${
-            anySubpanelOpen ? "w-[320px] min-w-[320px]" : "w-0 min-w-0"
+          className={`flex h-full min-h-0 flex-col overflow-hidden ${
+            anySubpanelOpen ? columnWidth : "w-0 min-w-0 max-w-0 shrink-0 overflow-hidden"
           }`}
           aria-hidden={!anySubpanelOpen}
         >
