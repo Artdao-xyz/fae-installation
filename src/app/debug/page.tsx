@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Thumbnail } from "@/components/ui/thumbnail-full";
 
 export const metadata: Metadata = {
@@ -8,7 +9,12 @@ export const metadata: Metadata = {
 
 export default function DebugPage() {
   return (
-    <main className="flex min-h-screen flex-wrap items-start justify-center gap-16 bg-[#c8c8c8] p-12">
+    <main className="flex min-h-screen flex-col flex-wrap items-start justify-center gap-16 bg-[#c8c8c8] p-12">
+      <p className="w-full font-sans text-sm text-text-primary">
+        <Link href="/debug/spread" className="underline hover:no-underline">
+          Thumbnail spread layout (center-out, Leva)
+        </Link>
+      </p>
       <Thumbnail variant="full" size="lg" imageSrc="/title.svg" imageAlt="Full variant" />
       <Thumbnail variant="text" size="lg" label="Fairclouds" chipTone="light" />
       <Thumbnail variant="text" size="md" label="Fairclouds" chipTone="dark" />

@@ -12,6 +12,21 @@ export function getThumbnailFramePx(size: ThumbnailSize = "lg"): number {
   return SIZE_DIMS[size].frame;
 }
 
+/**
+ * Outer width/height for a `variant="full"` card (label chip + gap + image frame),
+ * using a conservative label width so collision checks stay safe for typical titles.
+ */
+export function getThumbnailFullCardOuterSize(
+  size: ThumbnailSize = "lg",
+): { width: number; height: number } {
+  const d = SIZE_DIMS[size];
+  const labelH = d.labelMinH + 12; // vertical padding 6+6 on the chip row
+  const labelW = d.padX * 2 + d.chipW + 6 + 9 * (d.textPx * 0.55);
+  const width = Math.max(d.frame, Math.ceil(labelW));
+  const height = labelH + d.gapPx + d.frame;
+  return { width, height };
+}
+
 type BaseProps = {
   label?: string;
   className?: string;
