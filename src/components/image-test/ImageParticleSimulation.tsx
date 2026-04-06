@@ -7,8 +7,10 @@ import type { ContentFixtureRow } from "@/data/content-fixture";
 import {
   Thumbnail,
   getThumbnailFramePx,
+  getThumbnailFullCardOuterSize,
   type ThumbnailSize,
 } from "@/components/ui/thumbnail-full";
+import { computeThumbnailSpreadLayout } from "@/lib/thumbnail-spread-layout";
 
 // ---------------------------------------------------------------------------
 // Public types
@@ -87,6 +89,8 @@ function extractTextChunks(titles: string[]): string[] {
 // Defaults (also used as leva initial values)
 // ---------------------------------------------------------------------------
 
+type FilterSubset = "first10" | "random10";
+
 const TEXT_PARTICLE_RATIO = 0.5;
 
 const DEFAULTS = {
@@ -127,6 +131,9 @@ const DEFAULTS = {
 
   baseScaleMin: 0.6,
   baseScaleMax: 1.4,
+
+  filterEnabled: false,
+  filterSubset: "first10" as FilterSubset,
 };
 
 type SimConfig = typeof DEFAULTS;
@@ -150,6 +157,80 @@ function noise3d(x: number, y: number, z: number): number {
 
 function clamp(v: number, min: number, max: number) {
   return Math.min(max, Math.max(min, v));
+}
+
+function easeInOutCubic(t: number): number {
+  return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+}
+
+function lerp3(a: Vec3, b: Vec3, t: number): Vec3 {
+  return v3(
+    a.x + (b.x - a.x) * t,
+    a.y + (b.y - a.y) * t,
+    a.z + (b.z - a.z) * t,
+  );
+}
+
+const FILTER_MAX = 10;
+const REGROUP_MS = 1000;
+const SPREAD_GAP = 16;
+const SPREAD_SPIRAL = 10;
+/** Multiplier on particle opacity for non-selected tiles while filter is active (dimmed background). */
+const FILTER_BG_OPACITY_MUL = 0.4;
+
+type FilterPhase = "idle" | "enter" | "hold" | "leave";
+
+function pickFilterIndices(
+  rowCount: number,
+  textIndexSet: Set<number>,
+  subset: FilterSubset,
+): number[] {
+  const cap = Math.min(FILTER_MAX, rowCount);
+  if (cap === 0) return [];
+
+  const preferImages: number[] = [];
+  const rest: number[] = [];
+  for (let i = 0; i < rowCount; i++) {
+    if (textIndexSet.has(i)) rest.push(i);
+    else preferImages.push(i);
+  }
+
+  let ordered: number[] = [];
+  if (subset === "first10") {
+    ordered = [...preferImages, ...rest];
+  } else {
+    const keys = [...preferImages, ...rest];
+    ordered = keys
+      .map((idx) => ({ idx, k: seededRand(idx * 7919.13 + rowCount * 31) }))
+      .sort((a, b) => a.k - b.k)
+      .map((o) => o.idx);
+  }
+
+  return ordered.slice(0, cap);
+}
+
+function computeSpreadTargets(
+  vw: number,
+  vh: number,
+  zNear: number,
+  count: number,
+): Vec3[] {
+  const { width: cw, height: ch } = getThumbnailFullCardOuterSize("lg");
+  const { positions } = computeThumbnailSpreadLayout({
+    viewportWidth: vw,
+    viewportHeight: vh,
+    cardWidth: cw,
+    cardHeight: ch,
+    count,
+    gap: SPREAD_GAP,
+    spiralScale: SPREAD_SPIRAL,
+  });
+  const zFlat = zNear - 0.5;
+  return positions.map((pos) => {
+    const cx = pos.left + cw / 2;
+    const cy = pos.top + ch / 2;
+    return v3(cx - vw / 2, cy - vh / 2, zFlat);
+  });
 }
 
 const SCRAMBLE_ALPHABET =
@@ -222,6 +303,15 @@ type Particle = {
   textChunkIndex: number;
   seed: number;
 };
+
+function cloneParticle(p: Particle): Particle {
+  return {
+    ...p,
+    pos: { ...p.pos },
+    vel: { ...p.vel },
+    acc: { ...p.acc },
+  };
+}
 
 // ---------------------------------------------------------------------------
 // Particle system
@@ -539,6 +629,17 @@ export function ImageParticleSimulation({
       baseScaleMin: { value: DEFAULTS.baseScaleMin, min: 0.2, max: 2, step: 0.1 },
       baseScaleMax: { value: DEFAULTS.baseScaleMax, min: 0.3, max: 3, step: 0.1 },
     }),
+    Filter: folder({
+      filterEnabled: { value: false, label: "Filter on" },
+      filterSubset: {
+        value: "first10" as FilterSubset,
+        options: {
+          "First 10": "first10",
+          "Random 10": "random10",
+        },
+        label: "Subset",
+      },
+    }),
   });
 
   // ---- State ----
@@ -550,11 +651,40 @@ export function ImageParticleSimulation({
   const [errorCount, setErrorCount] = useState(0);
   const [loadDurationMs, setLoadDurationMs] = useState<number | null>(null);
   const [viewport, setViewport] = useState({ width: 1440, height: 900 });
+  const [filterPhase, setFilterPhase] = useState<FilterPhase>("idle");
+  const [selectedFilterIndices, setSelectedFilterIndices] = useState<number[]>(
+    [],
+  );
+
+  const idleSnapshotRef = useRef<Particle[] | null>(null);
+  const spreadTargetsRef = useRef<Vec3[]>([]);
+  const selectedIndicesRef = useRef<number[]>([]);
+  const filterT0Ref = useRef(0);
+  const filterPhaseRef = useRef<FilterPhase>("idle");
+  const filterEnabledPrevRef = useRef(false);
+  const leaveFromRef = useRef<Vec3[]>([]);
+  filterPhaseRef.current = filterPhase;
 
   const textChunks = useMemo(
     () => extractTextChunks(contentRows.map((r) => r.title)),
     [contentRows]
   );
+
+  const textIndexSet = useMemo(() => {
+    const count = contentRows.length;
+    if (count === 0) return new Set<number>();
+    const set = new Set<number>();
+    const textCount = Math.max(1, Math.floor(count * TEXT_PARTICLE_RATIO));
+    const step = Math.floor(count / textCount);
+    for (let t = 0; t < textCount; t++) {
+      const idx =
+        (t * step +
+          Math.floor(seededRand(t + 777.3) * step * 0.4)) %
+        count;
+      set.add(idx);
+    }
+    return set;
+  }, [contentRows.length]);
 
   const thumbnailSize = useMemo<ThumbnailSize>(() => {
     const d = Math.min(displayedWidth, displayedHeight);
@@ -566,12 +696,22 @@ export function ImageParticleSimulation({
     [thumbnailSize]
   );
 
+  const filteredLgOuter = useMemo(
+    () => getThumbnailFullCardOuterSize("lg"),
+    [],
+  );
+
+  const selectedFilterSet = useMemo(
+    () => new Set(selectedFilterIndices),
+    [selectedFilterIndices],
+  );
+
   const nodeRefs = useRef<Array<HTMLDivElement | null>>([]);
   const imgRefs = useRef<Array<HTMLImageElement | null>>([]);
   const textRefs = useRef<Array<HTMLParagraphElement | null>>([]);
   const systemRef = useRef<ParticleSystem | null>(null);
-  const configRef = useRef<SimConfig>(config);
-  configRef.current = config;
+  const configRef = useRef<SimConfig>(config as SimConfig);
+  configRef.current = config as SimConfig;
   const textChunksRef = useRef(textChunks);
   textChunksRef.current = textChunks;
 
@@ -710,6 +850,66 @@ export function ImageParticleSimulation({
     systemRef.current = sys;
   }, [contentRows, viewport.width, viewport.height]);
 
+  // ---- Filter: snapshot + spread targets (rising edge) ----
+  useEffect(() => {
+    if (!config.filterEnabled) return;
+    if (contentRows.length === 0) return;
+    if (filterEnabledPrevRef.current) return;
+
+    const raf = requestAnimationFrame(() => {
+      const sys = systemRef.current;
+      if (!sys || !configRef.current.filterEnabled) return;
+
+      idleSnapshotRef.current = sys.particles.map(cloneParticle);
+      const ordered = pickFilterIndices(
+        contentRows.length,
+        textIndexSet,
+        configRef.current.filterSubset,
+      );
+      if (ordered.length === 0) return;
+
+      const zNear = configRef.current.zNear;
+      const targets = computeSpreadTargets(
+        viewport.width,
+        viewport.height,
+        zNear,
+        ordered.length,
+      );
+      const n = Math.min(ordered.length, targets.length);
+      const sel = ordered.slice(0, n);
+      spreadTargetsRef.current = targets.slice(0, n);
+      selectedIndicesRef.current = sel;
+      setSelectedFilterIndices(sel);
+      filterT0Ref.current = performance.now();
+      filterPhaseRef.current = "enter";
+      setFilterPhase("enter");
+      filterEnabledPrevRef.current = true;
+    });
+
+    return () => cancelAnimationFrame(raf);
+  }, [
+    config.filterEnabled,
+    config.filterSubset,
+    contentRows.length,
+    viewport.width,
+    viewport.height,
+    textIndexSet,
+  ]);
+
+  // ---- Filter: leave when toggled off from hold or enter ----
+  useEffect(() => {
+    if (config.filterEnabled) return;
+    const ph = filterPhaseRef.current;
+    if (ph !== "hold" && ph !== "enter") return;
+    const sys = systemRef.current;
+    if (sys) {
+      leaveFromRef.current = sys.particles.map((p) => ({ ...p.pos }));
+    }
+    filterT0Ref.current = performance.now();
+    filterPhaseRef.current = "leave";
+    setFilterPhase("leave");
+  }, [config.filterEnabled]);
+
   // ---- Animation loop ----
   useEffect(() => {
     const sys = systemRef.current;
@@ -725,10 +925,75 @@ export function ImageParticleSimulation({
       const speed = clamp(speedFactor || 1, 0.1, 4);
 
       sys.cfg = configRef.current;
-      sys.step(dt, speed, globalTime);
-
       const c = sys.cfg;
       const zRange = c.zNear - c.zFar;
+      const phase = filterPhaseRef.current;
+
+      const runPhysics =
+        phase === "idle" || phase === "enter" || phase === "hold";
+      if (runPhysics) {
+        sys.step(dt, speed, globalTime);
+      }
+
+      const snap = idleSnapshotRef.current;
+      const targets = spreadTargetsRef.current;
+      const selIdx = selectedIndicesRef.current;
+
+      if (phase === "enter" && snap && targets.length > 0) {
+        const elapsed = now - filterT0Ref.current;
+        const u = Math.min(1, elapsed / REGROUP_MS);
+        const e = easeInOutCubic(u);
+        for (let j = 0; j < selIdx.length; j++) {
+          const i = selIdx[j]!;
+          const p = sys.particles[i];
+          if (!p) continue;
+          const start = snap[i]!.pos;
+          const tgt = targets[j]!;
+          p.pos = lerp3(start, tgt, e);
+          p.vel = v3(0, 0, 0);
+          p.opacity = clamp(snap[i]!.opacity + (1 - snap[i]!.opacity) * e, 0, 1);
+        }
+        if (u >= 1) {
+          filterPhaseRef.current = "hold";
+          setFilterPhase("hold");
+        }
+      } else if (phase === "hold" && targets.length > 0 && snap) {
+        for (let j = 0; j < selIdx.length; j++) {
+          const i = selIdx[j]!;
+          const p = sys.particles[i];
+          if (!p) continue;
+          p.pos = { ...targets[j]! };
+          p.vel = v3(0, 0, 0);
+          p.opacity = 1;
+        }
+      } else if (phase === "leave" && snap) {
+        const elapsed = now - filterT0Ref.current;
+        const u = Math.min(1, elapsed / REGROUP_MS);
+        const e = easeInOutCubic(u);
+        const leaveFrom = leaveFromRef.current;
+        for (let i = 0; i < sys.particles.length; i++) {
+          const p = sys.particles[i];
+          const s = snap[i]!;
+          const startPos = leaveFrom[i] ?? s.pos;
+          p.pos = lerp3(startPos, s.pos, e);
+          p.vel = v3(0, 0, 0);
+          if (selIdx.includes(i)) {
+            p.opacity = clamp((1 - e) + e * s.opacity, 0, 1);
+          } else {
+            p.opacity = clamp(s.opacity * e, 0, 1);
+          }
+        }
+        if (u >= 1) {
+          sys.particles = snap.map(cloneParticle);
+          idleSnapshotRef.current = null;
+          spreadTargetsRef.current = [];
+          selectedIndicesRef.current = [];
+          setSelectedFilterIndices([]);
+          filterPhaseRef.current = "idle";
+          setFilterPhase("idle");
+          filterEnabledPrevRef.current = false;
+        }
+      }
 
       const chunks = textChunksRef.current;
 
@@ -737,15 +1002,23 @@ export function ImageParticleSimulation({
         const node = nodeRefs.current[i];
         if (!node) continue;
 
+        const ph = filterPhaseRef.current;
+        const filteredActive =
+          ph !== "idle" && selectedIndicesRef.current.includes(i);
+        const filterDimmedBg =
+          (ph === "enter" || ph === "hold") &&
+          !selectedIndicesRef.current.includes(i);
+
         const perspScale =
           c.perspective / (c.perspective - p.pos.z);
-        const finalScale = Math.max(0, p.scale * perspScale);
+        let finalScale = Math.max(0, p.scale * perspScale);
+        if (filteredActive) {
+          finalScale = 1;
+        }
         const zIndex = Math.round(
           ((p.pos.z - c.zFar) / zRange) * 1000
         );
 
-        // Blur from on-screen size: gated ramp (sizeT above blurFarGate → no blur).
-        // Quadratic farBlend = visible mid-distance haze; cubic was too subtle.
         const psFar = c.perspective / (c.perspective - c.zFar);
         const psNear = c.perspective / (c.perspective - c.zNear);
         const apparentMin = c.baseScaleMin * psFar;
@@ -754,13 +1027,27 @@ export function ImageParticleSimulation({
         const sizeT = clamp((finalScale - apparentMin) / span, 0, 1);
         const gate = Math.max(1e-4, c.blurFarGate);
         const farBlend = clamp((gate - sizeT) / gate, 0, 1);
-        const blurPx = c.blurMax * farBlend * farBlend;
+        let blurPx = c.blurMax * farBlend * farBlend;
+        if (filteredActive) blurPx = 0;
+
+        let outOpacity = clamp(p.opacity, 0, 1);
+        if (filterDimmedBg) {
+          outOpacity = clamp(p.opacity * FILTER_BG_OPACITY_MUL, 0, 1);
+        }
+
+        const filterParts: string[] = [];
+        if (blurPx >= 0.03) {
+          filterParts.push(`blur(${blurPx.toFixed(2)}px)`);
+        }
+        if (filterDimmedBg) {
+          filterParts.push("grayscale(0.5)");
+          filterParts.push("saturate(0.55)");
+        }
 
         node.style.transform = `translate3d(${p.pos.x.toFixed(1)}px, ${p.pos.y.toFixed(1)}px, 0px) scale(${finalScale.toFixed(4)})`;
-        node.style.opacity = clamp(p.opacity, 0, 1).toFixed(3);
-        node.style.zIndex = String(zIndex);
-        node.style.filter =
-          blurPx < 0.03 ? "none" : `blur(${blurPx.toFixed(2)}px)`;
+        node.style.opacity = outOpacity.toFixed(3);
+        node.style.zIndex = String(zIndex + (filteredActive ? 2000 : 0));
+        node.style.filter = filterParts.length ? filterParts.join(" ") : "none";
 
         if (p.isText) {
           const textEl = textRefs.current[i];
@@ -768,7 +1055,9 @@ export function ImageParticleSimulation({
             const chunk = chunks[p.textChunkIndex];
             if (chunk != null) {
               const targetWord = chunk;
-              const scrambled = scrambleWord(targetWord, p.seed, globalTime);
+              const scrambled = filteredActive
+                ? targetWord
+                : scrambleWord(targetWord, p.seed, globalTime);
               if (textEl.textContent !== scrambled) {
                 textEl.textContent = scrambled;
               }
@@ -798,21 +1087,7 @@ export function ImageParticleSimulation({
     return () => cancelAnimationFrame(rafId);
   }, [contentRows, speedFactor]);
 
-  const textIndexSet = useMemo(() => {
-    const count = contentRows.length;
-    if (count === 0) return new Set<number>();
-    const set = new Set<number>();
-    const textCount = Math.max(1, Math.floor(count * TEXT_PARTICLE_RATIO));
-    const step = Math.floor(count / textCount);
-    for (let t = 0; t < textCount; t++) {
-      const idx =
-        (t * step +
-          Math.floor(seededRand(t + 777.3) * step * 0.4)) %
-        count;
-      set.add(idx);
-    }
-    return set;
-  }, [contentRows.length]);
+  const lgFramePx = getThumbnailFramePx("lg");
 
   return (
     <section
@@ -826,6 +1101,8 @@ export function ImageParticleSimulation({
       >
         {contentRows.map((row, i) => {
           const isText = textIndexSet.has(i);
+          const showFilteredCard =
+            selectedFilterSet.has(i) && filterPhase !== "idle";
 
           if (isText) {
             const isDark = seededRand(i + 30.7) > 0.5;
@@ -844,11 +1121,17 @@ export function ImageParticleSimulation({
                 style={{
                   opacity: 0,
                   transform: "translate3d(0,0,0) scale(0)",
+                  ...(showFilteredCard
+                    ? {
+                        marginLeft: `${-lgFramePx / 2}px`,
+                        marginTop: `${-lgFramePx / 2}px`,
+                      }
+                    : undefined),
                 }}
               >
                 <Thumbnail
                   variant="text"
-                  size={thumbnailSize}
+                  size={showFilteredCard ? "lg" : thumbnailSize}
                   label={chunk}
                   chipTone={isDark ? "dark" : "light"}
                   labelRef={(el) => {
@@ -867,27 +1150,51 @@ export function ImageParticleSimulation({
                 nodeRefs.current[i] = el;
               }}
               className="absolute left-1/2 top-1/2 will-change-[transform,opacity,filter]"
-              style={{
-                width: `${thumbnailFramePx}px`,
-                height: `${thumbnailFramePx}px`,
-                marginLeft: `${-thumbnailFramePx / 2}px`,
-                marginTop: `${-thumbnailFramePx / 2}px`,
-                opacity: 0,
-                transform: "translate3d(0,0,0) scale(0)",
-              }}
+              style={
+                showFilteredCard
+                  ? {
+                      marginLeft: `${-filteredLgOuter.width / 2}px`,
+                      marginTop: `${-filteredLgOuter.height / 2}px`,
+                      opacity: 0,
+                      transform: "translate3d(0,0,0) scale(0)",
+                    }
+                  : {
+                      width: `${thumbnailFramePx}px`,
+                      height: `${thumbnailFramePx}px`,
+                      marginLeft: `${-thumbnailFramePx / 2}px`,
+                      marginTop: `${-thumbnailFramePx / 2}px`,
+                      opacity: 0,
+                      transform: "translate3d(0,0,0) scale(0)",
+                    }
+              }
             >
-              <Thumbnail
-                variant="image"
-                size={thumbnailSize}
-                label={row.title}
-                imageSrc={row.imageUrl}
-                imageAlt={row.title}
-                imageRef={(el) => {
-                  imgRefs.current[i] = el;
-                }}
-                imageWidth={fetchedWidth}
-                imageHeight={fetchedHeight}
-              />
+              {showFilteredCard ? (
+                <Thumbnail
+                  variant="full"
+                  size="lg"
+                  label={row.title}
+                  imageSrc={row.imageUrl}
+                  imageAlt={row.title}
+                  imageRef={(el) => {
+                    imgRefs.current[i] = el;
+                  }}
+                  imageWidth={fetchedWidth}
+                  imageHeight={fetchedHeight}
+                />
+              ) : (
+                <Thumbnail
+                  variant="image"
+                  size={thumbnailSize}
+                  label={row.title}
+                  imageSrc={row.imageUrl}
+                  imageAlt={row.title}
+                  imageRef={(el) => {
+                    imgRefs.current[i] = el;
+                  }}
+                  imageWidth={fetchedWidth}
+                  imageHeight={fetchedHeight}
+                />
+              )}
             </div>
           );
         })}

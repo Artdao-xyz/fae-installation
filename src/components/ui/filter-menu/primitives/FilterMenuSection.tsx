@@ -40,7 +40,7 @@ export function FilterMenuSection({
       </header>
       <div
         className={[
-          "flex flex-wrap content-start gap-[5px] border-t-[0.5px] border-solid border-text-primary px-3 py-3",
+          "flex flex-wrap content-start gap-[5px] px-3 py-3",
           scrollBody
             ? "scrollbar-hide min-h-0 flex-1 overflow-x-hidden overflow-y-auto"
             : "",
