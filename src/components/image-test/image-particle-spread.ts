@@ -10,6 +10,8 @@ export const FILTER_MAX = 10;
 export const REGROUP_MS = 1000;
 /** Background dim (opacity + filters) eases faster than spread motion. */
 export const FILTER_DIM_MS = 320;
+/** Idle hover: full-card scale + background dim share this duration. */
+export const HOVER_CARD_MS = 420;
 /** Minimum gap between card outer rects (px). */
 const SPREAD_GAP = 8;
 /** Non-selected tiles while spread is active (nearly invisible background). */

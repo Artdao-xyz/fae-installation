@@ -64,6 +64,12 @@ export const DEFAULTS = {
 
 export type SimConfig = typeof DEFAULTS;
 
+/** Pause life progression and respawn for `step` (e.g. hover, spread, detail overlay). */
+export type LifeFreezeOptions = {
+  all?: boolean;
+  slots?: ReadonlySet<number>;
+};
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -285,8 +291,15 @@ export class ParticleSystem {
     };
   }
 
-  step(dt: number, speed: number, globalTime: number) {
+  step(
+    dt: number,
+    speed: number,
+    globalTime: number,
+    lifeFreeze?: LifeFreezeOptions,
+  ) {
     const c = this.cfg;
+    const freezeAll = lifeFreeze?.all === true;
+    const freezeSlots = lifeFreeze?.slots;
     const zRange = c.zNear - c.zFar;
     const effectiveDt = Math.min(dt, 0.05) * speed;
     const particles = this.particles;
@@ -379,7 +392,11 @@ export class ParticleSystem {
       p.pos = v3Add(p.pos, v3Scale(p.vel, effectiveDt));
       p.pos.z = Math.max(c.zFar, Math.min(c.zNear, p.pos.z));
 
-      p.life += p.lifeSpeed * effectiveDt;
+      const freezeLife =
+        freezeAll || (freezeSlots?.has(i) ?? false);
+      if (!freezeLife) {
+        p.life += p.lifeSpeed * effectiveDt;
+      }
 
       let lifeFactor: number;
       if (p.life < c.birthPhase) {
@@ -401,7 +418,7 @@ export class ParticleSystem {
 
       p.opacity = lifeFactor;
 
-      if (p.life >= 1) {
+      if (!freezeLife && p.life >= 1) {
         particles[i] = this.spawn(
           i,
           p.isText,

@@ -16,6 +16,7 @@ import { DetailView } from "@/components/ui/detail-view";
 import {
   ParticleSystem,
   type Particle,
+  type LifeFreezeOptions,
   type SimConfig,
   type Vec3,
   cloneParticle,
@@ -33,6 +34,7 @@ import {
   pickSpreadIndicesFromRows,
   REGROUP_MS,
   FILTER_DIM_MS,
+  HOVER_CARD_MS,
   FILTER_BG_OPACITY_MUL,
   type SpreadLayoutPhase,
 } from "./image-particle-spread";
@@ -113,6 +115,8 @@ export function ImageParticleSimulationView({
   spreadSignatureRef.current = spreadSig;
 
   const [detailRow, setDetailRow] = useState<ContentFixtureRow | null>(null);
+  const detailRowRef = useRef<ContentFixtureRow | null>(null);
+  detailRowRef.current = detailRow;
 
   const handleFilteredThumbnailClick = useCallback((row: ContentFixtureRow) => {
     setDetailRow(row);
@@ -135,6 +139,47 @@ export function ImageParticleSimulationView({
   const [selectedFilterIndices, setSelectedFilterIndices] = useState<number[]>(
     [],
   );
+  /** Idle hover: full-card chrome + pin physics (cleared when filter spread runs). */
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+
+  const spreadChromeActiveRef = useRef(false);
+  spreadChromeActiveRef.current = spreadChromeActive;
+  const hoverSlotRef = useRef<number | null>(null);
+  const hoverPinRef = useRef<{ slot: number; pos: Vec3 } | null>(null);
+  /** `in` → `hold` (expanded); `out` = shrinking until DOM clears. */
+  const hoverPhaseRef = useRef<"in" | "hold" | "out" | null>(null);
+  const hoverAnimT0Ref = useRef(0);
+
+  const handleTilePointerEnter = useCallback(
+    (index: number) => {
+      if (spreadChromeActive) return;
+      const sys = systemRef.current;
+      const p = sys?.particles[index];
+      if (!p) return;
+      const t = performance.now();
+      hoverPhaseRef.current = "in";
+      hoverAnimT0Ref.current = t;
+      hoverSlotRef.current = index;
+      hoverPinRef.current = { slot: index, pos: { ...p.pos } };
+      setHoveredIndex(index);
+    },
+    [spreadChromeActive],
+  );
+
+  const handleTilePointerLeave = useCallback((index: number) => {
+    if (hoverSlotRef.current !== index) return;
+    hoverPhaseRef.current = "out";
+    hoverAnimT0Ref.current = performance.now();
+  }, []);
+
+  useEffect(() => {
+    if (!spreadChromeActive) return;
+    hoverPhaseRef.current = null;
+    hoverAnimT0Ref.current = 0;
+    hoverSlotRef.current = null;
+    hoverPinRef.current = null;
+    setHoveredIndex(null);
+  }, [spreadChromeActive]);
 
   const idleSnapshotRef = useRef<Particle[] | null>(null);
   /** Inner spread slots — filter-matching tiles (center-first). */
@@ -371,6 +416,12 @@ export function ImageParticleSimulationView({
       );
       if (orderedPick.length === 0) return false;
 
+      hoverPhaseRef.current = null;
+      hoverAnimT0Ref.current = 0;
+      hoverSlotRef.current = null;
+      hoverPinRef.current = null;
+      setHoveredIndex(null);
+
       const sigNow = spreadSignatureRef.current;
       spreadEnterSignatureRef.current = sigNow;
 
@@ -477,15 +528,43 @@ export function ImageParticleSimulationView({
       const targets = spreadTargetsRef.current;
       const selIdx = selectedIndicesRef.current;
 
+      let lifeFreeze: LifeFreezeOptions | undefined;
+      if (detailRowRef.current != null) {
+        lifeFreeze = { all: true };
+      } else if (phase !== "idle") {
+        lifeFreeze = { all: true };
+      } else {
+        const hs = hoverSlotRef.current;
+        if (hs !== null) {
+          lifeFreeze = { slots: new Set([hs]) };
+        }
+      }
+
       if (phase === "idle") {
         const skipIdleStep = idlePhysicsSkipFramesRef.current > 0;
         if (skipIdleStep) {
           idlePhysicsSkipFramesRef.current -= 1;
         } else {
-          sys.step(dt, speed, globalTime);
+          sys.step(dt, speed, globalTime, lifeFreeze);
         }
       } else {
-        sys.step(dt, speed, globalTime);
+        sys.step(dt, speed, globalTime, lifeFreeze);
+      }
+
+      const hiPin = hoverSlotRef.current;
+      if (
+        spreadLayoutPhaseRef.current === "idle" &&
+        hiPin !== null &&
+        !spreadChromeActiveRef.current
+      ) {
+        const pin = hoverPinRef.current;
+        if (pin && pin.slot === hiPin) {
+          const ph = sys.particles[hiPin];
+          if (ph) {
+            ph.pos = { ...pin.pos };
+            ph.vel = v3(0, 0, 0);
+          }
+        }
       }
 
       const spreadAnimActive =
@@ -586,25 +665,62 @@ export function ImageParticleSimulationView({
           const node = nodeRefs.current[i];
           if (!node) continue;
 
-          const filteredActive =
+          const filteredSpreadActive =
             passPh !== "idle" && selectedIndicesRef.current.includes(i);
+          const hoverCardActive =
+            passPh === "idle" &&
+            !spreadChromeActiveRef.current &&
+            hoverSlotRef.current === i;
+          const cardActive = filteredSpreadActive || hoverCardActive;
           const spreadLayoutBg =
             passPh !== "idle" && !selectedIndicesRef.current.includes(i);
+          const hoverIdleDimmed =
+            passPh === "idle" &&
+            !spreadChromeActiveRef.current &&
+            hoverSlotRef.current !== null &&
+            hoverSlotRef.current !== i;
           /** 0 = full brightness, 1 = full dim — fades in during enter, out during leave. */
           let bgDimT = 0;
           if (spreadLayoutBg) {
             if (passPh === "enter") bgDimT = dimEnterT;
             else if (passPh === "hold") bgDimT = 1;
             else if (passPh === "leave") bgDimT = 1 - dimLeaveT;
+          } else if (hoverIdleDimmed) {
+            const hPv = hoverPhaseRef.current;
+            if (hPv === "in") {
+              const elapsed = styleNow - hoverAnimT0Ref.current;
+              bgDimT = smoothstep01(
+                Math.min(1, elapsed / HOVER_CARD_MS),
+              );
+            } else if (hPv === "hold") {
+              bgDimT = 1;
+            } else if (hPv === "out") {
+              const elapsed = styleNow - hoverAnimT0Ref.current;
+              const u = smoothstep01(Math.min(1, elapsed / HOVER_CARD_MS));
+              bgDimT = 1 - u;
+            }
           }
 
           const perspScale =
             c.perspective / (c.perspective - p.pos.z);
           const apparentIdle = Math.max(0, p.scale * perspScale);
           let finalScale: number;
-          if (filteredActive) {
+          if (cardActive) {
             const idleW =
               idleWidths?.[i] ?? thumbnailFramePx;
+            let hoverU = 1;
+            if (hoverCardActive && passPh === "idle") {
+              const hPv = hoverPhaseRef.current;
+              if (hPv === "in") {
+                const e = styleNow - hoverAnimT0Ref.current;
+                hoverU = smoothstep01(Math.min(1, e / HOVER_CARD_MS));
+              } else if (hPv === "hold") {
+                hoverU = 1;
+              } else if (hPv === "out") {
+                const e = styleNow - hoverAnimT0Ref.current;
+                hoverU = 1 - smoothstep01(Math.min(1, e / HOVER_CARD_MS));
+              }
+            }
             const lw =
               node.offsetWidth > 0
                 ? node.offsetWidth
@@ -640,6 +756,12 @@ export function ImageParticleSimulationView({
                 idleW * apparentIdle,
                 lw,
               );
+            } else if (hoverCardActive && passPh === "idle") {
+              const idleVisualW = idleW * apparentIdle;
+              const endVisualW = filteredLgOuter.width;
+              const visualW =
+                idleVisualW + (endVisualW - idleVisualW) * hoverU;
+              finalScale = scaleForTargetVisualWidth(visualW, lw);
             } else {
               finalScale = scaleForTargetVisualWidth(
                 filteredLgOuter.width,
@@ -674,7 +796,7 @@ export function ImageParticleSimulationView({
           const gate = Math.max(1e-4, c.blurFarGate);
           const farBlend = clamp((gate - sizeT) / gate, 0, 1);
           let blurPx = c.blurMax * farBlend * farBlend;
-          if (filteredActive || spreadLayoutBg) blurPx = 0;
+          if (cardActive || spreadLayoutBg || hoverIdleDimmed) blurPx = 0;
           else {
             const t0 = idleBlurRampT0Ref.current;
             const rampSet = idleBlurRampIndicesRef.current;
@@ -708,12 +830,17 @@ export function ImageParticleSimulationView({
           node.style.transform = `translate3d(${p.pos.x.toFixed(1)}px, ${p.pos.y.toFixed(1)}px, 0px) scale(${finalScale.toFixed(4)})`;
           node.style.opacity = outOpacity.toFixed(3);
           node.style.zIndex = String(
-            zIndex + (filteredActive ? 2000 : spreadLayoutBg ? 1000 : 0),
+            zIndex +
+              (cardActive
+                ? 2000
+                : spreadLayoutBg || hoverIdleDimmed
+                  ? 1000
+                  : 0),
           );
           node.style.filter = filterParts.length ? filterParts.join(" ") : "none";
 
           if (p.isText) {
-            if (filteredActive) {
+            if (cardActive) {
               const img = imgRefs.current[i];
               const row = contentRows[i];
               if (img && row) {
@@ -805,7 +932,22 @@ export function ImageParticleSimulationView({
           performance.now(),
         );
       } else {
+        if (
+          hoverPhaseRef.current === "in" &&
+          now - hoverAnimT0Ref.current >= HOVER_CARD_MS
+        ) {
+          hoverPhaseRef.current = "hold";
+        }
         applyParticleDomStyles(ph, now);
+        if (
+          hoverPhaseRef.current === "out" &&
+          now - hoverAnimT0Ref.current >= HOVER_CARD_MS
+        ) {
+          hoverPhaseRef.current = null;
+          hoverSlotRef.current = null;
+          hoverPinRef.current = null;
+          setHoveredIndex(null);
+        }
       }
 
       rafId = requestAnimationFrame(tick);
@@ -838,6 +980,8 @@ export function ImageParticleSimulationView({
           const isText = textIndexSet.has(i);
           const showFilteredCard =
             selectedFilterSet.has(i) && spreadChromeActive;
+          const showHoverCard = hoveredIndex === i && !spreadChromeActive;
+          const showChromeCard = showFilteredCard || showHoverCard;
           const spreadDimmed = spreadChromeActive && !showFilteredCard;
 
           if (isText) {
@@ -856,12 +1000,14 @@ export function ImageParticleSimulationView({
                   nodeRefs.current[i] = el;
                 }}
                 className={`absolute left-1/2 top-1/2 will-change-[transform,opacity,filter] ${
-                  showFilteredCard
+                  showChromeCard
                     ? "cursor-pointer pointer-events-auto"
                     : ""
                 } ${spreadDimmed ? "pointer-events-none" : ""}`}
+                onPointerEnter={() => handleTilePointerEnter(i)}
+                onPointerLeave={() => handleTilePointerLeave(i)}
                 onClick={
-                  showFilteredCard
+                  showChromeCard
                     ? (e) => {
                         e.stopPropagation();
                         handleFilteredThumbnailClick(row);
@@ -871,7 +1017,7 @@ export function ImageParticleSimulationView({
                 style={{
                   // transform/opacity are driven only by the RAF loop — putting them
                   // here caused React to reset scale(0) on re-renders that touch layout chrome.
-                  ...(showFilteredCard
+                  ...(showChromeCard
                     ? {
                         marginLeft: `${-filteredLgOuter.width / 2}px`,
                         marginTop: `${-filteredLgOuter.height / 2}px`,
@@ -884,7 +1030,7 @@ export function ImageParticleSimulationView({
                       }),
                 }}
               >
-                {showFilteredCard ? (
+                {showChromeCard ? (
                   <Thumbnail
                     variant="full"
                     size="lg"
@@ -923,12 +1069,14 @@ export function ImageParticleSimulationView({
                 nodeRefs.current[i] = el;
               }}
               className={`absolute left-1/2 top-1/2 will-change-[transform,opacity,filter] ${
-                showFilteredCard
+                showChromeCard
                   ? "cursor-pointer pointer-events-auto"
                   : ""
               } ${spreadDimmed ? "pointer-events-none" : ""}`}
+              onPointerEnter={() => handleTilePointerEnter(i)}
+              onPointerLeave={() => handleTilePointerLeave(i)}
               onClick={
-                showFilteredCard
+                showChromeCard
                   ? (e) => {
                       e.stopPropagation();
                       handleFilteredThumbnailClick(row);
@@ -936,7 +1084,7 @@ export function ImageParticleSimulationView({
                   : undefined
               }
               style={
-                showFilteredCard
+                showChromeCard
                   ? {
                       marginLeft: `${-filteredLgOuter.width / 2}px`,
                       marginTop: `${-filteredLgOuter.height / 2}px`,
@@ -949,7 +1097,7 @@ export function ImageParticleSimulationView({
                     }
               }
             >
-              {showFilteredCard ? (
+              {showChromeCard ? (
                 <Thumbnail
                   variant="full"
                   size="lg"
