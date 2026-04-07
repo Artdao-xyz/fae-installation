@@ -56,3 +56,27 @@ export const FORMAT_LABELS = [
   "Dataset",
   "PDF",
 ] as const;
+
+/** Partner / network names (Network row in the filter menu; also used on content rows). */
+export const NETWORK_LABELS = [
+  "RadicalxChange",
+  "Aerocene Foundation",
+  "Serpentine",
+  "New Museum",
+  "Tate",
+  "e-flux",
+  "DECAL",
+  "FAE Core",
+  "Ethereum Foundation",
+  "Creative Europe",
+  "Arts Council England",
+  "Goethe-Institut",
+  "Mozilla",
+  "W3C",
+  "IPFS",
+  "Filecoin",
+  "Zora",
+  "Mirror",
+  "Agnes",
+  "Serpentine R&D",
+] as const;

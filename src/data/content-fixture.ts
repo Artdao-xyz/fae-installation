@@ -1,6 +1,8 @@
 import {
   ACTIVITY_TYPE_LABELS,
   FOCUS_AREA_LABELS,
+  FORMAT_LABELS,
+  NETWORK_LABELS,
 } from "@/components/ui/filter-menu/config/constants";
 
 export type ContentFixtureRow = {
@@ -15,6 +17,12 @@ export type ContentFixtureRow = {
   focusAreas: readonly string[];
   /** 1–3 labels from {@link ACTIVITY_TYPE_LABELS}; every activity type appears at least once across the fixture. */
   activityTypes: readonly string[];
+  /** Single calendar year for the row. */
+  year: number;
+  /** 1–2 labels from {@link FORMAT_LABELS} (filter menu Format). */
+  formats: readonly string[];
+  /** 1–3 names from {@link NETWORK_LABELS} (filter menu Network). */
+  networks: readonly string[];
 };
 
 /** Deterministic mix for tag picking (stable across runs). */
@@ -26,6 +34,17 @@ function mix(i: number, s: number): number {
 
 function tagCount1to3(index: number, salt: number): number {
   return 1 + (mix(index, salt) % 3);
+}
+
+function formatCount1to2(index: number, salt: number): number {
+  return 1 + (mix(index, salt) % 2);
+}
+
+const YEAR_MIN = 2015;
+const YEAR_MAX = 2026;
+
+function yearForIndex(index: number): number {
+  return YEAR_MIN + (mix(index, 2101) % (YEAR_MAX - YEAR_MIN + 1));
 }
 
 function pickDistinctFromPool(
@@ -385,6 +404,21 @@ export const CONTENT_FIXTURE_ROWS: ContentFixtureRow[] = CONTENT_FIXTURE_TITLES.
       907,
     );
 
+    const formats = pickDistinctFromPool(
+      index,
+      FORMAT_LABELS,
+      formatCount1to2(index, 1113),
+      undefined,
+      1217,
+    );
+    const networks = pickDistinctFromPool(
+      index,
+      NETWORK_LABELS,
+      tagCount1to3(index, 1319),
+      undefined,
+      1423,
+    );
+
     return {
       id: `content-${paddedId}`,
       title,
@@ -393,6 +427,9 @@ export const CONTENT_FIXTURE_ROWS: ContentFixtureRow[] = CONTENT_FIXTURE_TITLES.
       resources: pickResourcesForIndex(index),
       focusAreas,
       activityTypes,
+      year: yearForIndex(index),
+      formats,
+      networks,
     };
   }
 );

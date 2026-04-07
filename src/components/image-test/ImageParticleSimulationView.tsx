@@ -123,6 +123,9 @@ export function ImageParticleSimulationView({
         imageUrl: row.imageUrl,
         content: row.content,
         resources: [...row.resources],
+        year: row.year,
+        formats: [...row.formats],
+        networks: [...row.networks],
       });
     },
     [selectedFocusAreas, selectedActivityTypes],
