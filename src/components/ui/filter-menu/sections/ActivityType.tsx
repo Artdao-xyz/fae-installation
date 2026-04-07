@@ -1,23 +1,23 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 import { ACTIVITY_TYPE_LABELS } from "../config/constants";
+import { useFilterSelection } from "../FilterSelectionContext";
 import { FilterMenuSection } from "../primitives/FilterMenuSection";
 import { FilterPill } from "../primitives/FilterPill";
 
 export function ActivityType() {
-  const [selected, setSelected] = useState<Set<string>>(() => new Set());
+  const { selectedActivityTypes, toggleActivityType, clearActivityTypes } =
+    useFilterSelection();
 
-  const toggle = useCallback((label: string) => {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (next.has(label)) next.delete(label);
-      else next.add(label);
-      return next;
-    });
-  }, []);
+  const toggle = useCallback(
+    (label: string) => {
+      toggleActivityType(label);
+    },
+    [toggleActivityType],
+  );
 
-  const clearAll = useCallback(() => setSelected(new Set()), []);
+  const clearAll = useCallback(() => clearActivityTypes(), [clearActivityTypes]);
 
   return (
     <FilterMenuSection
@@ -29,7 +29,7 @@ export function ActivityType() {
         <FilterPill
           key={label}
           label={label}
-          selected={selected.has(label)}
+          selected={selectedActivityTypes.has(label)}
           onPress={() => toggle(label)}
         />
       ))}

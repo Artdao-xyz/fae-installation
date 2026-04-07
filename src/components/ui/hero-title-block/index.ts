@@ -1,0 +1,1 @@
+export { HeroTitleBlock } from "./HeroTitleBlock";

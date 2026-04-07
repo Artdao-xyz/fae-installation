@@ -37,7 +37,7 @@ export function FilterMenu() {
 
   return (
     <div
-      className={`flex h-screen shrink-0 overflow-hidden ${
+      className={`flex h-screen shrink-0 overflow-hidden z-50 ${
         filtersOpen ? "w-auto min-w-0" : "w-[35px]"
       }`}
     >

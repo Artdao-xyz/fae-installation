@@ -27,17 +27,27 @@ export function getThumbnailFullCardOuterSize(
   return { width, height };
 }
 
+/**
+ * Fixed outer box for `variant="text"` only (label chip, no frame). Same width
+ * as full-card outer so filter transitions don’t reflow from `w-fit` + wrap.
+ */
+export function getThumbnailTextVariantOuterSize(
+  size: ThumbnailSize = "lg",
+): { width: number; height: number } {
+  const outer = getThumbnailFullCardOuterSize(size);
+  const d = SIZE_DIMS[size];
+  return {
+    width: outer.width,
+    height: d.labelMinH + 12,
+  };
+}
+
 type BaseProps = {
   label?: string;
   className?: string;
   style?: CSSProperties;
   /** Layout size; `lg` matches Figma max frame. */
   size?: ThumbnailSize;
-  /**
-   * Label chip palette. Omitted = Figma default (white chip + primary text).
-   * `light` / `dark` match the former particle text chips.
-   */
-  chipTone?: "light" | "dark";
   /** Imperative updates (e.g. scramble) — attach to the label `<p>`. */
   labelRef?: Ref<HTMLParagraphElement | null>;
   /** Imperative `src` swaps — attach to the `<img>`. */
@@ -59,47 +69,41 @@ export type ThumbnailProps =
 
 function LabelChip({
   label,
-  chipTone,
   dims,
   labelRef,
   accessibilityLabel,
 }: {
   label: string;
-  chipTone: "light" | "dark" | undefined;
   dims: (typeof SIZE_DIMS)[ThumbnailSize];
   labelRef?: Ref<HTMLParagraphElement | null>;
   accessibilityLabel?: string;
 }) {
-  const tone =
-    chipTone === "light"
-      ? "bg-white-fae text-text-primary "
-      : chipTone === "dark"
-        ? "bg-black-fae text-white-fae"
-        : "bg-white-fae text-text-primary";
-
   return (
-    <div
-      className={`flex items-center gap-1.5 rounded-xs ${tone}`}
-      style={{
-        minHeight: dims.labelMinH,
-        padding: `6px ${dims.padX}px`,
-      }}
-      role="group"
-      aria-label={accessibilityLabel ?? label}
-    >
-      <span
-        className="shrink-0 rounded-[1px] bg-blue-600"
-        style={{ width: dims.chipW, height: dims.chipH }}
-        aria-hidden
-      />
-      <p
-        ref={labelRef}
-        className="truncate font-sans font-semibold leading-tight"
-        style={{ fontSize: dims.textPx, lineHeight: `${dims.textPx + 3}px` }}
-        aria-hidden
+    <div className="flex w-full shrink-0 justify-center overflow-visible">
+      <div
+        className="inline-flex w-max max-w-none items-center gap-1.5 rounded-xs bg-white-fae text-text-primary"
+        style={{
+          minHeight: dims.labelMinH,
+          padding: `6px ${dims.padX}px`,
+          boxSizing: "border-box",
+        }}
+        role="group"
+        aria-label={accessibilityLabel ?? label}
       >
-        {label}
-      </p>
+        <span
+          className="shrink-0 rounded-[1px] bg-blue-600"
+          style={{ width: dims.chipW, height: dims.chipH }}
+          aria-hidden
+        />
+        <p
+          ref={labelRef}
+          className="whitespace-nowrap font-sans font-semibold leading-tight"
+          style={{ fontSize: dims.textPx, lineHeight: `${dims.textPx + 3}px` }}
+          aria-hidden
+        >
+          {label}
+        </p>
+      </div>
     </div>
   );
 }
@@ -127,6 +131,7 @@ function ImageFrame({
       style={{ width: dims.frame, height: dims.frame }}
     >
       <img
+        key={imageSrc}
         ref={imageRef}
         alt={imageAlt || label}
         src={imageSrc}
@@ -149,7 +154,6 @@ export function Thumbnail(props: ThumbnailProps) {
     className = "",
     style,
     size = "lg",
-    chipTone,
     labelRef,
     imageRef,
     imageWidth,
@@ -165,16 +169,43 @@ export function Thumbnail(props: ThumbnailProps) {
   const imageAlt = "imageSrc" in props ? props.imageAlt : undefined;
 
   const gapStyle = variant === "full" ? { gap: dims.gapPx } : undefined;
+  const textOuter =
+    variant === "text" ? getThumbnailTextVariantOuterSize(size) : null;
+  /** Full card: fixed outer box so label length never changes image frame size (spread/sim). */
+  const fullOuter =
+    variant === "full" ? getThumbnailFullCardOuterSize(size) : null;
 
   return (
     <div
-      className={`flex w-fit flex-col items-center ${className}`}
-      style={{ ...gapStyle, ...style }}
+      className={`flex flex-col items-center min-w-0 ${className}`}
+      style={{
+        ...(fullOuter
+          ? {
+              width: fullOuter.width,
+              minWidth: fullOuter.width,
+              maxWidth: fullOuter.width,
+              minHeight: fullOuter.height,
+              boxSizing: "border-box",
+              overflow: "visible",
+            }
+          : {}),
+        ...(textOuter
+          ? {
+              width: textOuter.width,
+              minWidth: textOuter.width,
+              height: textOuter.height,
+              minHeight: textOuter.height,
+              boxSizing: "border-box",
+              overflow: "visible",
+            }
+          : {}),
+        ...gapStyle,
+        ...style,
+      }}
     >
       {showLabel && (
         <LabelChip
           label={label}
-          chipTone={chipTone}
           dims={dims}
           labelRef={labelRef}
           accessibilityLabel={accessibilityLabel}

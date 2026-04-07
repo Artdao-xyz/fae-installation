@@ -1,29 +1,45 @@
 @import "tailwindcss";
 
 @font-face {
-  font-family: "SuisseIntl";
+  font-family: SuisseIntl;
   src: url("/fonts/SuisseIntl-Medium.woff2") format("woff2");
   font-weight: 500;
   font-style: normal;
 }
 
 @font-face {
-  font-family: "SuisseIntl";
+  font-family: SuisseIntl;
   src: url("/fonts/SuisseIntl-Regular.woff2") format("woff2");
   font-weight: 400;
   font-style: normal;
 }
 
+/* Single-token names so Tailwind’s minified font-family (quotes stripped) still matches @font-face */
 @font-face {
-  font-family: "Fira Sans";
+  font-family: FiraSans;
   src: url("/fonts/FiraSans-Regular.woff2") format("woff2");
   font-weight: 400;
   font-style: normal;
 }
 
 @font-face {
-  font-family: "Fira Sans";
+  font-family: FiraSans;
   src: url("/fonts/FiraSans-Medium.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+}
+
+/* One family; weight via font-normal (400) / font-medium (500) */
+@font-face {
+  font-family: LustText;
+  src: url("/fonts/LustTextBook.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: LustText;
+  src: url("/fonts/LustTextMedium.woff2") format("woff2");
   font-weight: 500;
   font-style: normal;
 }
@@ -31,7 +47,11 @@
 @theme inline {
   --font-geist-sans: var(--font-geist-sans);
   --font-geist-mono: var(--font-geist-mono);
-  
+  /* Match @font-face font-family (no spaces — see comment on @font-face above) */
+  --font-lust-text: LustText, ui-serif, serif;
+  --font-fira-sans: FiraSans, ui-sans-serif, system-ui, sans-serif;
+  --font-suisseintl: SuisseIntl, ui-sans-serif, system-ui, sans-serif;
+
   --color-white-fae: #e8e8e8;
   --color-black-fae: #212121;
   /* UI chrome: borders, icons, mono chips frame */
@@ -93,4 +113,14 @@
 
 button {
   cursor: pointer;
+}
+
+body {
+  min-height: 100dvh;
+  background: linear-gradient(
+    to bottom right,
+    #e1e1e1 0%,
+    #ffffff 50%,
+    #e1e1e1 100%
+  );
 }

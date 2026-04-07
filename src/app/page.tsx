@@ -2,7 +2,11 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { ImageTestDebugPanel } from "@/components/debug/ImageTestDebugPanel";
-import { FilterMenu } from "@/components/ui/filter-menu";
+import {
+  FilterMenu,
+  FilterSelectionProvider,
+} from "@/components/ui/filter-menu";
+import { HeroTitleBlock } from "@/components/ui/hero-title-block";
 import {
   ImageParticleSimulation,
   type ImageParticleSimulationStats,
@@ -14,7 +18,7 @@ type Mode = "optimized" | "snappy";
 const SPEED_FACTOR = 0.5;
 const MODE_STORAGE_KEY = "fae-image-test-mode";
 const RES_MULTIPLIER = 1;
-const FETCHED_WIDTH = 440 * RES_MULTIPLIER; 
+const FETCHED_WIDTH = 440 * RES_MULTIPLIER;
 const FETCHED_HEIGHT = 440 * RES_MULTIPLIER;
 const DISPLAYED_WIDTH = 75 * RES_MULTIPLIER;
 const DISPLAYED_HEIGHT = 75 * RES_MULTIPLIER;
@@ -53,19 +57,14 @@ export default function Home() {
   }, []);
 
   return (
+    <FilterSelectionProvider>
     <div className="flex min-h-screen w-full">
       <FilterMenu />
-      <main
-        className="relative min-h-screen min-w-0 flex-1 p-5 text-[#303030]"
-        style={{
-          background:
-            "linear-gradient(to bottom right, #E1E1E1 0%, #FFFFFF 50%, #E1E1E1 100%)",
-        }}
-      >
-        <img
-          src="/title.svg"
-          alt="Image Test"
-          className="absolute left-1/2 top-1/2 h-24 -translate-x-1/2 -translate-y-1/2 object-contain"
+      <main className="relative min-h-screen min-w-0 flex-1 p-5 text-[#303030]">
+
+        <HeroTitleBlock
+          title="Future Art Ecosystems"
+          subtitle="Cultural Infraestructure Research"
         />
 
         <ImageTestDebugPanel
@@ -98,5 +97,6 @@ export default function Home() {
         />
       </main>
     </div>
+    </FilterSelectionProvider>
   );
 }

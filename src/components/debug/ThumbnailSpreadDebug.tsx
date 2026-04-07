@@ -7,7 +7,7 @@ import {
   getThumbnailFullCardOuterSize,
   type ThumbnailSize,
 } from "@/components/ui/thumbnail-full";
-import { computeThumbnailSpreadLayout } from "@/lib/thumbnail-spread-layout";
+import { computeOrganicSpreadLayout } from "@/lib/organic-spread-layout";
 
 const DEMO_LABELS = ["Fairclouds", "Northwind", "Silverlake", "Marigold", "Harbor"] as const;
 
@@ -30,14 +30,7 @@ export function ThumbnailSpreadDebug() {
     Spread: folder(
       {
         count: { value: 5, min: 1, max: 100, step: 1 },
-        gap: { value: 16, min: 0, max: 64, step: 1 },
-        spiralScale: {
-          value: 10,
-          min: 4,
-          max: 48,
-          step: 1,
-          label: "Scatter wobble",
-        },
+        gap: { value: 8, min: 0, max: 64, step: 1 },
         size: {
           options: { sm: "sm", md: "md", lg: "lg" },
           value: "lg" as ThumbnailSize,
@@ -52,14 +45,13 @@ export function ThumbnailSpreadDebug() {
 
   const layout = useMemo(
     () =>
-      computeThumbnailSpreadLayout({
+      computeOrganicSpreadLayout({
         viewportWidth: viewport.width,
         viewportHeight: viewport.height,
         cardWidth: cardW,
         cardHeight: cardH,
         count: controls.count,
         gap: controls.gap,
-        spiralScale: controls.spiralScale,
       }),
     [
       viewport.width,
@@ -68,7 +60,6 @@ export function ThumbnailSpreadDebug() {
       cardH,
       controls.count,
       controls.gap,
-      controls.spiralScale,
     ],
   );
 
@@ -90,13 +81,12 @@ export function ThumbnailSpreadDebug() {
                 imageSrc="/title.svg"
                 imageAlt=""
                 label={DEMO_LABELS[i % DEMO_LABELS.length]!}
-                chipTone={i % 2 === 0 ? "light" : "dark"}
               />
             </div>
           ))}
-          {layout.placed < layout.requested && (
+          {layout.placed < controls.count && (
             <p className="absolute bottom-4 left-4 max-w-sm rounded bg-black/70 px-3 py-2 font-sans text-xs text-white">
-              Placed {layout.placed} of {layout.requested}: viewport or gap is too tight for
+              Placed {layout.placed} of {controls.count}: viewport or gap is too tight for
               this card size. Try smaller size, fewer items, or smaller gap.
             </p>
           )}

@@ -16,8 +16,8 @@ export default function DebugPage() {
         </Link>
       </p>
       <Thumbnail variant="full" size="lg" imageSrc="/title.svg" imageAlt="Full variant" />
-      <Thumbnail variant="text" size="lg" label="Fairclouds" chipTone="light" />
-      <Thumbnail variant="text" size="md" label="Fairclouds" chipTone="dark" />
+      <Thumbnail variant="text" size="lg" label="Fairclouds" />
+      <Thumbnail variant="text" size="md" label="Fairclouds" />
       <Thumbnail variant="image" size="sm" imageSrc="/title.svg" imageAlt="Image only" />
     </main>
   );
