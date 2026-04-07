@@ -204,7 +204,7 @@ export function DetailView({ row, onClose, className = "" }: DetailViewProps) {
 
           <div className="flex flex-col gap-4">
             <div className="flex gap-2.5">
-              <p className="w-[60px] shrink-0 font-fira-sans text-xs font-normal leading-[15px] tracking-[0.5px] text-text-body">
+              <p className="w-[60px] shrink-0 font-fira-mono text-xs font-normal leading-[15px] tracking-[0.5px] text-text-body">
                 Focus
               </p>
               <div className="flex min-w-0 flex-1 flex-wrap gap-1.5 gap-y-1.5">
@@ -219,7 +219,7 @@ export function DetailView({ row, onClose, className = "" }: DetailViewProps) {
             </div>
 
             <div className="flex gap-2.5">
-              <p className="w-[60px] shrink-0 font-fira-sans text-xs font-normal leading-[15px] tracking-[0.5px] text-text-body">
+              <p className="w-[60px] shrink-0 font-fira-mono text-xs font-normal leading-[15px] tracking-[0.5px] text-text-body">
                 Activity
               </p>
               <div className="flex min-w-0 flex-1 flex-wrap gap-x-1.5 gap-y-1.5">
@@ -234,7 +234,7 @@ export function DetailView({ row, onClose, className = "" }: DetailViewProps) {
             </div>
 
             <div className="flex gap-2.5">
-              <p className="w-[60px] shrink-0 font-fira-sans text-xs font-normal leading-[15px] tracking-[0.5px] text-text-body">
+              <p className="w-[60px] shrink-0 font-fira-mono text-xs font-normal leading-[15px] tracking-[0.5px] text-text-body">
                 Format
               </p>
               <div className="flex flex-wrap gap-1.5">
@@ -245,7 +245,7 @@ export function DetailView({ row, onClose, className = "" }: DetailViewProps) {
             </div>
 
             <div className="flex gap-2.5">
-              <p className="w-[60px] shrink-0 font-fira-sans text-xs font-normal leading-[15px] tracking-[0.5px] text-text-body">
+              <p className="w-[60px] shrink-0 font-fira-mono text-xs font-normal leading-[15px] tracking-[0.5px] text-text-body">
                 Network
               </p>
               <div className="flex min-w-0 flex-1 flex-wrap gap-1.5 gap-y-1.5">

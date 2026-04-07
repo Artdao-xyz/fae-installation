@@ -26,7 +26,7 @@ export function HeroTitleBlock({ title, subtitle, className = "" }: Props) {
       <div className="font-lust-text justify-start text-6xl leading-[65px] text-black">
         {title}
       </div>
-      <div className="font-fira-sans justify-start text-sm font-medium leading-4 text-black/50">
+      <div className="font-fira-mono justify-start text-sm font-medium leading-4 text-black/50">
         {subtitle}
       </div>
     </div>

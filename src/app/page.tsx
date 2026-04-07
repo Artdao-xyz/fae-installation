@@ -7,6 +7,7 @@ import {
   FilterSelectionProvider,
 } from "@/components/ui/filter-menu";
 import { HeroTitleBlock } from "@/components/ui/hero-title-block";
+import { PixelTessellationBackground } from "@/components/ui/pixel-tessellation-background";
 import {
   ImageParticleSimulation,
   type ImageParticleSimulationStats,
@@ -60,7 +61,8 @@ export default function Home() {
     <FilterSelectionProvider>
     <div className="flex min-h-screen w-full">
       <FilterMenu />
-      <main className="relative min-h-screen min-w-0 flex-1 p-5 text-[#303030]">
+      <PixelTessellationBackground />
+      <main className="relative z-1 min-h-screen min-w-0 flex-1 p-5 text-[#303030]">
 
         <HeroTitleBlock
           title="Future Art Ecosystems"
