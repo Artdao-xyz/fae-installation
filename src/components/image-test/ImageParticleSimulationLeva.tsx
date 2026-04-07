@@ -128,11 +128,11 @@ export function ImageParticleSimulationLeva(props: Props) {
         max: 1,
         step: 0.01,
       },
-      birthPhase: { value: DEFAULTS.birthPhase, min: 0.01, max: 0.3, step: 0.01 },
+      birthPhase: { value: DEFAULTS.birthPhase, min: 0.01, max: 0.35, step: 0.01 },
       deathPhaseStart: {
         value: DEFAULTS.deathPhaseStart,
         min: 0.5,
-        max: 0.99,
+        max: 1,
         step: 0.01,
       },
     }),

@@ -21,8 +21,13 @@ export function extractTextChunks(titles: string[]): string[] {
 
 const SCRAMBLE_ALPHABET =
   "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=[]{}|;:',.<>/?`~\\\"\\\\¡¿§¶¢£¥©®™†‡•…∞≈≠±÷√∑∏∆ΩΨЖЯ中々";
-const SCRAMBLE_BASE_PERIOD_SEC = 4.2;
-const SCRAMBLE_PERIOD_VARIANCE_SEC = 3.0;
+/** Longer = less frequent scramble “bursts” (per-tile period is base + random variance). */
+const SCRAMBLE_BASE_PERIOD_SEC = 9.5;
+const SCRAMBLE_PERIOD_VARIANCE_SEC = 5.0;
+/** Only the top of the wave counts — higher = shorter, rarer visible scramble. */
+const SCRAMBLE_INTENSITY_THRESHOLD = 0.32;
+/** How fast glyphs shuffle during a burst (updates per second). Lower = calmer. */
+const SCRAMBLE_TICK_HZ = 5;
 
 export function scrambleWord(
   word: string,
@@ -36,10 +41,10 @@ export function scrambleWord(
   const phase = seededRand(seed * 1.91) * Math.PI * 2;
 
   const wave = Math.max(0, Math.sin((time / period) * Math.PI * 2 + phase));
-  const intensity = Math.pow(wave, 3.2);
-  if (intensity < 0.18) return word;
+  const intensity = Math.pow(wave, 4.0);
+  if (intensity < SCRAMBLE_INTENSITY_THRESHOLD) return word;
 
-  const timeStep = Math.floor(time * 12);
+  const timeStep = Math.floor(time * SCRAMBLE_TICK_HZ);
 
   let output = "";
   for (let i = 0; i < word.length; i++) {

@@ -39,18 +39,21 @@ export const DEFAULTS = {
   orbitSpeedMax: 0.6,
   orbitRadialSpring: 0.8,
   orbitTangentialForce: 380,
-  orbitZAmplitude: 0.4,
+  orbitZAmplitude: 0.48,
   orbitZSpeedMin: 0.3,
   orbitZSpeedMax: 0.7,
   orbitTiltDeg: -15,
-  orbitRadiusSpread: 0.15,
+  /** Larger = wider radial band (inner/outer orbit radii differ more). */
+  orbitRadiusSpread: 0.3,
   viewportPadding: 60,
   viewportWallStrength: 3.0,
 
   lifeSpeedMin: 0.08,
   lifeSpeedMax: 0.22,
-  birthPhase: 0.06,
-  deathPhaseStart: 0.92,
+  /** Longer normalized window for fade-in (real time ∝ birthPhase / lifeSpeed). */
+  birthPhase: 0.18,
+  /** Set to `1` to disable shrink-before-respawn (tiles stay fully visible until reset). */
+  deathPhaseStart: 1,
 
   blurMax: 3.25,
   blurFarGate: 0.33,
@@ -220,8 +223,8 @@ export class ParticleSystem {
     const ps = physicsSeed ?? rowIndex;
     const r = (offset: number) => seededRand(ps + offset);
 
-    const baseRadiusX = this.viewW * 0.38;
-    const baseRadiusY = this.viewH * 0.32;
+    const baseRadiusX = this.viewW * 0.44;
+    const baseRadiusY = this.viewH * 0.38;
     const spread = c.orbitRadiusSpread;
     const orbitRadiusX = baseRadiusX * (1 + (r(2.1) - 0.5) * spread * 2);
     const orbitRadiusY = baseRadiusY * (1 + (r(2.7) - 0.5) * spread * 2);
@@ -380,9 +383,10 @@ export class ParticleSystem {
 
       let lifeFactor: number;
       if (p.life < c.birthPhase) {
-        const u = p.life / c.birthPhase;
-        lifeFactor = u * u;
-      } else if (p.life > c.deathPhaseStart) {
+        const u = clamp(p.life / c.birthPhase, 0, 1);
+        // Smoothstep: gentler than u² — less “pop” as tiles appear.
+        lifeFactor = u * u * (3 - 2 * u);
+      } else if (c.deathPhaseStart < 1 && p.life > c.deathPhaseStart) {
         const u =
           1 -
           (p.life - c.deathPhaseStart) / (1 - c.deathPhaseStart);

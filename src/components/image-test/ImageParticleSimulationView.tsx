@@ -12,6 +12,7 @@ import {
   getThumbnailTextVariantOuterSize,
   type ThumbnailSize,
 } from "@/components/ui/thumbnail-full";
+import { DetailView } from "@/components/ui/detail-view";
 import {
   ParticleSystem,
   type Particle,
@@ -31,6 +32,7 @@ import {
   computeSpreadTargets,
   pickSpreadIndicesFromRows,
   REGROUP_MS,
+  FILTER_DIM_MS,
   FILTER_BG_OPACITY_MUL,
   type SpreadLayoutPhase,
 } from "./image-particle-spread";
@@ -110,26 +112,11 @@ export function ImageParticleSimulationView({
   const spreadSignatureRef = useRef("");
   spreadSignatureRef.current = spreadSig;
 
-  const handleFilteredThumbnailClick = useCallback(
-    (row: ContentFixtureRow) => {
-      console.log("[filtered-thumbnail]", {
-        name: row.title,
-        filters: {
-          focus: [...selectedFocusAreas],
-          activity: [...selectedActivityTypes],
-        },
-        itemFocusAreas: [...row.focusAreas],
-        itemActivityTypes: [...row.activityTypes],
-        imageUrl: row.imageUrl,
-        content: row.content,
-        resources: [...row.resources],
-        year: row.year,
-        formats: [...row.formats],
-        networks: [...row.networks],
-      });
-    },
-    [selectedFocusAreas, selectedActivityTypes],
-  );
+  const [detailRow, setDetailRow] = useState<ContentFixtureRow | null>(null);
+
+  const handleFilteredThumbnailClick = useCallback((row: ContentFixtureRow) => {
+    setDetailRow(row);
+  }, []);
 
   const spreadEnterSignatureRef = useRef<string | null>(null);
   const respreadPendingRef = useRef(false);
@@ -152,9 +139,6 @@ export function ImageParticleSimulationView({
   const idleSnapshotRef = useRef<Particle[] | null>(null);
   /** Inner spread slots — filter-matching tiles (center-first). */
   const spreadTargetsRef = useRef<Vec3[]>([]);
-  /** Outer spread slots — same organic algorithm, parallel assignment (ring after filtered). */
-  const spreadBgTargetsRef = useRef<Vec3[]>([]);
-  const spreadBgIndicesRef = useRef<number[]>([]);
   const selectedIndicesRef = useRef<number[]>([]);
   const filterT0Ref = useRef(0);
   const spreadLayoutPhaseRef = useRef<SpreadLayoutPhase>("idle");
@@ -210,12 +194,6 @@ export function ImageParticleSimulationView({
 
   const filteredLgOuter = useMemo(
     () => getThumbnailFullCardOuterSize("lg"),
-    [],
-  );
-
-  /** Background spread slots use `sm` card footprint (independent layout from filtered `lg`). */
-  const spreadBgSmOuter = useMemo(
-    () => getThumbnailFullCardOuterSize("sm"),
     [],
   );
 
@@ -413,13 +391,7 @@ export function ImageParticleSimulationView({
       idleNodeWidthRef.current = idleW;
 
       let sel = orderedPick.slice();
-      const selSet = new Set(sel);
-      const bgOrdered: number[] = [];
-      for (let ii = 0; ii < contentRows.length; ii++) {
-        if (!selSet.has(ii)) bgOrdered.push(ii);
-      }
       const f = sel.length;
-      const b = bgOrdered.length;
       const filteredTargets = computeSpreadTargets(
         viewport.width,
         viewport.height,
@@ -427,19 +399,9 @@ export function ImageParticleSimulationView({
         f,
         "lg",
       );
-      const bgTargetsRaw = computeSpreadTargets(
-        viewport.width,
-        viewport.height,
-        cfg.zNear,
-        b,
-        "sm",
-      );
       const fCount = Math.min(f, filteredTargets.length);
-      const bCount = Math.min(b, bgTargetsRaw.length);
       sel = sel.slice(0, fCount);
       spreadTargetsRef.current = filteredTargets.slice(0, fCount);
-      spreadBgTargetsRef.current = bgTargetsRaw.slice(0, bCount);
-      spreadBgIndicesRef.current = bgOrdered.slice(0, bCount);
       selectedIndicesRef.current = sel;
       setSelectedFilterIndices(sel);
       setSpreadChromeActive(true);
@@ -513,8 +475,6 @@ export function ImageParticleSimulationView({
       const phase = spreadLayoutPhaseRef.current;
       const snap = idleSnapshotRef.current;
       const targets = spreadTargetsRef.current;
-      const bgTargets = spreadBgTargetsRef.current;
-      const bgIdx = spreadBgIndicesRef.current;
       const selIdx = selectedIndicesRef.current;
 
       if (phase === "idle") {
@@ -524,12 +484,12 @@ export function ImageParticleSimulationView({
         } else {
           sys.step(dt, speed, globalTime);
         }
+      } else {
+        sys.step(dt, speed, globalTime);
       }
 
       const spreadAnimActive =
-        phase === "enter" &&
-        snap &&
-        (targets.length > 0 || bgTargets.length > 0);
+        phase === "enter" && snap && targets.length > 0;
       if (spreadAnimActive) {
         const elapsed = now - filterT0Ref.current;
         const u = Math.min(1, elapsed / REGROUP_MS);
@@ -544,16 +504,6 @@ export function ImageParticleSimulationView({
           p.vel = v3(0, 0, 0);
           p.opacity = clamp(snap[i]!.opacity + (1 - snap[i]!.opacity) * e, 0, 1);
         }
-        for (let j = 0; j < bgIdx.length; j++) {
-          const i = bgIdx[j]!;
-          const p = sys.particles[i];
-          if (!p || j >= bgTargets.length) continue;
-          const s = snap[i]!;
-          const tgt = bgTargets[j]!;
-          p.pos = lerp3(s.pos, tgt, e);
-          p.vel = v3(0, 0, 0);
-          p.opacity = s.opacity;
-        }
         if (u >= 1) {
           for (let j = 0; j < selIdx.length; j++) {
             const i = selIdx[j]!;
@@ -561,19 +511,9 @@ export function ImageParticleSimulationView({
             if (!p || j >= targets.length) continue;
             p.pos = { ...targets[j]! };
           }
-          for (let j = 0; j < bgIdx.length; j++) {
-            const i = bgIdx[j]!;
-            const p = sys.particles[i];
-            if (!p || j >= bgTargets.length) continue;
-            p.pos = { ...bgTargets[j]! };
-          }
           spreadLayoutPhaseRef.current = "hold";
         }
-      } else if (
-        phase === "hold" &&
-        snap &&
-        (targets.length > 0 || bgTargets.length > 0)
-      ) {
+      } else if (phase === "hold" && snap && targets.length > 0) {
         for (let j = 0; j < selIdx.length; j++) {
           const i = selIdx[j]!;
           const p = sys.particles[i];
@@ -582,41 +522,31 @@ export function ImageParticleSimulationView({
           p.vel = v3(0, 0, 0);
           p.opacity = 1;
         }
-        for (let j = 0; j < bgIdx.length; j++) {
-          const i = bgIdx[j]!;
-          const p = sys.particles[i];
-          if (!p || j >= bgTargets.length) continue;
-          p.pos = { ...bgTargets[j]! };
-          p.vel = v3(0, 0, 0);
-          const s = snap[i];
-          if (s) p.opacity = s.opacity;
-        }
       } else if (phase === "leave" && snap) {
         const elapsed = now - filterT0Ref.current;
         const u = Math.min(1, elapsed / REGROUP_MS);
         const e = smoothstep01(u);
         const leaveFrom = leaveFromRef.current;
         const leaveScaleFrom = leaveScaleFromRef.current;
-        for (let i = 0; i < sys.particles.length; i++) {
+        for (let j = 0; j < selIdx.length; j++) {
+          const i = selIdx[j]!;
           const p = sys.particles[i];
-          const s = snap[i]!;
+          const s = snap[i];
+          if (!p || !s) continue;
           const startPos = leaveFrom[i] ?? s.pos;
           p.pos = lerp3(startPos, s.pos, e);
           const s0 = leaveScaleFrom[i] ?? s.scale;
           p.scale = s0 + (s.scale - s0) * e;
           p.vel = v3(0, 0, 0);
-          if (selIdx.includes(i)) {
-            p.opacity = clamp((1 - e) + e * s.opacity, 0, 1);
-          } else {
-            p.opacity = clamp(s.opacity * e, 0, 1);
-          }
+          p.opacity = clamp((1 - e) + e * s.opacity, 0, 1);
         }
         if (u >= 1) {
-          for (let i = 0; i < sys.particles.length; i++) {
+          for (let j = 0; j < selIdx.length; j++) {
+            const i = selIdx[j]!;
             const p = sys.particles[i];
-            const s = snap[i]!;
-            const restored = cloneParticle(s);
-            Object.assign(p, restored);
+            const s = snap[i];
+            if (!p || !s) continue;
+            Object.assign(p, cloneParticle(s));
           }
           leaveCompleteAfterRenderRef.current = true;
         }
@@ -632,15 +562,21 @@ export function ImageParticleSimulationView({
         const idleWidths = idleNodeWidthRef.current;
         let enterScaleT = 1;
         let leaveScaleT = 1;
+        let dimEnterT = 0;
+        let dimLeaveT = 0;
         if (passPh === "enter" && snapForScale) {
           const elapsedEnter = styleNow - filterT0Ref.current;
           const uEnter = Math.min(1, elapsedEnter / REGROUP_MS);
           enterScaleT = smoothstep01(uEnter);
+          const uDim = Math.min(1, elapsedEnter / FILTER_DIM_MS);
+          dimEnterT = smoothstep01(uDim);
         }
         if (passPh === "leave" && snapForScale) {
           const elapsedLeave = styleNow - filterT0Ref.current;
           const uLeave = Math.min(1, elapsedLeave / REGROUP_MS);
           leaveScaleT = smoothstep01(uLeave);
+          const uDimL = Math.min(1, elapsedLeave / FILTER_DIM_MS);
+          dimLeaveT = smoothstep01(uDimL);
         }
 
         const styleGlobalTime = styleNow / 1000;
@@ -654,9 +590,13 @@ export function ImageParticleSimulationView({
             passPh !== "idle" && selectedIndicesRef.current.includes(i);
           const spreadLayoutBg =
             passPh !== "idle" && !selectedIndicesRef.current.includes(i);
-          const filterDimmedBg =
-            (passPh === "enter" || passPh === "hold") &&
-            !selectedIndicesRef.current.includes(i);
+          /** 0 = full brightness, 1 = full dim — fades in during enter, out during leave. */
+          let bgDimT = 0;
+          if (spreadLayoutBg) {
+            if (passPh === "enter") bgDimT = dimEnterT;
+            else if (passPh === "hold") bgDimT = 1;
+            else if (passPh === "leave") bgDimT = 1 - dimLeaveT;
+          }
 
           const perspScale =
             c.perspective / (c.perspective - p.pos.z);
@@ -706,53 +646,6 @@ export function ImageParticleSimulationView({
                 lw,
               );
             }
-          } else if (spreadLayoutBg) {
-            const idleW =
-              idleWidths?.[i] ??
-              (p.isText
-                ? getThumbnailTextVariantOuterSize(thumbnailSize).width
-                : thumbnailFramePx);
-            const lw =
-              node.offsetWidth > 0
-                ? node.offsetWidth
-                : passPh === "hold"
-                  ? spreadBgSmOuter.width
-                  : passPh === "enter"
-                    ? idleW +
-                      (spreadBgSmOuter.width - idleW) * enterScaleT
-                    : spreadBgSmOuter.width +
-                      (idleW - spreadBgSmOuter.width) * leaveScaleT;
-            if (passPh === "hold") {
-              finalScale = scaleForTargetVisualWidth(
-                spreadBgSmOuter.width,
-                lw,
-              );
-            } else if (passPh === "enter" && snapForScale) {
-              const s = snapForScale[i];
-              if (s) {
-                const a0 = apparentScaleFromParticle(s, c.perspective);
-                const idleVisualW = idleW * a0;
-                const endVisualW = spreadBgSmOuter.width;
-                const visualW =
-                  idleVisualW + (endVisualW - idleVisualW) * enterScaleT;
-                finalScale = scaleForTargetVisualWidth(visualW, lw);
-              } else {
-                finalScale = scaleForTargetVisualWidth(
-                  spreadBgSmOuter.width,
-                  lw,
-                );
-              }
-            } else if (passPh === "leave" && snapForScale) {
-              finalScale = scaleForTargetVisualWidth(
-                idleW * apparentIdle,
-                lw,
-              );
-            } else {
-              finalScale = scaleForTargetVisualWidth(
-                spreadBgSmOuter.width,
-                lw,
-              );
-            }
           } else {
             const refPx =
               idleWidths?.[i] ??
@@ -797,18 +690,19 @@ export function ImageParticleSimulationView({
             }
           }
 
-          let outOpacity = clamp(p.opacity, 0, 1);
-          if (filterDimmedBg) {
-            outOpacity = clamp(p.opacity * FILTER_BG_OPACITY_MUL, 0, 1);
-          }
+          const dimOpacityMul =
+            1 + (FILTER_BG_OPACITY_MUL - 1) * bgDimT;
+          let outOpacity = clamp(p.opacity * dimOpacityMul, 0, 1);
 
           const filterParts: string[] = [];
           if (blurPx >= 0.03) {
             filterParts.push(`blur(${blurPx.toFixed(2)}px)`);
           }
-          if (filterDimmedBg) {
-            filterParts.push("grayscale(0.5)");
-            filterParts.push("saturate(0.55)");
+          if (bgDimT > 0) {
+            filterParts.push(`grayscale(${(0.5 * bgDimT).toFixed(3)})`);
+            filterParts.push(
+              `saturate(${(1 - 0.45 * bgDimT).toFixed(3)})`,
+            );
           }
 
           node.style.transform = `translate3d(${p.pos.x.toFixed(1)}px, ${p.pos.y.toFixed(1)}px, 0px) scale(${finalScale.toFixed(4)})`;
@@ -819,13 +713,13 @@ export function ImageParticleSimulationView({
           node.style.filter = filterParts.length ? filterParts.join(" ") : "none";
 
           if (p.isText) {
-            if (filteredActive || spreadLayoutBg) {
+            if (filteredActive) {
               const img = imgRefs.current[i];
               const row = contentRows[i];
               if (img && row) {
                 syncImgToContentRow(img, row);
               }
-            } else if (!filterDimmedBg && !spreadLayoutBg) {
+            } else {
               const textEl = textRefs.current[i];
               if (textEl) {
                 const row = contentRows[i];
@@ -868,12 +762,13 @@ export function ImageParticleSimulationView({
         const snapDone = idleSnapshotRef.current;
         const selLeave = [...selectedIndicesRef.current];
         if (snapDone && sys) {
-          sys.particles = snapDone.map(cloneParticle);
+          for (const si of selLeave) {
+            const s = snapDone[si];
+            if (s) sys.particles[si] = cloneParticle(s);
+          }
         }
         idleSnapshotRef.current = null;
         spreadTargetsRef.current = [];
-        spreadBgTargetsRef.current = [];
-        spreadBgIndicesRef.current = [];
         selectedIndicesRef.current = [];
         flushSync(() => {
           setSelectedFilterIndices([]);
@@ -927,8 +822,6 @@ export function ImageParticleSimulationView({
     thumbnailFramePx,
     thumbnailSize,
     filteredLgOuter.width,
-    spreadBgSmOuter.width,
-    spreadBgSmOuter.height,
   ]);
 
   return (
@@ -983,40 +876,18 @@ export function ImageParticleSimulationView({
                         marginLeft: `${-filteredLgOuter.width / 2}px`,
                         marginTop: `${-filteredLgOuter.height / 2}px`,
                       }
-                    : spreadDimmed
-                      ? {
-                          marginLeft: `${-spreadBgSmOuter.width / 2}px`,
-                          marginTop: `${-spreadBgSmOuter.height / 2}px`,
-                        }
-                      : {
-                          width: `${textIdleOuter.width}px`,
-                          height: `${textIdleOuter.height}px`,
-                          marginLeft: `${-textIdleOuter.width / 2}px`,
-                          marginTop: `${-textIdleOuter.height / 2}px`,
-                        }),
+                    : {
+                        width: `${textIdleOuter.width}px`,
+                        height: `${textIdleOuter.height}px`,
+                        marginLeft: `${-textIdleOuter.width / 2}px`,
+                        marginTop: `${-textIdleOuter.height / 2}px`,
+                      }),
                 }}
               >
                 {showFilteredCard ? (
                   <Thumbnail
                     variant="full"
                     size="lg"
-                    label={row.title}
-                    imageSrc={row.imageUrl}
-                    imageAlt={row.title}
-                    labelRef={(el) => {
-                      textRefs.current[i] = el;
-                    }}
-                    imageRef={(el) => {
-                      imgRefs.current[i] = el;
-                    }}
-                    imageWidth={fetchedWidth}
-                    imageHeight={fetchedHeight}
-                    accessibilityLabel={row.title}
-                  />
-                ) : spreadDimmed ? (
-                  <Thumbnail
-                    variant="full"
-                    size="sm"
                     label={row.title}
                     imageSrc={row.imageUrl}
                     imageAlt={row.title}
@@ -1070,36 +941,18 @@ export function ImageParticleSimulationView({
                       marginLeft: `${-filteredLgOuter.width / 2}px`,
                       marginTop: `${-filteredLgOuter.height / 2}px`,
                     }
-                  : spreadDimmed
-                    ? {
-                        marginLeft: `${-spreadBgSmOuter.width / 2}px`,
-                        marginTop: `${-spreadBgSmOuter.height / 2}px`,
-                      }
-                    : {
-                        width: `${thumbnailFramePx}px`,
-                        height: `${thumbnailFramePx}px`,
-                        marginLeft: `${-thumbnailFramePx / 2}px`,
-                        marginTop: `${-thumbnailFramePx / 2}px`,
-                      }
+                  : {
+                      width: `${thumbnailFramePx}px`,
+                      height: `${thumbnailFramePx}px`,
+                      marginLeft: `${-thumbnailFramePx / 2}px`,
+                      marginTop: `${-thumbnailFramePx / 2}px`,
+                    }
               }
             >
               {showFilteredCard ? (
                 <Thumbnail
                   variant="full"
                   size="lg"
-                  label={row.title}
-                  imageSrc={row.imageUrl}
-                  imageAlt={row.title}
-                  imageRef={(el) => {
-                    imgRefs.current[i] = el;
-                  }}
-                  imageWidth={fetchedWidth}
-                  imageHeight={fetchedHeight}
-                />
-              ) : spreadDimmed ? (
-                <Thumbnail
-                  variant="full"
-                  size="sm"
                   label={row.title}
                   imageSrc={row.imageUrl}
                   imageAlt={row.title}
@@ -1127,6 +980,9 @@ export function ImageParticleSimulationView({
           );
         })}
       </div>
+      {detailRow ? (
+        <DetailView row={detailRow} onClose={() => setDetailRow(null)} />
+      ) : null}
     </section>
   );
 }

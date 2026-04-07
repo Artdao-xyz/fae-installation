@@ -67,7 +67,7 @@ export default function Home() {
           subtitle="Cultural Infraestructure Research"
         />
 
-        <ImageTestDebugPanel
+        {/* <ImageTestDebugPanel
           mode={mode}
           onModeChange={setMode}
           loadedCount={stats.loadedCount}
@@ -83,7 +83,7 @@ export default function Home() {
           displayedWidth={DISPLAYED_WIDTH}
           displayedHeight={DISPLAYED_HEIGHT}
           loadDone={stats.loadDone}
-        />
+        /> */}
 
         <ImageParticleSimulation
           mode={mode}
