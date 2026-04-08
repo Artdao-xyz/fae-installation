@@ -43,6 +43,7 @@ import {
   REGROUP_MS,
   FILTER_DIM_MS,
   HOVER_CARD_MS,
+  HOVER_ENTER_DELAY_MS,
   FILTER_BG_OPACITY_MUL,
   type FilterMatchMode,
   type SpreadLayoutPhase,
@@ -184,37 +185,64 @@ export function ImageParticleSimulationView({
   /** `in` → `hold` (expanded); `out` = shrinking until DOM clears. */
   const hoverPhaseRef = useRef<"in" | "hold" | "out" | null>(null);
   const hoverAnimT0Ref = useRef(0);
+  const hoverEnterDelayTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
+
+  const clearHoverEnterDelay = useCallback(() => {
+    if (hoverEnterDelayTimerRef.current !== null) {
+      clearTimeout(hoverEnterDelayTimerRef.current);
+      hoverEnterDelayTimerRef.current = null;
+    }
+  }, []);
 
   const handleTilePointerEnter = useCallback(
     (index: number) => {
       if (spreadChromeActive) return;
+      clearHoverEnterDelay();
       const sys = systemRef.current;
       const p = sys?.particles[index];
       if (!p) return;
-      const t = performance.now();
-      hoverPhaseRef.current = "in";
-      hoverAnimT0Ref.current = t;
-      hoverSlotRef.current = index;
-      hoverPinRef.current = { slot: index, pos: { ...p.pos } };
-      setHoveredIndex(index);
+      hoverEnterDelayTimerRef.current = setTimeout(() => {
+        hoverEnterDelayTimerRef.current = null;
+        if (spreadChromeActiveRef.current) return;
+        const sysInner = systemRef.current;
+        const pt = sysInner?.particles[index];
+        if (!pt) return;
+        const t = performance.now();
+        hoverPhaseRef.current = "in";
+        hoverAnimT0Ref.current = t;
+        hoverSlotRef.current = index;
+        hoverPinRef.current = { slot: index, pos: { ...pt.pos } };
+        setHoveredIndex(index);
+      }, HOVER_ENTER_DELAY_MS);
     },
-    [spreadChromeActive],
+    [clearHoverEnterDelay, spreadChromeActive],
   );
 
-  const handleTilePointerLeave = useCallback((index: number) => {
-    if (hoverSlotRef.current !== index) return;
-    hoverPhaseRef.current = "out";
-    hoverAnimT0Ref.current = performance.now();
-  }, []);
+  const handleTilePointerLeave = useCallback(
+    (index: number) => {
+      clearHoverEnterDelay();
+      if (hoverSlotRef.current !== index) return;
+      hoverPhaseRef.current = "out";
+      hoverAnimT0Ref.current = performance.now();
+    },
+    [clearHoverEnterDelay],
+  );
 
   useEffect(() => {
     if (!spreadChromeActive) return;
+    clearHoverEnterDelay();
     hoverPhaseRef.current = null;
     hoverAnimT0Ref.current = 0;
     hoverSlotRef.current = null;
     hoverPinRef.current = null;
     setHoveredIndex(null);
-  }, [spreadChromeActive]);
+  }, [spreadChromeActive, clearHoverEnterDelay]);
+
+  useEffect(() => {
+    return () => clearHoverEnterDelay();
+  }, [clearHoverEnterDelay]);
 
   const idleSnapshotRef = useRef<Particle[] | null>(null);
   /** Inner spread slots — filter-matching tiles (center-first). */
@@ -499,6 +527,10 @@ export function ImageParticleSimulationView({
       spreadInPlaceRespreadRef.current =
         phaseBefore === "hold" || phaseBefore === "enter";
 
+      if (hoverEnterDelayTimerRef.current !== null) {
+        clearTimeout(hoverEnterDelayTimerRef.current);
+        hoverEnterDelayTimerRef.current = null;
+      }
       hoverPhaseRef.current = null;
       hoverAnimT0Ref.current = 0;
       hoverSlotRef.current = null;
