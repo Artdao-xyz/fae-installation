@@ -16,6 +16,13 @@ export type FilterSelectionContextValue = {
   toggleActivityType: (label: string) => void;
   clearFocusAreas: () => void;
   clearActivityTypes: () => void;
+  /**
+   * Replaces the current selection so it matches a content row’s tags (e.g. opening detail from a tile).
+   */
+  setFiltersFromContentRow: (row: {
+    focusAreas: readonly string[];
+    activityTypes: readonly string[];
+  }) => void;
 };
 
 const FilterSelectionContext = createContext<FilterSelectionContextValue | null>(
@@ -54,6 +61,14 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
     [],
   );
 
+  const setFiltersFromContentRow = useCallback(
+    (row: { focusAreas: readonly string[]; activityTypes: readonly string[] }) => {
+      setSelectedFocusAreas(new Set(row.focusAreas));
+      setSelectedActivityTypes(new Set(row.activityTypes));
+    },
+    [],
+  );
+
   const value = useMemo<FilterSelectionContextValue>(
     () => ({
       selectedFocusAreas,
@@ -62,6 +77,7 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
       toggleActivityType,
       clearFocusAreas,
       clearActivityTypes,
+      setFiltersFromContentRow,
     }),
     [
       selectedFocusAreas,
@@ -70,6 +86,7 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
       toggleActivityType,
       clearFocusAreas,
       clearActivityTypes,
+      setFiltersFromContentRow,
     ],
   );
 

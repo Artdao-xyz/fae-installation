@@ -20,20 +20,42 @@ export const FILTER_BG_OPACITY_MUL = 0.03;
 /** RAF tick: idle physics vs easing into spread vs locked spread vs easing out. */
 export type SpreadLayoutPhase = "idle" | "enter" | "hold" | "leave";
 
+/**
+ * - `intersection`: row must include **every** selected focus and **every** selected activity (AND).
+ * - `union`: row matches if it has **any** selected focus (when any focus selected) and **any** selected activity (when any activity selected) — cumulative OR within each group.
+ */
+export type FilterMatchMode = "intersection" | "union";
+
 function rowMatchesSpreadTags(
   row: ContentFixtureRow,
   focusSel: ReadonlySet<string>,
   activitySel: ReadonlySet<string>,
+  mode: FilterMatchMode,
 ): boolean {
   if (focusSel.size === 0 && activitySel.size === 0) return false;
-  if (focusSel.size > 0 && !row.focusAreas.some((f) => focusSel.has(f))) {
-    return false;
+
+  if (mode === "union") {
+    if (focusSel.size > 0 && !row.focusAreas.some((f) => focusSel.has(f))) {
+      return false;
+    }
+    if (
+      activitySel.size > 0 &&
+      !row.activityTypes.some((a) => activitySel.has(a))
+    ) {
+      return false;
+    }
+    return true;
   }
-  if (
-    activitySel.size > 0 &&
-    !row.activityTypes.some((a) => activitySel.has(a))
-  ) {
-    return false;
+
+  if (focusSel.size > 0) {
+    for (const f of focusSel) {
+      if (!row.focusAreas.includes(f)) return false;
+    }
+  }
+  if (activitySel.size > 0) {
+    for (const a of activitySel) {
+      if (!row.activityTypes.includes(a)) return false;
+    }
   }
   return true;
 }
@@ -44,10 +66,11 @@ export function pickSpreadIndicesFromRows(
   textIndexSet: Set<number>,
   focusSel: ReadonlySet<string>,
   activitySel: ReadonlySet<string>,
+  matchMode: FilterMatchMode = "intersection",
 ): number[] {
   const eligible: number[] = [];
   for (let i = 0; i < contentRows.length; i++) {
-    if (rowMatchesSpreadTags(contentRows[i]!, focusSel, activitySel)) {
+    if (rowMatchesSpreadTags(contentRows[i]!, focusSel, activitySel, matchMode)) {
       eligible.push(i);
     }
   }

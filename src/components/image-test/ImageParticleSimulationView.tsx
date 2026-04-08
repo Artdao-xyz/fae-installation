@@ -44,6 +44,7 @@ import {
   FILTER_DIM_MS,
   HOVER_CARD_MS,
   FILTER_BG_OPACITY_MUL,
+  type FilterMatchMode,
   type SpreadLayoutPhase,
 } from "./image-particle-spread";
 import { scaleForTargetVisualWidth } from "./image-particle-scale";
@@ -89,6 +90,11 @@ export type ImageParticleSimulationViewProps = {
    * right when the detail panel is open to match its fixed width). Omit to use the full window.
    */
   placementContainerRef?: RefObject<HTMLElement | null>;
+  /**
+   * How spread rows are chosen from Focus + Activity selections.
+   * Default `intersection` (AND). Leva can set `union` (OR / cumulative) to compare.
+   */
+  filterMatchMode?: FilterMatchMode;
 };
 
 export function ImageParticleSimulationView({
@@ -103,8 +109,14 @@ export function ImageParticleSimulationView({
   config,
   idleTextFullTitle = false,
   placementContainerRef,
+  filterMatchMode: filterMatchModeProp,
 }: ImageParticleSimulationViewProps) {
-  const { selectedFocusAreas, selectedActivityTypes } = useFilterSelection();
+  const filterMatchMode = filterMatchModeProp ?? "intersection";
+  const filterMatchModeRef = useRef(filterMatchMode);
+  filterMatchModeRef.current = filterMatchMode;
+
+  const { selectedFocusAreas, selectedActivityTypes, setFiltersFromContentRow } =
+    useFilterSelection();
 
   const idleTextFullTitleRef = useRef(idleTextFullTitle);
   idleTextFullTitleRef.current = idleTextFullTitle;
@@ -132,9 +144,13 @@ export function ImageParticleSimulationView({
   const detailRowRef = useRef<ContentFixtureRow | null>(null);
   detailRowRef.current = detailRow;
 
-  const handleFilteredThumbnailClick = useCallback((row: ContentFixtureRow) => {
-    setDetailRow(row);
-  }, []);
+  const handleFilteredThumbnailClick = useCallback(
+    (row: ContentFixtureRow) => {
+      setFiltersFromContentRow(row);
+      setDetailRow(row);
+    },
+    [setFiltersFromContentRow],
+  );
 
   const spreadEnterSignatureRef = useRef<string | null>(null);
 
@@ -475,6 +491,7 @@ export function ImageParticleSimulationView({
         textIndexSet,
         selPick.focus,
         selPick.activity,
+        filterMatchModeRef.current,
       );
       if (orderedPick.length === 0) return false;
 
@@ -546,6 +563,7 @@ export function ImageParticleSimulationView({
         textIndexSet,
         sel.focus,
         sel.activity,
+        filterMatchModeRef.current,
       );
 
       const phaseNow = spreadLayoutPhaseRef.current;
@@ -1017,6 +1035,7 @@ export function ImageParticleSimulationView({
     thumbnailFramePx,
     thumbnailSize,
     filteredLgOuter.width,
+    filterMatchMode,
   ]);
 
   return (
@@ -1044,6 +1063,9 @@ export function ImageParticleSimulationView({
           const showHoverCard = hoveredIndex === i && !spreadChromeActive;
           const showChromeCard = showFilteredCard || showHoverCard;
           const spreadDimmed = spreadChromeActive && !showFilteredCard;
+          /** Idle: click opens detail without requiring hover first; spread: only matching tiles. */
+          const opensDetailOnClick =
+            !spreadDimmed && (showChromeCard || !spreadChromeActive);
 
           if (isText) {
             const rowWords = textWordsByRow[i] ?? [];
@@ -1061,14 +1083,14 @@ export function ImageParticleSimulationView({
                   nodeRefs.current[i] = el;
                 }}
                 className={`absolute left-1/2 top-1/2 will-change-[transform,opacity,filter] ${
-                  showChromeCard
+                  opensDetailOnClick
                     ? "cursor-pointer pointer-events-auto"
                     : ""
                 } ${spreadDimmed ? "pointer-events-none" : ""}`}
                 onPointerEnter={() => handleTilePointerEnter(i)}
                 onPointerLeave={() => handleTilePointerLeave(i)}
                 onClick={
-                  showChromeCard
+                  opensDetailOnClick
                     ? (e) => {
                         e.stopPropagation();
                         handleFilteredThumbnailClick(row);
@@ -1130,14 +1152,14 @@ export function ImageParticleSimulationView({
                 nodeRefs.current[i] = el;
               }}
               className={`absolute left-1/2 top-1/2 will-change-[transform,opacity,filter] ${
-                showChromeCard
+                opensDetailOnClick
                   ? "cursor-pointer pointer-events-auto"
                   : ""
               } ${spreadDimmed ? "pointer-events-none" : ""}`}
               onPointerEnter={() => handleTilePointerEnter(i)}
               onPointerLeave={() => handleTilePointerLeave(i)}
               onClick={
-                showChromeCard
+                opensDetailOnClick
                   ? (e) => {
                       e.stopPropagation();
                       handleFilteredThumbnailClick(row);

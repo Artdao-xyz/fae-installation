@@ -7,13 +7,25 @@ import {
   type ImageParticleSimulationViewProps,
 } from "./ImageParticleSimulationView";
 
-type Props = Omit<ImageParticleSimulationViewProps, "config" | "idleTextFullTitle">;
+type Props = Omit<
+  ImageParticleSimulationViewProps,
+  "config" | "idleTextFullTitle" | "filterMatchMode"
+>;
 
 export function ImageParticleSimulationLeva(props: Props) {
   const idleLabel = useControls("Idle text", {
     showFullTitle: {
       value: false,
       label: "Full title (not keyword)",
+    },
+  });
+
+  /** `true` = original OR-style (cumulative); `false` = require every selected tag (AND). */
+  const { cumulativeFilterMatching } = useControls("Filter matching (dev)", {
+    cumulativeFilterMatching: {
+      value: false,
+      label:
+        "Cumulative (OR — widen when adding tags). Off = require ALL selected tags (AND). Same result if only 1 Focus + 1 Activity tag.",
     },
   });
 
@@ -154,6 +166,9 @@ export function ImageParticleSimulationLeva(props: Props) {
       {...props}
       config={config}
       idleTextFullTitle={idleLabel.showFullTitle}
+      filterMatchMode={
+        cumulativeFilterMatching ? "union" : "intersection"
+      }
     />
   );
 }
