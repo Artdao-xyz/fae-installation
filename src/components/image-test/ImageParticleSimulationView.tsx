@@ -1095,9 +1095,8 @@ export function ImageParticleSimulationView({
           const showHoverCard = hoveredIndex === i && !spreadChromeActive;
           const showChromeCard = showFilteredCard || showHoverCard;
           const spreadDimmed = spreadChromeActive && !showFilteredCard;
-          /** Idle: click opens detail without requiring hover first; spread: only matching tiles. */
-          const opensDetailOnClick =
-            !spreadDimmed && (showChromeCard || !spreadChromeActive);
+          /** Detail opens only from a tile in the active filter spread (not in idle hover). */
+          const opensDetailOnClick = showFilteredCard;
 
           if (isText) {
             const rowWords = textWordsByRow[i] ?? [];
@@ -1115,10 +1114,8 @@ export function ImageParticleSimulationView({
                   nodeRefs.current[i] = el;
                 }}
                 className={`absolute left-1/2 top-1/2 will-change-[transform,opacity,filter] ${
-                  opensDetailOnClick
-                    ? "cursor-pointer pointer-events-auto"
-                    : ""
-                } ${spreadDimmed ? "pointer-events-none" : ""}`}
+                  opensDetailOnClick ? "cursor-pointer " : ""
+                }${spreadDimmed ? "pointer-events-none" : "pointer-events-auto"}`}
                 onPointerEnter={() => handleTilePointerEnter(i)}
                 onPointerLeave={() => handleTilePointerLeave(i)}
                 onClick={
@@ -1184,10 +1181,8 @@ export function ImageParticleSimulationView({
                 nodeRefs.current[i] = el;
               }}
               className={`absolute left-1/2 top-1/2 will-change-[transform,opacity,filter] ${
-                opensDetailOnClick
-                  ? "cursor-pointer pointer-events-auto"
-                  : ""
-              } ${spreadDimmed ? "pointer-events-none" : ""}`}
+                opensDetailOnClick ? "cursor-pointer " : ""
+              }${spreadDimmed ? "pointer-events-none" : "pointer-events-auto"}`}
               onPointerEnter={() => handleTilePointerEnter(i)}
               onPointerLeave={() => handleTilePointerLeave(i)}
               onClick={

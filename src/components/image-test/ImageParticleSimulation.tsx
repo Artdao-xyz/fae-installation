@@ -18,8 +18,12 @@ const ImageParticleSimulationLeva = lazy(() =>
   })),
 );
 
+const showLeva =
+  process.env.NODE_ENV === "development" ||
+  process.env.NEXT_PUBLIC_SHOW_LEVA === "true";
+
 export function ImageParticleSimulation(props: ImageParticleSimulationProps) {
-  if (process.env.NODE_ENV === "development") {
+  if (showLeva) {
     return (
       <Suspense fallback={null}>
         <ImageParticleSimulationLeva {...props} />
