@@ -1,6 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type RefObject,
+} from "react";
 import { flushSync } from "react-dom";
 import { useFilterSelection } from "@/components/ui/filter-menu/FilterSelectionContext";
 import { listContent } from "@/lib/content-repository";
@@ -76,6 +84,11 @@ export type ImageParticleSimulationViewProps = {
   config: SimConfig;
   /** Dev (Leva): idle text tiles show full `title` instead of one keyword. */
   idleTextFullTitle?: boolean;
+  /**
+   * When set, idle orbit + spread packing use this element’s screen rect (clipped on the
+   * right when the detail panel is open to match its fixed width). Omit to use the full window.
+   */
+  placementContainerRef?: RefObject<HTMLElement | null>;
 };
 
 export function ImageParticleSimulationView({
@@ -89,6 +102,7 @@ export function ImageParticleSimulationView({
   onStatsChange,
   config,
   idleTextFullTitle = false,
+  placementContainerRef,
 }: ImageParticleSimulationViewProps) {
   const { selectedFocusAreas, selectedActivityTypes } = useFilterSelection();
 
@@ -132,7 +146,13 @@ export function ImageParticleSimulationView({
   const [loadedCount, setLoadedCount] = useState(0);
   const [errorCount, setErrorCount] = useState(0);
   const [loadDurationMs, setLoadDurationMs] = useState<number | null>(null);
-  const [viewport, setViewport] = useState({ width: 1440, height: 900 });
+  /** Physics + spread: size and center in viewport pixels (matches placement layer). */
+  const [placementBounds, setPlacementBounds] = useState({
+    cx: 720,
+    cy: 450,
+    w: 1440,
+    h: 900,
+  });
   /** True while spread layout chrome applies (enter → hold → leave). */
   const [spreadChromeActive, setSpreadChromeActive] = useState(false);
   const [selectedFilterIndices, setSelectedFilterIndices] = useState<number[]>(
@@ -262,14 +282,55 @@ export function ImageParticleSimulationView({
   const textWordsByRowRef = useRef(textWordsByRow);
   textWordsByRowRef.current = textWordsByRow;
 
-  // ---- Viewport ----
-  useEffect(() => {
-    const update = () =>
-      setViewport({ width: window.innerWidth, height: window.innerHeight });
-    update();
-    window.addEventListener("resize", update);
-    return () => window.removeEventListener("resize", update);
-  }, []);
+  // ---- Placement (main column below hero; minus detail drawer when open) ----
+  useLayoutEffect(() => {
+    const detailPanelWidth = () => {
+      if (!detailRow) return 0;
+      const vw = window.innerWidth;
+      return Math.min(Math.max(0, vw - 16), 432);
+    };
+
+    const measure = () => {
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      const dW = detailPanelWidth();
+      const rightLimit = vw - dW;
+      const el = placementContainerRef?.current;
+      if (!el) {
+        setPlacementBounds({
+          cx: vw / 2,
+          cy: vh / 2,
+          w: vw,
+          h: vh,
+        });
+        return;
+      }
+      const r = el.getBoundingClientRect();
+      const left = r.left;
+      const top = r.top;
+      const right = Math.min(r.right, rightLimit);
+      const width = Math.max(64, right - left);
+      const height = Math.max(64, r.bottom - top);
+      setPlacementBounds({
+        cx: left + width / 2,
+        cy: top + height / 2,
+        w: width,
+        h: height,
+      });
+    };
+
+    measure();
+    const el = placementContainerRef?.current;
+    const ro = new ResizeObserver(measure);
+    if (el) ro.observe(el);
+    window.addEventListener("resize", measure);
+    window.addEventListener("scroll", measure, true);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", measure);
+      window.removeEventListener("scroll", measure, true);
+    };
+  }, [placementContainerRef, detailRow]);
 
   // ---- Fetch content ----
   useEffect(() => {
@@ -389,12 +450,12 @@ export function ImageParticleSimulationView({
     sys.init(
       contentRows.length,
       textWordsByRowRef.current,
-      viewport.width,
-      viewport.height,
+      placementBounds.w,
+      placementBounds.h,
     );
 
     systemRef.current = sys;
-  }, [contentRows, viewport.width, viewport.height, textWordsByRow]);
+  }, [contentRows, placementBounds.w, placementBounds.h, textWordsByRow]);
 
   // ---- Animation loop ----
   useEffect(() => {
@@ -449,8 +510,8 @@ export function ImageParticleSimulationView({
       let sel = orderedPick.slice();
       const f = sel.length;
       const filteredTargets = computeSpreadTargets(
-        viewport.width,
-        viewport.height,
+        placementBounds.w,
+        placementBounds.h,
         cfg.zNear,
         f,
         "lg",
@@ -950,8 +1011,8 @@ export function ImageParticleSimulationView({
   }, [
     contentRows,
     speedFactor,
-    viewport.width,
-    viewport.height,
+    placementBounds.w,
+    placementBounds.h,
     textIndexSet,
     thumbnailFramePx,
     thumbnailSize,
@@ -965,9 +1026,17 @@ export function ImageParticleSimulationView({
       aria-label="3D image particle simulation"
     >
       <div
-        className="relative h-screen w-screen"
-        style={{ transformStyle: "preserve-3d" }}
+        className="absolute"
+        style={{
+          left: placementBounds.cx,
+          top: placementBounds.cy,
+          width: placementBounds.w,
+          height: placementBounds.h,
+          transform: "translate(-50%, -50%)",
+          transformStyle: "preserve-3d",
+        }}
       >
+        <div className="relative h-full w-full" style={{ transformStyle: "preserve-3d" }}>
         {contentRows.map((row, i) => {
           const isText = textIndexSet.has(i);
           const showFilteredCard =
@@ -1119,6 +1188,7 @@ export function ImageParticleSimulationView({
             </div>
           );
         })}
+        </div>
       </div>
       {detailRow ? (
         <DetailView row={detailRow} onClose={() => setDetailRow(null)} />

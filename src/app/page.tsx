@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ImageTestDebugPanel } from "@/components/debug/ImageTestDebugPanel";
 import {
   FilterMenu,
@@ -40,6 +40,8 @@ export default function Home() {
   const [mode, setMode] = useState<Mode>("optimized");
   const [stats, setStats] = useState<ImageParticleSimulationStats>(EMPTY_STATS);
   const imageLimit = IMAGE_FETCH_LIMIT > 0 ? IMAGE_FETCH_LIMIT : undefined;
+  /** Region between the filter column and the viewport; height is main below the hero. */
+  const particlePlacementRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const savedMode = window.localStorage.getItem(MODE_STORAGE_KEY);
@@ -62,13 +64,17 @@ export default function Home() {
     <div className="flex min-h-screen w-full">
       <FilterMenu />
       <PixelTessellationBackground />
-      <main className="relative z-1 min-h-screen min-w-0 flex-1 p-5 text-[#303030]">
+      <main className="relative z-1 flex min-h-screen min-w-0 flex-1 flex-col p-5 text-[#303030]">
 
         <HeroTitleBlock
           title="Future Art Ecosystems"
           subtitle="Cultural Infraestructure Research"
         />
 
+        <div
+          ref={particlePlacementRef}
+          className="relative min-h-0 w-full flex-1"
+        >
         {/* <ImageTestDebugPanel
           mode={mode}
           onModeChange={setMode}
@@ -96,7 +102,9 @@ export default function Home() {
           displayedHeight={DISPLAYED_HEIGHT}
           speedFactor={SPEED_FACTOR}
           onStatsChange={handleStatsChange}
+          placementContainerRef={particlePlacementRef}
         />
+        </div>
       </main>
     </div>
     </FilterSelectionProvider>
