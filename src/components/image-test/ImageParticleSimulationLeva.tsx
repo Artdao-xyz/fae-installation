@@ -23,7 +23,7 @@ export function ImageParticleSimulationLeva(props: Props) {
   /** `true` = original OR-style (cumulative); `false` = require every selected tag (AND). */
   const { cumulativeFilterMatching } = useControls("Filter matching (dev)", {
     cumulativeFilterMatching: {
-      value: false,
+      value: true,
       label:
         "Cumulative (OR — widen when adding tags). Off = require ALL selected tags (AND). Same result if only 1 Focus + 1 Activity tag.",
     },

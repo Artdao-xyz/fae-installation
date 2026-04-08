@@ -93,7 +93,7 @@ export type ImageParticleSimulationViewProps = {
   placementContainerRef?: RefObject<HTMLElement | null>;
   /**
    * How spread rows are chosen from Focus + Activity selections.
-   * Default `intersection` (AND). Leva can set `union` (OR / cumulative) to compare.
+   * Default `union` (OR / cumulative). Leva can set `intersection` (AND) to compare.
    */
   filterMatchMode?: FilterMatchMode;
 };
@@ -112,7 +112,7 @@ export function ImageParticleSimulationView({
   placementContainerRef,
   filterMatchMode: filterMatchModeProp,
 }: ImageParticleSimulationViewProps) {
-  const filterMatchMode = filterMatchModeProp ?? "intersection";
+  const filterMatchMode = filterMatchModeProp ?? "union";
   const filterMatchModeRef = useRef(filterMatchMode);
   filterMatchModeRef.current = filterMatchMode;
 
