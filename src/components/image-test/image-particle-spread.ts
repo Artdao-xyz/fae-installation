@@ -6,14 +6,14 @@ import {
 import { computeOrganicSpreadLayout } from "@/lib/organic-spread-layout";
 import { clamp, v3, type Vec3 } from "./particle-system";
 
-export const FILTER_MAX = 10;
+export const FILTER_MAX = 20;
 export const REGROUP_MS = 1000;
 /** Background dim (opacity + filters) eases faster than spread motion. */
 export const FILTER_DIM_MS = 320;
 /** Idle hover: full-card scale + background dim share this duration. */
 export const HOVER_CARD_MS = 420;
 /** Minimum gap between card outer rects (px). */
-const SPREAD_GAP = 8;
+const SPREAD_GAP = 26;
 /** Non-selected tiles while spread is active (nearly invisible background). */
 export const FILTER_BG_OPACITY_MUL = 0.03;
 
@@ -137,6 +137,6 @@ export function computeSpreadTargets(
     const da = Math.hypot(a.x, a.y);
     const db = Math.hypot(b.x, b.y);
     if (da !== db) return da - db;
-    return a.x - b.x;
+    return Math.atan2(a.y, a.x) - Math.atan2(b.y, b.x);
   });
 }

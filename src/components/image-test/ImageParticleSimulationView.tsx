@@ -123,7 +123,6 @@ export function ImageParticleSimulationView({
   }, []);
 
   const spreadEnterSignatureRef = useRef<string | null>(null);
-  const respreadPendingRef = useRef(false);
 
   // ---- State ----
   const [contentRows, setContentRows] = useState<ContentFixtureRow[]>([]);
@@ -187,6 +186,8 @@ export function ImageParticleSimulationView({
   const selectedIndicesRef = useRef<number[]>([]);
   const filterT0Ref = useRef(0);
   const spreadLayoutPhaseRef = useRef<SpreadLayoutPhase>("idle");
+  /** True during enter after swapping filters in place — skip scale/dim ramp (already at full card). */
+  const spreadInPlaceRespreadRef = useRef(false);
   const leaveFromRef = useRef<Vec3[]>([]);
   const leaveScaleFromRef = useRef<number[]>([]);
   /** Per-index `offsetWidth` at filter-on (idle DOM), for scale continuity vs thumbnailFramePx guess. */
@@ -416,6 +417,10 @@ export function ImageParticleSimulationView({
       );
       if (orderedPick.length === 0) return false;
 
+      const phaseBefore = spreadLayoutPhaseRef.current;
+      spreadInPlaceRespreadRef.current =
+        phaseBefore === "hold" || phaseBefore === "enter";
+
       hoverPhaseRef.current = null;
       hoverAnimT0Ref.current = 0;
       hoverSlotRef.current = null;
@@ -484,24 +489,27 @@ export function ImageParticleSimulationView({
 
       const phaseNow = spreadLayoutPhaseRef.current;
 
-      const shouldLeaveSpread =
+      /** Swap filter selection while spread is active: animate straight to new targets (no leave → idle). */
+      const shouldRespreadInPlace =
         (phaseNow === "hold" || phaseNow === "enter") &&
-        (!spreadActive || ordered.length === 0);
-
-      const shouldLeaveForRespread =
-        phaseNow === "hold" &&
         spreadActive &&
         ordered.length > 0 &&
         spreadEnterSignatureRef.current !== null &&
         sig !== spreadEnterSignatureRef.current;
 
+      if (shouldRespreadInPlace && systemRef.current) {
+        beginSpreadEnter(now);
+      }
+
+      const shouldLeaveSpread =
+        (phaseNow === "hold" || phaseNow === "enter") &&
+        (!spreadActive || ordered.length === 0);
+
       if (
-        (shouldLeaveSpread || shouldLeaveForRespread) &&
+        shouldLeaveSpread &&
         (phaseNow === "hold" || phaseNow === "enter") &&
         systemRef.current
       ) {
-        if (shouldLeaveForRespread) respreadPendingRef.current = true;
-        else respreadPendingRef.current = false;
         const sysLeave = systemRef.current;
         leaveFromRef.current = sysLeave.particles.map((p) => ({ ...p.pos }));
         leaveScaleFromRef.current = sysLeave.particles.map((p) => p.scale);
@@ -591,6 +599,7 @@ export function ImageParticleSimulationView({
             p.pos = { ...targets[j]! };
           }
           spreadLayoutPhaseRef.current = "hold";
+          spreadInPlaceRespreadRef.current = false;
         }
       } else if (phase === "hold" && snap && targets.length > 0) {
         for (let j = 0; j < selIdx.length; j++) {
@@ -644,11 +653,16 @@ export function ImageParticleSimulationView({
         let dimEnterT = 0;
         let dimLeaveT = 0;
         if (passPh === "enter" && snapForScale) {
-          const elapsedEnter = styleNow - filterT0Ref.current;
-          const uEnter = Math.min(1, elapsedEnter / REGROUP_MS);
-          enterScaleT = smoothstep01(uEnter);
-          const uDim = Math.min(1, elapsedEnter / FILTER_DIM_MS);
-          dimEnterT = smoothstep01(uDim);
+          if (spreadInPlaceRespreadRef.current) {
+            enterScaleT = 1;
+            dimEnterT = 1;
+          } else {
+            const elapsedEnter = styleNow - filterT0Ref.current;
+            const uEnter = Math.min(1, elapsedEnter / REGROUP_MS);
+            enterScaleT = smoothstep01(uEnter);
+            const uDim = Math.min(1, elapsedEnter / FILTER_DIM_MS);
+            dimEnterT = smoothstep01(uDim);
+          }
         }
         if (passPh === "leave" && snapForScale) {
           const elapsedLeave = styleNow - filterT0Ref.current;
@@ -682,8 +696,9 @@ export function ImageParticleSimulationView({
           /** 0 = full brightness, 1 = full dim — fades in during enter, out during leave. */
           let bgDimT = 0;
           if (spreadLayoutBg) {
-            if (passPh === "enter") bgDimT = dimEnterT;
-            else if (passPh === "hold") bgDimT = 1;
+            if (passPh === "enter") {
+              bgDimT = spreadInPlaceRespreadRef.current ? 1 : dimEnterT;
+            } else if (passPh === "hold") bgDimT = 1;
             else if (passPh === "leave") bgDimT = 1 - dimLeaveT;
           } else if (hoverIdleDimmed) {
             const hPv = hoverPhaseRef.current;
@@ -902,35 +917,12 @@ export function ImageParticleSimulationView({
           setSpreadChromeActive(false);
         });
         spreadLayoutPhaseRef.current = "idle";
-        let didRespreadEnter = false;
-        if (respreadPendingRef.current && systemRef.current) {
-          const sel2 = spreadSelectionRef.current;
-          const spreadActive2 = sel2.focus.size > 0 || sel2.activity.size > 0;
-          const ordered2 = pickSpreadIndicesFromRows(
-            contentRows,
-            textIndexSet,
-            sel2.focus,
-            sel2.activity,
-          );
-          if (spreadActive2 && ordered2.length > 0) {
-            respreadPendingRef.current = false;
-            beginSpreadEnter(performance.now());
-            didRespreadEnter = true;
-          } else {
-            respreadPendingRef.current = false;
-            spreadEnterSignatureRef.current = null;
-          }
-        } else {
-          spreadEnterSignatureRef.current = null;
-          respreadPendingRef.current = false;
-        }
+        spreadInPlaceRespreadRef.current = false;
+        spreadEnterSignatureRef.current = null;
         idleBlurRampIndicesRef.current = new Set(selLeave);
         idleBlurRampT0Ref.current = performance.now();
         idlePhysicsSkipFramesRef.current = 4;
-        applyParticleDomStyles(
-          didRespreadEnter ? spreadLayoutPhaseRef.current : "idle",
-          performance.now(),
-        );
+        applyParticleDomStyles("idle", performance.now());
       } else {
         if (
           hoverPhaseRef.current === "in" &&

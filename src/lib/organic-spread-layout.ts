@@ -1,30 +1,18 @@
 /**
- * Viewport spread: non-overlapping equal rectangles, packed from the center
- * outward on an ellipse matching the viewport aspect. Candidates are placed on
- * expanding rings; greedy selection preserves center-first order (slot 0 = innermost).
+ * Viewport spread: non-overlapping equal rectangles on a Vogel phyllotaxis spiral
+ * (golden-angle disk → viewport ellipse). Overlaps from clamping are resolved by
+ * pushing pairs apart along the line between centers — not axis-only — so the
+ * layout stays spiral-like instead of forming rows.
  */
 
 export type OrganicSpreadRect = { left: number; top: number };
-
-function hash01(n: number): number {
-  const x = Math.sin(n * 12.9898 + 78.233) * 43758.5453123;
-  return x - Math.floor(x);
-}
 
 function clamp(v: number, lo: number, hi: number): number {
   return Math.min(hi, Math.max(lo, v));
 }
 
-/** Ramanujan II approximation of ellipse perimeter (semi-axes a, b). */
-function ellipsePerimeter(a: number, b: number): number {
-  const ae = Math.abs(a);
-  const be = Math.abs(b);
-  if (ae < 1e-6 && be < 1e-6) return 0;
-  const h = ((ae - be) ** 2) / ((ae + be) ** 2);
-  return (
-    Math.PI * (ae + be) * (1 + (3 * h) / (10 + Math.sqrt(Math.max(0, 4 - 3 * h))))
-  );
-}
+/** Golden angle (radians) for Vogel / Fermat phyllotaxis. */
+const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
 
 /** Axis-aligned equal-size rects: gap is minimum edge–edge clearance. */
 export function centersOverlapRect(
@@ -39,113 +27,98 @@ export function centersOverlapRect(
   return Math.abs(ax - bx) < cw + gap && Math.abs(ay - by) < ch + gap;
 }
 
-function ellipticalNorm(
-  px: number,
-  py: number,
+function phyllotaxisSeed(
+  n: number,
   cx: number,
   cy: number,
   aMax: number,
   bMax: number,
-): number {
-  return Math.hypot((px - cx) / aMax, (py - cy) / bMax);
+  margin: number,
+): { px: number; py: number }[] {
+  const ae = aMax * margin;
+  const be = bMax * margin;
+  const denom = Math.sqrt(Math.max(1, n) - 0.5);
+  const out: { px: number; py: number }[] = [];
+  for (let i = 0; i < n; i++) {
+    const t = i + 0.5;
+    const r = Math.sqrt(t) / denom;
+    const theta = i * GOLDEN_ANGLE;
+    out.push({
+      px: cx + ae * r * Math.cos(theta),
+      py: cy + be * r * Math.sin(theta),
+    });
+  }
+  return out;
 }
 
-type Cand = { px: number; py: number; d: number };
-
-function buildRingCandidates(
-  vw: number,
-  vh: number,
+/**
+ * Separate overlapping rect centers by moving each pair apart along the vector
+ * between their centers (not pure horizontal/vertical), so banding into rows
+ * or columns is avoided.
+ */
+function separateOverlaps(
+  pts: { px: number; py: number }[],
   cw: number,
   ch: number,
   gap: number,
-  rhoStep: number,
-  maxRings: number,
-): Cand[] {
-  const pad = 2;
-  const cx = vw / 2;
-  const cy = vh / 2;
-  const aMax = Math.max(4, vw / 2 - cw / 2 - pad);
-  const bMax = Math.max(4, vh / 2 - ch / 2 - pad);
+  minX: number,
+  maxX: number,
+  minY: number,
+  maxY: number,
+  maxIterations: number,
+): void {
+  const needX = cw + gap;
+  const needY = ch + gap;
+  const n = pts.length;
 
-  const candidates: Cand[] = [{ px: cx, py: cy, d: 0 }];
+  for (let iter = 0; iter < maxIterations; iter++) {
+    let moved = false;
+    for (let i = 0; i < n; i++) {
+      for (let j = i + 1; j < n; j++) {
+        const a = pts[i]!;
+        const b = pts[j]!;
+        if (!centersOverlapRect(a.px, a.py, b.px, b.py, cw, ch, gap)) {
+          continue;
+        }
 
-  const slotPitch = cw + gap;
+        let dx = b.px - a.px;
+        let dy = b.py - a.py;
+        let len = Math.hypot(dx, dy);
+        if (len < 1e-5) {
+          const ang = (i * 97 + j * 53 + iter * 11) * GOLDEN_ANGLE;
+          dx = Math.cos(ang);
+          dy = Math.sin(ang);
+          len = 1;
+        }
+        const ux = dx / len;
+        const uy = dy / len;
 
-  for (let ring = 1; ring <= maxRings; ring++) {
-    let rho = ring * rhoStep;
-    if (rho > 0.992) rho = 0.992;
+        const adx = Math.abs(b.px - a.px);
+        const ady = Math.abs(b.py - a.py);
+        const penX = needX - adx;
+        const penY = needY - ady;
+        const step =
+          0.52 *
+          (penX > 0 && penY > 0
+            ? Math.min(penX, penY)
+            : Math.max(penX, penY));
 
-    const ae = aMax * rho;
-    const be = bMax * rho;
-    const perim = ellipsePerimeter(ae, be);
-    let slots = Math.max(3, Math.floor(perim / slotPitch));
-    if (rho < 0.14) {
-      slots = Math.min(8, Math.max(slots, 3 + ring));
+        moved = true;
+        a.px -= ux * step * 0.5;
+        a.py -= uy * step * 0.5;
+        b.px += ux * step * 0.5;
+        b.py += uy * step * 0.5;
+      }
     }
-
-    for (let s = 0; s < slots; s++) {
-      const base = (2 * Math.PI * s) / slots;
-      const jitter = (hash01(ring * 1009 + s * 173) - 0.5) * 0.4;
-      const theta = base + jitter;
-
-      const rhoWobble =
-        1 + (hash01(ring * 577 + s * 419) - 0.5) * 0.07;
-      let px = cx + aMax * rho * Math.cos(theta) * rhoWobble;
-      let py = cy + bMax * rho * Math.sin(theta) * rhoWobble;
-
-      px = clamp(px, cw / 2 + pad, vw - cw / 2 - pad);
-      py = clamp(py, ch / 2 + pad, vh - ch / 2 - pad);
-
-      const d = ellipticalNorm(px, py, cx, cy, aMax, bMax);
-      candidates.push({ px, py, d });
+    for (const p of pts) {
+      p.px = clamp(p.px, minX, maxX);
+      p.py = clamp(p.py, minY, maxY);
     }
+    if (!moved && iter > 3) break;
   }
-
-  candidates.sort((a, b) => {
-    if (a.d !== b.d) return a.d - b.d;
-    if (a.px !== b.px) return a.px - b.px;
-    return a.py - b.py;
-  });
-
-  return candidates;
 }
 
-function greedyCenterFirst(
-  candidates: Cand[],
-  n: number,
-  cw: number,
-  ch: number,
-  gapPx: number,
-): { px: number; py: number }[] {
-  const chosen: { px: number; py: number }[] = [];
-  const dedupeEps = 0.45;
-
-  for (const c of candidates) {
-    if (chosen.length >= n) break;
-
-    if (
-      chosen.some(
-        (q) =>
-          Math.abs(c.px - q.px) < dedupeEps &&
-          Math.abs(c.py - q.py) < dedupeEps,
-      )
-    ) {
-      continue;
-    }
-
-    if (
-      chosen.some((q) =>
-        centersOverlapRect(c.px, c.py, q.px, q.py, cw, ch, gapPx),
-      )
-    ) {
-      continue;
-    }
-
-    chosen.push({ px: c.px, py: c.py });
-  }
-
-  return chosen;
-}
+const SEPARATE_ITER = 64;
 
 export type OrganicSpreadOptions = {
   viewportWidth: number;
@@ -157,7 +130,8 @@ export type OrganicSpreadOptions = {
 };
 
 /**
- * Returns up to `count` top-left positions. Slot order is center → edge.
+ * Returns up to `count` top-left positions. Slot order follows phyllotaxis index
+ * (center → edge along the spiral).
  */
 export function computeOrganicSpreadLayout(
   options: OrganicSpreadOptions,
@@ -176,26 +150,38 @@ export function computeOrganicSpreadLayout(
     return { positions: [], placed: 0 };
   }
 
-  let candidates = buildRingCandidates(vw, vh, cw, ch, gap, 0.034, 240);
-  let chosen = greedyCenterFirst(candidates, n, cw, ch, gap);
+  const pad = 2;
+  const cx = vw / 2;
+  const cy = vh / 2;
+  const aMax = Math.max(4, vw / 2 - cw / 2 - pad);
+  const bMax = Math.max(4, vh / 2 - ch / 2 - pad);
 
-  if (chosen.length < n) {
-    const extra = buildRingCandidates(vw, vh, cw, ch, gap, 0.018, 420);
-    candidates = extra;
-    chosen = greedyCenterFirst(candidates, n, cw, ch, gap);
+  const minX = cw / 2 + pad;
+  const maxX = vw - cw / 2 - pad;
+  const minY = ch / 2 + pad;
+  const maxY = vh - ch / 2 - pad;
+
+  const phyllMargin = 0.68;
+
+  const centers = phyllotaxisSeed(n, cx, cy, aMax, bMax, phyllMargin);
+  for (const c of centers) {
+    c.px = clamp(c.px, minX, maxX);
+    c.py = clamp(c.py, minY, maxY);
   }
 
-  if (chosen.length < n) {
-    chosen = greedyCenterFirst(
-      buildRingCandidates(vw, vh, cw, ch, gap, 0.034, 240),
-      n,
-      cw,
-      ch,
-      gap * 0.62,
-    );
-  }
+  separateOverlaps(
+    centers,
+    cw,
+    ch,
+    gap,
+    minX,
+    maxX,
+    minY,
+    maxY,
+    SEPARATE_ITER,
+  );
 
-  const positions: OrganicSpreadRect[] = chosen.map(({ px, py }) => ({
+  const positions: OrganicSpreadRect[] = centers.map(({ px, py }) => ({
     left: px - cw / 2,
     top: py - ch / 2,
   }));
