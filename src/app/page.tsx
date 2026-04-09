@@ -64,7 +64,7 @@ export default function Home() {
     <div className="flex min-h-screen w-full">
       <FilterMenu />
       <PixelTessellationBackground />
-      <main className="relative z-1 flex min-h-screen min-w-0 flex-1 flex-col p-5 text-[#303030]">
+      <main className="relative z-1 flex min-h-screen min-w-0 flex-1 flex-col p-5 text-text-body">
 
         <HeroTitleBlock
           title="Future Art Ecosystems"
