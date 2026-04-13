@@ -128,6 +128,14 @@ button {
   cursor: pointer;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .fae-thumbnail-reveal,
+  .fae-thumbnail-reveal__img,
+  .fae-pixel-tessellation-bg {
+    transition: none !important;
+  }
+}
+
 body {
   min-height: 100dvh;
   background: linear-gradient(

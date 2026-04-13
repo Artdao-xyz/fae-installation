@@ -38,8 +38,10 @@ export function PixelTessellationBackground({ className = "" }: Props) {
   const stepXRef = useRef(TILE_W * TILE_SCALE);
   const stepYRef = useRef(TILE_H * TILE_SCALE);
   const rafRef = useRef(0);
+  const bgRevealScheduledRef = useRef(false);
 
   const [reduceMotion, setReduceMotion] = useState(false);
+  const [bgRevealed, setBgRevealed] = useState(false);
 
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -217,6 +219,11 @@ export function PixelTessellationBackground({ className = "" }: Props) {
       ctx.drawImage(maskCanvas, 0, 0, cols, rows, 0, 0, widthCss, heightCss);
       ctx.globalCompositeOperation = "source-over";
 
+      if (!bgRevealScheduledRef.current) {
+        bgRevealScheduledRef.current = true;
+        requestAnimationFrame(() => setBgRevealed(true));
+      }
+
       rafRef.current = requestAnimationFrame(frame);
     };
 
@@ -231,7 +238,9 @@ export function PixelTessellationBackground({ className = "" }: Props) {
 
   return (
     <div
-      className={`pointer-events-none fixed inset-0 z-0 overflow-hidden ${className}`}
+      className={`fae-pixel-tessellation-bg pointer-events-none fixed inset-0 z-0 overflow-hidden transition-opacity duration-[650ms] ease-out ${
+        bgRevealed ? "opacity-100" : "opacity-0"
+      } ${className}`}
       aria-hidden
     >
       <div

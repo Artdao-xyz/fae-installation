@@ -1,46 +1,12 @@
-import type { CSSProperties, Ref } from "react";
+"use client";
 
-const SIZE_DIMS = {
-  sm: { frame: 75, labelMinH: 24, textPx: 11, gapPx: 5, chipW: 2.5, chipH: 10, padX: 10 },
-  md: { frame: 120, labelMinH: 28, textPx: 12, gapPx: 6, chipW: 3, chipH: 12, padX: 12 },
-  lg: { frame: 156, labelMinH: 28, textPx: 12, gapPx: 6, chipW: 3, chipH: 12, padX: 12 },
-} as const;
-
-export type ThumbnailSize = keyof typeof SIZE_DIMS;
-
-export function getThumbnailFramePx(size: ThumbnailSize = "lg"): number {
-  return SIZE_DIMS[size].frame;
-}
-
-/**
- * Outer width/height for a `variant="full"` card (label chip + gap + image frame),
- * using a conservative label width so collision checks stay safe for typical titles.
- */
-export function getThumbnailFullCardOuterSize(
-  size: ThumbnailSize = "lg",
-): { width: number; height: number } {
-  const d = SIZE_DIMS[size];
-  const labelH = d.labelMinH + 12; // vertical padding 6+6 on the chip row
-  const labelW = d.padX * 2 + d.chipW + 6 + 9 * (d.textPx * 0.55);
-  const width = Math.max(d.frame, Math.ceil(labelW));
-  const height = labelH + d.gapPx + d.frame;
-  return { width, height };
-}
-
-/**
- * Fixed outer box for `variant="text"` only (label chip, no frame). Same width
- * as full-card outer so filter transitions don’t reflow from `w-fit` + wrap.
- */
-export function getThumbnailTextVariantOuterSize(
-  size: ThumbnailSize = "lg",
-): { width: number; height: number } {
-  const outer = getThumbnailFullCardOuterSize(size);
-  const d = SIZE_DIMS[size];
-  return {
-    width: outer.width,
-    height: d.labelMinH + 12,
-  };
-}
+import { useMemo, useState, type CSSProperties, type MutableRefObject, type Ref } from "react";
+import {
+  SIZE_DIMS,
+  getThumbnailFullCardOuterSize,
+  getThumbnailTextVariantOuterSize,
+  type ThumbnailSize,
+} from "./thumbnail-dimensions";
 
 type BaseProps = {
   label?: string;
@@ -105,6 +71,26 @@ function LabelChip({
   );
 }
 
+function assignRef<T>(ref: Ref<T | null> | undefined, value: T | null): void {
+  if (!ref) return;
+  if (typeof ref === "function") ref(value);
+  else (ref as MutableRefObject<T | null>).current = value;
+}
+
+/** Deterministic per-URL timing so SSR/client match and tiles don’t sync up. */
+function swarmRevealTiming(key: string): { durationMs: number; delayMs: number } {
+  let h = 2166136261;
+  for (let i = 0; i < key.length; i++) {
+    h ^= key.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  const u1 = (h >>> 0) / 2 ** 32;
+  const u2 = ((h ^ 0x9e3779b9) >>> 0) / 2 ** 32;
+  const durationMs = 220 + Math.floor(u1 * 320);
+  const delayMs = Math.floor(u2 * 220);
+  return { durationMs, delayMs };
+}
+
 function ImageFrame({
   imageSrc,
   imageAlt,
@@ -118,17 +104,42 @@ function ImageFrame({
   dims: (typeof SIZE_DIMS)[ThumbnailSize];
   imageRef?: Ref<HTMLImageElement | null>;
 }) {
+  const [loaded, setLoaded] = useState(false);
+  const { durationMs, delayMs } = useMemo(
+    () => swarmRevealTiming(imageSrc),
+    [imageSrc],
+  );
+
+  const revealDelay = loaded ? delayMs : 0;
+  const frameTransitionStyle: CSSProperties = {
+    transitionProperty: "background-color, box-shadow",
+    transitionDuration: `${durationMs}ms`,
+    transitionDelay: `${revealDelay}ms`,
+    transitionTimingFunction: "cubic-bezier(0, 0, 0.2, 1)",
+  };
+
   return (
     <div
-      className="relative shrink-0 overflow-hidden rounded bg-black-fae shadow-fae-thumbnail"
-      style={{ width: dims.frame, height: dims.frame }}
+      className={`fae-thumbnail-reveal relative shrink-0 overflow-hidden rounded ${
+        loaded ? "bg-black-fae shadow-fae-thumbnail" : "bg-transparent shadow-none"
+      }`}
+      style={{ width: dims.frame, height: dims.frame, ...frameTransitionStyle }}
     >
       <img
-        key={imageSrc}
-        ref={imageRef}
+        ref={(node) => assignRef(imageRef, node)}
         alt={imageAlt || label}
         src={imageSrc}
-        className="pointer-events-none absolute inset-0 size-full object-cover"
+        onLoad={() => setLoaded(true)}
+        onError={() => setLoaded(true)}
+        className={`fae-thumbnail-reveal__img pointer-events-none absolute inset-0 size-full object-cover ${
+          loaded ? "opacity-100 scale-100" : "opacity-0 scale-[0.98]"
+        }`}
+        style={{
+          transitionProperty: "opacity, transform",
+          transitionDuration: `${durationMs}ms`,
+          transitionDelay: `${revealDelay}ms`,
+          transitionTimingFunction: "cubic-bezier(0, 0, 0.2, 1)",
+        }}
         draggable={false}
       />
     </div>
@@ -202,6 +213,7 @@ export function Thumbnail(props: ThumbnailProps) {
       )}
       {showImage && imageSrc !== undefined && (
         <ImageFrame
+          key={imageSrc}
           imageSrc={imageSrc}
           imageAlt={imageAlt}
           label={label}
