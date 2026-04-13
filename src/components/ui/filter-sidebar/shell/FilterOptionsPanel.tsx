@@ -10,28 +10,28 @@ import { Format } from "../sections/Format";
 import { NetworkMenu } from "../sections/NetworkMenu";
 import { RDProjectsMenu } from "../sections/RDProjectsMenu";
 import { Search } from "../sections/Search";
-import { filterChromeRightEdgeClass } from "./layout-classes";
-
 type FilterOptionsPanelProps = {
   panelId: string;
-  mergeWithSubpanel: boolean;
   briefingsSubpanelOpen: boolean;
   rdSubpanelOpen: boolean;
+  networkSubpanelOpen: boolean;
   onToggleBriefingsSubpanel: () => void;
   onToggleRdSubpanel: () => void;
+  onToggleNetworkSubpanel: () => void;
 };
 
 export function FilterOptionsPanel({
   panelId,
-  mergeWithSubpanel,
   briefingsSubpanelOpen,
   rdSubpanelOpen,
+  networkSubpanelOpen,
   onToggleBriefingsSubpanel,
   onToggleRdSubpanel,
+  onToggleNetworkSubpanel,
 }: FilterOptionsPanelProps) {
   return (
     <aside
-      className={`flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden border-solid border-ink-primary ${filterChromeRightEdgeClass(mergeWithSubpanel)}`}
+      className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden border-r-hairline border-solid border-ink-primary"
       aria-label="Filters"
     >
       <div
@@ -58,7 +58,10 @@ export function FilterOptionsPanel({
           />
           <EditorialMenu />
           <ArtistsMenu />
-          <NetworkMenu />
+          <NetworkMenu
+            subpanelOpen={networkSubpanelOpen}
+            onToggleSubpanel={onToggleNetworkSubpanel}
+          />
         </div>
       </div>
     </aside>

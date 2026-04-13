@@ -339,10 +339,11 @@ export function ImageParticleSimulationView({
       const rightLimit = vw - dW;
       const el = placementContainerRef?.current;
       if (!el) {
+        const width = Math.max(64, rightLimit);
         setPlacementBounds({
-          cx: vw / 2,
+          cx: width / 2,
           cy: vh / 2,
-          w: vw,
+          w: width,
           h: vh,
         });
         return;

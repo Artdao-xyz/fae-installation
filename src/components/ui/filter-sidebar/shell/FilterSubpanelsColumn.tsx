@@ -1,6 +1,7 @@
 "use client";
 
 import { BriefingsSubpanelColumn } from "../domains/briefings/BriefingsSubpanelColumn";
+import { NetworkSubpanelColumn } from "../domains/network/NetworkSubpanelColumn";
 import { RDProjectsSubpanelColumn } from "../domains/rd-projects/RDProjectsSubpanelColumn";
 import {
   FILTER_SIDEBAR_COLUMN_CLASS,
@@ -11,16 +12,20 @@ type FilterSubpanelsColumnProps = {
   anySubpanelOpen: boolean;
   briefingsSubpanelOpen: boolean;
   rdSubpanelOpen: boolean;
+  networkSubpanelOpen: boolean;
   onCloseBriefings: () => void;
   onCloseRd: () => void;
+  onCloseNetwork: () => void;
 };
 
 export function FilterSubpanelsColumn({
   anySubpanelOpen,
   briefingsSubpanelOpen,
   rdSubpanelOpen,
+  networkSubpanelOpen,
   onCloseBriefings,
   onCloseRd,
+  onCloseNetwork,
 }: FilterSubpanelsColumnProps) {
   return (
     <div
@@ -29,17 +34,23 @@ export function FilterSubpanelsColumn({
       }`}
       aria-hidden={!anySubpanelOpen}
     >
-      <div className="scrollbar-hide flex min-h-0 w-full max-h-full flex-1 flex-col justify-end overflow-y-auto">
+      <div className="scrollbar-hide flex min-h-0 w-full max-h-full flex-1 flex-col justify-end overflow-x-hidden overflow-y-auto">
         {briefingsSubpanelOpen ? (
           <BriefingsSubpanelColumn
-            mergeBottomBorder={rdSubpanelOpen}
+            mergeBottomBorder={rdSubpanelOpen || networkSubpanelOpen}
             onClose={onCloseBriefings}
           />
         ) : null}
         {rdSubpanelOpen ? (
           <RDProjectsSubpanelColumn
-            mergeTopBorder={briefingsSubpanelOpen}
+            mergeTopBorder={briefingsSubpanelOpen || networkSubpanelOpen}
             onClose={onCloseRd}
+          />
+        ) : null}
+        {networkSubpanelOpen ? (
+          <NetworkSubpanelColumn
+            mergeTopBorder={briefingsSubpanelOpen || rdSubpanelOpen}
+            onClose={onCloseNetwork}
           />
         ) : null}
       </div>

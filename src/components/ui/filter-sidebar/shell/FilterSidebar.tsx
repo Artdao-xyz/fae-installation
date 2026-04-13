@@ -9,12 +9,14 @@ import { FILTER_SIDEBAR_COLUMN_CLASS } from "./layout-classes";
 import { SideBar } from "./SideBar";
 
 export function FilterSidebar() {
-  const [filtersOpen, setFiltersOpen] = useState(true);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [briefingsSubpanelOpen, setBriefingsSubpanelOpen] = useState(false);
   const [rdSubpanelOpen, setRdSubpanelOpen] = useState(false);
+  const [networkSubpanelOpen, setNetworkSubpanelOpen] = useState(false);
   const panelId = useId();
 
-  const anySubpanelOpen = briefingsSubpanelOpen || rdSubpanelOpen;
+  const anySubpanelOpen =
+    briefingsSubpanelOpen || rdSubpanelOpen || networkSubpanelOpen;
 
   const toggleFiltersOpen = useCallback(() => {
     setFiltersOpen((open) => {
@@ -22,6 +24,7 @@ export function FilterSidebar() {
       if (!next) {
         setBriefingsSubpanelOpen(false);
         setRdSubpanelOpen(false);
+        setNetworkSubpanelOpen(false);
       }
       return next;
     });
@@ -42,18 +45,20 @@ export function FilterSidebar() {
             filtersOpen={filtersOpen}
             onToggleFilters={toggleFiltersOpen}
             filterPanelId={panelId}
-            mergeWithSubpanel={anySubpanelOpen}
           />
           {filtersOpen ? (
             <FilterOptionsPanel
               panelId={panelId}
-              mergeWithSubpanel={anySubpanelOpen}
               briefingsSubpanelOpen={briefingsSubpanelOpen}
               rdSubpanelOpen={rdSubpanelOpen}
+              networkSubpanelOpen={networkSubpanelOpen}
               onToggleBriefingsSubpanel={() =>
                 setBriefingsSubpanelOpen((o) => !o)
               }
               onToggleRdSubpanel={() => setRdSubpanelOpen((o) => !o)}
+              onToggleNetworkSubpanel={() =>
+                setNetworkSubpanelOpen((o) => !o)
+              }
             />
           ) : null}
         </div>
@@ -64,8 +69,10 @@ export function FilterSidebar() {
           anySubpanelOpen={anySubpanelOpen}
           briefingsSubpanelOpen={briefingsSubpanelOpen}
           rdSubpanelOpen={rdSubpanelOpen}
+          networkSubpanelOpen={networkSubpanelOpen}
           onCloseBriefings={() => setBriefingsSubpanelOpen(false)}
           onCloseRd={() => setRdSubpanelOpen(false)}
+          onCloseNetwork={() => setNetworkSubpanelOpen(false)}
         />
       ) : null}
     </div>

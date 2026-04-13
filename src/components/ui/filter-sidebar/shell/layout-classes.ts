@@ -5,7 +5,7 @@ export const FILTER_SIDEBAR_COLUMN_CLASS =
 export const SUBPANEL_COLUMN_COLLAPSED_CLASS =
   "w-0 min-w-0 max-w-0 shrink-0 overflow-hidden";
 
-/** Hairline right edge on chrome rows, or none when flush with the subpanel stack. */
+/** HomeBar / Footer only: drop outer right edge when subpanels are open (seam from filter panel + subpanel stack). */
 export function filterChromeRightEdgeClass(mergeWithSubpanel: boolean) {
   return mergeWithSubpanel ? "border-r-0" : "border-r-hairline";
 }
