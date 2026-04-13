@@ -15,9 +15,7 @@ export function Search() {
       <img
           src="/svg/search.svg"
           alt=""
-          width={12}
-          height={12}
-          className="shrink-0 opacity-70"
+          className="size-3 shrink-0 object-contain opacity-70"
           aria-hidden
         />
       </div>

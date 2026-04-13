@@ -52,9 +52,6 @@ type BaseProps = {
   labelRef?: Ref<HTMLParagraphElement | null>;
   /** Imperative `src` swaps — attach to the `<img>`. */
   imageRef?: Ref<HTMLImageElement | null>;
-  /** Decoded dimensions for `<img>` (optional). */
-  imageWidth?: number;
-  imageHeight?: number;
   /**
    * When the visible label may differ (e.g. scrambled), screen readers use this stable phrase.
    * The `<p>` is `aria-hidden` so gibberish is not read aloud.
@@ -114,16 +111,12 @@ function ImageFrame({
   label,
   dims,
   imageRef,
-  imageWidth,
-  imageHeight,
 }: {
   imageSrc: string;
   imageAlt?: string;
   label: string;
   dims: (typeof SIZE_DIMS)[ThumbnailSize];
   imageRef?: Ref<HTMLImageElement | null>;
-  imageWidth?: number;
-  imageHeight?: number;
 }) {
   return (
     <div
@@ -135,8 +128,6 @@ function ImageFrame({
         ref={imageRef}
         alt={imageAlt || label}
         src={imageSrc}
-        width={imageWidth}
-        height={imageHeight}
         className="pointer-events-none absolute inset-0 size-full object-cover"
         draggable={false}
       />
@@ -156,8 +147,6 @@ export function Thumbnail(props: ThumbnailProps) {
     size = "lg",
     labelRef,
     imageRef,
-    imageWidth,
-    imageHeight,
     accessibilityLabel,
   } = props;
   const variant = props.variant ?? "full";
@@ -218,8 +207,6 @@ export function Thumbnail(props: ThumbnailProps) {
           label={label}
           dims={dims}
           imageRef={imageRef}
-          imageWidth={imageWidth}
-          imageHeight={imageHeight}
         />
       )}
     </div>

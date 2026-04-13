@@ -101,8 +101,6 @@ export type ImageParticleSimulationViewProps = {
 export function ImageParticleSimulationView({
   mode,
   imageLimit,
-  fetchedWidth,
-  fetchedHeight,
   displayedWidth,
   displayedHeight,
   speedFactor,
@@ -1155,8 +1153,6 @@ export function ImageParticleSimulationView({
                     imageRef={(el) => {
                       imgRefs.current[i] = el;
                     }}
-                    imageWidth={fetchedWidth}
-                    imageHeight={fetchedHeight}
                     accessibilityLabel={row.title}
                   />
                 ) : (
@@ -1217,8 +1213,6 @@ export function ImageParticleSimulationView({
                   imageRef={(el) => {
                     imgRefs.current[i] = el;
                   }}
-                  imageWidth={fetchedWidth}
-                  imageHeight={fetchedHeight}
                 />
               ) : (
                 <Thumbnail
@@ -1230,8 +1224,6 @@ export function ImageParticleSimulationView({
                   imageRef={(el) => {
                     imgRefs.current[i] = el;
                   }}
-                  imageWidth={fetchedWidth}
-                  imageHeight={fetchedHeight}
                 />
               )}
             </div>

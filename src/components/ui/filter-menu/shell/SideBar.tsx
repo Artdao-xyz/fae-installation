@@ -1,6 +1,8 @@
 "use client";
 
-import { FilterMenuFiltersIcon } from "../icons/FilterMenuFiltersIcon";
+import { FiltersSvgIcon } from "@/components/ui/icons/FiltersSvgIcon";
+import { OpenSvgIcon } from "@/components/ui/icons/OpenSvgIcon";
+import { navRailVerticalLabelClassName } from "@/components/ui/icons/navChrome";
 
 type SideBarProps = {
   filtersOpen: boolean;
@@ -23,21 +25,13 @@ export function SideBar({
         aria-controls={filterPanelId}
         aria-label={filtersOpen ? "Collapse filters" : "Expand filters"}
       >
-        <img
-          src="/svg/sidebar.svg"
-          alt=""
-          className="block w-1/2"
-          aria-hidden
-        />
+        <OpenSvgIcon />
       </button>
         <div className="mt-auto flex w-full flex-col items-center gap-4 pb-3 pt-3">
-        <span
-            className="select-none text-center font-mono text-xs font-medium leading-tight tracking-wide text-text-body [text-orientation:mixed] [writing-mode:vertical-rl] rotate-180"
-            aria-hidden
-          >
+        <span className={navRailVerticalLabelClassName} aria-hidden>
             Filters
           </span>
-          <FilterMenuFiltersIcon className="opacity-90" />
+          <FiltersSvgIcon />
 
         </div>
     </div>

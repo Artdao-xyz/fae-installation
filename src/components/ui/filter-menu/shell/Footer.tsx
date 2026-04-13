@@ -4,9 +4,7 @@ export function Footer() {
       <img
         src="/svg/serpentine.svg"
         alt="Serpentine"
-        width={47}
-        height={10}
-        className="pointer-events-none h-[10px] w-auto shrink-0"
+        className="pointer-events-none h-[10px] w-[47px] shrink-0 object-contain"
         aria-hidden
       />
       <p className="font-mono text-[8px] leading-3 text-text-caption">

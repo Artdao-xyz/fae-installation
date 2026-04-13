@@ -6,6 +6,8 @@ import {
   FilterMenu,
   FilterSelectionProvider,
 } from "@/components/ui/filter-menu";
+import { AboutPanel } from "@/components/ui/about-panel/AboutPanel";
+import { LatestUpdatesPanel } from "@/components/ui/latest-updates-panel/LatestUpdatesPanel";
 import { HeroTitleBlock } from "@/components/ui/hero-title-block";
 import { PixelTessellationBackground } from "@/components/ui/pixel-tessellation-background";
 import {
@@ -64,6 +66,8 @@ export default function Home() {
     <div className="flex min-h-screen w-full">
       <FilterMenu />
       <PixelTessellationBackground />
+      <AboutPanel />
+      <LatestUpdatesPanel />
       <main className="relative z-1 flex min-h-screen min-w-0 flex-1 flex-col p-5 text-text-body">
 
         <HeroTitleBlock
