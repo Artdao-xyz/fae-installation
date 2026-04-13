@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useId, useState } from "react";
 import { OpenSvgIcon } from "@/components/ui/icons/OpenSvgIcon";
 import { UpdatesSvgIcon } from "@/components/ui/icons/UpdatesSvgIcon";
-import { navRailVerticalLabelClassName } from "@/components/ui/icons/navChrome";
+import { navSidebarVerticalLabelClassName } from "@/components/ui/icons/nav-sidebar-labels";
 import {
   Thumbnail,
   getThumbnailFullCardOuterSize,
@@ -11,7 +11,6 @@ import {
 
 type View = "minimized" | "peek";
 
-/** Placeholder entries with real raster images until wired to CMS/API. */
 const LATEST_UPDATES_THUMBNAILS = [
   {
     label: "Synthetic Commons",
@@ -30,7 +29,6 @@ const LATEST_UPDATES_THUMBNAILS = [
   },
 ] as const;
 
-/** Matches open state: one `lg` full thumbnail row + `py-5` padding (collapsed rail uses same height). */
 const UPDATES_PANEL_MIN_HEIGHT_PX =
   getThumbnailFullCardOuterSize("lg").height + 40;
 
@@ -46,7 +44,6 @@ function LatestUpdatesTabRail({
   onClick: () => void;
   ariaExpanded: boolean;
   ariaControls: string;
-  /** Separator between rail and content when rail is on the left. */
   showRightDivider?: boolean;
   className?: string;
 }) {
@@ -56,13 +53,13 @@ function LatestUpdatesTabRail({
       aria-expanded={ariaExpanded}
       aria-controls={ariaControls}
       onClick={onClick}
-      className={`flex h-full min-h-0 w-8 shrink-0 flex-col items-center justify-between border-solid border-text-primary bg-white-fae/90 px-0.5 py-2.5 backdrop-blur-[10px] transition-colors hover:bg-surface-hover/80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-text-primary ${
-        showRightDivider ? "border-r-[0.5px]" : ""
+      className={`flex min-h-0 w-8 shrink-0 flex-col items-center justify-between self-stretch border-solid border-ink-primary bg-surface-canvas/90 px-0.5 py-2.5 backdrop-blur-fae-sm transition-colors hover:bg-surface-hover/80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary ${
+        showRightDivider ? "border-r-hairline" : ""
       } ${className}`}
     >
       <OpenSvgIcon className={`shrink-0 ${arrowClassName ?? ""}`} />
       <div className="flex shrink-0 flex-col items-center gap-2">
-        <span className={navRailVerticalLabelClassName}>Latest Updates</span>
+        <span className={navSidebarVerticalLabelClassName}>Latest Updates</span>
         <UpdatesSvgIcon />
       </div>
     </button>
@@ -89,7 +86,7 @@ export function LatestUpdatesPanel() {
     <>
       {view === "minimized" ? (
         <div
-          className="fixed bottom-5 right-5 z-52 flex border-[0.5px] border-solid border-text-primary"
+          className="fixed bottom-5 right-5 z-52 flex border-hairline border-solid border-ink-primary"
           style={{ height: UPDATES_PANEL_MIN_HEIGHT_PX }}
         >
           <LatestUpdatesTabRail
@@ -106,28 +103,30 @@ export function LatestUpdatesPanel() {
           id={panelId}
           role="region"
           aria-label="Latest updates"
-          className="fixed bottom-5 right-5 z-52 flex max-h-[min(85dvh,calc(100dvh-2.5rem))] w-max max-w-[calc(100vw-2.5rem)] flex-row items-stretch overflow-hidden border-[0.5px] border-solid border-text-primary bg-white-fae/90 shadow-none backdrop-blur-[25px] motion-reduce:transition-none"
+          className="fixed bottom-5 right-5 z-52 max-h-updates-panel w-max max-w-floating-panel overflow-hidden border-hairline border-solid border-ink-primary bg-surface-canvas/90 shadow-none backdrop-blur-fae-md motion-reduce:transition-none"
           style={{ minHeight: UPDATES_PANEL_MIN_HEIGHT_PX }}
         >
-          <LatestUpdatesTabRail
-            onClick={minimize}
-            ariaExpanded={true}
-            ariaControls={panelId}
-            showRightDivider
-          />
+          <div className="flex min-h-0 w-max min-w-0 flex-row items-stretch">
+            <LatestUpdatesTabRail
+              onClick={minimize}
+              ariaExpanded={true}
+              ariaControls={panelId}
+              showRightDivider
+            />
 
-          <div className="flex min-h-full min-w-0 flex-col justify-end overflow-x-auto overflow-y-auto overscroll-contain">
-            <div className="flex w-max flex-row flex-nowrap items-end gap-6 px-4 py-5 sm:gap-8 sm:px-6">
-              {LATEST_UPDATES_THUMBNAILS.map((item) => (
-                <Thumbnail
-                  key={item.label}
-                  variant="full"
-                  size="lg"
-                  label={item.label}
-                  imageSrc={item.imageSrc}
-                  imageAlt={item.imageAlt}
-                />
-              ))}
+            <div className="flex min-h-0 min-w-0 flex-1 flex-col justify-end overflow-x-auto overflow-y-auto overscroll-contain">
+              <div className="flex w-max flex-row flex-nowrap items-end gap-6 px-4 py-5 sm:gap-8 sm:px-6">
+                {LATEST_UPDATES_THUMBNAILS.map((item) => (
+                  <Thumbnail
+                    key={item.label}
+                    variant="full"
+                    size="lg"
+                    label={item.label}
+                    imageSrc={item.imageSrc}
+                    imageAlt={item.imageAlt}
+                  />
+                ))}
+              </div>
             </div>
           </div>
         </div>

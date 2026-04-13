@@ -1,20 +1,11 @@
-/**
- * Viewport spread: non-overlapping equal rectangles on a Vogel phyllotaxis spiral
- * (golden-angle disk → viewport ellipse). Overlaps from clamping are resolved by
- * pushing pairs apart along the line between centers — not axis-only — so the
- * layout stays spiral-like instead of forming rows.
- */
-
 export type OrganicSpreadRect = { left: number; top: number };
 
 function clamp(v: number, lo: number, hi: number): number {
   return Math.min(hi, Math.max(lo, v));
 }
 
-/** Golden angle (radians) for Vogel / Fermat phyllotaxis. */
 const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
 
-/** Axis-aligned equal-size rects: gap is minimum edge–edge clearance. */
 export function centersOverlapRect(
   ax: number,
   ay: number,
@@ -51,11 +42,6 @@ function phyllotaxisSeed(
   return out;
 }
 
-/**
- * Separate overlapping rect centers by moving each pair apart along the vector
- * between their centers (not pure horizontal/vertical), so banding into rows
- * or columns is avoided.
- */
 function separateOverlaps(
   pts: { px: number; py: number }[],
   cw: number,
@@ -129,10 +115,6 @@ export type OrganicSpreadOptions = {
   count: number;
 };
 
-/**
- * Returns up to `count` top-left positions. Slot order follows phyllotaxis index
- * (center → edge along the spiral).
- */
 export function computeOrganicSpreadLayout(
   options: OrganicSpreadOptions,
 ): { positions: OrganicSpreadRect[]; placed: number } {

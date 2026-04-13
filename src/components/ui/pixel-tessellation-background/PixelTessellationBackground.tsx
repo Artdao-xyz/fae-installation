@@ -3,26 +3,17 @@
 import { useEffect, useRef, useState } from "react";
 import { valueNoise2D } from "./value-noise-2d";
 
-/**
- * Tiled SVG + spatial opacity from smooth 2D noise: one pattern fill per frame, then a
- * low-res mask scaled up (soft “zones”). See {@link NOISE_SCALE}, {@link OPACITY_MIN}, {@link OPACITY_MAX}.
- */
-
 const TILE_W = 65;
 const TILE_H = 67;
 const TILE_SCALE = 0.15;
 const SVG_SRC = "/svg/pixel.svg";
 
-/** Supersample small tiles before pattern creation (device px). */
 const MIN_RASTER_DEVICE_PX = 36;
 
-/** Smaller → broader light/dark zones across the grid. */
 const NOISE_SCALE = 0.035;
-/** How fast noise drifts (noise-space units per second). */
 const NOISE_DRIFT_X = 1.5;
 const NOISE_DRIFT_Y = 1.5;
 
-/** Zone opacity range: noise 0→1 maps to this alpha range on the pattern. */
 const OPACITY_MIN = .350;
 const OPACITY_MAX = 0.01;
 

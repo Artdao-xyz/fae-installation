@@ -2,21 +2,20 @@
 
 import { useEffect } from "react";
 import { ExternalLink } from "lucide-react";
-import type { ContentFixtureRow } from "@/data/content-fixture";
-import { useFilterSelection } from "@/components/ui/filter-menu/FilterSelectionContext";
-import { FORMAT_ICON_ITEMS } from "@/components/ui/filter-menu/domains/format/formatItems";
+import type { ContentRow } from "@/data/content-types";
+import { useFilterSelection } from "@/components/ui/filter-sidebar/FilterSelectionContext";
+import { FORMAT_ICON_ITEMS } from "@/components/ui/filter-sidebar/domains/format/formatItems";
 
 type DetailViewProps = {
-  row: ContentFixtureRow;
+  row: ContentRow;
   onClose: () => void;
   className?: string;
 };
 
 function Divider() {
-  return <div className="h-px w-full shrink-0 bg-text-primary" role="presentation" />;
+  return <div className="h-px w-full shrink-0 bg-ink-primary" role="presentation" />;
 }
 
-/** Corner-bracket outline chips (read-only), matching Figma “Filters-Button-Toggle” focus row. */
 function FocusOutlineChip({
   label,
   filterSelected,
@@ -29,23 +28,23 @@ function FocusOutlineChip({
       className="flex h-[26px] w-0.5 shrink-0 flex-col justify-between py-px"
       aria-hidden
     >
-      <span className="h-0.5 w-full border-[0.5px] border-text-primary bg-text-primary" />
-      <span className="h-0.5 w-full border-[0.5px] border-text-primary bg-text-primary" />
+      <span className="h-0.5 w-full border-hairline border-ink-primary bg-ink-primary" />
+      <span className="h-0.5 w-full border-hairline border-ink-primary bg-ink-primary" />
     </span>
   );
 
   return (
     <div
-      className="flex items-center bg-white-fae/80 pr-px backdrop-blur-[25px]"
+      className="flex items-center bg-surface-canvas/80 pr-px backdrop-blur-fae-md"
       data-name="Filters-Button-Toggle"
     >
       {cap}
       <span
-        className={`flex items-center justify-center border-[0.5px] border-solid border-text-primary px-2 py-[5px] ${
+        className={`flex items-center justify-center border-hairline border-solid border-ink-primary px-2 py-[5px] ${
           filterSelected ? "bg-surface-muted" : ""
         }`}
       >
-        <span className="max-w-[220px] truncate font-mono text-[10px] font-normal leading-[14px] text-text-primary">
+        <span className="max-w-[220px] truncate font-fira-mono text-[10px] font-normal leading-[14px] text-ink-primary">
           {label}
         </span>
       </span>
@@ -54,7 +53,6 @@ function FocusOutlineChip({
   );
 }
 
-/** Inverted pill when the label matches the current Activity filter selection (Figma selected state). */
 function ActivityChipReadOnly({
   label,
   filterSelected,
@@ -65,10 +63,10 @@ function ActivityChipReadOnly({
   if (filterSelected) {
     return (
       <div
-        className="flex items-center gap-0 border-[0.5px] border-solid border-text-primary bg-text-primary"
+        className="flex items-center gap-0 border-hairline border-solid border-ink-primary bg-ink-primary"
         data-name="Filters-Button-Toggle"
       >
-        <span className="rounded px-2.5 py-[5px] font-mono text-[10px] font-normal leading-[14px] text-text-primary bg-white-fae">
+        <span className="rounded px-2.5 py-[5px] font-fira-mono text-[10px] font-normal leading-[14px] text-ink-primary bg-surface-canvas">
           {label}
         </span>
       </div>
@@ -76,7 +74,7 @@ function ActivityChipReadOnly({
   }
 
   return (
-    <span className="border-[0.5px] border-solid border-text-primary bg-white-fae/80 px-2.5 py-[5px] font-mono text-[10px] font-normal leading-[14px] text-text-primary backdrop-blur-[25px]">
+    <span className="border-hairline border-solid border-ink-primary bg-surface-canvas/80 px-2.5 py-[5px] font-fira-mono text-[10px] font-normal leading-[14px] text-ink-primary backdrop-blur-fae-md">
       {label}
     </span>
   );
@@ -85,11 +83,11 @@ function ActivityChipReadOnly({
 function NetworkPillReadOnly({ label }: { label: string }) {
   return (
     <span
-      className="flex shrink-0 flex-col items-start justify-center border-[0.3px] border-dashed border-text-primary bg-white-fae/80 backdrop-blur-[25px]"
+      className="flex shrink-0 flex-col items-start justify-center border-fine border-dashed border-ink-primary bg-surface-canvas/80 backdrop-blur-fae-md"
       data-name="Filters-Button-Toggle"
     >
       <span className="flex items-center justify-center rounded-full px-2 py-[5px]">
-        <span className="whitespace-nowrap font-mono text-[10px] font-normal leading-[14px] text-text-primary">
+        <span className="whitespace-nowrap font-fira-mono text-[10px] font-normal leading-[14px] text-ink-primary">
           {label}
         </span>
       </span>
@@ -107,7 +105,7 @@ function FormatReadOnlyChip({ label }: { label: string }) {
     const { Icon } = item;
     return (
       <div
-        className="flex h-[25px] w-[38px] shrink-0 items-center justify-center border-[0.5px] border-solid border-text-primary bg-white-fae/80 text-text-primary backdrop-blur-[25px]"
+        className="flex h-format-icon w-format-icon shrink-0 items-center justify-center border-hairline border-solid border-ink-primary bg-surface-canvas/80 text-ink-primary backdrop-blur-fae-md"
         title={label}
         aria-label={label}
       >
@@ -118,7 +116,7 @@ function FormatReadOnlyChip({ label }: { label: string }) {
 
   return (
     <div
-      className="flex h-[25px] min-w-[38px] shrink-0 items-center justify-center border-[0.5px] border-solid border-text-primary bg-white-fae/80 px-2 font-mono text-[10px] text-text-primary backdrop-blur-[25px]"
+      className="flex h-format-icon min-w-format-icon shrink-0 items-center justify-center border-hairline border-solid border-ink-primary bg-surface-canvas/80 px-2 font-fira-mono text-[10px] text-ink-primary backdrop-blur-fae-md"
       title={label}
     >
       {label}
@@ -144,7 +142,7 @@ function resourceLinkLabel(url: string): string {
 function RichParagraph({ text }: { text: string }) {
   const segments = text.split(/(\*[^*]+\*)/g);
   return (
-    <p className="mb-0 font-suisseintl text-xs font-normal leading-[1.6] tracking-[0.36px] text-text-caption">
+    <p className="mb-0 font-suisseintl text-xs font-normal leading-[1.6] tracking-[0.36px] text-ink-caption">
       {segments.map((seg, i) => {
         if (seg.startsWith("*") && seg.endsWith("*") && seg.length >= 2) {
           return (
@@ -174,7 +172,7 @@ export function DetailView({ row, onClose, className = "" }: DetailViewProps) {
 
   return (
     <aside
-      className={`fixed right-0 top-0 z-55 flex h-full max-h-dvh w-[min(100vw-1rem,432px)] flex-col border-x-[0.5px] border-solid border-text-primary bg-white-fae motion-reduce:transition-none ${className}`}
+      className={`fixed right-0 top-0 z-55 flex h-full max-h-dvh w-detail-panel flex-col border-x-hairline border-solid border-ink-primary bg-surface-canvas motion-reduce:transition-none ${className}`}
       aria-label="Content detail"
       role="dialog"
       aria-modal="true"
@@ -191,10 +189,10 @@ export function DetailView({ row, onClose, className = "" }: DetailViewProps) {
               />
             </div>
             <div className="flex min-w-0 flex-1 flex-col items-start justify-end gap-2.5 leading-none">
-              <p className="font-lust-text text-xl tracking-[-0.38px] text-black">
+              <p className="font-lust-text text-xl tracking-[-0.38px] text-black-fae">
                 {row.title}
               </p>
-              <p className="font-lust-text text-xs tracking-[-0.228px] text-black">
+              <p className="font-lust-text text-xs tracking-[-0.228px] text-black-fae">
                 {row.year}
               </p>
             </div>
@@ -204,7 +202,7 @@ export function DetailView({ row, onClose, className = "" }: DetailViewProps) {
 
           <div className="flex flex-col gap-4">
             <div className="flex gap-2.5">
-              <p className="w-[60px] shrink-0 font-fira-mono text-xs font-normal leading-[15px] tracking-[0.5px] text-text-body">
+              <p className="w-[60px] shrink-0 font-fira-mono text-xs font-normal leading-[15px] tracking-[0.5px] text-ink-body">
                 Focus
               </p>
               <div className="flex min-w-0 flex-1 flex-wrap gap-1.5 gap-y-1.5">
@@ -219,7 +217,7 @@ export function DetailView({ row, onClose, className = "" }: DetailViewProps) {
             </div>
 
             <div className="flex gap-2.5">
-              <p className="w-[60px] shrink-0 font-fira-mono text-xs font-normal leading-[15px] tracking-[0.5px] text-text-body">
+              <p className="w-[60px] shrink-0 font-fira-mono text-xs font-normal leading-[15px] tracking-[0.5px] text-ink-body">
                 Activity
               </p>
               <div className="flex min-w-0 flex-1 flex-wrap gap-x-1.5 gap-y-1.5">
@@ -234,7 +232,7 @@ export function DetailView({ row, onClose, className = "" }: DetailViewProps) {
             </div>
 
             <div className="flex gap-2.5">
-              <p className="w-[60px] shrink-0 font-fira-mono text-xs font-normal leading-[15px] tracking-[0.5px] text-text-body">
+              <p className="w-[60px] shrink-0 font-fira-mono text-xs font-normal leading-[15px] tracking-[0.5px] text-ink-body">
                 Format
               </p>
               <div className="flex flex-wrap gap-1.5">
@@ -245,7 +243,7 @@ export function DetailView({ row, onClose, className = "" }: DetailViewProps) {
             </div>
 
             <div className="flex gap-2.5">
-              <p className="w-[60px] shrink-0 font-fira-mono text-xs font-normal leading-[15px] tracking-[0.5px] text-text-body">
+              <p className="w-[60px] shrink-0 font-fira-mono text-xs font-normal leading-[15px] tracking-[0.5px] text-ink-body">
                 Network
               </p>
               <div className="flex min-w-0 flex-1 flex-wrap gap-1.5 gap-y-1.5">
@@ -267,7 +265,7 @@ export function DetailView({ row, onClose, className = "" }: DetailViewProps) {
           <Divider />
 
           <div className="flex flex-col gap-3 pb-2">
-            <p className="font-lust-text text-xs leading-none tracking-[-0.228px] text-text-caption">
+            <p className="font-lust-text text-xs leading-none tracking-[-0.228px] text-ink-caption">
               Resources
             </p>
             <ul className="flex list-none flex-col gap-[5px] p-0">
@@ -277,7 +275,7 @@ export function DetailView({ row, onClose, className = "" }: DetailViewProps) {
                     href={href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex max-w-full items-center gap-2 rounded-sm bg-white-fae/90 px-0 py-0.5 font-mono text-[10px] leading-[14px] text-text-body underline decoration-solid [text-decoration-skip-ink:none] backdrop-blur-[25px] hover:bg-surface-hover/80"
+                    className="inline-flex max-w-full items-center gap-2 rounded-sm bg-surface-canvas/90 px-0 py-0.5 font-fira-mono text-[10px] leading-[14px] text-ink-body underline decoration-solid [text-decoration-skip-ink:none] backdrop-blur-fae-md hover:bg-surface-hover/80"
                   >
                     <span className="min-w-0 truncate">{resourceLinkLabel(href)}</span>
                     <ExternalLink
@@ -296,11 +294,11 @@ export function DetailView({ row, onClose, className = "" }: DetailViewProps) {
         <button
           type="button"
           onClick={onClose}
-          className="flex w-full items-center justify-center gap-3 px-4 py-3 font-mono text-sm text-white-fae transition-colors hover:bg-black-fae/30 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white-fae focus-visible:ring-offset-2 focus-visible:ring-offset-text-body border-t-[0.5px] border-solid border-text-primary"
+          className="flex w-full items-center justify-center gap-3 px-4 py-3 font-fira-mono text-sm text-surface-canvas transition-colors hover:bg-black-fae/30 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-surface-canvas focus-visible:ring-offset-2 focus-visible:ring-offset-ink-body border-t-hairline border-solid border-ink-primary"
           aria-label="Close detail panel"
         >
           <span
-            className="select-none text-[13px] leading-none tracking-wide text-black"
+            className="select-none text-[13px] leading-none tracking-wide text-black-fae"
           >
             Show more
           </span>

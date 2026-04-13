@@ -1,4 +1,4 @@
-import { navMarkIconImgClassName } from "./navChrome";
+import { navMarkIconImgClassName } from "./nav-sidebar-labels";
 
 export function HomeSvgIcon({ className }: { className?: string }) {
   return (

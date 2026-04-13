@@ -14,7 +14,6 @@
   font-style: normal;
 }
 
-/* Single-token names so Tailwind’s minified font-family (quotes stripped) still matches @font-face */
 @font-face {
   font-family: FiraMono;
   src: url("/fonts/FiraMono-Regular.woff2") format("woff2");
@@ -29,7 +28,6 @@
   font-style: normal;
 }
 
-/* One family; weight via font-normal (400) / font-medium (500) */
 @font-face {
   font-family: LustText;
   src: url("/fonts/LustTextBook.woff2") format("woff2");
@@ -45,39 +43,53 @@
 }
 
 @theme inline {
-  --font-geist-sans: var(--font-geist-sans);
-  --font-geist-mono: var(--font-geist-mono);
-  /* Match @font-face font-family (no spaces — see comment on @font-face above) */
   --font-lust-text: LustText, ui-serif, serif;
   --font-fira-mono: FiraMono, ui-sans-serif, system-ui, sans-serif;
   --font-suisseintl: SuisseIntl, ui-sans-serif, system-ui, sans-serif;
 
-  --color-white-fae: #e8e8e8;
+  --color-surface-canvas: #e8e8e8;
   --color-black-fae: #212121;
-  /* UI chrome: borders, icons, mono chips frame */
-  --color-text-primary: #414141;
-  /* Body copy, inputs, sidebar labels (use text-body/60 for de-emphasized) */
-  --color-text-body: #303030;
-  /* Fine print (e.g. footer copyright) */
-  --color-text-caption: #363636;
-  /* Raised / inset surfaces */
+  --color-ink-primary: #414141;
+  --color-ink-body: #303030;
+  --color-ink-caption: #363636;
   --color-surface-muted: #ececec;
   --color-surface-hover: #e0e0e0;
 
-  /* Filter menu category accents (3px rail + marker SVG) */
-  --color-filter-category-fae-briefings: var(--color-text-primary);
+  --color-filter-category-fae-briefings: var(--color-ink-primary);
   --color-filter-category-fellowships: #0000ff;
   --color-filter-category-rd: #9005cc;
   --color-filter-category-editorial: #b22fb6;
   --color-filter-category-artists: #5e1937;
   --color-filter-category-network: #0cdc2a;
   --shadow-fae-thumbnail: 0 0 40px 0 rgb(0 0 0 / 0.3);
+
+  --color-page-gradient-edge: #e1e1e1;
+  --color-page-gradient-center: #ffffff;
+
+  --blur-fae-sm: 10px;
+  --blur-fae-md: 25px;
+
+  --border-width-hairline: 0.5px;
+  --border-width-fine: 0.3px;
+
+  --width-filter-narrow-column: 35px;
+  --height-filter-top-bar: 40px;
+  --height-filter-narrow-toggle: 35px;
+  --height-filter-close-bar: 22px;
+  --width-format-icon: 38px;
+  --height-format-icon: 25px;
+
+  --width-about-panel: 580px;
+  --width-detail-panel: min(100vw - 1rem, 432px);
+
+  --max-height-about-panel: min(70dvh, calc(100dvh - 2.5rem));
+  --max-height-updates-panel: min(85dvh, calc(100dvh - 2.5rem));
+  --max-width-floating-panel: calc(100vw - 2.5rem);
 }
 
-/* Global scrollbars: thin black line (track stays transparent) */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #000 transparent;
+  scrollbar-color: var(--color-ink-primary) transparent;
 }
 
 *::-webkit-scrollbar {
@@ -90,7 +102,7 @@
 }
 
 *::-webkit-scrollbar-thumb {
-  background-color: #000;
+  background-color: var(--color-ink-primary);
   border-radius: 0;
 }
 
@@ -98,7 +110,6 @@
   background: transparent;
 }
 
-/* Scroll still works; bar hidden (filter panels, subcolumns) */
 .scrollbar-hide {
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -119,8 +130,8 @@ body {
   min-height: 100dvh;
   background: linear-gradient(
     to bottom right,
-    #e1e1e1 0%,
-    #ffffff 50%,
-    #e1e1e1 100%
+    var(--color-page-gradient-edge) 0%,
+    var(--color-page-gradient-center) 50%,
+    var(--color-page-gradient-edge) 100%
   );
 }

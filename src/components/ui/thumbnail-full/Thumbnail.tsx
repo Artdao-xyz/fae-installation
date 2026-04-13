@@ -78,7 +78,7 @@ function LabelChip({
   return (
     <div className="flex w-full shrink-0 justify-center overflow-visible">
       <div
-        className="inline-flex w-max max-w-none items-center gap-1.5 rounded-xs bg-white-fae text-text-primary"
+        className="inline-flex w-max max-w-none items-center gap-1.5 rounded-xs bg-surface-canvas text-ink-primary"
         style={{
           minHeight: dims.labelMinH,
           padding: `6px ${dims.padX}px`,

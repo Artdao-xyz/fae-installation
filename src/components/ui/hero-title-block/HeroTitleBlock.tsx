@@ -1,6 +1,6 @@
 "use client";
 
-import { useFilterSelection } from "@/components/ui/filter-menu/FilterSelectionContext";
+import { useFilterSelection } from "@/components/ui/filter-sidebar/FilterSelectionContext";
 
 type Props = {
   title: string;
@@ -8,9 +8,6 @@ type Props = {
   className?: string;
 };
 
-/**
- * Centered hero title; fades out when any filter menu selection is active.
- */
 export function HeroTitleBlock({ title, subtitle, className = "" }: Props) {
   const { selectedFocusAreas, selectedActivityTypes } = useFilterSelection();
   const filterActive =
@@ -23,10 +20,10 @@ export function HeroTitleBlock({ title, subtitle, className = "" }: Props) {
       } ${className}`}
       aria-hidden={filterActive}
     >
-      <div className="font-lust-text justify-start text-6xl leading-[65px] text-black">
+      <div className="font-lust-text justify-start text-6xl leading-[65px] text-black-fae">
         {title}
       </div>
-      <div className="font-fira-mono justify-start text-sm font-medium leading-4 text-black/50">
+      <div className="font-fira-mono justify-start text-sm font-medium leading-4 text-black-fae/50">
         {subtitle}
       </div>
     </div>

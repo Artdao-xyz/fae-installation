@@ -1,4 +1,3 @@
-/** Deterministic pseudo-random in [0, 1) for integer lattice points. */
 function lattice01(ix: number, iy: number): number {
   const s = Math.sin(ix * 127.1 + iy * 311.7) * 43758.5453123;
   return s - Math.floor(s);
@@ -9,7 +8,6 @@ function smoothstep01(t: number): number {
   return x * x * (3 - 2 * x);
 }
 
-/** Smooth 2D value noise at fractional coordinates (large-scale blobs when input changes slowly). */
 export function valueNoise2D(nx: number, ny: number): number {
   const x0 = Math.floor(nx);
   const y0 = Math.floor(ny);

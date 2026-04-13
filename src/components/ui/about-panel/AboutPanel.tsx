@@ -3,11 +3,10 @@
 import { useCallback, useEffect, useId, useState } from "react";
 import { AboutSvgIcon } from "@/components/ui/icons/AboutSvgIcon";
 import { OpenSvgIcon } from "@/components/ui/icons/OpenSvgIcon";
-import { navRailVerticalLabelClassName } from "@/components/ui/icons/navChrome";
+import { navSidebarVerticalLabelClassName } from "@/components/ui/icons/nav-sidebar-labels";
 
 type View = "minimized" | "peek" | "full";
 
-/** Peek + Vision intro (shared). */
 const ABOUT_BODY = (
   <>
     <p className="mb-0 leading-[1.6]">
@@ -37,10 +36,10 @@ const ABOUT_FULL_TEAM = [
 ] as const;
 
 const showMoreLessButtonClassName =
-  "inline-flex items-center gap-2 border-r-[0.5px] border-t-[0.5px] border-solid border-text-primary bg-white-fae/90 px-5 py-4 text-left backdrop-blur-[10px] transition-colors hover:bg-surface-hover/80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-text-primary";
+  "inline-flex items-center gap-2 border-r-hairline border-t-hairline border-solid border-ink-primary bg-surface-canvas/90 px-5 py-4 text-left backdrop-blur-fae-sm transition-colors hover:bg-surface-hover/80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ink-primary";
 
 const showMoreLessLabelClassName =
-  "whitespace-nowrap font-fira-mono text-sm font-normal leading-[14px] text-text-body";
+  "whitespace-nowrap font-fira-mono text-sm font-normal leading-[14px] text-ink-body";
 
 function BracketSectionLabel({ children }: { children: string }) {
   const rail = (
@@ -48,15 +47,15 @@ function BracketSectionLabel({ children }: { children: string }) {
       className="flex w-0.5 shrink-0 flex-col justify-between py-1"
       aria-hidden
     >
-      <span className="h-0.5 w-full border-[0.5px] border-solid border-text-primary bg-text-primary" />
-      <span className="h-0.5 w-full border-[0.5px] border-solid border-text-primary bg-text-primary" />
+      <span className="h-0.5 w-full border-hairline border-solid border-ink-primary bg-ink-primary" />
+      <span className="h-0.5 w-full border-hairline border-solid border-ink-primary bg-ink-primary" />
     </span>
   );
   return (
-    <div className="inline-flex items-stretch border-[0.5px] border-solid border-text-primary bg-white-fae/90 backdrop-blur-[25px]">
+    <div className="inline-flex items-stretch border-hairline border-solid border-ink-primary bg-surface-canvas/90 backdrop-blur-fae-md">
       {rail}
       <span className="flex items-center px-2 py-[5px]">
-        <span className="font-fira-mono text-[10px] font-medium leading-[14px] text-text-primary">
+        <span className="font-fira-mono text-[10px] font-medium leading-[14px] text-ink-primary">
           {children}
         </span>
       </span>
@@ -67,7 +66,7 @@ function BracketSectionLabel({ children }: { children: string }) {
 
 function AboutFullScreenBody() {
   return (
-    <div className="flex flex-col items-start gap-2.5 text-text-body">
+    <div className="flex flex-col items-start gap-2.5 text-ink-body">
       <BracketSectionLabel>Vision</BracketSectionLabel>
       <div className="w-full font-suisseintl text-xs font-normal leading-5">
         {ABOUT_BODY}
@@ -92,7 +91,7 @@ function AboutFullScreenBody() {
 
       <BracketSectionLabel>Contact</BracketSectionLabel>
       <nav
-        className="flex flex-wrap items-center gap-x-5 gap-y-2 font-fira-mono text-xs font-normal text-text-body"
+        className="flex flex-wrap items-center gap-x-5 gap-y-2 font-fira-mono text-xs font-normal text-ink-body"
         aria-label="Social and community links"
       >
         <a
@@ -124,7 +123,6 @@ function AboutFullScreenBody() {
   );
 }
 
-/** Vertical tab: arrow and label at opposite ends; icon anchored at bottom. */
 function AboutTabRail({
   arrowClassName,
   onClick,
@@ -136,7 +134,6 @@ function AboutTabRail({
   onClick: () => void;
   ariaExpanded: boolean;
   ariaControls: string;
-  /** When true, draw a right edge to separate the rail from the content column. */
   showRightDivider?: boolean;
 }) {
   return (
@@ -145,13 +142,13 @@ function AboutTabRail({
       aria-expanded={ariaExpanded}
       aria-controls={ariaControls}
       onClick={onClick}
-      className={`flex min-h-[120px] w-8 shrink-0 flex-col items-center border-solid border-text-primary bg-white-fae/90 py-2.5 backdrop-blur-[10px] transition-colors hover:bg-surface-hover/80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-text-primary ${
-        showRightDivider ? "border-r-[0.5px]" : ""
+      className={`flex min-h-[120px] w-8 shrink-0 flex-col items-center border-solid border-ink-primary bg-surface-canvas/90 py-2.5 backdrop-blur-fae-sm transition-colors hover:bg-surface-hover/80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary ${
+        showRightDivider ? "border-r-hairline" : ""
       }`}
     >
       <div className="flex min-h-[72px] w-full flex-1 flex-col items-center justify-between px-0.5">
         <OpenSvgIcon className={arrowClassName ?? ""} />
-        <span className={navRailVerticalLabelClassName}>About</span>
+        <span className={navSidebarVerticalLabelClassName}>About</span>
       </div>
       <AboutSvgIcon className="mt-2" />
     </button>
@@ -188,7 +185,7 @@ export function AboutPanel() {
   return (
     <>
       {view === "minimized" ? (
-        <div className="fixed top-5 right-5 z-52 border-[0.5px] border-solid border-text-primary">
+        <div className="fixed top-5 right-5 z-52 border-hairline border-solid border-ink-primary">
           <AboutTabRail
             arrowClassName="-scale-x-100"
             onClick={openPeek}
@@ -203,7 +200,7 @@ export function AboutPanel() {
           id={panelId}
           role="region"
           aria-label="About"
-          className="fixed top-5 right-5 z-52 flex max-h-[min(70dvh,calc(100dvh-2.5rem))] w-[580px] overflow-hidden border-[0.5px] border-solid border-text-primary bg-white-fae/90 shadow-none backdrop-blur-[25px] motion-reduce:transition-none"
+          className="fixed top-5 right-5 z-52 flex max-h-about-panel w-about-panel overflow-hidden border-hairline border-solid border-ink-primary bg-surface-canvas/90 shadow-none backdrop-blur-fae-md motion-reduce:transition-none"
         >
           <div className="flex min-h-0 min-w-0 flex-1 flex-row">
             <AboutTabRail
@@ -215,7 +212,7 @@ export function AboutPanel() {
 
             <div className="flex min-h-0 min-w-0 flex-1 flex-col">
               <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pt-5">
-                <div className="font-suisseintl text-xs font-normal leading-[1.6] text-text-body">
+                <div className="font-suisseintl text-xs font-normal leading-[1.6] text-ink-body">
                   {ABOUT_BODY}
                 </div>
               </div>
@@ -237,16 +234,16 @@ export function AboutPanel() {
 
       {view === "full" ? (
         <div
-          className="fixed inset-0 z-60 flex flex-col bg-white-fae motion-reduce:transition-none"
+          className="fixed inset-0 z-60 flex flex-col bg-surface-canvas motion-reduce:transition-none"
           role="dialog"
           aria-modal="true"
           aria-label="About Future Art Ecosystems"
         >
-          <div className="flex shrink-0 border-b-[0.5px] border-solid border-text-primary bg-white-fae/95 backdrop-blur-[25px]">
+          <div className="flex shrink-0 border-b-hairline border-solid border-ink-primary bg-surface-canvas/95 backdrop-blur-fae-md">
             <button
               type="button"
               onClick={closeFull}
-              className="flex h-11 w-11 shrink-0 items-center justify-center border-r-[0.5px] border-solid border-text-primary transition-colors hover:bg-surface-hover/80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-text-primary"
+              className="flex h-11 w-11 shrink-0 items-center justify-center border-r-hairline border-solid border-ink-primary transition-colors hover:bg-surface-hover/80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary"
               aria-label="Back to compact about panel"
             >
               <OpenSvgIcon />

@@ -1,8 +1,5 @@
-import { navMarkIconImgClassName } from "./navChrome";
+import { navMarkIconImgClassName } from "./nav-sidebar-labels";
 
-/**
- * Standard render for `public/svg/open.svg`; same box as other nav mark icons.
- */
 export function OpenSvgIcon({ className }: { className?: string }) {
   return (
     <img

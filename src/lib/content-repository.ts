@@ -1,4 +1,7 @@
-import { CONTENT_FIXTURE_ROWS, type ContentFixtureRow } from "@/data/content-fixture";
+import { CONTENT_FIXTURE_ROWS } from "@/data/content-fixture";
+import type { ContentRow } from "@/data/content-types";
+
+export type { ContentRow };
 
 export type ListContentInput = {
   limit?: number;
@@ -9,7 +12,7 @@ export type ListContentInput = {
 };
 
 export type ListContentOutput = {
-  rows: ContentFixtureRow[];
+  rows: ContentRow[];
   total: number;
   durationMs: number;
 };
@@ -40,7 +43,7 @@ export async function listContent({
   const normalizedSearch = search.trim().toLowerCase();
   const filteredRows = normalizedSearch
     ? CONTENT_FIXTURE_ROWS.filter((row) =>
-        row.title.toLowerCase().includes(normalizedSearch)
+        row.title.toLowerCase().includes(normalizedSearch),
       )
     : CONTENT_FIXTURE_ROWS;
 
