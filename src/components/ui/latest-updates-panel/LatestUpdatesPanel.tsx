@@ -103,7 +103,7 @@ export function LatestUpdatesPanel() {
           id={panelId}
           role="region"
           aria-label="Latest updates"
-          className="fixed bottom-5 right-5 z-52 max-h-updates-panel w-max max-w-floating-panel overflow-hidden border-hairline border-solid border-ink-primary bg-surface-canvas/90 shadow-none backdrop-blur-fae-md motion-reduce:transition-none"
+          className="fixed bottom-8.5 right-8.5 z-52 max-h-updates-panel w-max max-w-floating-panel overflow-hidden border-hairline border-solid border-ink-primary bg-surface-canvas/90 shadow-none backdrop-blur-fae-md motion-reduce:transition-none"
           style={{ minHeight: UPDATES_PANEL_MIN_HEIGHT_PX }}
         >
           <div className="flex min-h-0 w-max min-w-0 flex-row items-stretch">

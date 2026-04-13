@@ -200,7 +200,7 @@ export function AboutPanel() {
           id={panelId}
           role="region"
           aria-label="About"
-          className="fixed top-5 right-5 z-52 flex max-h-about-panel w-about-panel overflow-hidden border-hairline border-solid border-ink-primary bg-surface-canvas/90 shadow-none backdrop-blur-fae-md motion-reduce:transition-none"
+          className="fixed top-8.5 right-8.5 z-52 flex max-h-about-panel w-about-panel overflow-hidden border-hairline border-solid border-ink-primary bg-surface-canvas/90 shadow-none backdrop-blur-fae-md motion-reduce:transition-none"
         >
           <div className="flex min-h-0 min-w-0 flex-1 flex-row">
             <AboutTabRail
