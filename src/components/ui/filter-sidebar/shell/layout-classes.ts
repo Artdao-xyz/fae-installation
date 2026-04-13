@@ -1,0 +1,11 @@
+/** Main filter column width (chrome + subpanel when open). */
+export const FILTER_SIDEBAR_COLUMN_CLASS =
+  "w-[18vw] min-w-[320px] max-w-[18vw] shrink-0 transition-[width] duration-200 ease-out";
+
+export const SUBPANEL_COLUMN_COLLAPSED_CLASS =
+  "w-0 min-w-0 max-w-0 shrink-0 overflow-hidden";
+
+/** Hairline right edge on chrome rows, or none when flush with the subpanel stack. */
+export function filterChromeRightEdgeClass(mergeWithSubpanel: boolean) {
+  return mergeWithSubpanel ? "border-r-0" : "border-r-hairline";
+}

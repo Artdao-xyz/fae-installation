@@ -51,7 +51,7 @@ export default function Home() {
         <PixelTessellationBackground />
         <AboutPanel />
         <LatestUpdatesPanel />
-        <main className="relative z-1 flex min-h-screen min-w-0 flex-1 flex-col p-5 text-ink-body">
+        <main className="relative z-1 flex min-h-0 min-w-0 flex-1 flex-col p-5 text-ink-body">
           <HeroTitleBlock
             title="Future Art Ecosystems"
             subtitle="Cultural Infrastructure Research"

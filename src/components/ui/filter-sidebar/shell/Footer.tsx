@@ -1,6 +1,18 @@
-export function Footer() {
+import { filterChromeRightEdgeClass } from "./layout-classes";
+
+type FooterProps = {
+  className?: string;
+  mergeWithSubpanel?: boolean;
+};
+
+export function Footer({
+  className = "",
+  mergeWithSubpanel = false,
+}: FooterProps) {
   return (
-    <footer className="flex h-filter-top-bar shrink-0 items-center justify-between border-t-hairline border-solid border-ink-primary bg-surface-canvas px-3 py-2">
+    <footer
+      className={`flex h-filter-chrome-bar shrink-0 items-center justify-between border-t-hairline border-solid border-ink-primary bg-surface-canvas px-3 py-0 ${filterChromeRightEdgeClass(mergeWithSubpanel)} ${className}`}
+    >
       <img
         src="/svg/serpentine.svg"
         alt="Serpentine"

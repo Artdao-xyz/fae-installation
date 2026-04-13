@@ -142,7 +142,7 @@ function AboutTabRail({
       aria-expanded={ariaExpanded}
       aria-controls={ariaControls}
       onClick={onClick}
-      className={`flex min-h-[120px] w-8 shrink-0 flex-col items-center border-solid border-ink-primary bg-surface-canvas/90 py-2.5 backdrop-blur-fae-sm transition-colors hover:bg-surface-hover/80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary ${
+      className={`flex min-h-[120px] w-filter-narrow-column shrink-0 flex-col items-center border-solid border-ink-primary bg-surface-canvas/90 py-2.5 backdrop-blur-fae-sm transition-colors hover:bg-surface-hover/80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary ${
         showRightDivider ? "border-r-hairline" : ""
       }`}
     >

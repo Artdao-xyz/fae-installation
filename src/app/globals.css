@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@source "../**/*.{js,ts,jsx,tsx}";
 
 @font-face {
   font-family: SuisseIntl;
@@ -73,7 +74,7 @@
   --border-width-fine: 0.3px;
 
   --width-filter-narrow-column: 35px;
-  --height-filter-top-bar: 40px;
+  --height-filter-chrome-bar: var(--width-filter-narrow-column);
   --height-filter-narrow-toggle: 35px;
   --height-filter-close-bar: 22px;
   --width-format-icon: 38px;
