@@ -86,7 +86,7 @@ export function LatestUpdatesPanel() {
     <>
       {view === "minimized" ? (
         <div
-          className="fixed bottom-5 right-5 z-52 flex border-hairline border-solid border-ink-primary"
+          className="fixed bottom-8.5 right-8.5 z-52 flex border-hairline border-solid border-ink-primary"
           style={{ height: UPDATES_PANEL_MIN_HEIGHT_PX }}
         >
           <LatestUpdatesTabRail

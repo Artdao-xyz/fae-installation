@@ -8,6 +8,7 @@ import {
 import { AboutPanel } from "@/components/ui/about-panel/AboutPanel";
 import { LatestUpdatesPanel } from "@/components/ui/latest-updates-panel/LatestUpdatesPanel";
 import { HeroTitleBlock } from "@/components/ui/hero-title-block";
+import { MarginGuideFrame } from "@/components/ui/margin-guide-frame";
 import { PixelTessellationBackground } from "@/components/ui/pixel-tessellation-background";
 import { ImageParticleSimulation } from "@/components/particle-canvas/ImageParticleSimulation";
 import { IMAGE_FETCH_LIMIT } from "@/components/particle-canvas/config";
@@ -52,6 +53,7 @@ export default function Home() {
         <AboutPanel />
         <LatestUpdatesPanel />
         <main className="relative z-1 flex min-h-0 min-w-0 flex-1 flex-col p-5 text-ink-body">
+          <MarginGuideFrame />
           <HeroTitleBlock
             title="Future Art Ecosystems"
             subtitle="Cultural Infrastructure Research"

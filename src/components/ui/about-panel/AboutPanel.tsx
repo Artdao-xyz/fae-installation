@@ -185,7 +185,7 @@ export function AboutPanel() {
   return (
     <>
       {view === "minimized" ? (
-        <div className="fixed top-5 right-5 z-52 border-hairline border-solid border-ink-primary">
+        <div className="fixed top-8.5 right-8.5 z-52 border-hairline border-solid border-ink-primary">
           <AboutTabRail
             arrowClassName="-scale-x-100"
             onClick={openPeek}

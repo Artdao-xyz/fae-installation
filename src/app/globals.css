@@ -74,6 +74,7 @@
   --border-width-fine: 0.3px;
 
   --width-filter-narrow-column: 35px;
+  --inset-margin-guide: calc(var(--width-filter-narrow-column) - 1px);
   --height-filter-chrome-bar: var(--width-filter-narrow-column);
   --height-filter-narrow-toggle: 35px;
   --height-filter-close-bar: 22px;
