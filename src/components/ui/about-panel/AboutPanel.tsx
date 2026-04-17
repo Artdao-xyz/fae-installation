@@ -41,38 +41,14 @@ const showMoreLessButtonClassName =
 const showMoreLessLabelClassName =
   "whitespace-nowrap font-fira-mono text-sm font-normal leading-[14px] text-ink-body";
 
-function BracketSectionLabel({ children }: { children: string }) {
-  const rail = (
-    <span
-      className="flex w-0.5 shrink-0 flex-col justify-between py-1"
-      aria-hidden
-    >
-      <span className="h-0.5 w-full border-hairline border-solid border-ink-primary bg-ink-primary" />
-      <span className="h-0.5 w-full border-hairline border-solid border-ink-primary bg-ink-primary" />
-    </span>
-  );
-  return (
-    <div className="inline-flex items-stretch border-hairline border-solid border-ink-primary bg-surface-canvas/90 backdrop-blur-fae-md">
-      {rail}
-      <span className="flex items-center px-2 py-[5px]">
-        <span className="font-fira-mono text-[10px] font-medium leading-[14px] text-ink-primary">
-          {children}
-        </span>
-      </span>
-      {rail}
-    </div>
-  );
-}
-
 function AboutFullScreenBody() {
   return (
     <div className="flex flex-col items-start gap-2.5 text-ink-body">
-      <BracketSectionLabel>Vision</BracketSectionLabel>
+
       <div className="w-full font-suisseintl text-xs font-normal leading-5">
         {ABOUT_BODY}
       </div>
 
-      <BracketSectionLabel>Team</BracketSectionLabel>
       <ul className="m-0 w-full list-none p-0 font-suisseintl text-xs font-normal leading-5">
         {ABOUT_FULL_TEAM.map((name) => (
           <li key={name} className="p-0">
@@ -81,7 +57,6 @@ function AboutFullScreenBody() {
         ))}
       </ul>
 
-      <BracketSectionLabel>Partnerships</BracketSectionLabel>
       <p className="mb-0 font-suisseintl text-xs font-normal leading-5">
         You can explore our Twitch archive, or tune in live for special events.
         To get more involved, join our Telegram community, sign up to our
@@ -89,7 +64,6 @@ function AboutFullScreenBody() {
         partnerships and other inquiries, please email us.
       </p>
 
-      <BracketSectionLabel>Contact</BracketSectionLabel>
       <nav
         className="flex flex-wrap items-center gap-x-5 gap-y-2 font-fira-mono text-xs font-normal text-ink-body"
         aria-label="Social and community links"

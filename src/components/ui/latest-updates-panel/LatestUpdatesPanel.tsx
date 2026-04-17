@@ -4,10 +4,8 @@ import { useCallback, useEffect, useId, useState } from "react";
 import { OpenSvgIcon } from "@/components/ui/icons/OpenSvgIcon";
 import { UpdatesSvgIcon } from "@/components/ui/icons/UpdatesSvgIcon";
 import { navSidebarVerticalLabelClassName } from "@/components/ui/icons/nav-sidebar-labels";
-import {
-  Thumbnail,
-  getThumbnailFullCardOuterSize,
-} from "@/components/ui/thumbnail-full";
+import { latestUpdatesMinimizedOuterHeightPx } from "@/components/ui/floating-panels/right-rail-stack";
+import { Thumbnail } from "@/components/ui/thumbnail-full";
 
 type View = "minimized" | "peek";
 
@@ -28,9 +26,6 @@ const LATEST_UPDATES_THUMBNAILS = [
     imageAlt: "Node Atlas",
   },
 ] as const;
-
-const UPDATES_PANEL_MIN_HEIGHT_PX =
-  getThumbnailFullCardOuterSize("lg").height + 40;
 
 function LatestUpdatesTabRail({
   arrowClassName,
@@ -59,7 +54,7 @@ function LatestUpdatesTabRail({
     >
       <OpenSvgIcon className={`shrink-0 ${arrowClassName ?? ""}`} />
       <div className="flex shrink-0 flex-col items-center gap-2">
-        <span className={navSidebarVerticalLabelClassName}>Latest Updates</span>
+        <span className={navSidebarVerticalLabelClassName}>Fellowships</span>
         <UpdatesSvgIcon />
       </div>
     </button>
@@ -69,6 +64,7 @@ function LatestUpdatesTabRail({
 export function LatestUpdatesPanel() {
   const panelId = useId();
   const [view, setView] = useState<View>("minimized");
+  const updatesMinimizedOuterH = latestUpdatesMinimizedOuterHeightPx();
 
   const openPeek = useCallback(() => setView("peek"), []);
   const minimize = useCallback(() => setView("minimized"), []);
@@ -87,7 +83,7 @@ export function LatestUpdatesPanel() {
       {view === "minimized" ? (
         <div
           className="fixed bottom-8.5 right-8.5 z-52 flex border-hairline border-solid border-ink-primary"
-          style={{ height: UPDATES_PANEL_MIN_HEIGHT_PX }}
+          style={{ height: updatesMinimizedOuterH }}
         >
           <LatestUpdatesTabRail
             arrowClassName="-scale-x-100"
@@ -104,7 +100,7 @@ export function LatestUpdatesPanel() {
           role="region"
           aria-label="Fellowships"
           className="fixed bottom-8.5 right-8.5 z-52 max-h-updates-panel w-max max-w-floating-panel overflow-hidden border-hairline border-solid border-ink-primary bg-surface-canvas/90 shadow-none backdrop-blur-fae-md motion-reduce:transition-none"
-          style={{ minHeight: UPDATES_PANEL_MIN_HEIGHT_PX }}
+          style={{ minHeight: updatesMinimizedOuterH }}
         >
           <div className="flex min-h-0 w-max min-w-0 flex-row items-stretch">
             <LatestUpdatesTabRail

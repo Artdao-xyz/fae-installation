@@ -1,0 +1,40 @@
+/**
+ * Glossary copy for `GlossaryPanel`.
+ */
+
+export type GlossaryPanelEntry = {
+  id: string;
+  term: string;
+  definition: string;
+};
+
+/** Optional one-line intro under the panel title (set to empty string to hide). */
+export const GLOSSARY_PANEL_INTRO =
+  "Short definitions for language used across Future Art Ecosystems briefings, labs, and programmes.";
+
+export const GLOSSARY_PANEL_ENTRIES: GlossaryPanelEntry[] = [
+  {
+    id: "advanced-technologies",
+    term: "Advanced technologies",
+    definition:
+      "Emerging technical domains—including machine learning, sensing, and distributed systems—that reshape how art is produced, distributed, and experienced.",
+  },
+  {
+    id: "briefing",
+    term: "Briefing",
+    definition:
+      "A focused publication or session that frames a question, gathers evidence, and proposes directions for the field.",
+  },
+  {
+    id: "fellowship",
+    term: "Fellowship",
+    definition:
+      "A structured period of support for practitioners to develop work in dialogue with FAE’s community and research themes.",
+  },
+  {
+    id: "rd-lab",
+    term: "R&D Lab",
+    definition:
+      "Hands-on research settings where artists, technologists, and partners prototype ideas and share methods.",
+  },
+];

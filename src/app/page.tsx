@@ -6,6 +6,7 @@ import {
   FilterSelectionProvider,
 } from "@/components/ui/filter-sidebar";
 import { AboutPanel } from "@/components/ui/about-panel/AboutPanel";
+import { GlossaryPanel } from "@/components/ui/glossary-panel";
 import { LatestUpdatesPanel } from "@/components/ui/latest-updates-panel/LatestUpdatesPanel";
 import { HeroTitleBlock } from "@/components/ui/hero-title-block";
 import { MarginGuideFrame } from "@/components/ui/margin-guide-frame";
@@ -50,6 +51,7 @@ export default function Home() {
         <FilterSidebar />
         <PixelTessellationBackground />
         <AboutPanel />
+        <GlossaryPanel />
         <LatestUpdatesPanel />
         <main className="relative z-1 flex min-h-0 min-w-0 flex-1 flex-col p-5 text-ink-body">
           <MarginGuideFrame />

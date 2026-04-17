@@ -84,6 +84,11 @@
   --height-format-icon: 25px;
 
   --width-about-panel: 580px;
+  /** Glossary peek column (Figma: glossary drawer; narrower than About for reading measure). */
+  --width-glossary-panel: min(
+    420px,
+    calc(100vw - 2.5rem - var(--width-filter-narrow-column))
+  );
   --width-preview-panel: min(100vw - 1rem, 432px);
 
   --max-height-about-panel: min(70dvh, calc(100dvh - 2.5rem));
@@ -133,6 +138,10 @@
    */
   .w-preview-panel {
     width: var(--width-preview-panel);
+  }
+
+  .w-glossary-panel {
+    width: var(--width-glossary-panel);
   }
 
   .fae-control-shape-rounded {
