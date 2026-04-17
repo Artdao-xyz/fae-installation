@@ -8,10 +8,6 @@ export type GlossaryPanelEntry = {
   definition: string;
 };
 
-/** Optional one-line intro under the panel title (set to empty string to hide). */
-export const GLOSSARY_PANEL_INTRO =
-  "Short definitions for language used across Future Art Ecosystems briefings, labs, and programmes.";
-
 export const GLOSSARY_PANEL_ENTRIES: GlossaryPanelEntry[] = [
   {
     id: "advanced-technologies",
