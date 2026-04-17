@@ -6,7 +6,7 @@ import { useFilterSelection } from "../FilterSelectionContext";
 import { FilterSidebarSection } from "../primitives/FilterSidebarSection";
 import { FilterPill } from "../primitives/FilterPill";
 
-export function FocusAreas() {
+export function FocusAreas({ collapsed = false }: { collapsed?: boolean }) {
   const { selectedFocusAreas, toggleFocusArea, clearFocusAreas } =
     useFilterSelection();
 
@@ -24,11 +24,13 @@ export function FocusAreas() {
       title="Focus Areas"
       onClearAll={clearAll}
       scrollBody
+      collapsed={collapsed}
     >
       {FOCUS_AREA_LABELS.map((label) => (
         <FilterPill
           key={label}
           label={label}
+          variant="square"
           selected={selectedFocusAreas.has(label)}
           onPress={() => toggle(label)}
         />

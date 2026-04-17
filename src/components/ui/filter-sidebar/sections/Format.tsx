@@ -1,11 +1,11 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { FormatIconButton } from "../domains/format/FormatIconButton";
-import { FORMAT_ICON_ITEMS } from "../domains/format/formatItems";
+import { FormatButton } from "../domains/format/FormatButton";
+import { FORMAT_ITEMS } from "../domains/format/formatItems";
 import { FilterSidebarSection } from "../primitives/FilterSidebarSection";
 
-export function Format() {
+export function Format({ collapsed = false }: { collapsed?: boolean }) {
   const [selected, setSelected] = useState<Set<string>>(() => new Set());
 
   const toggle = useCallback((id: string) => {
@@ -20,12 +20,15 @@ export function Format() {
   const clearAll = useCallback(() => setSelected(new Set()), []);
 
   return (
-    <FilterSidebarSection title="Format" onClearAll={clearAll}>
-      {FORMAT_ICON_ITEMS.map(({ id, label, Icon }) => (
-        <FormatIconButton
+    <FilterSidebarSection
+      title="Format"
+      onClearAll={clearAll}
+      collapsed={collapsed}
+    >
+      {FORMAT_ITEMS.map(({ id, label }) => (
+        <FormatButton
           key={id}
           label={label}
-          Icon={Icon}
           selected={selected.has(id)}
           onPress={() => toggle(id)}
         />

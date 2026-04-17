@@ -6,7 +6,7 @@ import { useFilterSelection } from "../FilterSelectionContext";
 import { FilterSidebarSection } from "../primitives/FilterSidebarSection";
 import { FilterPill } from "../primitives/FilterPill";
 
-export function ActivityType() {
+export function ActivityType({ collapsed = false }: { collapsed?: boolean }) {
   const { selectedActivityTypes, toggleActivityType, clearActivityTypes } =
     useFilterSelection();
 
@@ -24,11 +24,13 @@ export function ActivityType() {
       title="Activity Type"
       onClearAll={clearAll}
       scrollBody
+      collapsed={collapsed}
     >
       {ACTIVITY_TYPE_LABELS.map((label) => (
         <FilterPill
           key={label}
           label={label}
+          variant="rounded"
           selected={selectedActivityTypes.has(label)}
           onPress={() => toggle(label)}
         />

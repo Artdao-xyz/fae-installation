@@ -25,6 +25,7 @@ export function FilterSidebarCategoryRow({
   onClick?: () => void;
 }) {
   const { glow, marker } = toneAccentClass[tone];
+  const showAccent = expanded === true;
 
   return (
     <button
@@ -34,18 +35,25 @@ export function FilterSidebarCategoryRow({
       className="relative flex w-full items-center gap-2 border-t-hairline border-solid border-ink-primary bg-surface-canvas py-[7px] pl-3 pr-[15px] text-left backdrop-blur-fae-sm hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary"
       data-name="Filters-Button-Dropdown"
     >
-      <span
-        className={`pointer-events-none absolute inset-y-0 left-0 w-[3px] ${glow}`}
-        aria-hidden
-        data-name="Glow"
-      />
-      <CategoryMarkerIcon
-        className={`h-[10px] w-[11px] shrink-0 -rotate-90 ${marker}`}
-      />
-      <span className="min-h-px min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-base font-normal leading-5 text-ink-body font-lust-text">
+      {showAccent ? (
+        <span
+          className={`pointer-events-none absolute inset-y-0 left-0 w-[3px] ${glow}`}
+          aria-hidden
+          data-name="Glow"
+        />
+      ) : null}
+      {showAccent ? (
+        <CategoryMarkerIcon
+          tone={tone}
+          className="size-4 shrink-0 object-contain"
+        />
+      ) : null}
+      <span className="min-h-px min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-base font-medium leading-5 text-ink-body font-lust-text">
         {label}
       </span>
-      <CategoryRowArrowIcon className={`h-2 w-1.5 shrink-0 ${marker}`} />
+      {showAccent ? (
+        <CategoryRowArrowIcon className={`h-2 w-1.5 shrink-0 ${marker}`} />
+      ) : null}
     </button>
   );
 }

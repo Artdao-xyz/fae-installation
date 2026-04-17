@@ -114,8 +114,12 @@ export function ImageParticleSimulationView({
   const filterMatchModeRef = useRef(filterMatchMode);
   filterMatchModeRef.current = filterMatchMode;
 
-  const { selectedFocusAreas, selectedActivityTypes, setFiltersFromContentRow } =
-    useFilterSelection();
+  const {
+    selectedFocusAreas,
+    selectedActivityTypes,
+    setFiltersFromContentRow,
+    registerContentDetailOpener,
+  } = useFilterSelection();
 
   const idleTextFullTitleRef = useRef(idleTextFullTitle);
   idleTextFullTitleRef.current = idleTextFullTitle;
@@ -150,6 +154,11 @@ export function ImageParticleSimulationView({
     },
     [setFiltersFromContentRow],
   );
+
+  useEffect(() => {
+    registerContentDetailOpener(handleFilteredThumbnailClick);
+    return () => registerContentDetailOpener(null);
+  }, [registerContentDetailOpener, handleFilteredThumbnailClick]);
 
   const spreadEnterSignatureRef = useRef<string | null>(null);
 

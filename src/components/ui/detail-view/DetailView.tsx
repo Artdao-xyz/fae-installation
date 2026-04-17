@@ -4,8 +4,6 @@ import { useEffect } from "react";
 import { ExternalLink } from "lucide-react";
 import type { ContentRow } from "@/data/content-types";
 import { useFilterSelection } from "@/components/ui/filter-sidebar/FilterSelectionContext";
-import { FORMAT_ICON_ITEMS } from "@/components/ui/filter-sidebar/domains/format/formatItems";
-
 type DetailViewProps = {
   row: ContentRow;
   onClose: () => void;
@@ -95,28 +93,10 @@ function NetworkPillReadOnly({ label }: { label: string }) {
   );
 }
 
-function formatIconForLabel(label: string) {
-  return FORMAT_ICON_ITEMS.find((item) => item.label === label) ?? null;
-}
-
 function FormatReadOnlyChip({ label }: { label: string }) {
-  const item = formatIconForLabel(label);
-  if (item) {
-    const { Icon } = item;
-    return (
-      <div
-        className="flex h-format-icon w-format-icon shrink-0 items-center justify-center border-hairline border-solid border-ink-primary bg-surface-canvas/80 text-ink-primary backdrop-blur-fae-md"
-        title={label}
-        aria-label={label}
-      >
-        <Icon className="pointer-events-none h-3.5 w-auto max-w-[28px] shrink-0" />
-      </div>
-    );
-  }
-
   return (
     <div
-      className="flex h-format-icon min-w-format-icon shrink-0 items-center justify-center border-hairline border-solid border-ink-primary bg-surface-canvas/80 px-2 font-fira-mono text-[10px] text-ink-primary backdrop-blur-fae-md"
+      className="flex min-h-format-icon min-w-0 shrink-0 items-center justify-center border-hairline border-solid border-ink-primary bg-surface-canvas/80 px-2 font-fira-mono text-[10px] font-normal leading-[14px] text-ink-primary backdrop-blur-fae-md"
       title={label}
     >
       {label}

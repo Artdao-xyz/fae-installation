@@ -16,10 +16,10 @@ export function Footer({
       <img
         src="/svg/serpentine.svg"
         alt="Serpentine"
-        className="pointer-events-none h-[10px] w-[47px] shrink-0 object-contain"
+        className="pointer-events-none w-12 shrink-0 object-contain"
         aria-hidden
       />
-      <p className="font-fira-mono text-[8px] leading-3 text-ink-caption">
+      <p className="font-suisseintl text-[10px] font-medium leading-3 text-ink-caption">
         © {new Date().getFullYear()}
       </p>
     </footer>

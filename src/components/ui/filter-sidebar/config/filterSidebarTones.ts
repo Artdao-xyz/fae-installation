@@ -6,6 +6,20 @@ export type FilterSidebarCategoryTone =
   | "artists"
   | "network";
 
+/** Pre-colored marker assets in `/public/svg/` (20×20). */
+export const categoryMarkerImageSrc: Record<
+  FilterSidebarCategoryTone,
+  string
+> = {
+  "fae-briefings": "/svg/briefing.svg",
+  fellowships: "/svg/fellowship.svg",
+  /** Filename on disk is `r&d.svg`; `&` must be encoded in the URL path. */
+  rd: "/svg/r%26d.svg",
+  editorial: "/svg/editorial.svg",
+  artists: "/svg/artists.svg",
+  network: "/svg/network.svg",
+};
+
 export const toneAccentClass: Record<
   FilterSidebarCategoryTone,
   { glow: string; marker: string }

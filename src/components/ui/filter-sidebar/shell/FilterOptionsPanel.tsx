@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { ActivityType } from "../sections/ActivityType";
 import { ArtistsMenu } from "../sections/ArtistsMenu";
 import { EditorialMenu } from "../sections/EditorialMenu";
@@ -29,6 +30,9 @@ export function FilterOptionsPanel({
   onToggleRdSubpanel,
   onToggleNetworkSubpanel,
 }: FilterOptionsPanelProps) {
+  const [searchQuery, setSearchQuery] = useState("");
+  const searching = searchQuery.trim().length > 0;
+
   return (
     <aside
       className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden border-r-hairline border-solid border-ink-primary"
@@ -40,13 +44,21 @@ export function FilterOptionsPanel({
         role="region"
         aria-label="Filter options"
       >
-        <Search />
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-          <FocusAreas />
-          <ActivityType />
+        <Search value={searchQuery} onChange={setSearchQuery} />
+        <div
+          className={
+            searching
+              ? "flex shrink-0 flex-col"
+              : "flex min-h-0 flex-1 flex-col overflow-hidden"
+          }
+        >
+          <FocusAreas collapsed={searching} />
+          <ActivityType collapsed={searching} />
         </div>
         <div className="shrink-0">
-          <Format />
+          <Format collapsed={searching} />
+        </div>
+        <div className="shrink-0">
           <FAEBriefingsMenu
             subpanelOpen={briefingsSubpanelOpen}
             onToggleSubpanel={onToggleBriefingsSubpanel}

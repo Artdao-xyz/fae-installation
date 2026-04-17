@@ -5,9 +5,11 @@ import {
   useCallback,
   useContext,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
+import type { ContentRow } from "@/data/content-types";
 
 export type FilterSelectionContextValue = {
   selectedFocusAreas: ReadonlySet<string>;
@@ -20,6 +22,10 @@ export type FilterSelectionContextValue = {
     focusAreas: readonly string[];
     activityTypes: readonly string[];
   }) => void;
+  /** Opens the right-hand content detail panel for this row (wired from the particle canvas). */
+  openContentDetail: (row: ContentRow) => void;
+  /** Called by `ImageParticleSimulationView` to connect `openContentDetail` to preview state. */
+  registerContentDetailOpener: (fn: ((row: ContentRow) => void) | null) => void;
 };
 
 const FilterSelectionContext = createContext<FilterSelectionContextValue | null>(
@@ -27,6 +33,8 @@ const FilterSelectionContext = createContext<FilterSelectionContextValue | null>
 );
 
 export function FilterSelectionProvider({ children }: { children: ReactNode }) {
+  const contentDetailOpenerRef = useRef<((row: ContentRow) => void) | null>(null);
+
   const [selectedFocusAreas, setSelectedFocusAreas] = useState<Set<string>>(
     () => new Set(),
   );
@@ -66,6 +74,17 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
     [],
   );
 
+  const openContentDetail = useCallback((row: ContentRow) => {
+    contentDetailOpenerRef.current?.(row);
+  }, []);
+
+  const registerContentDetailOpener = useCallback(
+    (fn: ((row: ContentRow) => void) | null) => {
+      contentDetailOpenerRef.current = fn;
+    },
+    [],
+  );
+
   const value = useMemo<FilterSelectionContextValue>(
     () => ({
       selectedFocusAreas,
@@ -75,6 +94,8 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
       clearFocusAreas,
       clearActivityTypes,
       setFiltersFromContentRow,
+      openContentDetail,
+      registerContentDetailOpener,
     }),
     [
       selectedFocusAreas,
@@ -84,6 +105,8 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
       clearFocusAreas,
       clearActivityTypes,
       setFiltersFromContentRow,
+      openContentDetail,
+      registerContentDetailOpener,
     ],
   );
 

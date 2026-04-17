@@ -14,7 +14,7 @@ export function BriefingsDropdownPanel({
   variant = "default",
   onClearAll: onClearAllFromParent,
 }: BriefingsDropdownPanelProps) {
-  const [selected, setSelected] = useState<string | null>("FAE 1");
+  const [selected, setSelected] = useState<string | null>(null);
 
   const handleClearAll = () => {
     onClearAllFromParent?.();
