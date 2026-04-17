@@ -12,7 +12,7 @@ type SearchProps = {
 };
 
 export function Search({ value, onChange }: SearchProps) {
-  const { openContentDetail } = useFilterSelection();
+  const { openContentPreview } = useFilterSelection();
 
   const results = useMemo(
     () => filterContentRowsForSearchQuery(value),
@@ -59,7 +59,7 @@ export function Search({ value, onChange }: SearchProps) {
                   variant="dotted"
                   tone="fae-briefings"
                   className="box-border w-full min-w-0 max-w-full"
-                  onPress={() => openContentDetail(row)}
+                  onPress={() => openContentPreview(row)}
                 />
               </div>
             ))

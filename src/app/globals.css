@@ -84,7 +84,7 @@
   --height-format-icon: 25px;
 
   --width-about-panel: 580px;
-  --width-detail-panel: min(100vw - 1rem, 432px);
+  --width-preview-panel: min(100vw - 1rem, 432px);
 
   --max-height-about-panel: min(70dvh, calc(100dvh - 2.5rem));
   --max-height-updates-panel: min(85dvh, calc(100dvh - 2.5rem));
@@ -127,6 +127,14 @@
 }
 
 @layer utilities {
+  /**
+   * Preview drawer width: theme token uses `min()`; ensure the utility exists (Tailwind may not
+   * emit `w-preview-panel` from `--width-preview-panel` in all configs).
+   */
+  .w-preview-panel {
+    width: var(--width-preview-panel);
+  }
+
   .fae-control-shape-rounded {
     border-radius: 0.25rem;
   }

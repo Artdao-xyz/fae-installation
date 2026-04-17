@@ -11,7 +11,7 @@ const period = DASH + GAP;
 const horizontalDashes = `repeating-linear-gradient(to right, var(--color-ink-primary) 0 ${DASH}px, transparent ${DASH}px ${period}px)`;
 const verticalDashes = `repeating-linear-gradient(to bottom, var(--color-ink-primary) 0 ${DASH}px, transparent ${DASH}px ${period}px)`;
 
-const edge = "pointer-events-none fixed z-6";
+const edge = "pointer-events-none fixed z-2";
 
 export function MarginGuideFrame({ className = "" }: MarginGuideFrameProps) {
   return (

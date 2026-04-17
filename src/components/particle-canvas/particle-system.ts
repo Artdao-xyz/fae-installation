@@ -64,7 +64,7 @@ export const DEFAULTS = {
 
 export type SimConfig = typeof DEFAULTS;
 
-/** Pause life progression and respawn for `step` (e.g. hover, spread, detail overlay). */
+/** Pause life progression and respawn for `step` (e.g. hover, spread, preview overlay). */
 export type LifeFreezeOptions = {
   all?: boolean;
   slots?: ReadonlySet<number>;

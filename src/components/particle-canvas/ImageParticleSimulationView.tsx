@@ -9,8 +9,12 @@ import {
   useState,
   type RefObject,
 } from "react";
-import { flushSync } from "react-dom";
+import { createPortal, flushSync } from "react-dom";
 import { useFilterSelection } from "@/components/ui/filter-sidebar/FilterSelectionContext";
+import {
+  getFilterNarrowColumnWidthPx,
+  getMarginGuideInsetPx,
+} from "@/lib/margin-guide";
 import { listContent } from "@/lib/content-repository";
 import type { ContentRow } from "@/data/content-types";
 import {
@@ -20,7 +24,7 @@ import {
   getThumbnailTextVariantOuterSize,
   type ThumbnailSize,
 } from "@/components/ui/thumbnail-full";
-import { DetailView } from "@/components/ui/detail-view";
+import { PreviewView } from "@/components/ui/preview";
 import {
   ParticleSystem,
   type Particle,
@@ -88,7 +92,7 @@ export type ImageParticleSimulationViewProps = {
   idleTextFullTitle?: boolean;
   /**
    * When set, idle orbit + spread packing use this element’s screen rect (clipped on the
-   * right when the detail panel is open to match its fixed width). Omit to use the full window.
+   * right when the preview panel is open to match its fixed width). Omit to use the full window.
    */
   placementContainerRef?: RefObject<HTMLElement | null>;
   /**
@@ -118,7 +122,7 @@ export function ImageParticleSimulationView({
     selectedFocusAreas,
     selectedActivityTypes,
     setFiltersFromContentRow,
-    registerContentDetailOpener,
+    registerContentPreviewOpener,
   } = useFilterSelection();
 
   const idleTextFullTitleRef = useRef(idleTextFullTitle);
@@ -143,22 +147,29 @@ export function ImageParticleSimulationView({
   const spreadSignatureRef = useRef("");
   spreadSignatureRef.current = spreadSig;
 
-  const [detailRow, setDetailRow] = useState<ContentRow | null>(null);
-  const detailRowRef = useRef<ContentRow | null>(null);
-  detailRowRef.current = detailRow;
+  const [previewRow, setPreviewRow] = useState<ContentRow | null>(null);
+  const [previewCollapsed, setPreviewCollapsed] = useState(false);
+  const [previewFullScreen, setPreviewFullScreen] = useState(false);
+  const previewRowRef = useRef<ContentRow | null>(null);
+  previewRowRef.current = previewRow;
 
   const handleFilteredThumbnailClick = useCallback(
     (row: ContentRow) => {
       setFiltersFromContentRow(row);
-      setDetailRow(row);
+      setPreviewRow(row);
     },
     [setFiltersFromContentRow],
   );
 
   useEffect(() => {
-    registerContentDetailOpener(handleFilteredThumbnailClick);
-    return () => registerContentDetailOpener(null);
-  }, [registerContentDetailOpener, handleFilteredThumbnailClick]);
+    registerContentPreviewOpener(handleFilteredThumbnailClick);
+    return () => registerContentPreviewOpener(null);
+  }, [registerContentPreviewOpener, handleFilteredThumbnailClick]);
+
+  useEffect(() => {
+    setPreviewCollapsed(false);
+    setPreviewFullScreen(false);
+  }, [previewRow?.id]);
 
   const spreadEnterSignatureRef = useRef<string | null>(null);
 
@@ -333,19 +344,24 @@ export function ImageParticleSimulationView({
   const textWordsByRowRef = useRef(textWordsByRow);
   textWordsByRowRef.current = textWordsByRow;
 
-  // ---- Placement (main column below hero; minus detail drawer when open) ----
+  // ---- Placement (main column below hero; minus preview drawer when open) ----
   useLayoutEffect(() => {
-    const detailPanelWidth = () => {
-      if (!detailRow) return 0;
+    /** Width reserved on the right: margin guide inset + full or collapsed preview (matches `PreviewView`). */
+    const previewRightReservationPx = () => {
+      if (!previewRow) return 0;
+      if (previewFullScreen) return 0;
       const vw = window.innerWidth;
-      return Math.min(Math.max(0, vw - 16), 432);
+      const inset = getMarginGuideInsetPx();
+      if (previewCollapsed) return inset + getFilterNarrowColumnWidthPx();
+      const panelW = Math.min(Math.max(0, vw - 16), 432);
+      return inset + panelW;
     };
 
     const measure = () => {
       const vw = window.innerWidth;
       const vh = window.innerHeight;
-      const dW = detailPanelWidth();
-      const rightLimit = vw - dW;
+      const reservedRight = previewRightReservationPx();
+      const rightLimit = vw - reservedRight;
       const el = placementContainerRef?.current;
       if (!el) {
         const width = Math.max(64, rightLimit);
@@ -382,7 +398,7 @@ export function ImageParticleSimulationView({
       window.removeEventListener("resize", measure);
       window.removeEventListener("scroll", measure, true);
     };
-  }, [placementContainerRef, detailRow]);
+  }, [placementContainerRef, previewRow, previewCollapsed, previewFullScreen]);
 
   // ---- Fetch content ----
   useEffect(() => {
@@ -656,7 +672,7 @@ export function ImageParticleSimulationView({
       const selIdx = selectedIndicesRef.current;
 
       let lifeFreeze: LifeFreezeOptions | undefined;
-      if (detailRowRef.current != null) {
+      if (previewRowRef.current != null) {
         lifeFreeze = { all: true };
       } else if (phase !== "idle") {
         lifeFreeze = { all: true };
@@ -1103,8 +1119,8 @@ export function ImageParticleSimulationView({
           const showHoverCard = hoveredIndex === i && !spreadChromeActive;
           const showChromeCard = showFilteredCard || showHoverCard;
           const spreadDimmed = spreadChromeActive && !showFilteredCard;
-          /** Detail opens only from a tile in the active filter spread (not in idle hover). */
-          const opensDetailOnClick = showFilteredCard;
+          /** Preview opens only from a tile in the active filter spread (not in idle hover). */
+          const opensPreviewOnClick = showFilteredCard;
 
           if (isText) {
             const rowWords = textWordsByRow[i] ?? [];
@@ -1122,12 +1138,12 @@ export function ImageParticleSimulationView({
                   nodeRefs.current[i] = el;
                 }}
                 className={`absolute left-1/2 top-1/2 will-change-[transform,opacity,filter] ${
-                  opensDetailOnClick ? "cursor-pointer " : ""
+                  opensPreviewOnClick ? "cursor-pointer " : ""
                 }${spreadDimmed ? "pointer-events-none" : "pointer-events-auto"}`}
                 onPointerEnter={() => handleTilePointerEnter(i)}
                 onPointerLeave={() => handleTilePointerLeave(i)}
                 onClick={
-                  opensDetailOnClick
+                  opensPreviewOnClick
                     ? (e) => {
                         e.stopPropagation();
                         handleFilteredThumbnailClick(row);
@@ -1187,12 +1203,12 @@ export function ImageParticleSimulationView({
                 nodeRefs.current[i] = el;
               }}
               className={`absolute left-1/2 top-1/2 will-change-[transform,opacity,filter] ${
-                opensDetailOnClick ? "cursor-pointer " : ""
+                opensPreviewOnClick ? "cursor-pointer " : ""
               }${spreadDimmed ? "pointer-events-none" : "pointer-events-auto"}`}
               onPointerEnter={() => handleTilePointerEnter(i)}
               onPointerLeave={() => handleTilePointerLeave(i)}
               onClick={
-                opensDetailOnClick
+                opensPreviewOnClick
                   ? (e) => {
                       e.stopPropagation();
                       handleFilteredThumbnailClick(row);
@@ -1241,9 +1257,19 @@ export function ImageParticleSimulationView({
         })}
         </div>
       </div>
-      {detailRow ? (
-        <DetailView row={detailRow} onClose={() => setDetailRow(null)} />
-      ) : null}
+      {previewRow
+        ? createPortal(
+            <PreviewView
+              row={previewRow}
+              collapsed={previewCollapsed}
+              onCollapsedChange={setPreviewCollapsed}
+              fullScreen={previewFullScreen}
+              onFullScreenChange={setPreviewFullScreen}
+              onClose={() => setPreviewRow(null)}
+            />,
+            document.body,
+          )
+        : null}
     </section>
   );
 }
