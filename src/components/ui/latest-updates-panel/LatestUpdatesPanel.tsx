@@ -102,7 +102,7 @@ export function LatestUpdatesPanel() {
         <div
           id={panelId}
           role="region"
-          aria-label="Latest updates"
+          aria-label="Fellowships"
           className="fixed bottom-8.5 right-8.5 z-52 max-h-updates-panel w-max max-w-floating-panel overflow-hidden border-hairline border-solid border-ink-primary bg-surface-canvas/90 shadow-none backdrop-blur-fae-md motion-reduce:transition-none"
           style={{ minHeight: UPDATES_PANEL_MIN_HEIGHT_PX }}
         >
