@@ -11,6 +11,7 @@ import { AboutPanel } from "@/components/ui/about-panel/AboutPanel";
 import { GlossaryPanel } from "@/components/ui/glossary-panel";
 import { LatestUpdatesPanel } from "@/components/ui/latest-updates-panel/LatestUpdatesPanel";
 import { HeroTitleBlock } from "@/components/ui/hero-title-block";
+import { MarginGuideFrame } from "@/components/ui/margin-guide-frame";
 import { PixelTessellationBackground } from "@/components/ui/pixel-tessellation-background";
 import { ImageParticleSimulation } from "@/components/particle-canvas/ImageParticleSimulation";
 import { IMAGE_FETCH_LIMIT } from "@/components/particle-canvas/config";
@@ -52,6 +53,10 @@ function HomeContent() {
   return (
     <div className="flex min-h-screen w-full">
       <FilterSidebar />
+      {/* Desktop: dashed inset frame aligned with `--inset-margin-guide` (narrow column − 1px). */}
+      <div className="pointer-events-none max-lg:hidden" aria-hidden>
+        <MarginGuideFrame />
+      </div>
       <PixelTessellationBackground />
       <AboutPanel />
       <GlossaryPanel />
