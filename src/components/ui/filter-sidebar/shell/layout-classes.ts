@@ -1,16 +1,32 @@
 /**
- * Main filter column + domain subpanel column width: 30vw, floor 320px.
- * No width transition — animated width fights hero/particle compensation and reads as jitter.
+ * Main filter column + domain subpanel column width: 25vw (same token as preview dock).
+ * Options strip animates via `FILTER_OPTIONS_PANEL_CLIP_TRANSITION_CLASS`; subpanels use width transitions.
  */
 export const FILTER_SIDEBAR_COLUMN_CLASS =
-  "w-[30vw] min-w-[320px] max-w-[30vw] shrink-0";
+  "w-[25vw] max-w-[25vw] shrink-0";
+
+/**
+ * Filter options strip: clip with `max-width` (avoids `fr` track interpolation feeling like
+ * overshoot on open — same idea as `PREVIEW_DOCK_WIDTH_TRANSITION_CLASS`).
+ */
+/** Use `width` (not `max-width` + `flex-1`) so flex doesn’t skip the interpolation. */
+export const FILTER_OPTIONS_PANEL_CLIP_TRANSITION_CLASS =
+  "transition-[width] duration-300 ease-out motion-reduce:transition-none";
+
+/** Domain subpanel stack column. */
+export const FILTER_SUBPANEL_COLUMN_TRANSITION_CLASS =
+  "transition-[max-width,min-width,width,opacity] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] motion-reduce:transition-none";
+
+/** Content preview dock: width clip (smoother than animating `fr` tracks in some engines). */
+export const PREVIEW_DOCK_WIDTH_TRANSITION_CLASS =
+  "transition-[max-width] duration-300 ease-out motion-reduce:transition-none";
 
 /** Alias for expanded subpanel stack (same width token). */
 export const FILTER_SUBPANELS_COLUMN_EXPANDED_CLASS = FILTER_SIDEBAR_COLUMN_CLASS;
 
-/** Pixel width matching `FILTER_SIDEBAR_COLUMN_CLASS` (hero + particle bounds when subpanel is open). */
+/** Pixel width matching `FILTER_SIDEBAR_COLUMN_CLASS` / `--width-preview-panel` (hero + particle bounds). */
 export function getFilterSubpanelColumnWidthPx(viewportWidth: number): number {
-  return Math.max(320, viewportWidth * 0.3);
+  return viewportWidth * 0.25;
 }
 
 export const SUBPANEL_COLUMN_COLLAPSED_CLASS =

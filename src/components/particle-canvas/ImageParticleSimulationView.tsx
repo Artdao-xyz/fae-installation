@@ -75,6 +75,18 @@ function syncImgToContentRow(
   }
 }
 
+type PlacementBounds = { cx: number; cy: number; w: number; h: number };
+
+function approxEqualPlacementBounds(a: PlacementBounds, b: PlacementBounds) {
+  const eps = 0.5;
+  return (
+    Math.abs(a.cx - b.cx) <= eps &&
+    Math.abs(a.cy - b.cy) <= eps &&
+    Math.abs(a.w - b.w) <= eps &&
+    Math.abs(a.h - b.h) <= eps
+  );
+}
+
 export type ImageParticleSimulationViewProps = {
   mode: ImageParticleSimulationMode;
   imageLimit?: number;
@@ -153,6 +165,10 @@ export function ImageParticleSimulationView({
   const [previewFullScreen, setPreviewFullScreen] = useState(false);
   const previewRowRef = useRef<ContentRow | null>(null);
   previewRowRef.current = previewRow;
+
+  const closePreview = useCallback(() => {
+    setPreviewRow(null);
+  }, []);
 
   const handleFilteredThumbnailClick = useCallback(
     (row: ContentRow) => {
@@ -382,7 +398,7 @@ export function ImageParticleSimulationView({
       if (previewFullScreen) return 0;
       const vw = window.innerWidth;
       const inset = getMarginGuideInsetPx();
-      const panelW = Math.min(Math.max(0, vw - 16), 432);
+      const panelW = getFilterSubpanelColumnWidthPx(vw);
       return inset + panelW;
     };
 
@@ -398,24 +414,30 @@ export function ImageParticleSimulationView({
        */
       if (!filtersPanelOpen) {
         const w = Math.max(64, vw - reservedRight);
-        setPlacementBounds({
+        const next: PlacementBounds = {
           cx: vw / 2,
           cy: vh / 2,
           w,
           h: vh,
-        });
+        };
+        setPlacementBounds((prev) =>
+          approxEqualPlacementBounds(prev, next) ? prev : next,
+        );
         return;
       }
 
       const el = placementContainerRef?.current;
       if (!el) {
         const w = Math.max(64, rightLimit);
-        setPlacementBounds({
+        const next: PlacementBounds = {
           cx: vw / 2,
           cy: vh / 2,
           w,
           h: vh,
-        });
+        };
+        setPlacementBounds((prev) =>
+          approxEqualPlacementBounds(prev, next) ? prev : next,
+        );
         return;
       }
       const r = el.getBoundingClientRect();
@@ -431,12 +453,15 @@ export function ImageParticleSimulationView({
         cx -= subW / 2;
         width += subW;
       }
-      setPlacementBounds({
+      const next: PlacementBounds = {
         cx,
         cy: top + height / 2,
         w: width,
         h: height,
-      });
+      };
+      setPlacementBounds((prev) =>
+        approxEqualPlacementBounds(prev, next) ? prev : next,
+      );
     };
 
     measure();
@@ -1314,7 +1339,7 @@ export function ImageParticleSimulationView({
               row={previewRow}
               fullScreen={previewFullScreen}
               onFullScreenChange={setPreviewFullScreen}
-              onClose={() => setPreviewRow(null)}
+              onClose={closePreview}
             />,
             document.body,
           )

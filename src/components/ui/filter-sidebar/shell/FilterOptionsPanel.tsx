@@ -39,7 +39,7 @@ export function FilterOptionsPanel({
 
   return (
     <aside
-      className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden border-r-hairline border-solid border-ink-primary"
+      className="flex h-full min-h-0 w-full min-w-[285px] flex-col overflow-hidden border-r-hairline border-solid border-ink-primary"
       aria-label="Filters"
     >
       <div

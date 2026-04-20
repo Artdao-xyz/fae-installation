@@ -1,9 +1,16 @@
 "use client";
 
-import { useEffect, useMemo, type ReactNode } from "react";
+import {
+  memo,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 import type { ContentRow } from "@/data/content-types";
 import { OpenSvgIcon } from "@/components/ui/icons/OpenSvgIcon";
 import { FilterPill } from "@/components/ui/filter-sidebar/primitives/FilterPill";
+import { PREVIEW_DOCK_WIDTH_TRANSITION_CLASS } from "@/components/ui/filter-sidebar/shell/layout-classes";
 import { PreviewBlocksBody } from "./PreviewBlocksBody";
 import { PreviewPanelCollapseBar } from "./PreviewPanelCollapseBar";
 
@@ -211,9 +218,15 @@ function PreviewMainContent({ row }: { row: ContentRow }) {
         <>
           <Divider />
           {hasBlocks && row.contentBlocks ? (
-            <PreviewBlocksBody content={row.contentBlocks} />
+            <PreviewBlocksBody
+              key={`${row.id}-blocks`}
+              content={row.contentBlocks}
+            />
           ) : (
-            <div className="flex flex-col gap-3">
+            <div
+              key={`${row.id}-plain`}
+              className="fae-preview-text-stagger flex flex-col gap-3"
+            >
               {paragraphs.map((p, i) => (
                 <RichParagraph key={i} text={p} />
               ))}
@@ -259,36 +272,65 @@ function PreviewMainContent({ row }: { row: ContentRow }) {
   );
 }
 
-const dockedShellClass =
-  "fixed top-[var(--inset-margin-guide)] right-[var(--inset-margin-guide)] bottom-[var(--inset-margin-guide)] z-55 flex shrink-0 flex-col border-hairline border-solid border-ink-primary bg-surface-canvas motion-reduce:transition-none";
+/** Fixed shell: clip width 0 → token (avoids `fr` interpolation overshoot in some browsers). */
+const previewDockedOuterClass = `fixed top-[var(--inset-margin-guide)] right-[var(--inset-margin-guide)] bottom-[var(--inset-margin-guide)] z-55 flex min-h-0 min-w-0 justify-end overflow-hidden ${PREVIEW_DOCK_WIDTH_TRANSITION_CLASS}`;
+
+const previewDockedAsideClass =
+  "flex h-full min-h-0 w-preview-panel shrink-0 flex-col overflow-hidden border-hairline border-solid border-ink-primary bg-surface-canvas";
 
 /** Same inset on all sides as `MarginGuideFrame` dashed guides. */
 const fullScreenShellClass =
-  "fixed top-[var(--inset-margin-guide)] right-[var(--inset-margin-guide)] bottom-[var(--inset-margin-guide)] left-[var(--inset-margin-guide)] z-[62] flex min-h-0 min-w-0 flex-col overflow-hidden border-hairline border-solid border-ink-primary bg-surface-canvas motion-reduce:transition-none";
+  "fixed top-[var(--inset-margin-guide)] right-[var(--inset-margin-guide)] bottom-[var(--inset-margin-guide)] left-[var(--inset-margin-guide)] z-[62] flex min-h-0 min-w-0 flex-col overflow-hidden border-hairline border-solid border-ink-primary bg-surface-canvas";
 
 const showMoreButtonClass =
   "inline-flex w-fit items-center gap-2 self-start border-t-hairline border-r-hairline border-solid border-ink-primary px-5 py-3 font-fira-mono text-sm text-black-fae transition-colors hover:bg-black-fae/10 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ink-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface-canvas";
 
-export function PreviewView({
+export const PreviewView = memo(function PreviewView({
   row,
   fullScreen,
   onFullScreenChange,
   onClose,
   className = "",
 }: PreviewViewProps) {
+  /** Replay open animation when switching docked ↔ full screen (same easing as filter drawer). */
+  const [shellEntered, setShellEntered] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    let raf = 0;
+    queueMicrotask(() => {
+      if (cancelled || typeof window === "undefined") return;
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        setShellEntered(true);
+        return;
+      }
+      setShellEntered(false);
+      raf = requestAnimationFrame(() => {
+        if (!cancelled) setShellEntered(true);
+      });
+    });
+    return () => {
+      cancelled = true;
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, [fullScreen]);
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
-      onClose();
+      if (fullScreen) onFullScreenChange(false);
+      else onClose();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
+  }, [fullScreen, onClose, onFullScreenChange]);
 
   if (fullScreen) {
     return (
       <div
-        className={fullScreenShellClass}
+        className={`${fullScreenShellClass} transition-opacity duration-300 ease-out motion-reduce:transition-none ${
+          shellEntered ? "opacity-100" : "opacity-0"
+        } motion-reduce:opacity-100`}
         role="dialog"
         aria-modal="true"
         aria-label="Content preview full screen"
@@ -305,9 +347,9 @@ export function PreviewView({
         <div className="flex shrink-0 justify-start">
           <button
             type="button"
-            onClick={onClose}
+            onClick={() => onFullScreenChange(false)}
             className={showMoreButtonClass}
-            aria-label="Close preview"
+            aria-label="Exit full screen preview"
           >
             <OpenSvgIcon className="shrink-0" />
             <span className="select-none text-[13px] leading-none tracking-wide">Show less</span>
@@ -318,33 +360,44 @@ export function PreviewView({
   }
 
   return (
-    <aside
-      className={`${dockedShellClass} w-preview-panel ${className}`}
-      aria-label="Content preview"
-      role="dialog"
-      aria-modal="true"
+    <div
+      className={`${previewDockedOuterClass} ${
+        shellEntered
+          ? "max-w-[var(--width-preview-panel)]"
+          : "max-w-0"
+      } motion-reduce:max-w-[var(--width-preview-panel)]`}
+      role="presentation"
     >
-      <PreviewPanelCollapseBar
-        ariaLabel="Close preview"
-        onClose={onClose}
-      />
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-        <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-5 pt-5 pb-4 scrollbar-hide">
-          <PreviewMainContent row={row} />
+      <aside
+        className={`${previewDockedAsideClass} ${className}`}
+        aria-label="Content preview"
+        role="dialog"
+        aria-modal="true"
+      >
+        <PreviewPanelCollapseBar
+          ariaLabel="Close preview"
+          onClose={onClose}
+        />
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+          <div className="scrollbar-hide flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-5 pt-5 pb-4">
+            <PreviewMainContent row={row} />
+          </div>
         </div>
-      </div>
 
-      <div className="flex shrink-0 justify-start">
-        <button
-          type="button"
-          onClick={() => onFullScreenChange(true)}
-          className={showMoreButtonClass}
-          aria-label="Open full screen preview"
-        >
-          <OpenSvgIcon className="shrink-0 rotate-180" />
-          <span className="select-none text-[13px] leading-none tracking-wide">Show more</span>
-        </button>
-      </div>
-    </aside>
+        <div className="flex shrink-0 justify-start">
+          <button
+            type="button"
+            onClick={() => onFullScreenChange(true)}
+            className={showMoreButtonClass}
+            aria-label="Open full screen preview"
+          >
+            <OpenSvgIcon className="shrink-0 rotate-180" />
+            <span className="select-none text-[13px] leading-none tracking-wide">
+              Show more
+            </span>
+          </button>
+        </div>
+      </aside>
+    </div>
   );
-}
+});
