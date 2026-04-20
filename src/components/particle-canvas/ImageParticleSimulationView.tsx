@@ -121,6 +121,7 @@ export function ImageParticleSimulationView({
   const {
     selectedFocusAreas,
     selectedActivityTypes,
+    filtersPanelOpen,
     setFiltersFromContentRow,
     registerContentPreviewOpener,
   } = useFilterSelection();
@@ -362,13 +363,29 @@ export function ImageParticleSimulationView({
       const vh = window.innerHeight;
       const reservedRight = previewRightReservationPx();
       const rightLimit = vw - reservedRight;
+
+      /**
+       * Filter panel closed: match fixed hero — orbit uses full viewport width (minus preview
+       * reservation) centered on screen. Panel open: use main column rect (sidebar toggles width).
+       */
+      if (!filtersPanelOpen) {
+        const w = Math.max(64, vw - reservedRight);
+        setPlacementBounds({
+          cx: vw / 2,
+          cy: vh / 2,
+          w,
+          h: vh,
+        });
+        return;
+      }
+
       const el = placementContainerRef?.current;
       if (!el) {
-        const width = Math.max(64, rightLimit);
+        const w = Math.max(64, rightLimit);
         setPlacementBounds({
-          cx: width / 2,
+          cx: vw / 2,
           cy: vh / 2,
-          w: width,
+          w,
           h: vh,
         });
         return;
@@ -398,7 +415,13 @@ export function ImageParticleSimulationView({
       window.removeEventListener("resize", measure);
       window.removeEventListener("scroll", measure, true);
     };
-  }, [placementContainerRef, previewRow, previewCollapsed, previewFullScreen]);
+  }, [
+    placementContainerRef,
+    previewRow,
+    previewCollapsed,
+    previewFullScreen,
+    filtersPanelOpen,
+  ]);
 
   // ---- Fetch content ----
   useEffect(() => {

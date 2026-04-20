@@ -1,6 +1,6 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { useRef, useSyncExternalStore } from "react";
 import {
   FilterSidebar,
   FilterSelectionProvider,
@@ -33,6 +33,7 @@ function readStoredMode(): Mode {
 }
 
 export default function Home() {
+  const particlePlacementRef = useRef<HTMLDivElement>(null);
   const imageLimit = IMAGE_FETCH_LIMIT > 0 ? IMAGE_FETCH_LIMIT : undefined;
 
   const mode = useSyncExternalStore(
@@ -60,7 +61,10 @@ export default function Home() {
             subtitle="Cultural Infrastructure Research"
           />
 
-          <div className="relative min-h-0 w-full flex-1">
+          <div
+            ref={particlePlacementRef}
+            className="relative min-h-0 w-full flex-1"
+          >
             <ImageParticleSimulation
               mode={mode}
               imageLimit={imageLimit}
@@ -69,6 +73,7 @@ export default function Home() {
               displayedWidth={DISPLAYED_WIDTH}
               displayedHeight={DISPLAYED_HEIGHT}
               speedFactor={SPEED_FACTOR}
+              placementContainerRef={particlePlacementRef}
             />
           </div>
         </main>
