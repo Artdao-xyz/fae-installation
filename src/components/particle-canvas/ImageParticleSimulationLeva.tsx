@@ -15,7 +15,7 @@ type Props = Omit<
 export function ImageParticleSimulationLeva(props: Props) {
   const idleLabel = useControls("Idle text", {
     showFullTitle: {
-      value: false,
+      value: true,
       label: "Full title (not keyword)",
     },
   });

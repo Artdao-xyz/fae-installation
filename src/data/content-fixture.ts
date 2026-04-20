@@ -1,3 +1,9 @@
+/**
+ * Synthetic catalog for dev. `toSlimCatalogRow` / `getContentFixture*` are only required by
+ * `src/lib/strapi/offline-fixture/` — remove those exports with the offline-fixture folder if you
+ * drop that feature.
+ */
+import type { BlocksContent } from "@strapi/blocks-react-renderer";
 import {
   ACTIVITY_TYPE_LABELS,
   ARTIST_LABELS,
@@ -95,6 +101,34 @@ function buildContentForIndex(index: number, title: string): string {
   return parts.join("\n\n");
 }
 
+/** Mirrors Strapi `Text` JSON so preview can run `BlocksRenderer` offline. */
+const FIXTURE_STRAPI_LIKE_BLOCKS_ROW0: BlocksContent = [
+  {
+    type: "paragraph",
+    children: [
+      {
+        type: "text",
+        text: "Fixture body in Strapi blocks shape. Use FAE_USE_STRAPI_FIXTURE=1 to avoid CMS calls while developing.",
+      },
+    ],
+  },
+  {
+    type: "heading",
+    level: 2,
+    children: [{ type: "text", text: "Sample heading" }],
+  },
+  {
+    type: "paragraph",
+    children: [
+      { type: "text", text: "Inline modifiers: " },
+      { type: "text", text: "italic", italic: true },
+      { type: "text", text: " and " },
+      { type: "text", text: "bold", bold: true },
+      { type: "text", text: "." },
+    ],
+  },
+];
+
 export const CONTENT_FIXTURE_ROWS: ContentRow[] = FIXTURE_SEED_TITLES.map(
   (title, index) => {
     const numericId = index + 1;
@@ -143,13 +177,15 @@ export const CONTENT_FIXTURE_ROWS: ContentRow[] = FIXTURE_SEED_TITLES.map(
     );
 
     const year = yearForIndex(index);
+    const id = `fxt-${paddedId}`;
+    const plainContent = buildContentForIndex(index, title);
     return {
-      id: `content-${paddedId}`,
+      id,
       title,
       shortTitle: title,
-      imageUrl: `https://picsum.photos/seed/content-${paddedId}/220/220.webp`,
-      content: buildContentForIndex(index, title),
-      contentBlocks: null,
+      imageUrl: `https://picsum.photos/seed/${id}/220/220.webp`,
+      content: plainContent,
+      contentBlocks: index === 0 ? FIXTURE_STRAPI_LIKE_BLOCKS_ROW0 : null,
       resources: pickResourcesForIndex(index),
       focusAreas,
       activityTypes,
@@ -161,3 +197,26 @@ export const CONTENT_FIXTURE_ROWS: ContentRow[] = FIXTURE_SEED_TITLES.map(
     };
   },
 );
+
+/** Same shape as Strapi catalog list rows (no body text or resources until detail). */
+export function toSlimCatalogRow(row: ContentRow): ContentRow {
+  return {
+    ...row,
+    content: "",
+    contentBlocks: null,
+    resources: [],
+  };
+}
+
+export function getContentFixtureCatalogRows(): ContentRow[] {
+  return CONTENT_FIXTURE_ROWS.map(toSlimCatalogRow);
+}
+
+export function getContentFixtureDetailByDocumentId(
+  documentId: string,
+): ContentRow | null {
+  const t = documentId.trim();
+  if (!t) return null;
+  const row = CONTENT_FIXTURE_ROWS.find((r) => r.id === t);
+  return row ? { ...row } : null;
+}

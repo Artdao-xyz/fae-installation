@@ -5,14 +5,22 @@
  * **Detail (preview):** full document for body, resources, and image fallbacks.
  *
  * Taxonomy option lists: `GET /api/strapi/taxonomy-options`.
+ *
+ * Optional offline data: `offline-fixture` import + `offlineFixture*` calls below — removable as a unit
+ * (see `src/lib/strapi/offline-fixture/index.ts`).
  */
 
+import type { ContentRow } from "@/data/content-types";
 import {
   mapStrapiOutputToContentRow,
   mapStrapiOutputsPayloadToContentRows,
   strapiDocumentDisplayName,
 } from "@/lib/strapi/map-output-to-content-row";
-import type { ContentRow } from "@/data/content-types";
+import {
+  offlineFixtureCatalogOrNull,
+  offlineFixtureDetailIfEnabled,
+  offlineFixtureTaxonomyOrNull,
+} from "@/lib/strapi/offline-fixture";
 
 /** Larger pages = fewer Strapi round-trips; balance with response size. */
 const DEFAULT_PAGE_SIZE = 200;
@@ -201,6 +209,9 @@ function readPagination(
 }
 
 export async function fetchStrapiTaxonomyOptionLabelsStaged(): Promise<StrapiTaxonomyOptionLabels> {
+  const offline = offlineFixtureTaxonomyOrNull();
+  if (offline) return offline;
+
   const [focusOptionLabels, activityOptionLabels, formatOptionLabels] =
     await Promise.all([
       fetchStrapiSortedOptionLabels("focus-options"),
@@ -229,6 +240,9 @@ export async function fetchStrapiOutputsCatalogOnly(options?: {
   total: number;
   durationMs: number;
 }> {
+  const offline = offlineFixtureCatalogOrNull();
+  if (offline) return offline;
+
   const started = performance.now();
   const pageSize = options?.pageSize ?? DEFAULT_PAGE_SIZE;
 
@@ -267,6 +281,9 @@ export async function fetchStrapiOutputDetailByDocumentId(
 ): Promise<ContentRow | null> {
   const trimmed = documentId.trim();
   if (!trimmed) return null;
+
+  const offlineRow = offlineFixtureDetailIfEnabled(trimmed);
+  if (offlineRow !== undefined) return offlineRow;
 
   const base = strapiBaseUrl();
   const token = process.env.STRAPI_API_TOKEN?.trim();
