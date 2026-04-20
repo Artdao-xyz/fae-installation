@@ -1,6 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useId, useState } from "react";
+import {
+  useFloatingPanelPhase,
+  useFloatingPanelStack,
+} from "@/components/ui/floating-panels/FloatingPanelStackContext";
 import { AboutSvgIcon } from "@/components/ui/icons/AboutSvgIcon";
 import { OpenSvgIcon } from "@/components/ui/icons/OpenSvgIcon";
 import { navSidebarVerticalLabelClassName } from "@/components/ui/icons/nav-sidebar-labels";
@@ -132,6 +136,8 @@ function AboutTabRail({
 export function AboutPanel() {
   const panelId = useId();
   const [view, setView] = useState<View>("minimized");
+  const { getChromeZIndex } = useFloatingPanelStack();
+  useFloatingPanelPhase("about", view);
 
   const openPeek = useCallback(() => setView("peek"), []);
   const openFull = useCallback(() => setView("full"), []);
@@ -159,7 +165,10 @@ export function AboutPanel() {
   return (
     <>
       {view === "minimized" ? (
-        <div className="fixed top-8.5 right-8.5 z-52 border-hairline border-solid border-ink-primary">
+        <div
+          className="fixed top-8.5 right-8.5 border-hairline border-solid border-ink-primary"
+          style={{ zIndex: getChromeZIndex("about", "minimized") }}
+        >
           <AboutTabRail
             arrowClassName="-scale-x-100"
             onClick={openPeek}
@@ -174,7 +183,8 @@ export function AboutPanel() {
           id={panelId}
           role="region"
           aria-label="About"
-          className="fixed top-8.5 right-8.5 z-52 flex max-h-about-panel w-about-panel overflow-hidden border-hairline border-solid border-ink-primary bg-surface-canvas/90 shadow-none backdrop-blur-fae-md motion-reduce:transition-none"
+          className="fixed top-8.5 right-8.5 flex max-h-about-panel w-about-panel overflow-hidden border-hairline border-solid border-ink-primary bg-surface-canvas/90 shadow-none backdrop-blur-fae-md motion-reduce:transition-none"
+          style={{ zIndex: getChromeZIndex("about", "peek") }}
         >
           <div className="flex min-h-0 min-w-0 flex-1 flex-row">
             <AboutTabRail
@@ -208,7 +218,8 @@ export function AboutPanel() {
 
       {view === "full" ? (
         <div
-          className="fixed inset-0 z-60 flex flex-col bg-surface-canvas motion-reduce:transition-none"
+          className="fixed inset-0 flex flex-col bg-surface-canvas motion-reduce:transition-none"
+          style={{ zIndex: getChromeZIndex("about", "full") }}
           role="dialog"
           aria-modal="true"
           aria-label="About Future Art Ecosystems"

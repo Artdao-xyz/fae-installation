@@ -92,7 +92,7 @@
   --width-preview-panel: min(100vw - 1rem, 432px);
 
   --max-height-about-panel: min(70dvh, calc(100dvh - 2.5rem));
-  --max-height-updates-panel: min(85dvh, calc(100dvh - 2.5rem));
+  --max-height-fellowships-panel: min(85dvh, calc(100dvh - 2.5rem));
   --max-width-floating-panel: calc(100vw - 2.5rem);
 }
 

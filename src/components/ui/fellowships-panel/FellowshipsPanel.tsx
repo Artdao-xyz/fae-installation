@@ -1,15 +1,19 @@
 "use client";
 
 import { useCallback, useEffect, useId, useState } from "react";
+import {
+  useFloatingPanelPhase,
+  useFloatingPanelStack,
+} from "@/components/ui/floating-panels/FloatingPanelStackContext";
 import { OpenSvgIcon } from "@/components/ui/icons/OpenSvgIcon";
-import { UpdatesSvgIcon } from "@/components/ui/icons/UpdatesSvgIcon";
+import { FellowshipsSvgIcon } from "@/components/ui/icons/FellowshipsSvgIcon";
 import { navSidebarVerticalLabelClassName } from "@/components/ui/icons/nav-sidebar-labels";
-import { latestUpdatesMinimizedOuterHeightPx } from "@/components/ui/floating-panels/right-rail-stack";
+import { fellowshipsMinimizedOuterHeightPx } from "@/components/ui/floating-panels/right-rail-stack";
 import { Thumbnail } from "@/components/ui/thumbnail-full";
 
 type View = "minimized" | "peek";
 
-const LATEST_UPDATES_THUMBNAILS = [
+const FELLOWSHIPS_THUMBNAILS = [
   {
     label: "Synthetic Commons",
     imageSrc: "https://picsum.photos/seed/fae-upd-1/440/440",
@@ -27,7 +31,7 @@ const LATEST_UPDATES_THUMBNAILS = [
   },
 ] as const;
 
-function LatestUpdatesTabRail({
+function FellowshipsTabRail({
   arrowClassName,
   onClick,
   ariaExpanded,
@@ -55,16 +59,18 @@ function LatestUpdatesTabRail({
       <OpenSvgIcon className={`shrink-0 ${arrowClassName ?? ""}`} />
       <div className="flex shrink-0 flex-col items-center gap-2">
         <span className={navSidebarVerticalLabelClassName}>Fellowships</span>
-        <UpdatesSvgIcon />
+        <FellowshipsSvgIcon />
       </div>
     </button>
   );
 }
 
-export function LatestUpdatesPanel() {
+export function FellowshipsPanel() {
   const panelId = useId();
   const [view, setView] = useState<View>("minimized");
-  const updatesMinimizedOuterH = latestUpdatesMinimizedOuterHeightPx();
+  const { getChromeZIndex } = useFloatingPanelStack();
+  useFloatingPanelPhase("fellowships", view);
+  const fellowshipsMinimizedOuterH = fellowshipsMinimizedOuterHeightPx();
 
   const openPeek = useCallback(() => setView("peek"), []);
   const minimize = useCallback(() => setView("minimized"), []);
@@ -82,10 +88,13 @@ export function LatestUpdatesPanel() {
     <>
       {view === "minimized" ? (
         <div
-          className="fixed bottom-8.5 right-8.5 z-52 flex border-hairline border-solid border-ink-primary"
-          style={{ height: updatesMinimizedOuterH }}
+          className="fixed bottom-8.5 right-8.5 flex border-hairline border-solid border-ink-primary"
+          style={{
+            zIndex: getChromeZIndex("fellowships", "minimized"),
+            height: fellowshipsMinimizedOuterH,
+          }}
         >
-          <LatestUpdatesTabRail
+          <FellowshipsTabRail
             arrowClassName="-scale-x-100"
             onClick={openPeek}
             ariaExpanded={false}
@@ -99,11 +108,14 @@ export function LatestUpdatesPanel() {
           id={panelId}
           role="region"
           aria-label="Fellowships"
-          className="fixed bottom-8.5 right-8.5 z-52 max-h-updates-panel w-max max-w-floating-panel overflow-hidden border-hairline border-solid border-ink-primary bg-surface-canvas/90 shadow-none backdrop-blur-fae-md motion-reduce:transition-none"
-          style={{ minHeight: updatesMinimizedOuterH }}
+          className="fixed bottom-8.5 right-8.5 max-h-fellowships-panel w-max max-w-floating-panel overflow-hidden border-hairline border-solid border-ink-primary bg-surface-canvas/90 shadow-none backdrop-blur-fae-md motion-reduce:transition-none"
+          style={{
+            zIndex: getChromeZIndex("fellowships", "peek"),
+            minHeight: fellowshipsMinimizedOuterH,
+          }}
         >
           <div className="flex min-h-0 w-max min-w-0 flex-row items-stretch">
-            <LatestUpdatesTabRail
+            <FellowshipsTabRail
               onClick={minimize}
               ariaExpanded={true}
               ariaControls={panelId}
@@ -112,7 +124,7 @@ export function LatestUpdatesPanel() {
 
             <div className="flex min-h-0 min-w-0 flex-1 flex-col justify-end overflow-x-auto overflow-y-auto overscroll-contain">
               <div className="flex w-max flex-row flex-nowrap items-end gap-6 px-4 py-5 sm:gap-8 sm:px-6">
-                {LATEST_UPDATES_THUMBNAILS.map((item) => (
+                {FELLOWSHIPS_THUMBNAILS.map((item) => (
                   <Thumbnail
                     key={item.label}
                     variant="full"

@@ -9,7 +9,7 @@ export const RIGHT_FLOAT_VIEWPORT_INSET = "2.125rem";
 /** Matches minimized `AboutTabRail`: `min-h-[120px]`. */
 export const ABOUT_MINIMIZED_RAIL_HEIGHT_PX = 120;
 
-/** Matches `LatestUpdatesPanel` minimized wrapper height. */
-export function latestUpdatesMinimizedOuterHeightPx(): number {
+/** Matches `FellowshipsPanel` minimized wrapper height. */
+export function fellowshipsMinimizedOuterHeightPx(): number {
   return getThumbnailFullCardOuterSize("lg").height + 40;
 }

@@ -1,6 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useId, useState } from "react";
+import {
+  useFloatingPanelPhase,
+  useFloatingPanelStack,
+} from "@/components/ui/floating-panels/FloatingPanelStackContext";
 import { OpenSvgIcon } from "@/components/ui/icons/OpenSvgIcon";
 import {
   navMarkIconImgClassName,
@@ -9,7 +13,7 @@ import {
 import {
   ABOUT_MINIMIZED_RAIL_HEIGHT_PX,
   RIGHT_FLOAT_VIEWPORT_INSET,
-  latestUpdatesMinimizedOuterHeightPx,
+  fellowshipsMinimizedOuterHeightPx,
 } from "@/components/ui/floating-panels/right-rail-stack";
 import {
   GLOSSARY_PANEL_ENTRIES,
@@ -30,7 +34,7 @@ function GlossaryTabRail({
   ariaExpanded: boolean;
   ariaControls: string;
   showRightDivider?: boolean;
-  /** When true, rail stretches vertically like `flex-1` between About and Latest Updates. */
+  /** When true, rail stretches vertically like `flex-1` between About and Fellowships. */
   fillColumn?: boolean;
 }) {
   const sizeClassName = fillColumn
@@ -65,7 +69,9 @@ function GlossaryTabRail({
 export function GlossaryPanel() {
   const panelId = useId();
   const [view, setView] = useState<View>("minimized");
-  const latestUpdatesMinimizedH = latestUpdatesMinimizedOuterHeightPx();
+  const { getChromeZIndex } = useFloatingPanelStack();
+  useFloatingPanelPhase("glossary", view);
+  const fellowshipsMinimizedH = fellowshipsMinimizedOuterHeightPx();
 
   const openPeek = useCallback(() => setView("peek"), []);
   const minimize = useCallback(() => setView("minimized"), []);
@@ -83,10 +89,11 @@ export function GlossaryPanel() {
     <>
       {view === "minimized" ? (
         <div
-          className="fixed right-8.5 z-52 flex min-h-0 flex-col items-stretch border-hairline border-solid border-ink-primary"
+          className="fixed right-8.5 flex min-h-0 flex-col items-stretch border-t-hairline border-l-hairline border-r-hairline border-b-0 border-solid border-ink-primary"
           style={{
+            zIndex: getChromeZIndex("glossary", "minimized"),
             top: `calc(${RIGHT_FLOAT_VIEWPORT_INSET} + ${ABOUT_MINIMIZED_RAIL_HEIGHT_PX}px)`,
-            bottom: `calc(${RIGHT_FLOAT_VIEWPORT_INSET} + ${latestUpdatesMinimizedH}px)`,
+            bottom: `calc(${RIGHT_FLOAT_VIEWPORT_INSET} + ${fellowshipsMinimizedH}px)`,
           }}
         >
           <GlossaryTabRail
@@ -104,7 +111,8 @@ export function GlossaryPanel() {
           id={panelId}
           role="region"
           aria-label="Term definitions"
-          className="fixed top-8.5 right-8.5 bottom-8.5 z-[55] flex max-h-[calc(100dvh-4.25rem)] w-max max-w-floating-panel overflow-hidden border-hairline border-solid border-ink-primary bg-surface-canvas/90 shadow-none backdrop-blur-fae-md motion-reduce:transition-none"
+          className="fixed top-8.5 right-8.5 bottom-8.5 flex max-h-[calc(100dvh-4.25rem)] w-max max-w-floating-panel overflow-hidden border-hairline border-solid border-ink-primary bg-surface-canvas/90 shadow-none backdrop-blur-fae-md motion-reduce:transition-none"
+          style={{ zIndex: getChromeZIndex("glossary", "peek") }}
         >
           <div className="flex h-full min-h-0 w-max min-w-0 flex-row items-stretch">
             <GlossaryTabRail
