@@ -108,7 +108,7 @@ export function FilterOptionsPanel({
       {/* Search lives on the landing `main` below `lg`; sidebar only from `lg`. */}
       <div
         className={[
-          "hidden min-w-0 w-full border-b-hairline border-solid border-ink-primary bg-surface-canvas lg:relative lg:z-auto lg:flex lg:flex-col",
+          "hidden min-w-0 w-full bg-surface-canvas lg:relative lg:z-auto lg:flex lg:flex-col",
           searching
             ? "lg:min-h-0 lg:min-w-0 lg:flex-1 lg:overflow-hidden"
             : "lg:shrink-0",
@@ -143,11 +143,11 @@ export function FilterOptionsPanel({
           <Format collapsed={searching} />
         </div>
 
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden lg:min-h-0">
-          <div className="flex min-h-0 min-w-0 flex-1 flex-row max-lg:items-stretch max-lg:justify-start max-lg:overflow-hidden lg:flex-col lg:overflow-visible">
-            <div className="flex min-h-0 min-w-0 flex-1 flex-col justify-start overflow-hidden overflow-x-hidden max-lg:h-full max-lg:w-[140px] max-lg:min-w-[140px] max-lg:max-w-[140px] lg:w-full lg:max-w-none">
-              {/* Mobile: Focus / Activity / Format first; share column height */}
-              <div className="flex min-h-0 min-w-0 flex-1 flex-col lg:hidden">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden lg:flex-none lg:shrink-0 lg:overflow-visible">
+          <div className="flex min-h-0 min-w-0 flex-1 flex-row max-lg:items-stretch max-lg:justify-start max-lg:overflow-hidden lg:flex-none lg:flex-col lg:overflow-visible">
+            <div className="flex min-h-0 min-w-0 flex-1 flex-col justify-start overflow-hidden overflow-x-hidden max-lg:h-full max-lg:w-[140px] max-lg:min-w-[140px] max-lg:max-w-[140px] lg:w-full lg:max-w-none lg:flex-none">
+              {/* Mobile: Focus / Activity / Format fill remaining height; domain rows below take only what they need */}
+              <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden lg:hidden">
                 <FilterSidebarRailRow
                   growToFill
                   label="Focus Areas / Themes"
@@ -173,9 +173,9 @@ export function FilterOptionsPanel({
                   onClick={() => toggleMobileRail("format")}
                 />
               </div>
-              {/* Mobile: domain/category rows below; scroll if needed */}
+              {/* Mobile: compact domain rows (intrinsic height); scroll only if the list exceeds viewport */}
               <div
-                className={`min-h-0 w-full overflow-y-auto lg:flex-1 lg:min-h-0 max-lg:flex-1 max-lg:border-t max-lg:border-solid max-lg:border-ink-primary`}
+                className={`w-full shrink-0 overflow-y-auto max-lg:max-h-[min(42vh,18rem)] max-lg:border-t max-lg:border-solid max-lg:border-ink-primary lg:flex-none`}
               >
                 {categoryMenus}
               </div>

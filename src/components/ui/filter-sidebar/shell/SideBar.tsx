@@ -17,7 +17,7 @@ export function SideBar({
 }: SideBarProps) {
   return (
     <div
-      className="flex h-full min-h-0 w-filter-narrow-column shrink-0 flex-col self-stretch border-r-hairline border-solid border-ink-primary bg-surface-canvas"
+      className="flex h-full min-h-0 w-filter-narrow-column shrink-0 flex-col justify-between self-stretch border-r-hairline border-solid border-ink-primary bg-surface-canvas"
     >
       <button
         type="button"
@@ -29,7 +29,8 @@ export function SideBar({
       >
         <OpenSvgIcon />
       </button>
-      <div className="mt-auto flex w-full flex-col items-center gap-4 pb-3 pt-3">
+      {/* Desktop only (`lg`): column + vertical label — unlike mobile bottom bar (row + horizontal label). */}
+      <div className="flex w-full shrink-0 flex-col items-center gap-4 px-2 pb-3 pt-3">
         <span className={navSidebarVerticalLabelClassName} aria-hidden>
           Filters
         </span>
