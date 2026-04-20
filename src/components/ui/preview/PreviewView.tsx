@@ -219,12 +219,11 @@ export function PreviewView({
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
-      if (fullScreen) onFullScreenChange(false);
-      else onClose();
+      onClose();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [fullScreen, onClose, onFullScreenChange]);
+  }, [onClose]);
 
   if (fullScreen) {
     return (
@@ -235,8 +234,8 @@ export function PreviewView({
         aria-label="Content preview full screen"
       >
         <PreviewPanelCollapseBar
-          ariaLabel="Exit full screen preview"
-          onClose={() => onFullScreenChange(false)}
+          ariaLabel="Close preview"
+          onClose={onClose}
         />
         <div className="scrollbar-hide min-h-0 flex-1 overflow-y-auto px-6 py-6 md:px-12 md:py-8">
           <div className="mx-auto flex max-w-3xl flex-col gap-5">
@@ -246,9 +245,9 @@ export function PreviewView({
         <div className="flex shrink-0 justify-start">
           <button
             type="button"
-            onClick={() => onFullScreenChange(false)}
+            onClick={onClose}
             className={showMoreButtonClass}
-            aria-label="Exit full screen preview"
+            aria-label="Close preview"
           >
             <OpenSvgIcon className="shrink-0" />
             <span className="select-none text-[13px] leading-none tracking-wide">Show less</span>
@@ -284,8 +283,8 @@ export function PreviewView({
       aria-modal="true"
     >
       <PreviewPanelCollapseBar
-        ariaLabel="Collapse preview to edge"
-        onClose={() => onCollapsedChange(true)}
+        ariaLabel="Close preview"
+        onClose={onClose}
       />
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-5 pt-5 pb-4 scrollbar-hide">
