@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useId, useState } from "react";
+import { useFilterSelection } from "@/components/ui/filter-sidebar/FilterSelectionContext";
 import { FilterOptionsPanel } from "./FilterOptionsPanel";
 import { FilterSubpanelsColumn } from "./FilterSubpanelsColumn";
 import { Footer } from "./Footer";
@@ -9,7 +10,8 @@ import { FILTER_SIDEBAR_COLUMN_CLASS } from "./layout-classes";
 import { SideBar } from "./SideBar";
 
 export function FilterSidebar() {
-  const [filtersOpen, setFiltersOpen] = useState(false);
+  const { filtersPanelOpen: filtersOpen, setFiltersPanelOpen: setFiltersOpen } =
+    useFilterSelection();
   const [briefingsSubpanelOpen, setBriefingsSubpanelOpen] = useState(false);
   const [rdSubpanelOpen, setRdSubpanelOpen] = useState(false);
   const [networkSubpanelOpen, setNetworkSubpanelOpen] = useState(false);

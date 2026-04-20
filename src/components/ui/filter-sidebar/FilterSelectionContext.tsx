@@ -7,7 +7,9 @@ import {
   useMemo,
   useRef,
   useState,
+  type Dispatch,
   type ReactNode,
+  type SetStateAction,
 } from "react";
 import type { ContentRow } from "@/data/content-types";
 
@@ -22,6 +24,9 @@ export type FilterSelectionContextValue = {
     focusAreas: readonly string[];
     activityTypes: readonly string[];
   }) => void;
+  /** Filter options column open (desktop layout + hero alignment). */
+  filtersPanelOpen: boolean;
+  setFiltersPanelOpen: Dispatch<SetStateAction<boolean>>;
   /** Opens the right-hand content preview for this row (wired from the particle canvas). */
   openContentPreview: (row: ContentRow) => void;
   /** Called by `ImageParticleSimulationView` to connect `openContentPreview` to preview state. */
@@ -34,6 +39,8 @@ const FilterSelectionContext = createContext<FilterSelectionContextValue | null>
 
 export function FilterSelectionProvider({ children }: { children: ReactNode }) {
   const contentPreviewOpenerRef = useRef<((row: ContentRow) => void) | null>(null);
+
+  const [filtersPanelOpen, setFiltersPanelOpen] = useState(true);
 
   const [selectedFocusAreas, setSelectedFocusAreas] = useState<Set<string>>(
     () => new Set(),
@@ -94,6 +101,8 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
       clearFocusAreas,
       clearActivityTypes,
       setFiltersFromContentRow,
+      filtersPanelOpen,
+      setFiltersPanelOpen,
       openContentPreview,
       registerContentPreviewOpener,
     }),
@@ -105,6 +114,7 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
       clearFocusAreas,
       clearActivityTypes,
       setFiltersFromContentRow,
+      filtersPanelOpen,
       openContentPreview,
       registerContentPreviewOpener,
     ],
