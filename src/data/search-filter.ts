@@ -1,6 +1,10 @@
 import type { ContentRow } from "@/data/content-types";
 
-/** Case-insensitive match against titles and taxonomy fields on the given rows. */
+/**
+ * Case-insensitive match against titles, taxonomy, year, resources, and plain `content`.
+ * Catalog rows from Strapi may omit body text (`content` empty) until preview loads detail;
+ * in that case search won’t match inside the article body.
+ */
 export function filterContentRowsForSearchQuery(
   query: string,
   rows: readonly ContentRow[],

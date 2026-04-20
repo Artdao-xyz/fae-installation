@@ -1,22 +1,14 @@
 import { NextResponse } from "next/server";
-import { fetchStrapiOutputsAllMapped } from "@/lib/strapi/fetch-outputs-list";
+import { fetchStrapiOutputsCatalogOnly } from "@/lib/strapi/fetch-outputs-list";
 
 /**
  * Returns mapped `ContentRow[]` for the whole Strapi catalog (all pages merged server-side).
- * Token stays on the server; upstream Strapi fetches are cached via `next.revalidate`.
+ * Taxonomy option lists are served from `GET /api/strapi/taxonomy-options` so the client can
+ * paint particles first, then hydrate filters without one oversized payload.
  */
 export async function GET() {
   try {
-    const {
-      rows,
-      total,
-      durationMs,
-      focusOptionLabels,
-      activityOptionLabels,
-      formatOptionLabels,
-      networkOptionLabels,
-      artistOptionLabels,
-    } = await fetchStrapiOutputsAllMapped();
+    const { rows, total, durationMs } = await fetchStrapiOutputsCatalogOnly();
 
     if (process.env.NODE_ENV === "development") {
       const resolvedStatus =
@@ -27,25 +19,11 @@ export async function GET() {
         rowCount: rows.length,
         total,
         durationMs,
-        focusOptionsCount: focusOptionLabels.length,
-        activityOptionsCount: activityOptionLabels.length,
-        formatOptionsCount: formatOptionLabels.length,
-        networkOptionsCount: networkOptionLabels.length,
-        artistOptionsCount: artistOptionLabels.length,
         status: resolvedStatus,
       });
     }
 
-    return NextResponse.json({
-      rows,
-      total,
-      durationMs,
-      focusOptionLabels,
-      activityOptionLabels,
-      formatOptionLabels,
-      networkOptionLabels,
-      artistOptionLabels,
-    });
+    return NextResponse.json({ rows, total, durationMs });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
     console.error("[Strapi] outputs catalog error", message);

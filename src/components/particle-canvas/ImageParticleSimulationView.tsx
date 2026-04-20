@@ -171,6 +171,36 @@ export function ImageParticleSimulationView({
     setPreviewFullScreen(false);
   }, [previewRow?.id]);
 
+  /** Catalog rows are slim (no `Text` / `Resources`); hydrate full output for preview. */
+  useEffect(() => {
+    const id = previewRow?.id;
+    if (!id) return;
+    const ac = new AbortController();
+    void (async () => {
+      try {
+        const res = await fetch(
+          `/api/strapi/outputs/${encodeURIComponent(id)}`,
+          { signal: ac.signal, credentials: "same-origin" },
+        );
+        if (!res.ok) return;
+        const body: unknown = await res.json();
+        if (
+          ac.signal.aborted ||
+          !body ||
+          typeof body !== "object" ||
+          !("row" in body)
+        ) {
+          return;
+        }
+        const row = (body as { row: ContentRow }).row;
+        setPreviewRow((prev) => (prev?.id === id ? { ...prev, ...row } : prev));
+      } catch {
+        /* aborted or network */
+      }
+    })();
+    return () => ac.abort();
+  }, [previewRow?.id]);
+
   const spreadEnterSignatureRef = useRef<string | null>(null);
 
   // ---- State ----

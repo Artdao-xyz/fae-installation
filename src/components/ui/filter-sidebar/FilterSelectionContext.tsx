@@ -104,6 +104,20 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
     setContentCatalogError(null);
 
     void (async () => {
+      const asStringArray = (obj: unknown, key: string): string[] => {
+        if (
+          !obj ||
+          typeof obj !== "object" ||
+          !(key in obj) ||
+          !Array.isArray((obj as Record<string, unknown>)[key])
+        ) {
+          return [];
+        }
+        return (obj as Record<string, unknown[]>)[key]!.filter(
+          (x): x is string => typeof x === "string",
+        );
+      };
+
       try {
         const res = await fetch("/api/strapi/outputs", {
           credentials: "same-origin",
@@ -145,31 +159,48 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
             ? (body as { durationMs: number }).durationMs
             : null;
 
-        const asStringArray = (key: string): string[] => {
-          if (
-            !body ||
-            typeof body !== "object" ||
-            !(key in body) ||
-            !Array.isArray((body as Record<string, unknown>)[key])
-          ) {
-            return [];
-          }
-          return (body as Record<string, unknown[]>)[key]!.filter(
-            (x): x is string => typeof x === "string",
-          );
-        };
-
         setContentCatalog(rows);
         setContentCatalogTotal(total);
         setContentCatalogFetchMs(durationMs);
-        setTaxonomyLabelsFromApi({
-          focus: asStringArray("focusOptionLabels"),
-          activity: asStringArray("activityOptionLabels"),
-          format: asStringArray("formatOptionLabels"),
-          network: asStringArray("networkOptionLabels"),
-          artist: asStringArray("artistOptionLabels"),
-        });
         setContentCatalogStatus("success");
+
+        try {
+          const taxRes = await fetch("/api/strapi/taxonomy-options", {
+            credentials: "same-origin",
+          });
+          const taxBody: unknown = taxRes.ok ? await taxRes.json() : null;
+
+          if (cancelled) return;
+
+          if (taxRes.ok && taxBody && typeof taxBody === "object") {
+            setTaxonomyLabelsFromApi({
+              focus: asStringArray(taxBody, "focusOptionLabels"),
+              activity: asStringArray(taxBody, "activityOptionLabels"),
+              format: asStringArray(taxBody, "formatOptionLabels"),
+              network: asStringArray(taxBody, "networkOptionLabels"),
+              artist: asStringArray(taxBody, "artistOptionLabels"),
+            });
+          } else {
+            setTaxonomyLabelsFromApi({
+              focus: [],
+              activity: [],
+              format: [],
+              network: [],
+              artist: [],
+            });
+          }
+        } catch {
+          if (cancelled) return;
+          setTaxonomyLabelsFromApi({
+            focus: [],
+            activity: [],
+            format: [],
+            network: [],
+            artist: [],
+          });
+        }
+
+        if (!cancelled) setFiltersPanelOpen(true);
       } catch (e) {
         if (cancelled) return;
         setContentCatalog([]);
@@ -194,7 +225,8 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const [filtersPanelOpen, setFiltersPanelOpen] = useState(true);
+  /** Closed until catalog + taxonomy pipeline finishes so layout doesn’t jump with empty filters. */
+  const [filtersPanelOpen, setFiltersPanelOpen] = useState(false);
   const [briefingsSubpanelOpen, setBriefingsSubpanelOpen] = useState(false);
   const [rdSubpanelOpen, setRdSubpanelOpen] = useState(false);
   const [networkSubpanelOpen, setNetworkSubpanelOpen] = useState(false);
