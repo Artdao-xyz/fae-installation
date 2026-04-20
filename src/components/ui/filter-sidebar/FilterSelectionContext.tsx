@@ -31,6 +31,15 @@ export type FilterSelectionContextValue = {
   /** Filter options column open (desktop layout + hero alignment). */
   filtersPanelOpen: boolean;
   setFiltersPanelOpen: Dispatch<SetStateAction<boolean>>;
+  /** Domain subpanel toggles — live in context so layout/hero/particles update same frame as the click. */
+  briefingsSubpanelOpen: boolean;
+  setBriefingsSubpanelOpen: Dispatch<SetStateAction<boolean>>;
+  rdSubpanelOpen: boolean;
+  setRdSubpanelOpen: Dispatch<SetStateAction<boolean>>;
+  networkSubpanelOpen: boolean;
+  setNetworkSubpanelOpen: Dispatch<SetStateAction<boolean>>;
+  /** Derived: any domain subpanel column open. */
+  filterSubpanelsOpen: boolean;
   /** Opens the right-hand content preview for this row (wired from the particle canvas). */
   openContentPreview: (row: ContentRow) => void;
   /** Called by `ImageParticleSimulationView` to connect `openContentPreview` to preview state. */
@@ -45,6 +54,11 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
   const contentPreviewOpenerRef = useRef<((row: ContentRow) => void) | null>(null);
 
   const [filtersPanelOpen, setFiltersPanelOpen] = useState(true);
+  const [briefingsSubpanelOpen, setBriefingsSubpanelOpen] = useState(false);
+  const [rdSubpanelOpen, setRdSubpanelOpen] = useState(false);
+  const [networkSubpanelOpen, setNetworkSubpanelOpen] = useState(false);
+  const filterSubpanelsOpen =
+    briefingsSubpanelOpen || rdSubpanelOpen || networkSubpanelOpen;
 
   const [selectedFocusAreas, setSelectedFocusAreas] = useState<Set<string>>(
     () => new Set(),
@@ -116,6 +130,13 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
       setFiltersFromContentRow,
       filtersPanelOpen,
       setFiltersPanelOpen,
+      briefingsSubpanelOpen,
+      setBriefingsSubpanelOpen,
+      rdSubpanelOpen,
+      setRdSubpanelOpen,
+      networkSubpanelOpen,
+      setNetworkSubpanelOpen,
+      filterSubpanelsOpen,
       openContentPreview,
       registerContentPreviewOpener,
     }),
@@ -130,6 +151,10 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
       clearAllFilters,
       setFiltersFromContentRow,
       filtersPanelOpen,
+      briefingsSubpanelOpen,
+      rdSubpanelOpen,
+      networkSubpanelOpen,
+      filterSubpanelsOpen,
       openContentPreview,
       registerContentPreviewOpener,
     ],

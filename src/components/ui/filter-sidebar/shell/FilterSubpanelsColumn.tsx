@@ -4,7 +4,7 @@ import { BriefingsSubpanelColumn } from "../domains/briefings/BriefingsSubpanelC
 import { NetworkSubpanelColumn } from "../domains/network/NetworkSubpanelColumn";
 import { RDProjectsSubpanelColumn } from "../domains/rd-projects/RDProjectsSubpanelColumn";
 import {
-  FILTER_SIDEBAR_COLUMN_CLASS,
+  FILTER_SUBPANELS_COLUMN_EXPANDED_CLASS,
   SUBPANEL_COLUMN_COLLAPSED_CLASS,
 } from "./layout-classes";
 
@@ -30,7 +30,9 @@ export function FilterSubpanelsColumn({
   return (
     <div
       className={`flex h-full min-h-0 flex-col overflow-hidden ${
-        anySubpanelOpen ? FILTER_SIDEBAR_COLUMN_CLASS : SUBPANEL_COLUMN_COLLAPSED_CLASS
+        anySubpanelOpen
+          ? FILTER_SUBPANELS_COLUMN_EXPANDED_CLASS
+          : SUBPANEL_COLUMN_COLLAPSED_CLASS
       }`}
       aria-hidden={!anySubpanelOpen}
     >

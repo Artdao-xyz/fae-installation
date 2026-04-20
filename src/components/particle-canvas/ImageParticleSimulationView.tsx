@@ -11,6 +11,7 @@ import {
 } from "react";
 import { createPortal, flushSync } from "react-dom";
 import { useFilterSelection } from "@/components/ui/filter-sidebar/FilterSelectionContext";
+import { getFilterSubpanelColumnWidthPx } from "@/components/ui/filter-sidebar/shell/layout-classes";
 import { getMarginGuideInsetPx } from "@/lib/margin-guide";
 import { listContent } from "@/lib/content-repository";
 import type { ContentRow } from "@/data/content-types";
@@ -119,6 +120,7 @@ export function ImageParticleSimulationView({
     selectedFocusAreas,
     selectedActivityTypes,
     filtersPanelOpen,
+    filterSubpanelsOpen,
     setFiltersFromContentRow,
     registerContentPreviewOpener,
   } = useFilterSelection();
@@ -388,10 +390,17 @@ export function ImageParticleSimulationView({
       const left = r.left;
       const top = r.top;
       const right = Math.min(r.right, rightLimit);
-      const width = Math.max(64, right - left);
+      let width = Math.max(64, right - left);
       const height = Math.max(64, r.bottom - top);
+      let cx = left + width / 2;
+      /** Keep orbit center + width as if domain subpanels were closed (only extra column shifts main). */
+      if (filterSubpanelsOpen) {
+        const subW = getFilterSubpanelColumnWidthPx(vw);
+        cx -= subW / 2;
+        width += subW;
+      }
       setPlacementBounds({
-        cx: left + width / 2,
+        cx,
         cy: top + height / 2,
         w: width,
         h: height,
@@ -414,6 +423,7 @@ export function ImageParticleSimulationView({
     previewRow,
     previewFullScreen,
     filtersPanelOpen,
+    filterSubpanelsOpen,
   ]);
 
   // ---- Fetch content ----
@@ -523,7 +533,7 @@ export function ImageParticleSimulationView({
     onStatsChange,
   ]);
 
-  // ---- Init system ----
+  // ---- Init system (respawn only when row count / text words change) ----
   useEffect(() => {
     if (contentRows.length === 0) {
       systemRef.current = null;
@@ -539,7 +549,14 @@ export function ImageParticleSimulationView({
     );
 
     systemRef.current = sys;
-  }, [contentRows, placementBounds.w, placementBounds.h, textWordsByRow]);
+  }, [contentRows, textWordsByRow]);
+
+  // ---- Viewport for physics: resize without respawning (sidebar / subpanels / window) ----
+  useEffect(() => {
+    const sys = systemRef.current;
+    if (!sys || contentRows.length === 0) return;
+    sys.resize(placementBounds.w, placementBounds.h);
+  }, [placementBounds.w, placementBounds.h, contentRows.length]);
 
   // ---- Animation loop ----
   useEffect(() => {

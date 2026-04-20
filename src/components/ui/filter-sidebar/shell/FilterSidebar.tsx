@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useId, useState } from "react";
+import { useCallback, useId } from "react";
 import { useFilterSelection } from "@/components/ui/filter-sidebar/FilterSelectionContext";
 import { FilterOptionsPanel } from "./FilterOptionsPanel";
 import { FilterSubpanelsColumn } from "./FilterSubpanelsColumn";
@@ -10,11 +10,16 @@ import { FILTER_SIDEBAR_COLUMN_CLASS } from "./layout-classes";
 import { SideBar } from "./SideBar";
 
 export function FilterSidebar() {
-  const { filtersPanelOpen: filtersOpen, setFiltersPanelOpen: setFiltersOpen } =
-    useFilterSelection();
-  const [briefingsSubpanelOpen, setBriefingsSubpanelOpen] = useState(false);
-  const [rdSubpanelOpen, setRdSubpanelOpen] = useState(false);
-  const [networkSubpanelOpen, setNetworkSubpanelOpen] = useState(false);
+  const {
+    filtersPanelOpen: filtersOpen,
+    setFiltersPanelOpen: setFiltersOpen,
+    briefingsSubpanelOpen,
+    setBriefingsSubpanelOpen,
+    rdSubpanelOpen,
+    setRdSubpanelOpen,
+    networkSubpanelOpen,
+    setNetworkSubpanelOpen,
+  } = useFilterSelection();
   const panelId = useId();
 
   const anySubpanelOpen =
@@ -30,7 +35,12 @@ export function FilterSidebar() {
       }
       return next;
     });
-  }, []);
+  }, [
+    setFiltersOpen,
+    setBriefingsSubpanelOpen,
+    setRdSubpanelOpen,
+    setNetworkSubpanelOpen,
+  ]);
 
   return (
     <div className="flex h-screen min-h-0 shrink-0 overflow-hidden z-50 w-auto min-w-0">
