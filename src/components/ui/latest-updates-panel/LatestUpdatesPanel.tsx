@@ -79,7 +79,7 @@ export function LatestUpdatesPanel() {
   }, [view, minimize]);
 
   return (
-    <>
+    <div className="max-lg:hidden">
       {view === "minimized" ? (
         <div
           className="fixed bottom-8.5 right-8.5 z-52 flex border-hairline border-solid border-ink-primary"
@@ -127,6 +127,6 @@ export function LatestUpdatesPanel() {
           </div>
         </div>
       ) : null}
-    </>
+    </div>
   );
 }

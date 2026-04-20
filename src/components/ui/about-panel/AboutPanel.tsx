@@ -157,7 +157,7 @@ export function AboutPanel() {
   }, [view]);
 
   return (
-    <>
+    <div className="max-lg:hidden">
       {view === "minimized" ? (
         <div className="fixed top-8.5 right-8.5 z-52 border-hairline border-solid border-ink-primary">
           <AboutTabRail
@@ -244,6 +244,6 @@ export function AboutPanel() {
           </div>
         </div>
       ) : null}
-    </>
+    </div>
   );
 }

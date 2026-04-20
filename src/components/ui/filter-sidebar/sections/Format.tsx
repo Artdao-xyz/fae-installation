@@ -1,9 +1,9 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { FormatButton } from "../domains/format/FormatButton";
 import { FORMAT_ITEMS } from "../domains/format/formatItems";
 import { FilterSidebarSection } from "../primitives/FilterSidebarSection";
+import { FilterPill } from "../primitives/FilterPill";
 
 export function Format({ collapsed = false }: { collapsed?: boolean }) {
   const [selected, setSelected] = useState<Set<string>>(() => new Set());
@@ -23,12 +23,16 @@ export function Format({ collapsed = false }: { collapsed?: boolean }) {
     <FilterSidebarSection
       title="Format"
       onClearAll={clearAll}
+      selectedCount={selected.size}
+      totalCount={FORMAT_ITEMS.length}
+      scrollBody
       collapsed={collapsed}
     >
       {FORMAT_ITEMS.map(({ id, label }) => (
-        <FormatButton
+        <FilterPill
           key={id}
           label={label}
+          variant="square"
           selected={selected.has(id)}
           onPress={() => toggle(id)}
         />

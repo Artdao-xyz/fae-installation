@@ -26,6 +26,8 @@ export function BriefingsDropdownPanel({
       tone="fae-briefings"
       variant={variant}
       onClearAll={handleClearAll}
+      selectedCount={selected != null ? 1 : 0}
+      totalCount={FAE_BRIEFING_OPTIONS.length}
     >
       <div
         className="contents"

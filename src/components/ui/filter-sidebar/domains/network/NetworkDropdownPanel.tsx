@@ -49,6 +49,8 @@ export function NetworkDropdownPanel({
       tone="network"
       variant={variant}
       onClearAll={handleClearAll}
+      selectedCount={selected.size}
+      totalCount={NETWORK_LABELS.length}
     >
       <div className="flex w-full min-w-0 shrink-0 basis-full flex-col gap-2">
         <div className="min-w-0 shrink-0">

@@ -1,3 +1,4 @@
+export { Search } from "./sections/Search";
 export { FilterSidebar } from "./shell/FilterSidebar";
 export { HomeBar } from "./shell/HomeBar";
 export { Footer } from "./shell/Footer";

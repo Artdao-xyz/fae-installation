@@ -23,6 +23,8 @@ export function FocusAreas({ collapsed = false }: { collapsed?: boolean }) {
     <FilterSidebarSection
       title="Focus Areas"
       onClearAll={clearAll}
+      selectedCount={selectedFocusAreas.size}
+      totalCount={FOCUS_AREA_LABELS.length}
       scrollBody
       collapsed={collapsed}
     >

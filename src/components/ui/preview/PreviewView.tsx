@@ -200,7 +200,7 @@ function PreviewMainContent({ row }: { row: ContentRow }) {
 const dockedShellClass =
   "fixed top-[var(--inset-margin-guide)] right-[var(--inset-margin-guide)] bottom-[var(--inset-margin-guide)] z-55 flex shrink-0 flex-col border-hairline border-solid border-ink-primary bg-surface-canvas motion-reduce:transition-none";
 
-/** Same inset on all sides as `MarginGuideFrame` dashed guides. */
+/** Same inset as legacy margin guide / `--inset-margin-guide` (narrow column − 1px). */
 const fullScreenShellClass =
   "fixed top-[var(--inset-margin-guide)] right-[var(--inset-margin-guide)] bottom-[var(--inset-margin-guide)] left-[var(--inset-margin-guide)] z-[62] flex min-h-0 min-w-0 flex-col overflow-hidden border-hairline border-solid border-ink-primary bg-surface-canvas motion-reduce:transition-none";
 

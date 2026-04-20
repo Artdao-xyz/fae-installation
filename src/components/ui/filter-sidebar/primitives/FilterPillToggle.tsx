@@ -21,7 +21,7 @@ export function FilterPillToggle({
       role={onClick ? "radio" : undefined}
       aria-checked={onClick ? selected : undefined}
       data-tone={tone}
-      className={filterDottedPillClassName(selected)}
+      className={`${filterDottedPillClassName(selected)} max-w-full text-left wrap-break-word`}
       data-name="Filters-Button-Toggle"
     >
       {label}

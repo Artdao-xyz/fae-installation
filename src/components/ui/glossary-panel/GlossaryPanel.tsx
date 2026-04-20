@@ -80,7 +80,7 @@ export function GlossaryPanel() {
   }, [view, minimize]);
 
   return (
-    <>
+    <div className="max-lg:hidden">
       {view === "minimized" ? (
         <div
           className="fixed right-8.5 z-52 flex min-h-0 flex-col items-stretch border-hairline border-solid border-ink-primary"
@@ -145,6 +145,6 @@ export function GlossaryPanel() {
           </div>
         </div>
       ) : null}
-    </>
+    </div>
   );
 }

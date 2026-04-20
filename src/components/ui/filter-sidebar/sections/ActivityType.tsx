@@ -23,6 +23,8 @@ export function ActivityType({ collapsed = false }: { collapsed?: boolean }) {
     <FilterSidebarSection
       title="Activity Type"
       onClearAll={clearAll}
+      selectedCount={selectedActivityTypes.size}
+      totalCount={ACTIVITY_TYPE_LABELS.length}
       scrollBody
       collapsed={collapsed}
     >
@@ -30,7 +32,7 @@ export function ActivityType({ collapsed = false }: { collapsed?: boolean }) {
         <FilterPill
           key={label}
           label={label}
-          variant="rounded"
+          variant="square"
           selected={selectedActivityTypes.has(label)}
           onPress={() => toggle(label)}
         />

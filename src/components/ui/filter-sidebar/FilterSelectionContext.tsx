@@ -22,6 +22,9 @@ export type FilterSelectionContextValue = {
     focusAreas: readonly string[];
     activityTypes: readonly string[];
   }) => void;
+  /** Shared with `FilterOptionsPanel` (desktop) and landing `main` (mobile) so filters react while searching. */
+  filterSearchQuery: string;
+  setFilterSearchQuery: (value: string) => void;
   /** Opens the right-hand content preview for this row (wired from the particle canvas). */
   openContentPreview: (row: ContentRow) => void;
   /** Called by `ImageParticleSimulationView` to connect `openContentPreview` to preview state. */
@@ -41,6 +44,7 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
   const [selectedActivityTypes, setSelectedActivityTypes] = useState<Set<string>>(
     () => new Set(),
   );
+  const [filterSearchQuery, setFilterSearchQuery] = useState("");
 
   const toggleFocusArea = useCallback((label: string) => {
     setSelectedFocusAreas((prev) => {
@@ -94,6 +98,8 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
       clearFocusAreas,
       clearActivityTypes,
       setFiltersFromContentRow,
+      filterSearchQuery,
+      setFilterSearchQuery,
       openContentPreview,
       registerContentPreviewOpener,
     }),
@@ -105,6 +111,7 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
       clearFocusAreas,
       clearActivityTypes,
       setFiltersFromContentRow,
+      filterSearchQuery,
       openContentPreview,
       registerContentPreviewOpener,
     ],

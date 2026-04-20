@@ -6,6 +6,7 @@ import {
   filterDottedPillClassName,
   filterFramedOuterFocusClass,
   filterFramedRoundedInnerClass,
+  filterFramedRoundedOuterHoverClass,
   filterFramedRoundedOuterSelectedClass,
   filterPillLabelBoxClass,
   filterPillSelection,
@@ -38,10 +39,10 @@ const SQUARE_CORNER_POSITIONS = [
 ] as const;
 
 function SquareCornerMarkers({ selected }: { selected: boolean }) {
-  const fill = selected
-    ? "var(--color-filter-pill-selection)"
-    : "var(--color-ink-primary)";
   const n = SQUARE_MARKER_SIZE;
+  const colorClass = selected
+    ? "text-[color:var(--color-filter-pill-selection)]"
+    : "text-ink-primary group-hover:text-[color:var(--color-filter-pill-selection)]";
   return (
     <>
       {SQUARE_CORNER_POSITIONS.map((positionClass, i) => (
@@ -51,10 +52,10 @@ function SquareCornerMarkers({ selected }: { selected: boolean }) {
           height={n}
           viewBox={`0 0 ${n} ${n}`}
           shapeRendering="crispEdges"
-          className={`pointer-events-none absolute z-0 block shrink-0 ${positionClass}`}
+          className={`pointer-events-none absolute z-0 block shrink-0 ${positionClass} ${colorClass}`}
           aria-hidden
         >
-          <rect width={n} height={n} x={0} y={0} fill={fill} />
+          <rect width={n} height={n} x={0} y={0} fill="currentColor" />
         </svg>
       ))}
     </>
@@ -64,7 +65,7 @@ function SquareCornerMarkers({ selected }: { selected: boolean }) {
 function SquarePillFrame({ label, selected }: { label: string; selected: boolean }) {
   const cellOutline = selected
     ? `${filterPillSelection.text} outline-[0.5px] outline-offset-[-0.5px] ${filterPillSelection.outline}`
-    : "text-ink-primary outline-[0.5px] outline-offset-[-0.5px] outline-ink-primary";
+    : `text-ink-primary outline-[0.5px] outline-offset-[-0.5px] outline-ink-primary group-hover:text-[color:var(--color-filter-pill-selection)] group-hover:outline-[color:var(--color-filter-pill-selection)]`;
 
   return (
     <span className="relative isolate inline-flex items-center justify-center">
@@ -143,7 +144,7 @@ export function FilterPill({
         aria-expanded={expandable ? isOpen : undefined}
         aria-pressed={onPress ? selected : undefined}
         className={[
-          "inline-flex cursor-pointer items-center justify-start border-0 bg-transparent p-0 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ink-primary focus-visible:ring-offset-0",
+          "group inline-flex cursor-pointer items-center justify-start border-0 bg-transparent p-0 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ink-primary focus-visible:ring-offset-0",
           className,
         ]
           .filter(Boolean)
@@ -163,8 +164,10 @@ export function FilterPill({
       aria-expanded={expandable ? isOpen : undefined}
       aria-pressed={onPress ? selected : undefined}
       className={[
-        `fae-control-filter-outer ${filterFramedOuterFocusClass} ${
-          selected ? filterFramedRoundedOuterSelectedClass : ""
+        `group fae-control-filter-outer ${filterFramedOuterFocusClass} ${
+          selected
+            ? filterFramedRoundedOuterSelectedClass
+            : filterFramedRoundedOuterHoverClass
         }`,
         className,
       ]

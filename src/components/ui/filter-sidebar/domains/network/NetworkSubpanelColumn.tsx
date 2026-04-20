@@ -23,7 +23,7 @@ export function NetworkSubpanelColumn({
       aria-label="Network filters"
     >
       <SubpanelCloseBar onClose={onClose} />
-      <div className="scrollbar-hide min-h-0 flex-1 overflow-y-auto">
+      <div className="scrollbar-hide min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto">
         <NetworkDropdownPanel variant="subcolumn" onClearAll={onClearAll} />
       </div>
     </div>

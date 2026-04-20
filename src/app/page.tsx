@@ -2,14 +2,15 @@
 
 import { useSyncExternalStore } from "react";
 import {
-  FilterSidebar,
   FilterSelectionProvider,
+  FilterSidebar,
+  Search,
+  useFilterSelection,
 } from "@/components/ui/filter-sidebar";
 import { AboutPanel } from "@/components/ui/about-panel/AboutPanel";
 import { GlossaryPanel } from "@/components/ui/glossary-panel";
 import { LatestUpdatesPanel } from "@/components/ui/latest-updates-panel/LatestUpdatesPanel";
 import { HeroTitleBlock } from "@/components/ui/hero-title-block";
-import { MarginGuideFrame } from "@/components/ui/margin-guide-frame";
 import { PixelTessellationBackground } from "@/components/ui/pixel-tessellation-background";
 import { ImageParticleSimulation } from "@/components/particle-canvas/ImageParticleSimulation";
 import { IMAGE_FETCH_LIMIT } from "@/components/particle-canvas/config";
@@ -32,8 +33,11 @@ function readStoredMode(): Mode {
   return "optimized";
 }
 
-export default function Home() {
+function HomeContent() {
   const imageLimit = IMAGE_FETCH_LIMIT > 0 ? IMAGE_FETCH_LIMIT : undefined;
+
+  const { filterSearchQuery, setFilterSearchQuery } = useFilterSelection();
+  const searching = filterSearchQuery.trim().length > 0;
 
   const mode = useSyncExternalStore(
     (onStoreChange) => {
@@ -46,33 +50,53 @@ export default function Home() {
   );
 
   return (
-    <FilterSelectionProvider>
-      <div className="flex min-h-screen w-full">
-        <FilterSidebar />
-        <PixelTessellationBackground />
-        <AboutPanel />
-        <GlossaryPanel />
-        <LatestUpdatesPanel />
-        <main className="relative z-1 flex min-h-0 min-w-0 flex-1 flex-col p-5 text-ink-body">
-          <MarginGuideFrame />
-          <HeroTitleBlock
-            title="Future Art Ecosystems"
-            subtitle="Cultural Infrastructure Research"
+    <div className="flex min-h-screen w-full">
+      <FilterSidebar />
+      <PixelTessellationBackground />
+      <AboutPanel />
+      <GlossaryPanel />
+      <LatestUpdatesPanel />
+      <main className="relative z-1 flex min-h-0 min-w-0 flex-1 flex-col p-5 text-ink-body max-lg:pb-[calc(1.25rem+env(safe-area-inset-bottom,0px)+5.75rem)]">
+        <div
+          className={[
+            "min-w-0 w-full border-b-hairline border-solid border-ink-primary bg-surface-canvas lg:hidden",
+            searching
+              ? "flex min-h-0 flex-1 flex-col overflow-hidden"
+              : "shrink-0",
+          ].join(" ")}
+        >
+          <Search
+            value={filterSearchQuery}
+            onChange={setFilterSearchQuery}
+            fieldId="filter-search-landing"
           />
+        </div>
 
-          <div className="relative min-h-0 w-full flex-1">
-            <ImageParticleSimulation
-              mode={mode}
-              imageLimit={imageLimit}
-              fetchedWidth={FETCHED_WIDTH}
-              fetchedHeight={FETCHED_HEIGHT}
-              displayedWidth={DISPLAYED_WIDTH}
-              displayedHeight={DISPLAYED_HEIGHT}
-              speedFactor={SPEED_FACTOR}
-            />
-          </div>
-        </main>
-      </div>
+        <HeroTitleBlock
+          title="Future Art Ecosystems"
+          subtitle="Cultural Infrastructure Research"
+        />
+
+        <div className="relative min-h-0 w-full flex-1">
+          <ImageParticleSimulation
+            mode={mode}
+            imageLimit={imageLimit}
+            fetchedWidth={FETCHED_WIDTH}
+            fetchedHeight={FETCHED_HEIGHT}
+            displayedWidth={DISPLAYED_WIDTH}
+            displayedHeight={DISPLAYED_HEIGHT}
+            speedFactor={SPEED_FACTOR}
+          />
+        </div>
+      </main>
+    </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <FilterSelectionProvider>
+      <HomeContent />
     </FilterSelectionProvider>
   );
 }

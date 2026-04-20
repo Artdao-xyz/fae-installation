@@ -9,9 +9,11 @@ import { FilterSearchField } from "../primitives/FilterSearchField";
 type SearchProps = {
   value: string;
   onChange: (value: string) => void;
+  /** Pass unique ids when both mobile (landing) and desktop (sidebar) instances exist. */
+  fieldId?: string;
 };
 
-export function Search({ value, onChange }: SearchProps) {
+export function Search({ value, onChange, fieldId = "filter-search" }: SearchProps) {
   const { openContentPreview } = useFilterSelection();
 
   const results = useMemo(
@@ -24,13 +26,14 @@ export function Search({ value, onChange }: SearchProps) {
     <div
       className={
         searching
-          ? "flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
-          : "shrink-0"
+          ? "flex min-h-0 min-w-0 w-full flex-1 flex-col overflow-hidden"
+          : "w-full shrink-0"
       }
     >
-      <div className="min-w-0 shrink-0 bg-surface-canvas px-3 py-3">
+      {/* Bar row: `max-lg` aligns to parent inset-0; horizontal padding from `lg` */}
+      <div className="min-w-0 shrink-0 bg-surface-canvas p-3">
         <FilterSearchField
-          id="filter-search"
+          id={fieldId}
           label="Search"
           value={value}
           onChange={onChange}
@@ -39,7 +42,7 @@ export function Search({ value, onChange }: SearchProps) {
 
       {searching ? (
         <div
-          className="scrollbar-hide flex min-h-0 min-w-0 w-full flex-1 flex-col gap-[5px] overflow-y-auto px-3 pb-3 pt-0"
+          className="scrollbar-hide flex min-h-0 min-w-0 w-full flex-1 flex-col gap-[5px] overflow-y-auto px-0 pb-3 pt-0 lg:px-3"
           role="list"
           aria-label="Search results"
         >

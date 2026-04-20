@@ -2,17 +2,6 @@ import { CategoryMarkerIcon } from "./CategoryMarkerIcon";
 import type { FilterSidebarCategoryTone } from "../config/filterSidebarTones";
 import { toneAccentClass } from "../config/filterSidebarTones";
 
-function CategoryRowArrowIcon({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 6 8" className={className} aria-hidden>
-      <path
-        fill="currentColor"
-        d="M6 4C6 4 3.98794 4.62867 2.78809 5.42857C1.58824 6.22847 -2.38419e-07 8 -2.38419e-07 8C-2.38419e-07 8 0.941176 5.5623 0.941176 4C0.941176 2.4377 -2.38419e-07 -2.62268e-07 -2.38419e-07 -2.62268e-07C-2.38419e-07 -2.62268e-07 1.3997 1.64584 2.78809 2.57143C4.17647 3.49702 6 4 6 4Z"
-      />
-    </svg>
-  );
-}
-
 export function FilterSidebarCategoryRow({
   label,
   tone,
@@ -24,7 +13,7 @@ export function FilterSidebarCategoryRow({
   expanded?: boolean;
   onClick?: () => void;
 }) {
-  const { glow, marker } = toneAccentClass[tone];
+  const { glow } = toneAccentClass[tone];
   const showAccent = expanded === true;
 
   return (
@@ -32,7 +21,7 @@ export function FilterSidebarCategoryRow({
       type="button"
       onClick={onClick}
       aria-expanded={expanded}
-      className="relative flex w-full items-center gap-2 border-t-hairline border-solid border-ink-primary bg-surface-canvas py-[7px] pl-3 pr-[15px] text-left backdrop-blur-fae-sm hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary"
+      className="relative flex w-full flex-col items-stretch border-t-hairline border-r-hairline border-solid border-ink-primary bg-surface-canvas text-left backdrop-blur-fae-sm hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary"
       data-name="Filters-Button-Dropdown"
     >
       {showAccent ? (
@@ -42,18 +31,15 @@ export function FilterSidebarCategoryRow({
           data-name="Glow"
         />
       ) : null}
-      {showAccent ? (
+      <span className="relative flex min-h-0 w-full min-w-0 flex-1 flex-col flex-wrap items-start content-start justify-center gap-[5px] px-2.5 py-3">
         <CategoryMarkerIcon
           tone={tone}
-          className="size-4 shrink-0 object-contain"
+          className={`h-[14px] w-[14px] shrink-0 object-contain ${showAccent ? "opacity-100" : "opacity-50"}`}
         />
-      ) : null}
-      <span className="min-h-px min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-base font-medium leading-5 text-ink-body font-lust-text">
-        {label}
+        <span className="w-full min-w-0 wrap-break-word text-left font-lust-text text-sm leading-[18px] tracking-[0.5px] text-ink-body">
+          {label}
+        </span>
       </span>
-      {showAccent ? (
-        <CategoryRowArrowIcon className={`h-2 w-1.5 shrink-0 ${marker}`} />
-      ) : null}
     </button>
   );
 }

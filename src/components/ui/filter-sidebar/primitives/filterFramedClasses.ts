@@ -11,16 +11,19 @@ export const filterPillSelection = {
   outerMat: "!border-[color:var(--color-filter-pill-selection)] !bg-[color:var(--color-filter-pill-selection)]",
 } as const;
 
-/** Sidebar filter pill label box — keep in sync with `.fae-control-filter-inner` (layout shell only). */
+/**
+ * Sidebar filter pill label box — keep in sync with `.fae-control-filter-inner` (layout shell only).
+ * Mobile-first so small screens get `text-xs` / `py-[5px]`; `lg:` restores desktop sizing (Tailwind order is safe).
+ */
 export const filterPillLabelBoxClass =
-  "px-2.5 py-[3px] font-fira-mono text-[12px] font-normal leading-4";
+  "px-2.5 py-[5px] font-fira-mono text-xs font-normal leading-4 lg:py-[3px] lg:text-[12px]";
 
-/** Shared ink-frame + rounded inner surface (Activity Type / `FilterPill` `rounded`). */
+/** Shared ink-frame + rounded inner surface (Activity Type / `FilterPill` `rounded`). Unselected hover uses `group` on parent. */
 export function filterFramedRoundedInnerClass(selected: boolean) {
   return `fae-control-filter-inner fae-control-shape-rounded ${filterPillLabelBoxClass} ${
     selected
       ? `bg-surface-canvas ${filterPillSelection.text}`
-      : "bg-surface-canvas text-ink-primary"
+      : "bg-surface-canvas text-ink-primary group-hover:text-[color:var(--color-filter-pill-selection)]"
   }`;
 }
 
@@ -29,6 +32,10 @@ export const filterFramedOuterFocusClass =
 
 /** Rounded outer: same hairline mat as unselected (border + fill), in selection blue. */
 export const filterFramedRoundedOuterSelectedClass = filterPillSelection.outerMat;
+
+/** Unselected rounded pill: hover outer matches selected mat (use with `group` on the button). */
+export const filterFramedRoundedOuterHoverClass =
+  "hover:!border-[color:var(--color-filter-pill-selection)] hover:!bg-[color:var(--color-filter-pill-selection)]";
 
 /**
  * Single-layer dotted control: unselected dotted ink stroke; selected same surface bg, blue text + border.
@@ -39,6 +46,6 @@ export function filterDottedPillClassName(selected: boolean) {
   return `${base} ${filterFramedOuterFocusClass} ${
     selected
       ? `border-dotted ${filterPillSelection.border} bg-surface-canvas/80 ${filterPillSelection.text}`
-      : "border-dotted border-ink-primary text-ink-primary"
+      : `border-dotted border-ink-primary text-ink-primary hover:border-[color:var(--color-filter-pill-selection)] hover:text-[color:var(--color-filter-pill-selection)]`
   }`;
 }
