@@ -5,11 +5,13 @@ import { FilterSidebarCategoryRow } from "../primitives/FilterSidebarCategoryRow
 type FAEBriefingsMenuProps = {
   subpanelOpen: boolean;
   onToggleSubpanel: () => void;
+  mobileFillCell?: boolean;
 };
 
 export function FAEBriefingsMenu({
   subpanelOpen,
   onToggleSubpanel,
+  mobileFillCell,
 }: FAEBriefingsMenuProps) {
   return (
     <FilterSidebarCategoryRow
@@ -17,6 +19,7 @@ export function FAEBriefingsMenu({
       tone="fae-briefings"
       expanded={subpanelOpen}
       onClick={onToggleSubpanel}
+      mobileFillCell={mobileFillCell}
     />
   );
 }

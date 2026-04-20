@@ -43,18 +43,18 @@ export function FilterSidebarRailRow({
       onClick={onClick}
       aria-expanded={expanded}
       aria-controls={controlsId}
-      className={`relative flex w-full flex-row items-stretch border-t-hairline border-r-hairline border-solid border-ink-primary text-left backdrop-blur-fae-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary ${railChrome} ${fill ? "min-h-18 flex-1 basis-0" : "min-h-[68px]"}`}
+      className={`relative flex w-full flex-row items-stretch border-t-hairline border-r-hairline border-solid border-ink-primary text-left backdrop-blur-fae-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary ${railChrome} ${fill ? "box-border h-full max-h-full min-h-0 overflow-hidden" : "min-h-[68px]"}`}
       data-name="FiltersSection"
     >
       <span
-        className={`flex min-w-0 w-full flex-1 flex-col flex-wrap items-start content-start justify-center ${relaxed ? "gap-2 px-3 py-4" : "gap-[5px] px-2.5 py-3"}`}
+        className={`flex min-h-0 min-w-0 w-full flex-1 flex-col flex-wrap items-start content-start justify-center overflow-hidden ${relaxed ? "gap-2 px-2.5 py-2.5" : "gap-[5px] px-2.5 py-3"}`}
       >
         <CategoryMarkerIcon
           tone={tone}
-          className={`shrink-0 object-contain ${relaxed ? "h-[22px] w-[22px]" : "h-[14px] w-[14px]"} ${expanded ? "opacity-100" : "opacity-50"}`}
+          className={`shrink-0 object-contain ${relaxed ? "h-6 w-6" : "h-[14px] w-[14px]"} ${expanded ? "opacity-100" : "opacity-50"}`}
         />
         <span
-          className={`w-full min-w-0 wrap-break-word text-left font-lust-text tracking-[0.5px] ${relaxed ? "text-[14px] leading-[22px]" : "text-sm leading-[18px]"} ${expanded ? filterPillSelection.text : "text-ink-body"}`}
+          className={`w-full min-w-0 text-left font-lust-text tracking-[0.5px] ${relaxed ? "line-clamp-4 text-[14px] leading-[18px]" : "wrap-break-word text-sm leading-[18px]"} ${expanded ? filterPillSelection.text : "text-ink-body"}`}
         >
           {label}
         </span>
