@@ -1,6 +1,7 @@
 "use client";
 
-/** White field + dotted ink frame for search / clear chrome icons */
+import { RefreshCw } from "lucide-react";
+
 const SEARCH_ICON_FRAME_CLASS =
   "inline-flex shrink-0 items-center justify-center border-hairline border-dotted border-ink-primary bg-[#ffffff] p-1";
 
@@ -10,6 +11,8 @@ export type FilterSearchFieldProps = {
   label: string;
   value: string;
   onChange: (value: string) => void;
+  /** When set, shows a control that clears global filters (and typically the field via `onChange`). */
+  onRefreshFilters?: () => void;
   placeholder?: string;
 };
 
@@ -18,6 +21,7 @@ export function FilterSearchField({
   label,
   value,
   onChange,
+  onRefreshFilters,
   placeholder = "Search",
 }: FilterSearchFieldProps) {
   return (
@@ -50,6 +54,16 @@ export function FilterSearchField({
               className="size-3 shrink-0 object-contain"
               aria-hidden
             />
+          </button>
+        ) : null}
+        {onRefreshFilters ? (
+          <button
+            type="button"
+            onClick={onRefreshFilters}
+            aria-label="Clear all filters"
+            className={`${SEARCH_ICON_FRAME_CLASS} text-ink-primary transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ink-primary`}
+          >
+            <RefreshCw className="size-3 shrink-0" strokeWidth={1.75} aria-hidden />
           </button>
         ) : null}
         <span className={SEARCH_ICON_FRAME_CLASS} aria-hidden>

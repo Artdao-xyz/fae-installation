@@ -16,10 +16,14 @@ import type { ContentRow } from "@/data/content-types";
 export type FilterSelectionContextValue = {
   selectedFocusAreas: ReadonlySet<string>;
   selectedActivityTypes: ReadonlySet<string>;
+  /** Increments when `clearAllFilters` runs; local filter UIs can reset from this. */
+  filterResetNonce: number;
   toggleFocusArea: (label: string) => void;
   toggleActivityType: (label: string) => void;
   clearFocusAreas: () => void;
   clearActivityTypes: () => void;
+  /** Clears focus + activity and bumps `filterResetNonce` so Format / subpanel filters reset too. */
+  clearAllFilters: () => void;
   setFiltersFromContentRow: (row: {
     focusAreas: readonly string[];
     activityTypes: readonly string[];
@@ -48,6 +52,7 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
   const [selectedActivityTypes, setSelectedActivityTypes] = useState<Set<string>>(
     () => new Set(),
   );
+  const [filterResetNonce, setFilterResetNonce] = useState(0);
 
   const toggleFocusArea = useCallback((label: string) => {
     setSelectedFocusAreas((prev) => {
@@ -73,6 +78,12 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
     [],
   );
 
+  const clearAllFilters = useCallback(() => {
+    setSelectedFocusAreas(new Set());
+    setSelectedActivityTypes(new Set());
+    setFilterResetNonce((n) => n + 1);
+  }, []);
+
   const setFiltersFromContentRow = useCallback(
     (row: { focusAreas: readonly string[]; activityTypes: readonly string[] }) => {
       setSelectedFocusAreas(new Set(row.focusAreas));
@@ -96,10 +107,12 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
     () => ({
       selectedFocusAreas,
       selectedActivityTypes,
+      filterResetNonce,
       toggleFocusArea,
       toggleActivityType,
       clearFocusAreas,
       clearActivityTypes,
+      clearAllFilters,
       setFiltersFromContentRow,
       filtersPanelOpen,
       setFiltersPanelOpen,
@@ -109,10 +122,12 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
     [
       selectedFocusAreas,
       selectedActivityTypes,
+      filterResetNonce,
       toggleFocusArea,
       toggleActivityType,
       clearFocusAreas,
       clearActivityTypes,
+      clearAllFilters,
       setFiltersFromContentRow,
       filtersPanelOpen,
       openContentPreview,

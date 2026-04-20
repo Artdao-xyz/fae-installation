@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useFilterSelection } from "../../FilterSelectionContext";
 import { NETWORK_LABELS } from "../../config/constants";
 import { filterNetworkLabelsForSearchQuery } from "@/data/network-search-filter";
 import { FilterPill } from "../../primitives/FilterPill";
@@ -16,8 +17,14 @@ export function NetworkDropdownPanel({
   variant = "default",
   onClearAll: onClearAllFromParent,
 }: NetworkDropdownPanelProps) {
+  const { filterResetNonce } = useFilterSelection();
   const [selected, setSelected] = useState<Set<string>>(() => new Set());
   const [searchQuery, setSearchQuery] = useState("");
+
+  useEffect(() => {
+    setSelected(new Set());
+    setSearchQuery("");
+  }, [filterResetNonce]);
 
   const searching = searchQuery.trim().length > 0;
 

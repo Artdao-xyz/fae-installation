@@ -12,7 +12,7 @@ export function getMarginGuideInsetPx(): number {
   return Math.max(0, narrow - 1);
 }
 
-/** Matches `--width-filter-narrow-column` (filter rail / collapsed preview strip). */
+/** Matches `--width-filter-narrow-column` (filter rail width). */
 export function getFilterNarrowColumnWidthPx(): number {
   if (typeof document === "undefined") return 35;
   const raw = getComputedStyle(document.documentElement).getPropertyValue(

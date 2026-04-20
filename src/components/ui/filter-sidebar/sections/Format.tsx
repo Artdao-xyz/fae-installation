@@ -1,12 +1,18 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { useFilterSelection } from "../FilterSelectionContext";
 import { FormatButton } from "../domains/format/FormatButton";
 import { FORMAT_ITEMS } from "../domains/format/formatItems";
 import { FilterSidebarSection } from "../primitives/FilterSidebarSection";
 
 export function Format({ collapsed = false }: { collapsed?: boolean }) {
+  const { filterResetNonce } = useFilterSelection();
   const [selected, setSelected] = useState<Set<string>>(() => new Set());
+
+  useEffect(() => {
+    setSelected(new Set());
+  }, [filterResetNonce]);
 
   const toggle = useCallback((id: string) => {
     setSelected((prev) => {

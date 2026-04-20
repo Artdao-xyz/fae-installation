@@ -11,10 +11,7 @@ import {
 } from "react";
 import { createPortal, flushSync } from "react-dom";
 import { useFilterSelection } from "@/components/ui/filter-sidebar/FilterSelectionContext";
-import {
-  getFilterNarrowColumnWidthPx,
-  getMarginGuideInsetPx,
-} from "@/lib/margin-guide";
+import { getMarginGuideInsetPx } from "@/lib/margin-guide";
 import { listContent } from "@/lib/content-repository";
 import type { ContentRow } from "@/data/content-types";
 import {
@@ -149,7 +146,6 @@ export function ImageParticleSimulationView({
   spreadSignatureRef.current = spreadSig;
 
   const [previewRow, setPreviewRow] = useState<ContentRow | null>(null);
-  const [previewCollapsed, setPreviewCollapsed] = useState(false);
   const [previewFullScreen, setPreviewFullScreen] = useState(false);
   const previewRowRef = useRef<ContentRow | null>(null);
   previewRowRef.current = previewRow;
@@ -168,7 +164,6 @@ export function ImageParticleSimulationView({
   }, [registerContentPreviewOpener, handleFilteredThumbnailClick]);
 
   useEffect(() => {
-    setPreviewCollapsed(false);
     setPreviewFullScreen(false);
   }, [previewRow?.id]);
 
@@ -347,13 +342,12 @@ export function ImageParticleSimulationView({
 
   // ---- Placement (main column below hero; minus preview drawer when open) ----
   useLayoutEffect(() => {
-    /** Width reserved on the right: margin guide inset + full or collapsed preview (matches `PreviewView`). */
+    /** Width reserved on the right: margin guide inset + docked preview panel (matches `PreviewView`). */
     const previewRightReservationPx = () => {
       if (!previewRow) return 0;
       if (previewFullScreen) return 0;
       const vw = window.innerWidth;
       const inset = getMarginGuideInsetPx();
-      if (previewCollapsed) return inset + getFilterNarrowColumnWidthPx();
       const panelW = Math.min(Math.max(0, vw - 16), 432);
       return inset + panelW;
     };
@@ -418,7 +412,6 @@ export function ImageParticleSimulationView({
   }, [
     placementContainerRef,
     previewRow,
-    previewCollapsed,
     previewFullScreen,
     filtersPanelOpen,
   ]);
@@ -1284,8 +1277,6 @@ export function ImageParticleSimulationView({
         ? createPortal(
             <PreviewView
               row={previewRow}
-              collapsed={previewCollapsed}
-              onCollapsedChange={setPreviewCollapsed}
               fullScreen={previewFullScreen}
               onFullScreenChange={setPreviewFullScreen}
               onClose={() => setPreviewRow(null)}

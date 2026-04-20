@@ -8,12 +8,10 @@ import { PreviewPanelCollapseBar } from "./PreviewPanelCollapseBar";
 
 type PreviewViewProps = {
   row: ContentRow;
-  /** When true, only the narrow edge strip is shown (same width as filter rail). */
-  collapsed: boolean;
-  onCollapsedChange: (collapsed: boolean) => void;
   /** When true, preview fills the viewport (docked panel hidden). */
   fullScreen: boolean;
   onFullScreenChange: (fullScreen: boolean) => void;
+  /** Dismisses the preview entirely (dock or full screen). */
   onClose: () => void;
   className?: string;
 };
@@ -209,8 +207,6 @@ const showMoreButtonClass =
 
 export function PreviewView({
   row,
-  collapsed,
-  onCollapsedChange,
   fullScreen,
   onFullScreenChange,
   onClose,
@@ -219,12 +215,11 @@ export function PreviewView({
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
-      if (fullScreen) onFullScreenChange(false);
-      else onClose();
+      onClose();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [fullScreen, onClose, onFullScreenChange]);
+  }, [onClose]);
 
   if (fullScreen) {
     return (
@@ -235,8 +230,8 @@ export function PreviewView({
         aria-label="Content preview full screen"
       >
         <PreviewPanelCollapseBar
-          ariaLabel="Exit full screen preview"
-          onClose={() => onFullScreenChange(false)}
+          ariaLabel="Close preview"
+          onClose={onClose}
         />
         <div className="scrollbar-hide min-h-0 flex-1 overflow-y-auto px-6 py-6 md:px-12 md:py-8">
           <div className="mx-auto flex max-w-3xl flex-col gap-5">
@@ -246,33 +241,15 @@ export function PreviewView({
         <div className="flex shrink-0 justify-start">
           <button
             type="button"
-            onClick={() => onFullScreenChange(false)}
+            onClick={onClose}
             className={showMoreButtonClass}
-            aria-label="Exit full screen preview"
+            aria-label="Close preview"
           >
             <OpenSvgIcon className="shrink-0" />
             <span className="select-none text-[13px] leading-none tracking-wide">Show less</span>
           </button>
         </div>
       </div>
-    );
-  }
-
-  if (collapsed) {
-    return (
-      <aside
-        className={`${dockedShellClass} w-filter-narrow-column min-w-0 overflow-hidden ${className}`}
-        aria-label="Preview collapsed"
-      >
-        <button
-          type="button"
-          onClick={() => onCollapsedChange(false)}
-          className="flex min-h-0 w-full flex-1 flex-col items-center border-0 bg-surface-canvas pt-3 text-ink-primary hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary"
-          aria-label="Expand preview"
-        >
-          <OpenSvgIcon className="rotate-180" />
-        </button>
-      </aside>
     );
   }
 
@@ -284,8 +261,8 @@ export function PreviewView({
       aria-modal="true"
     >
       <PreviewPanelCollapseBar
-        ariaLabel="Collapse preview to edge"
-        onClose={() => onCollapsedChange(true)}
+        ariaLabel="Close preview"
+        onClose={onClose}
       />
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-5 pt-5 pb-4 scrollbar-hide">

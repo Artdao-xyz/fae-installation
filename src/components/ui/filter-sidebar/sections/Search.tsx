@@ -12,7 +12,7 @@ type SearchProps = {
 };
 
 export function Search({ value, onChange }: SearchProps) {
-  const { openContentPreview } = useFilterSelection();
+  const { openContentPreview, clearAllFilters } = useFilterSelection();
 
   const results = useMemo(
     () => filterContentRowsForSearchQuery(value),
@@ -34,6 +34,10 @@ export function Search({ value, onChange }: SearchProps) {
           label="Search"
           value={value}
           onChange={onChange}
+          onRefreshFilters={() => {
+            clearAllFilters();
+            onChange("");
+          }}
         />
       </div>
 
