@@ -57,6 +57,18 @@ export const FORMAT_LABELS = [
   "PDF",
 ] as const;
 
+/** Sample artist names for local fixtures (Strapi uses the `artists` collection). */
+export const ARTIST_LABELS = [
+  "Refik Anadol",
+  "Holly Herndon",
+  "Ian Cheng",
+  "Lauren Lee McCarthy",
+  "Ruth Catlow",
+  "Tega Brain",
+  "Anicka Yi",
+  "Jake Elwes",
+] as const;
+
 export const NETWORK_LABELS = [
   "Agnes Cameron",
   "Alana Kushnir",

@@ -1,18 +1,18 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { useFilterSelection } from "../FilterSelectionContext";
 import { FormatButton } from "../domains/format/FormatButton";
-import { FORMAT_ITEMS } from "../domains/format/formatItems";
 import { FilterSidebarSection } from "../primitives/FilterSidebarSection";
 
 export function Format({ collapsed = false }: { collapsed?: boolean }) {
   const { filterResetNonce } = useFilterSelection();
-  const [selected, setSelected] = useState<Set<string>>(() => new Set());
+  return <FormatInner key={filterResetNonce} collapsed={collapsed} />;
+}
 
-  useEffect(() => {
-    setSelected(new Set());
-  }, [filterResetNonce]);
+function FormatInner({ collapsed = false }: { collapsed?: boolean }) {
+  const { filterFormatOptionLabels } = useFilterSelection();
+  const [selected, setSelected] = useState<Set<string>>(() => new Set());
 
   const toggle = useCallback((id: string) => {
     setSelected((prev) => {
@@ -31,12 +31,12 @@ export function Format({ collapsed = false }: { collapsed?: boolean }) {
       onClearAll={clearAll}
       collapsed={collapsed}
     >
-      {FORMAT_ITEMS.map(({ id, label }) => (
+      {filterFormatOptionLabels.map((label) => (
         <FormatButton
-          key={id}
+          key={label}
           label={label}
-          selected={selected.has(id)}
-          onPress={() => toggle(id)}
+          selected={selected.has(label)}
+          onPress={() => toggle(label)}
         />
       ))}
     </FilterSidebarSection>

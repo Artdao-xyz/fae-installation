@@ -1,18 +1,26 @@
-import { CONTENT_FIXTURE_ROWS } from "@/data/content-fixture";
 import type { ContentRow } from "@/data/content-types";
 
-/** Case-insensitive match against fixture titles and taxonomy fields. */
-export function filterContentRowsForSearchQuery(query: string): ContentRow[] {
+/** Case-insensitive match against titles and taxonomy fields on the given rows. */
+export function filterContentRowsForSearchQuery(
+  query: string,
+  rows: readonly ContentRow[],
+): ContentRow[] {
   const q = query.trim().toLowerCase();
   if (!q) return [];
 
-  return CONTENT_FIXTURE_ROWS.filter((row) => {
+  return rows.filter((row) => {
     if (row.title.toLowerCase().includes(q)) return true;
+    if (row.shortTitle.toLowerCase().includes(q)) return true;
+    if (row.content.length > 0 && row.content.toLowerCase().includes(q))
+      return true;
     if (String(row.year).includes(q)) return true;
+    if (row.yearLabel.toLowerCase().includes(q)) return true;
     if (row.focusAreas.some((x) => x.toLowerCase().includes(q))) return true;
     if (row.activityTypes.some((x) => x.toLowerCase().includes(q))) return true;
     if (row.formats.some((x) => x.toLowerCase().includes(q))) return true;
     if (row.networks.some((x) => x.toLowerCase().includes(q))) return true;
+    if (row.artists.some((x) => x.toLowerCase().includes(q))) return true;
+    if (row.resources.some((x) => x.toLowerCase().includes(q))) return true;
     return false;
   });
 }

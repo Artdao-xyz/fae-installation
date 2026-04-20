@@ -1,14 +1,17 @@
 "use client";
 
 import { useCallback } from "react";
-import { ACTIVITY_TYPE_LABELS } from "../config/constants";
 import { useFilterSelection } from "../FilterSelectionContext";
 import { FilterSidebarSection } from "../primitives/FilterSidebarSection";
 import { FilterPill } from "../primitives/FilterPill";
 
 export function ActivityType({ collapsed = false }: { collapsed?: boolean }) {
-  const { selectedActivityTypes, toggleActivityType, clearActivityTypes } =
-    useFilterSelection();
+  const {
+    selectedActivityTypes,
+    toggleActivityType,
+    clearActivityTypes,
+    filterActivityOptionLabels,
+  } = useFilterSelection();
 
   const toggle = useCallback(
     (label: string) => {
@@ -26,7 +29,7 @@ export function ActivityType({ collapsed = false }: { collapsed?: boolean }) {
       scrollBody
       collapsed={collapsed}
     >
-      {ACTIVITY_TYPE_LABELS.map((label) => (
+      {filterActivityOptionLabels.map((label) => (
         <FilterPill
           key={label}
           label={label}

@@ -19,11 +19,16 @@ export function FilterSidebar() {
     setRdSubpanelOpen,
     networkSubpanelOpen,
     setNetworkSubpanelOpen,
+    artistsSubpanelOpen,
+    setArtistsSubpanelOpen,
   } = useFilterSelection();
   const panelId = useId();
 
   const anySubpanelOpen =
-    briefingsSubpanelOpen || rdSubpanelOpen || networkSubpanelOpen;
+    briefingsSubpanelOpen ||
+    rdSubpanelOpen ||
+    artistsSubpanelOpen ||
+    networkSubpanelOpen;
 
   const toggleFiltersOpen = useCallback(() => {
     setFiltersOpen((open) => {
@@ -31,6 +36,7 @@ export function FilterSidebar() {
       if (!next) {
         setBriefingsSubpanelOpen(false);
         setRdSubpanelOpen(false);
+        setArtistsSubpanelOpen(false);
         setNetworkSubpanelOpen(false);
       }
       return next;
@@ -39,6 +45,7 @@ export function FilterSidebar() {
     setFiltersOpen,
     setBriefingsSubpanelOpen,
     setRdSubpanelOpen,
+    setArtistsSubpanelOpen,
     setNetworkSubpanelOpen,
   ]);
 
@@ -63,11 +70,15 @@ export function FilterSidebar() {
               panelId={panelId}
               briefingsSubpanelOpen={briefingsSubpanelOpen}
               rdSubpanelOpen={rdSubpanelOpen}
+              artistsSubpanelOpen={artistsSubpanelOpen}
               networkSubpanelOpen={networkSubpanelOpen}
               onToggleBriefingsSubpanel={() =>
                 setBriefingsSubpanelOpen((o) => !o)
               }
               onToggleRdSubpanel={() => setRdSubpanelOpen((o) => !o)}
+              onToggleArtistsSubpanel={() =>
+                setArtistsSubpanelOpen((o) => !o)
+              }
               onToggleNetworkSubpanel={() =>
                 setNetworkSubpanelOpen((o) => !o)
               }
@@ -81,9 +92,11 @@ export function FilterSidebar() {
           anySubpanelOpen={anySubpanelOpen}
           briefingsSubpanelOpen={briefingsSubpanelOpen}
           rdSubpanelOpen={rdSubpanelOpen}
+          artistsSubpanelOpen={artistsSubpanelOpen}
           networkSubpanelOpen={networkSubpanelOpen}
           onCloseBriefings={() => setBriefingsSubpanelOpen(false)}
           onCloseRd={() => setRdSubpanelOpen(false)}
+          onCloseArtists={() => setArtistsSubpanelOpen(false)}
           onCloseNetwork={() => setNetworkSubpanelOpen(false)}
         />
       ) : null}

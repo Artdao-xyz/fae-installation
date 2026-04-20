@@ -112,7 +112,7 @@ function ImageFrame({
 
   const revealDelay = loaded ? delayMs : 0;
   const frameTransitionStyle: CSSProperties = {
-    transitionProperty: "background-color, box-shadow",
+    transitionProperty: "box-shadow",
     transitionDuration: `${durationMs}ms`,
     transitionDelay: `${revealDelay}ms`,
     transitionTimingFunction: "cubic-bezier(0, 0, 0.2, 1)",
@@ -120,8 +120,8 @@ function ImageFrame({
 
   return (
     <div
-      className={`fae-thumbnail-reveal relative shrink-0 overflow-hidden rounded ${
-        loaded ? "bg-black-fae shadow-fae-thumbnail" : "bg-transparent shadow-none"
+      className={`fae-thumbnail-reveal relative shrink-0 overflow-hidden rounded bg-surface-canvas ${
+        loaded ? "shadow-fae-thumbnail" : "shadow-none"
       }`}
       style={{ width: dims.frame, height: dims.frame, ...frameTransitionStyle }}
     >
@@ -131,7 +131,7 @@ function ImageFrame({
         src={imageSrc}
         onLoad={() => setLoaded(true)}
         onError={() => setLoaded(true)}
-        className={`fae-thumbnail-reveal__img pointer-events-none absolute inset-0 size-full object-cover ${
+        className={`fae-thumbnail-reveal__img pointer-events-none absolute inset-0 size-full object-contain object-center ${
           loaded ? "opacity-100 scale-100" : "opacity-0 scale-[0.98]"
         }`}
         style={{

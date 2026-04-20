@@ -12,11 +12,12 @@ type SearchProps = {
 };
 
 export function Search({ value, onChange }: SearchProps) {
-  const { openContentPreview, clearAllFilters } = useFilterSelection();
+  const { openContentPreview, clearAllFilters, contentCatalog } =
+    useFilterSelection();
 
   const results = useMemo(
-    () => filterContentRowsForSearchQuery(value),
-    [value],
+    () => filterContentRowsForSearchQuery(value, contentCatalog),
+    [value, contentCatalog],
   );
   const searching = value.trim().length > 0;
 

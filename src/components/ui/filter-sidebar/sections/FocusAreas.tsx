@@ -1,14 +1,17 @@
 "use client";
 
 import { useCallback } from "react";
-import { FOCUS_AREA_LABELS } from "../config/constants";
 import { useFilterSelection } from "../FilterSelectionContext";
 import { FilterSidebarSection } from "../primitives/FilterSidebarSection";
 import { FilterPill } from "../primitives/FilterPill";
 
 export function FocusAreas({ collapsed = false }: { collapsed?: boolean }) {
-  const { selectedFocusAreas, toggleFocusArea, clearFocusAreas } =
-    useFilterSelection();
+  const {
+    selectedFocusAreas,
+    toggleFocusArea,
+    clearFocusAreas,
+    filterFocusOptionLabels,
+  } = useFilterSelection();
 
   const toggle = useCallback(
     (label: string) => {
@@ -26,7 +29,7 @@ export function FocusAreas({ collapsed = false }: { collapsed?: boolean }) {
       scrollBody
       collapsed={collapsed}
     >
-      {FOCUS_AREA_LABELS.map((label) => (
+      {filterFocusOptionLabels.map((label) => (
         <FilterPill
           key={label}
           label={label}

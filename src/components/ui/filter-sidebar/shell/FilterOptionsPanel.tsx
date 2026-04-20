@@ -15,9 +15,11 @@ type FilterOptionsPanelProps = {
   panelId: string;
   briefingsSubpanelOpen: boolean;
   rdSubpanelOpen: boolean;
+  artistsSubpanelOpen: boolean;
   networkSubpanelOpen: boolean;
   onToggleBriefingsSubpanel: () => void;
   onToggleRdSubpanel: () => void;
+  onToggleArtistsSubpanel: () => void;
   onToggleNetworkSubpanel: () => void;
 };
 
@@ -25,9 +27,11 @@ export function FilterOptionsPanel({
   panelId,
   briefingsSubpanelOpen,
   rdSubpanelOpen,
+  artistsSubpanelOpen,
   networkSubpanelOpen,
   onToggleBriefingsSubpanel,
   onToggleRdSubpanel,
+  onToggleArtistsSubpanel,
   onToggleNetworkSubpanel,
 }: FilterOptionsPanelProps) {
   const [searchQuery, setSearchQuery] = useState("");
@@ -69,7 +73,10 @@ export function FilterOptionsPanel({
             onToggleSubpanel={onToggleRdSubpanel}
           />
           <EditorialMenu />
-          <ArtistsMenu />
+          <ArtistsMenu
+            subpanelOpen={artistsSubpanelOpen}
+            onToggleSubpanel={onToggleArtistsSubpanel}
+          />
           <NetworkMenu
             subpanelOpen={networkSubpanelOpen}
             onToggleSubpanel={onToggleNetworkSubpanel}

@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, type ReactNode } from "react";
 import type { ContentRow } from "@/data/content-types";
 import { OpenSvgIcon } from "@/components/ui/icons/OpenSvgIcon";
 import { FilterPill } from "@/components/ui/filter-sidebar/primitives/FilterPill";
+import { PreviewBlocksBody } from "./PreviewBlocksBody";
 import { PreviewPanelCollapseBar } from "./PreviewPanelCollapseBar";
 
 type PreviewViewProps = {
@@ -64,133 +65,196 @@ const pillReadOnlyClass = "pointer-events-none shrink-0";
 const sectionLabelClass =
   "w-[72px] shrink-0 font-lust-text text-xs font-normal leading-none tracking-[-0.228px] text-ink-body";
 
+function CategoryBlock({
+  label,
+  children,
+}: {
+  label: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="flex gap-2.5">
+      <p className={sectionLabelClass}>{label}</p>
+      <div className="flex min-w-0 flex-1 flex-wrap content-start gap-1.5 gap-y-1.5">
+        {children}
+      </div>
+    </div>
+  );
+}
+
 function PreviewMainContent({ row }: { row: ContentRow }) {
   const paragraphs = useMemo(
-    () => row.content.split(/\n\n+/).filter(Boolean),
+    () => row.content.split(/\n\n+/).map((p) => p.trim()).filter(Boolean),
     [row.content],
   );
+
+  const hasFocus = row.focusAreas.length > 0;
+  const hasActivity = row.activityTypes.length > 0;
+  const hasFormats = row.formats.length > 0;
+  const hasNetworks = row.networks.length > 0;
+  const hasArtists = row.artists.length > 0;
+  const hasCategories =
+    hasFocus || hasActivity || hasFormats || hasNetworks || hasArtists;
+  const hasBlocks =
+    row.contentBlocks !== null && row.contentBlocks.length > 0;
+  const hasBody = hasBlocks || paragraphs.length > 0;
+  const hasResources = row.resources.length > 0;
+  const dateLine =
+    row.yearLabel.trim().length > 0
+      ? row.yearLabel
+      : row.year > 0
+        ? String(row.year)
+        : "";
 
   return (
     <>
       <div className="flex w-full shrink-0 items-start gap-5">
-        <div className="relative size-[205px] shrink-0 overflow-hidden rounded-[3.677px]">
+        <div className="relative flex size-[205px] shrink-0 items-center justify-center overflow-hidden rounded-[3.677px] bg-surface-canvas">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={row.imageUrl}
             alt={row.title}
-            className="pointer-events-none size-full object-cover"
+            className="pointer-events-none max-h-full max-w-full object-contain object-center"
           />
         </div>
         <div className="flex min-w-0 flex-1 flex-col items-start justify-start gap-2.5 leading-none">
-          <p className="font-lust-text text-xl tracking-[-0.38px] text-black-fae">{row.title}</p>
-          <p className="font-lust-text text-xs tracking-[-0.228px] text-black-fae">{row.year}</p>
+          <p className="font-lust-text text-xl tracking-[-0.38px] text-black-fae">
+            {row.title}
+          </p>
+          {dateLine ? (
+            <p className="font-lust-text text-xs tracking-[-0.228px] text-black-fae">
+              {dateLine}
+            </p>
+          ) : null}
         </div>
       </div>
 
-      <Divider />
-
-      <div className="flex flex-col gap-3">
-        <div className="flex gap-2.5">
-          <p className={sectionLabelClass}>Focus</p>
-          <div className="flex min-w-0 flex-1 flex-wrap gap-1.5 gap-y-1.5">
-            {row.focusAreas.map((label) => (
-              <FilterPill
-                key={label}
-                label={label}
-                variant="square"
-                tone="fae-briefings"
-                selected={false}
-                className={pillReadOnlyClass}
-              />
-            ))}
+      {hasCategories ? (
+        <>
+          <Divider />
+          <div className="flex flex-col gap-3">
+            {hasFocus ? (
+              <CategoryBlock label="Focus">
+                {row.focusAreas.map((label) => (
+                  <FilterPill
+                    key={label}
+                    label={label}
+                    variant="square"
+                    tone="fae-briefings"
+                    selected={false}
+                    className={pillReadOnlyClass}
+                  />
+                ))}
+              </CategoryBlock>
+            ) : null}
+            {hasActivity ? (
+              <CategoryBlock label="Activity">
+                {row.activityTypes.map((label) => (
+                  <FilterPill
+                    key={label}
+                    label={label}
+                    variant="rounded"
+                    tone="fae-briefings"
+                    selected={false}
+                    className={pillReadOnlyClass}
+                  />
+                ))}
+              </CategoryBlock>
+            ) : null}
+            {hasFormats ? (
+              <CategoryBlock label="Format">
+                {row.formats.map((label) => (
+                  <FilterPill
+                    key={label}
+                    label={label}
+                    variant="rounded"
+                    tone="fae-briefings"
+                    selected={false}
+                    className={pillReadOnlyClass}
+                  />
+                ))}
+              </CategoryBlock>
+            ) : null}
+            {hasNetworks ? (
+              <CategoryBlock label="Network">
+                {row.networks.map((label) => (
+                  <FilterPill
+                    key={label}
+                    label={label}
+                    variant="dotted"
+                    tone="network"
+                    selected={false}
+                    className={pillReadOnlyClass}
+                  />
+                ))}
+              </CategoryBlock>
+            ) : null}
+            {hasArtists ? (
+              <CategoryBlock label="Artist">
+                {row.artists.map((label) => (
+                  <FilterPill
+                    key={label}
+                    label={label}
+                    variant="rounded"
+                    tone="artists"
+                    selected={false}
+                    className={pillReadOnlyClass}
+                  />
+                ))}
+              </CategoryBlock>
+            ) : null}
           </div>
-        </div>
+        </>
+      ) : null}
 
-        <div className="flex gap-2.5">
-          <p className={sectionLabelClass}>Activity</p>
-          <div className="flex min-w-0 flex-1 flex-wrap gap-x-1.5 gap-y-1.5">
-            {row.activityTypes.map((label) => (
-              <FilterPill
-                key={label}
-                label={label}
-                variant="rounded"
-                tone="fae-briefings"
-                selected={false}
-                className={pillReadOnlyClass}
-              />
-            ))}
+      {hasBody ? (
+        <>
+          <Divider />
+          {hasBlocks && row.contentBlocks ? (
+            <PreviewBlocksBody content={row.contentBlocks} />
+          ) : (
+            <div className="flex flex-col gap-3">
+              {paragraphs.map((p, i) => (
+                <RichParagraph key={i} text={p} />
+              ))}
+            </div>
+          )}
+        </>
+      ) : null}
+
+      {hasResources ? (
+        <>
+          <Divider />
+          <div className="flex flex-col gap-2 pb-2">
+            <p className="font-lust-text text-xs leading-none tracking-[-0.228px] text-ink-caption">
+              Resources
+            </p>
+            <ul className="flex list-none flex-col gap-1 p-0">
+              {row.resources.map((href) => (
+                <li key={href} className="leading-none">
+                  <a
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex max-w-full items-center gap-1.5 rounded-sm bg-surface-canvas/90 py-0 pl-0 pr-0 font-fira-mono text-[10px] leading-[14px] text-ink-body underline decoration-solid [text-decoration-skip-ink:none] backdrop-blur-fae-md hover:bg-surface-hover/80"
+                  >
+                    <span className="min-w-0 truncate">
+                      {resourceLinkLabel(href)}
+                    </span>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src="/svg/blue-arrow.svg"
+                      alt=""
+                      className="h-[7px] w-[5px] shrink-0 object-contain"
+                      aria-hidden
+                    />
+                  </a>
+                </li>
+              ))}
+            </ul>
           </div>
-        </div>
-
-        <div className="flex gap-2.5">
-          <p className={sectionLabelClass}>Format</p>
-          <div className="flex flex-wrap gap-1.5">
-            {row.formats.map((label) => (
-              <FilterPill
-                key={label}
-                label={label}
-                variant="rounded"
-                tone="fae-briefings"
-                selected={false}
-                className={pillReadOnlyClass}
-              />
-            ))}
-          </div>
-        </div>
-
-        <div className="flex gap-2.5">
-          <p className={sectionLabelClass}>Network</p>
-          <div className="flex min-w-0 flex-1 flex-wrap gap-1.5 gap-y-1.5">
-            {row.networks.map((label) => (
-              <FilterPill
-                key={label}
-                label={label}
-                variant="dotted"
-                tone="network"
-                selected={false}
-                className={pillReadOnlyClass}
-              />
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <Divider />
-
-      <div className="flex flex-col gap-0">
-        {paragraphs.map((p, i) => (
-          <RichParagraph key={i} text={p} />
-        ))}
-      </div>
-
-      <Divider />
-
-      <div className="flex flex-col gap-2 pb-2">
-        <p className="font-lust-text text-xs leading-none tracking-[-0.228px] text-ink-caption">
-          Resources
-        </p>
-        <ul className="flex list-none flex-col gap-1 p-0">
-          {row.resources.map((href) => (
-            <li key={href} className="leading-none">
-              <a
-                href={href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex max-w-full items-center gap-1.5 rounded-sm bg-surface-canvas/90 py-0 pl-0 pr-0 font-fira-mono text-[10px] leading-[14px] text-ink-body underline decoration-solid [text-decoration-skip-ink:none] backdrop-blur-fae-md hover:bg-surface-hover/80"
-              >
-                <span className="min-w-0 truncate">{resourceLinkLabel(href)}</span>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src="/svg/blue-arrow.svg"
-                  alt=""
-                  className="h-[7px] w-[5px] shrink-0 object-contain"
-                  aria-hidden
-                />
-              </a>
-            </li>
-          ))}
-        </ul>
-      </div>
+        </>
+      ) : null}
     </>
   );
 }

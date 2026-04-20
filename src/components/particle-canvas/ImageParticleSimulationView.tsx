@@ -13,7 +13,6 @@ import { createPortal, flushSync } from "react-dom";
 import { useFilterSelection } from "@/components/ui/filter-sidebar/FilterSelectionContext";
 import { getFilterSubpanelColumnWidthPx } from "@/components/ui/filter-sidebar/shell/layout-classes";
 import { getMarginGuideInsetPx } from "@/lib/margin-guide";
-import { listContent } from "@/lib/content-repository";
 import type { ContentRow } from "@/data/content-types";
 import {
   Thumbnail,
@@ -69,8 +68,8 @@ function syncImgToContentRow(
     img.getAttribute(ROW_IMAGE_ATTR) !== row.imageUrl
   ) {
     img.src = row.imageUrl;
-    img.alt = row.title;
-    img.title = row.title;
+    img.alt = row.shortTitle;
+    img.title = row.shortTitle;
     img.dataset.idx = row.id;
     img.setAttribute(ROW_IMAGE_ATTR, row.imageUrl);
   }
@@ -101,7 +100,6 @@ export type ImageParticleSimulationViewProps = {
 };
 
 export function ImageParticleSimulationView({
-  mode,
   imageLimit,
   displayedWidth,
   displayedHeight,
@@ -123,6 +121,10 @@ export function ImageParticleSimulationView({
     filterSubpanelsOpen,
     setFiltersFromContentRow,
     registerContentPreviewOpener,
+    contentCatalog,
+    contentCatalogError,
+    contentCatalogTotal,
+    contentCatalogFetchMs,
   } = useFilterSelection();
 
   const idleTextFullTitleRef = useRef(idleTextFullTitle);
@@ -426,37 +428,23 @@ export function ImageParticleSimulationView({
     filterSubpanelsOpen,
   ]);
 
-  // ---- Fetch content ----
+  // ---- Catalog from Strapi (single shared fetch in FilterSelectionProvider) ----
   useEffect(() => {
-    let cancelled = false;
-    setFetchError(null);
-    setFetchDurationMs(null);
-
-    (async () => {
-      try {
-        const res = await listContent({
-          limit: imageLimit,
-          offset: 0,
-          latencyMs: mode === "optimized" ? 180 : 80,
-        });
-        if (cancelled) return;
-        setContentRows(res.rows);
-        setContentTotal(res.total);
-        setFetchDurationMs(res.durationMs);
-      } catch (err) {
-        if (cancelled) return;
-        setFetchError(
-          err instanceof Error ? err.message : "Unknown error"
-        );
-        setContentRows([]);
-        setContentTotal(0);
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [imageLimit, mode]);
+    setFetchError(contentCatalogError);
+    setFetchDurationMs(contentCatalogFetchMs);
+    const capped =
+      imageLimit !== undefined && imageLimit > 0
+        ? contentCatalog.slice(0, imageLimit)
+        : [...contentCatalog];
+    setContentRows(capped);
+    setContentTotal(contentCatalogTotal);
+  }, [
+    contentCatalog,
+    contentCatalogError,
+    contentCatalogFetchMs,
+    contentCatalogTotal,
+    imageLimit,
+  ]);
 
   // ---- Preload images ----
   useEffect(() => {
@@ -1036,7 +1024,7 @@ export function ImageParticleSimulationView({
                 const useFull = idleTextFullTitleRef.current;
                 const rowWords = wordsByRow[i];
                 const chunk = useFull
-                  ? (row?.title ?? "")
+                  ? (row?.shortTitle ?? "")
                   : (rowWords?.[p.textChunkIndex] ?? rowWords?.[0] ?? "");
                 if (chunk !== "") {
                   const scrambled = scrambleWord(
@@ -1159,9 +1147,9 @@ export function ImageParticleSimulationView({
             const rowWords = textWordsByRow[i] ?? [];
             const widx = pickIdleTextWordIndex(i, rowWords.length);
             const chunk = idleTextFullTitle
-              ? row.title
+              ? row.shortTitle
               : (rowWords[widx] ??
-                row.title.split(/\s+/)[0] ??
+                row.shortTitle.split(/\s+/)[0] ??
                 "TEXT");
 
             return (
@@ -1203,16 +1191,16 @@ export function ImageParticleSimulationView({
                   <Thumbnail
                     variant="full"
                     size="lg"
-                    label={row.title}
+                    label={row.shortTitle}
                     imageSrc={row.imageUrl}
-                    imageAlt={row.title}
+                    imageAlt={row.shortTitle}
                     labelRef={(el) => {
                       textRefs.current[i] = el;
                     }}
                     imageRef={(el) => {
                       imgRefs.current[i] = el;
                     }}
-                    accessibilityLabel={row.title}
+                    accessibilityLabel={row.shortTitle}
                   />
                 ) : (
                   <Thumbnail
@@ -1266,9 +1254,9 @@ export function ImageParticleSimulationView({
                 <Thumbnail
                   variant="full"
                   size="lg"
-                  label={row.title}
+                  label={row.shortTitle}
                   imageSrc={row.imageUrl}
-                  imageAlt={row.title}
+                  imageAlt={row.shortTitle}
                   imageRef={(el) => {
                     imgRefs.current[i] = el;
                   }}
@@ -1277,9 +1265,9 @@ export function ImageParticleSimulationView({
                 <Thumbnail
                   variant="image"
                   size={thumbnailSize}
-                  label={row.title}
+                  label={row.shortTitle}
                   imageSrc={row.imageUrl}
-                  imageAlt={row.title}
+                  imageAlt={row.shortTitle}
                   imageRef={(el) => {
                     imgRefs.current[i] = el;
                   }}

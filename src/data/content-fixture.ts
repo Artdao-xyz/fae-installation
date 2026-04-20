@@ -1,5 +1,6 @@
 import {
   ACTIVITY_TYPE_LABELS,
+  ARTIST_LABELS,
   FOCUS_AREA_LABELS,
   FORMAT_LABELS,
   NETWORK_LABELS,
@@ -133,18 +134,30 @@ export const CONTENT_FIXTURE_ROWS: ContentRow[] = FIXTURE_SEED_TITLES.map(
       undefined,
       1423,
     );
+    const artists = pickDistinctFromPool(
+      index,
+      ARTIST_LABELS,
+      formatCount1to2(index, 1529),
+      undefined,
+      1631,
+    );
 
+    const year = yearForIndex(index);
     return {
       id: `content-${paddedId}`,
       title,
+      shortTitle: title,
       imageUrl: `https://picsum.photos/seed/content-${paddedId}/220/220.webp`,
       content: buildContentForIndex(index, title),
+      contentBlocks: null,
       resources: pickResourcesForIndex(index),
       focusAreas,
       activityTypes,
-      year: yearForIndex(index),
+      year,
+      yearLabel: String(year),
       formats,
       networks,
+      artists,
     };
   },
 );

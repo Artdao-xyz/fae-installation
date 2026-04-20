@@ -7,18 +7,18 @@ import { FilterPill } from "../../primitives/FilterPill";
 import { FilterPillDropdown } from "../../primitives/FilterPillDropdown";
 import { FilterSearchField } from "../../primitives/FilterSearchField";
 
-type NetworkDropdownPanelProps = {
+type ArtistsDropdownPanelProps = {
   variant?: "default" | "subcolumn";
   onClearAll?: () => void;
 };
 
-export function NetworkDropdownPanel({
+export function ArtistsDropdownPanel({
   variant = "default",
   onClearAll: onClearAllFromParent,
-}: NetworkDropdownPanelProps) {
+}: ArtistsDropdownPanelProps) {
   const { filterResetNonce } = useFilterSelection();
   return (
-    <NetworkDropdownPanelInner
+    <ArtistsDropdownPanelInner
       key={filterResetNonce}
       variant={variant}
       onClearAll={onClearAllFromParent}
@@ -26,11 +26,11 @@ export function NetworkDropdownPanel({
   );
 }
 
-function NetworkDropdownPanelInner({
+function ArtistsDropdownPanelInner({
   variant = "default",
   onClearAll: onClearAllFromParent,
-}: NetworkDropdownPanelProps) {
-  const { filterNetworkOptionLabels } = useFilterSelection();
+}: ArtistsDropdownPanelProps) {
+  const { filterArtistOptionLabels } = useFilterSelection();
   const [selected, setSelected] = useState<Set<string>>(() => new Set());
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -38,8 +38,8 @@ function NetworkDropdownPanelInner({
 
   const searchMatches = useMemo(
     () =>
-      filterNetworkLabelsForSearchQuery(searchQuery, filterNetworkOptionLabels),
-    [searchQuery, filterNetworkOptionLabels],
+      filterNetworkLabelsForSearchQuery(searchQuery, filterArtistOptionLabels),
+    [searchQuery, filterArtistOptionLabels],
   );
 
   const toggle = useCallback((label: string) => {
@@ -62,15 +62,15 @@ function NetworkDropdownPanelInner({
 
   return (
     <FilterPillDropdown
-      tone="network"
+      tone="artists"
       variant={variant}
       onClearAll={handleClearAll}
     >
       <div className="flex w-full min-w-0 shrink-0 basis-full flex-col gap-2">
         <div className="min-w-0 shrink-0">
           <FilterSearchField
-            id="network-filter-search"
-            label="Search network"
+            id="artists-filter-search"
+            label="Search artists"
             value={searchQuery}
             onChange={setSearchQuery}
           />
@@ -79,7 +79,7 @@ function NetworkDropdownPanelInner({
           <div
             className="scrollbar-hide flex min-h-0 min-w-0 w-full flex-col gap-[5px] overflow-y-auto"
             role="list"
-            aria-label="Network search results"
+            aria-label="Artist search results"
           >
             {searchMatches.length === 0 ? (
               <p className="font-fira-mono text-[10px] font-normal leading-4 text-ink-body/70">
@@ -94,7 +94,7 @@ function NetworkDropdownPanelInner({
                 >
                   <FilterPill
                     label={label}
-                    tone="network"
+                    tone="artists"
                     selected={selected.has(label)}
                     onPress={() => toggle(label)}
                     className={pillClassName}
@@ -107,13 +107,13 @@ function NetworkDropdownPanelInner({
           <div
             className="flex w-full flex-wrap content-start items-start"
             role="group"
-            aria-label="Network"
+            aria-label="Artists"
           >
-            {filterNetworkOptionLabels.map((label) => (
+            {filterArtistOptionLabels.map((label) => (
               <FilterPill
                 key={label}
                 label={label}
-                tone="network"
+                tone="artists"
                 selected={selected.has(label)}
                 onPress={() => toggle(label)}
               />

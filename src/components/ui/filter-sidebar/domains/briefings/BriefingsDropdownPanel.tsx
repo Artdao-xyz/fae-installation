@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useFilterSelection } from "../../FilterSelectionContext";
 import { FilterPillDropdown } from "../../primitives/FilterPillDropdown";
 import { FilterPillToggle } from "../../primitives/FilterPillToggle";
@@ -16,11 +16,20 @@ export function BriefingsDropdownPanel({
   onClearAll: onClearAllFromParent,
 }: BriefingsDropdownPanelProps) {
   const { filterResetNonce } = useFilterSelection();
-  const [selected, setSelected] = useState<string | null>(null);
+  return (
+    <BriefingsDropdownPanelInner
+      key={filterResetNonce}
+      variant={variant}
+      onClearAll={onClearAllFromParent}
+    />
+  );
+}
 
-  useEffect(() => {
-    setSelected(null);
-  }, [filterResetNonce]);
+function BriefingsDropdownPanelInner({
+  variant = "default",
+  onClearAll: onClearAllFromParent,
+}: BriefingsDropdownPanelProps) {
+  const [selected, setSelected] = useState<string | null>(null);
 
   const handleClearAll = () => {
     onClearAllFromParent?.();
