@@ -90,6 +90,12 @@ export type FilterSelectionContextValue = {
   openContentPreview: (row: ContentRow) => void;
   /** Called by `ImageParticleSimulationView` to connect `openContentPreview` to preview state. */
   registerContentPreviewOpener: (fn: ((row: ContentRow) => void) | null) => void;
+  /**
+   * Closes the content preview and returns particles to idle spread (same as the preview close
+   * control) — wired from the canvas, not by setting `contentPreviewRow` directly.
+   */
+  closeContentPreview: () => void;
+  registerContentPreviewCloser: (fn: (() => void) | null) => void;
   /** Row currently shown in the content preview (for chrome such as HomeBar breadcrumb). */
   contentPreviewRow: ContentRow | null;
   setContentPreviewRow: Dispatch<SetStateAction<ContentRow | null>>;
@@ -113,6 +119,7 @@ const FilterSelectionContext = createContext<FilterSelectionContextValue | null>
 export function FilterSelectionProvider({ children }: { children: ReactNode }) {
   const { minimizeAllFloatingPanels } = useFloatingPanelStack();
   const contentPreviewOpenerRef = useRef<((row: ContentRow) => void) | null>(null);
+  const contentPreviewCloserRef = useRef<(() => void) | null>(null);
 
   const [contentPreviewRow, setContentPreviewRow] = useState<ContentRow | null>(
     null,
@@ -638,6 +645,14 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
     [],
   );
 
+  const closeContentPreview = useCallback(() => {
+    contentPreviewCloserRef.current?.();
+  }, []);
+
+  const registerContentPreviewCloser = useCallback((fn: (() => void) | null) => {
+    contentPreviewCloserRef.current = fn;
+  }, []);
+
   const value = useMemo<FilterSelectionContextValue>(
     () => ({
       contentCatalog,
@@ -683,6 +698,8 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
       filterSubpanelsOpen,
       openContentPreview,
       registerContentPreviewOpener,
+      closeContentPreview,
+      registerContentPreviewCloser,
       contentPreviewRow,
       setContentPreviewRow,
       filterMatchingRowCount,
@@ -731,6 +748,8 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
       filterSubpanelsOpen,
       openContentPreview,
       registerContentPreviewOpener,
+      closeContentPreview,
+      registerContentPreviewCloser,
       contentPreviewRow,
       filterMatchingRowCount,
       focusOptionToggleMatchCount,

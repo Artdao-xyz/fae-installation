@@ -12,7 +12,7 @@ type SearchProps = {
 };
 
 export function Search({ value, onChange }: SearchProps) {
-  const { openContentPreview, clearAllFilters, contentCatalog } =
+  const { openContentPreview, clearAllFilters, closeContentPreview, contentCatalog } =
     useFilterSelection();
 
   const results = useMemo(
@@ -38,6 +38,7 @@ export function Search({ value, onChange }: SearchProps) {
           onRefreshFilters={() => {
             clearAllFilters();
             onChange("");
+            closeContentPreview();
           }}
         />
       </div>

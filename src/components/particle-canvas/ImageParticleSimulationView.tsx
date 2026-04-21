@@ -144,6 +144,7 @@ export function ImageParticleSimulationView({
     filtersPanelOpen,
     setFiltersFromContentRow,
     registerContentPreviewOpener,
+    registerContentPreviewCloser,
     setContentPreviewRow,
     contentCatalog,
     contentCatalogError,
@@ -214,6 +215,14 @@ export function ImageParticleSimulationView({
     registerContentPreviewOpener(handleFilteredThumbnailClick);
     return () => registerContentPreviewOpener(null);
   }, [registerContentPreviewOpener, handleFilteredThumbnailClick]);
+
+  useEffect(() => {
+    registerContentPreviewCloser(() => {
+      setPreviewRow(null);
+      setPreviewFullScreen(false);
+    });
+    return () => registerContentPreviewCloser(null);
+  }, [registerContentPreviewCloser]);
 
   useEffect(() => {
     setContentPreviewRow(previewRow);
