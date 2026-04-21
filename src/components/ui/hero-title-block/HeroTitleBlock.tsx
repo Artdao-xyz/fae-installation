@@ -30,23 +30,18 @@ export function HeroTitleBlock({ title, subtitle, className = "" }: Props) {
     selectedActivityTypes,
     filtersPanelOpen,
     filterSubpanelsOpen,
-    contentCatalogStatus,
   } = useFilterSelection();
   const filterActive =
     selectedFocusAreas.size > 0 || selectedActivityTypes.size > 0;
 
   /**
-   * Fade in only after filter chrome has settled (panel open on success, or error with panel
-   * staying closed). Otherwise we briefly show the hero `fixed` centered, then jump to
-   * `absolute` when `filtersPanelOpen` flips — reads as visible → hidden → fade in.
+   * Reveal title/subtitle on mount so they appear before Strapi-backed imagery loads in the canvas.
+   * (Position still follows `filtersPanelOpen` for layout; minor shift may occur when the panel opens.)
    */
-  const layoutReadyForHeroFade =
-    filtersPanelOpen || contentCatalogStatus === "error";
-
   const heroRevealOnceRef = useRef(false);
   const [heroTextEnter, setHeroTextEnter] = useState(false);
   useEffect(() => {
-    if (heroRevealOnceRef.current || !layoutReadyForHeroFade) return;
+    if (heroRevealOnceRef.current) return;
     heroRevealOnceRef.current = true;
     let cancelled = false;
     let raf = 0;
@@ -64,7 +59,7 @@ export function HeroTitleBlock({ title, subtitle, className = "" }: Props) {
       cancelled = true;
       if (raf) cancelAnimationFrame(raf);
     };
-  }, [layoutReadyForHeroFade]);
+  }, []);
 
   const innerWidth = useInnerWidth();
   const subpanelHalfPx =
@@ -85,7 +80,7 @@ export function HeroTitleBlock({ title, subtitle, className = "" }: Props) {
 
   return (
     <div
-      className={`z-10 flex flex-col items-start justify-center transition-opacity duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] motion-reduce:transition-none whitespace-nowrap ${positionClass} ${
+      className={`z-20 flex flex-col items-start justify-center transition-opacity duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] motion-reduce:transition-none whitespace-nowrap ${positionClass} ${
         filterActive ? "pointer-events-none opacity-0" : "opacity-100"
       } ${className}`}
       style={

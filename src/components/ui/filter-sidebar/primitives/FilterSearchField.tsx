@@ -66,14 +66,6 @@ export function FilterSearchField({
             <RefreshCw className="size-3 shrink-0" strokeWidth={1.75} aria-hidden />
           </button>
         ) : null}
-        <span className={SEARCH_ICON_FRAME_CLASS} aria-hidden>
-          {/* eslint-disable-next-line @next/next/no-img-element -- small static chrome icon */}
-          <img
-            src="/svg/search.svg"
-            alt=""
-            className="size-3 shrink-0 object-contain opacity-70"
-          />
-        </span>
       </div>
     </>
   );

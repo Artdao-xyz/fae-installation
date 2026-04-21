@@ -97,7 +97,7 @@ export type ImageParticleSimulationViewProps = {
   speedFactor: number;
   onStatsChange?: (stats: ImageParticleSimulationStats) => void;
   config: SimConfig;
-  /** Dev (Leva): idle text tiles show full `title` instead of one keyword. */
+  /** Idle text tiles: full `shortTitle` vs one keyword (default full title). Leva can override in dev. */
   idleTextFullTitle?: boolean;
   /**
    * When set, idle orbit + spread packing use this element’s screen rect (clipped on the
@@ -118,7 +118,7 @@ export function ImageParticleSimulationView({
   speedFactor,
   onStatsChange,
   config,
-  idleTextFullTitle = false,
+  idleTextFullTitle = true,
   placementContainerRef,
   filterMatchMode: filterMatchModeProp,
 }: ImageParticleSimulationViewProps) {
@@ -1172,7 +1172,7 @@ export function ImageParticleSimulationView({
 
   return (
     <section
-      className="fixed inset-0 overflow-hidden"
+      className="fixed inset-0 z-0 overflow-hidden"
       style={{ perspective: `${config.perspective}px` }}
       aria-label="3D image particle simulation"
     >

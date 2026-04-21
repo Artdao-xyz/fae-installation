@@ -22,10 +22,16 @@ import {
   offlineFixtureTaxonomyOrNull,
 } from "@/lib/strapi/offline-fixture";
 
-/** Larger pages = fewer Strapi round-trips; balance with response size. */
-const DEFAULT_PAGE_SIZE = 200;
-/** Fetch pages 2…N in parallel batches to beat sequential latency without bursting Strapi. */
-const OUTPUT_PAGE_FETCH_CONCURRENCY = 3;
+/**
+ * Strapi often enforces a max `pageSize` (commonly 100). Asking for 200 can make page ≥2 return
+ * empty `data` while `meta.pagination.total` still reflects the full collection.
+ */
+const CATALOG_PAGE_SIZE = 100;
+/**
+ * Max catalog list pages (page size {@link CATALOG_PAGE_SIZE}). Raise if the collection can exceed
+ * this many pages (e.g. 1000 pages × 100 = 100k rows).
+ */
+const OUTPUT_LIST_MAX_PAGES = 1000;
 const STRAPI_REVALIDATE_SECONDS = 300;
 
 export type StrapiOutputsListUnknown = {
@@ -101,6 +107,8 @@ function outputsListPageParams(page: number, pageSize: number): string {
   params.append("status", strapiOutputsListStatus());
   params.append("pagination[page]", String(page));
   params.append("pagination[pageSize]", String(pageSize));
+  /** Ensures `meta.pagination.total` reflects the filtered query (Strapi v5). */
+  params.append("pagination[withCount]", "true");
   params.append("sort[0]", "Index:asc");
   appendOutputsListSlimQuery(params);
   return params.toString();
@@ -109,6 +117,8 @@ function outputsListPageParams(page: number, pageSize: number): string {
 async function fetchStrapiOutputsPageJson(
   page: number,
   pageSize: number,
+  /** Use for catalog merge — avoids Next fetch cache reusing one page's body for every `page` param. */
+  catalogListFetch?: boolean,
 ): Promise<StrapiOutputsListUnknown> {
   const base = strapiBaseUrl();
   const token = process.env.STRAPI_API_TOKEN?.trim();
@@ -119,7 +129,9 @@ async function fetchStrapiOutputsPageJson(
 
   const res = await fetch(url, {
     headers,
-    next: { revalidate: STRAPI_REVALIDATE_SECONDS },
+    ...(catalogListFetch
+      ? { cache: "no-store" as const }
+      : { next: { revalidate: STRAPI_REVALIDATE_SECONDS } }),
   });
 
   const body = (await res.json()) as StrapiOutputsListUnknown;
@@ -135,21 +147,6 @@ async function fetchStrapiOutputsPageJson(
   }
 
   return body;
-}
-
-async function fetchStrapiOutputPagesBatched(
-  pages: readonly number[],
-  pageSize: number,
-): Promise<StrapiOutputsListUnknown[]> {
-  const out: StrapiOutputsListUnknown[] = [];
-  for (let i = 0; i < pages.length; i += OUTPUT_PAGE_FETCH_CONCURRENCY) {
-    const chunk = pages.slice(i, i + OUTPUT_PAGE_FETCH_CONCURRENCY);
-    const batch = await Promise.all(
-      chunk.map((p) => fetchStrapiOutputsPageJson(p, pageSize)),
-    );
-    out.push(...batch);
-  }
-  return out;
 }
 
 /** Strapi collection REST id (e.g. `format-options`, `artists`). */
@@ -190,24 +187,6 @@ async function fetchStrapiSortedOptionLabels(
   }
 }
 
-function readPagination(
-  payload: StrapiOutputsListUnknown,
-): { pageCount: number; total: number } {
-  const meta = payload.meta;
-  if (!meta || typeof meta !== "object" || !("pagination" in meta)) {
-    return { pageCount: 1, total: Array.isArray(payload.data) ? payload.data.length : 0 };
-  }
-  const p = (meta as { pagination?: unknown }).pagination;
-  if (!p || typeof p !== "object") {
-    return { pageCount: 1, total: Array.isArray(payload.data) ? payload.data.length : 0 };
-  }
-  const pg = p as { pageCount?: unknown; total?: unknown };
-  const pageCount =
-    typeof pg.pageCount === "number" && pg.pageCount >= 1 ? pg.pageCount : 1;
-  const total = typeof pg.total === "number" ? pg.total : 0;
-  return { pageCount, total };
-}
-
 export async function fetchStrapiTaxonomyOptionLabelsStaged(): Promise<StrapiTaxonomyOptionLabels> {
   const offline = offlineFixtureTaxonomyOrNull();
   if (offline) return offline;
@@ -244,31 +223,34 @@ export async function fetchStrapiOutputsCatalogOnly(options?: {
   if (offline) return offline;
 
   const started = performance.now();
-  const pageSize = options?.pageSize ?? DEFAULT_PAGE_SIZE;
-
-  const first = await fetchStrapiOutputsPageJson(1, pageSize);
-  const { pageCount, total } = readPagination(first);
-
-  const pagePayloads: StrapiOutputsListUnknown[] = [first];
-  if (pageCount > 1) {
-    const restPages = Array.from(
-      { length: pageCount - 1 },
-      (_, i) => i + 2,
-    );
-    const rest = await fetchStrapiOutputPagesBatched(restPages, pageSize);
-    pagePayloads.push(...rest);
-  }
+  const pageSize = Math.min(
+    options?.pageSize ?? CATALOG_PAGE_SIZE,
+    CATALOG_PAGE_SIZE,
+  );
 
   const mergedData: unknown[] = [];
-  for (const payload of pagePayloads) {
-    if (Array.isArray(payload.data)) mergedData.push(...payload.data);
+
+  for (let page = 1; page <= OUTPUT_LIST_MAX_PAGES; page++) {
+    const payload = await fetchStrapiOutputsPageJson(page, pageSize, true);
+    const chunk = Array.isArray(payload.data) ? payload.data : [];
+    if (chunk.length === 0) break;
+
+    mergedData.push(...chunk);
+
+    /**
+     * Do not rely on `meta.pagination.total` to stop: it can under-report, and stopping at
+     * `merged.length >= total` hides additional entries. Stop only when Strapi has no more rows
+     * (empty page) or returns a partial page.
+     */
+    if (chunk.length < pageSize) break;
   }
 
   const rows = mapStrapiOutputsPayloadToContentRows(mergedData);
 
   return {
     rows,
-    total: total > 0 ? total : rows.length,
+    /** Rows actually merged — matches `rows.length` after mapping (minus null maps). */
+    total: rows.length,
     durationMs: Math.round(performance.now() - started),
   };
 }

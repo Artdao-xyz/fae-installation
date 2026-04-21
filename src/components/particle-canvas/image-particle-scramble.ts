@@ -1,3 +1,4 @@
+import { IDLE_TEXT_TILE_SCRAMBLE_ENABLED } from "./config";
 import { seededRand } from "./particle-system";
 
 /** Words for one title only (idle text tiles pick from this row’s list). */
@@ -35,6 +36,7 @@ export function scrambleWord(
   time: number,
 ): string {
   if (!word) return word;
+  if (!IDLE_TEXT_TILE_SCRAMBLE_ENABLED) return word;
   const period =
     SCRAMBLE_BASE_PERIOD_SEC +
     seededRand(seed * 0.73) * SCRAMBLE_PERIOD_VARIANCE_SEC;
