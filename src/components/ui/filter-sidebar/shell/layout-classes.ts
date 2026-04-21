@@ -1,5 +1,5 @@
 /**
- * Main filter column + domain subpanel column width: 25vw (same token as preview dock).
+ * Main filter column + domain subpanel column width: 25vw (preview dock uses `--width-preview-panel`, 30vw).
  * Options strip animates via `FILTER_OPTIONS_PANEL_CLIP_TRANSITION_CLASS`; subpanels use width transitions.
  */
 export const FILTER_SIDEBAR_COLUMN_CLASS =
