@@ -20,9 +20,15 @@ const STRAPI_FORMAT_URL_PRIORITY = [
   "thumbnail_webp",
 ] as const;
 
+/** Strapi may nest file fields under `attributes` (REST plugin). */
 function mediaPreferredUrl(media: unknown): string | null {
   if (!media || typeof media !== "object") return null;
-  const m = media as StrapiMedia;
+  const raw = media as Record<string, unknown>;
+  const m = (
+    raw.attributes && typeof raw.attributes === "object"
+      ? (raw.attributes as StrapiMedia)
+      : raw
+  ) as StrapiMedia;
   if (typeof m.url === "string" && m.url.length > 0) return m.url;
   if (m.formats && typeof m.formats === "object") {
     const fmt = m.formats as Record<string, { url?: unknown } | undefined>;
@@ -41,6 +47,39 @@ function mediaPreferredUrl(media: unknown): string | null {
     }
   }
   return null;
+}
+
+/**
+ * Collects best-effort image URLs from Strapi `Image` when it is a single file, `{ data: [...] }`,
+ * or a plain array (repeatable media).
+ */
+export function collectMediaGalleryUrls(raw: unknown): string[] {
+  const out: string[] = [];
+  const seen = new Set<string>();
+
+  const push = (u: string | null): void => {
+    if (!u || seen.has(u)) return;
+    seen.add(u);
+    out.push(u);
+  };
+
+  const visit = (node: unknown): void => {
+    if (node == null) return;
+    if (Array.isArray(node)) {
+      for (const item of node) visit(item);
+      return;
+    }
+    if (typeof node !== "object") return;
+    const o = node as Record<string, unknown>;
+    if ("data" in o) {
+      visit(o.data);
+      return;
+    }
+    push(mediaPreferredUrl(node));
+  };
+
+  visit(raw);
+  return out;
 }
 
 function pickRelationLabel(obj: Record<string, unknown>): string | null {
@@ -190,8 +229,9 @@ export function mapStrapiOutputToContentRow(
   const title = contentTitle || shortTitleRaw;
   const shortTitle = shortTitleRaw || contentTitle;
 
+  const imageGallery = collectMediaGalleryUrls(doc.Image);
   const thumbUrl = mediaPreferredUrl(doc.Thumbnail);
-  const imageUrl = thumbUrl ?? mediaPreferredUrl(doc.Image) ?? "";
+  const imageUrl = thumbUrl ?? imageGallery[0] ?? "";
 
   const textRaw = "Text" in doc ? doc.Text : undefined;
   const contentBlocks: BlocksContent | null = Array.isArray(textRaw)
@@ -212,6 +252,7 @@ export function mapStrapiOutputToContentRow(
     title,
     shortTitle,
     imageUrl,
+    imageGallery,
     content,
     contentBlocks,
     resources: resourcesFromDoc(doc),

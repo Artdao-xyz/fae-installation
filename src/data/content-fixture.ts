@@ -184,6 +184,10 @@ export const CONTENT_FIXTURE_ROWS: ContentRow[] = FIXTURE_SEED_TITLES.map(
       title,
       shortTitle: title,
       imageUrl: `https://picsum.photos/seed/${id}/220/220.webp`,
+      imageGallery: [
+        `https://picsum.photos/seed/${id}-g0/440/440.webp`,
+        `https://picsum.photos/seed/${id}-g1/440/440.webp`,
+      ],
       content: plainContent,
       contentBlocks: index === 0 ? FIXTURE_STRAPI_LIKE_BLOCKS_ROW0 : null,
       resources: pickResourcesForIndex(index),
@@ -205,6 +209,7 @@ export function toSlimCatalogRow(row: ContentRow): ContentRow {
     content: "",
     contentBlocks: null,
     resources: [],
+    imageGallery: [],
   };
 }
 

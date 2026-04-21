@@ -7,6 +7,11 @@ export type ContentRow = {
   /** Short label (`Short_Title`) — particle thumbnails and tile chrome. */
   shortTitle: string;
   imageUrl: string;
+  /**
+   * URLs from Strapi `Image` (repeatable media) — filled on detail fetch for preview carousel.
+   * Catalog list rows usually have `[]` until preview hydrates.
+   */
+  imageGallery: readonly string[];
   /** Plain text from blocks — search and fallbacks. */
   content: string;
   /** Strapi `Text` blocks JSON; rendered in preview via `@strapi/blocks-react-renderer`. */

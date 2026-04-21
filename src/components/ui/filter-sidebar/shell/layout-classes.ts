@@ -9,9 +9,9 @@ export const FILTER_SIDEBAR_COLUMN_CLASS =
  * Filter options strip: clip with `max-width` (avoids `fr` track interpolation feeling like
  * overshoot on open — same idea as `PREVIEW_DOCK_WIDTH_TRANSITION_CLASS`).
  */
-/** Use `width` (not `max-width` + `flex-1`) so flex doesn’t skip the interpolation. */
+/** Use `width` (not `max-width` + `flex-1`) so flex doesn’t skip the interpolation; `opacity` softens the reveal. */
 export const FILTER_OPTIONS_PANEL_CLIP_TRANSITION_CLASS =
-  "transition-[width] duration-300 ease-out motion-reduce:transition-none";
+  "transition-[width,opacity] duration-500 ease-in-out motion-reduce:transition-none";
 
 /** Domain subpanel stack column. */
 export const FILTER_SUBPANEL_COLUMN_TRANSITION_CLASS =

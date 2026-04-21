@@ -59,7 +59,7 @@ export function FilterSidebar() {
       >
         <HomeBar mergeWithSubpanel={anySubpanelOpen} />
         <div
-          className={`flex min-h-0 min-w-0 flex-1 flex-row overflow-hidden transition-colors duration-300 motion-reduce:transition-none ${
+          className={`flex min-h-0 min-w-0 flex-1 flex-row overflow-hidden transition-colors duration-500 ease-in-out motion-reduce:transition-none ${
             filtersOpen ? "bg-surface-canvas" : "bg-transparent"
           }`}
         >
@@ -71,8 +71,8 @@ export function FilterSidebar() {
           <div
             className={`h-full min-h-0 shrink-0 overflow-hidden ${FILTER_OPTIONS_PANEL_CLIP_TRANSITION_CLASS} ${
               filtersOpen
-                ? "w-[var(--width-filter-options)]"
-                : "w-0"
+                ? "w-[var(--width-filter-options)] opacity-100"
+                : "pointer-events-none w-0 opacity-0"
             }`}
           >
             <div className="h-full min-h-0 w-[var(--width-filter-options)] min-w-0 overflow-hidden">

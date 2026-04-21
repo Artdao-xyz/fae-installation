@@ -60,8 +60,11 @@ function strapiOutputsListStatus(): "draft" | "published" {
 }
 
 function appendOutputsDetailPopulate(params: URLSearchParams): void {
-  params.append("populate[Image]", "true");
-  params.append("populate[Thumbnail]", "true");
+  params.append("populate[Thumbnail][fields][0]", "url");
+  params.append("populate[Thumbnail][fields][1]", "formats");
+  /** Repeatable `Image` — request url + formats for each entry (carousel in preview). */
+  params.append("populate[Image][fields][0]", "url");
+  params.append("populate[Image][fields][1]", "formats");
   params.append("populate[Focus]", "true");
   params.append("populate[Activity]", "true");
   params.append("populate[Network]", "true");

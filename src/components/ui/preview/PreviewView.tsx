@@ -12,6 +12,7 @@ import { OpenSvgIcon } from "@/components/ui/icons/OpenSvgIcon";
 import { FilterPill } from "@/components/ui/filter-sidebar/primitives/FilterPill";
 import { PREVIEW_DOCK_WIDTH_TRANSITION_CLASS } from "@/components/ui/filter-sidebar/shell/layout-classes";
 import { PreviewBlocksBody } from "./PreviewBlocksBody";
+import { PreviewImageCarousel } from "./PreviewImageCarousel";
 import { PreviewPanelCollapseBar } from "./PreviewPanelCollapseBar";
 
 type PreviewViewProps = {
@@ -90,6 +91,16 @@ function CategoryBlock({
 }
 
 function PreviewMainContent({ row }: { row: ContentRow }) {
+  const previewSlides = useMemo(
+    () =>
+      row.imageGallery.length > 0
+        ? row.imageGallery
+        : row.imageUrl
+          ? [row.imageUrl]
+          : [],
+    [row.imageGallery, row.imageUrl],
+  );
+
   const paragraphs = useMemo(
     () => row.content.split(/\n\n+/).map((p) => p.trim()).filter(Boolean),
     [row.content],
@@ -116,14 +127,18 @@ function PreviewMainContent({ row }: { row: ContentRow }) {
   return (
     <>
       <div className="flex w-full shrink-0 items-start gap-5">
-        <div className="relative flex size-[205px] shrink-0 items-center justify-center overflow-hidden rounded-[3.677px] bg-surface-canvas">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={row.imageUrl}
+        {previewSlides.length > 0 ? (
+          <PreviewImageCarousel
+            key={previewSlides.join("\0")}
+            slides={previewSlides}
             alt={row.title}
-            className="pointer-events-none max-h-full max-w-full object-contain object-center"
           />
-        </div>
+        ) : (
+          <div
+            className="relative flex size-[205px] shrink-0 items-center justify-center overflow-hidden rounded-[3.677px] bg-surface-canvas"
+            aria-hidden
+          />
+        )}
         <div className="flex min-w-0 flex-1 flex-col items-start justify-start gap-2.5 leading-none">
           <p className="font-lust-text text-xl tracking-[-0.38px] text-black-fae">
             {row.title}
