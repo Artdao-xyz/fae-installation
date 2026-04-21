@@ -20,7 +20,12 @@ export const FILTER_DIM_MS = 320;
 /** Idle hover: full-card scale + background dim share this duration. */
 export const HOVER_CARD_MS = 420;
 /** Pointer must rest on a tile this long before hover chrome starts (reduces accidental hovers while moving). */
-export const HOVER_ENTER_DELAY_MS = 150;
+export const HOVER_ENTER_DELAY_MS = 220;
+/**
+ * Idle hover only counts if the pointer moved (or pressed) recently — otherwise drifting tiles
+ * under a stationary cursor fire spurious pointerenter.
+ */
+export const HOVER_POINTER_MOTION_MAX_AGE_MS = 1000;
 /** Minimum gap between card outer rects (px). */
 const SPREAD_GAP = 26;
 /** Non-selected tiles while spread is active (nearly invisible background). */

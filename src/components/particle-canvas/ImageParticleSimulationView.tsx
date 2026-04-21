@@ -52,6 +52,7 @@ import {
   FILTER_DIM_MS,
   HOVER_CARD_MS,
   HOVER_ENTER_DELAY_MS,
+  HOVER_POINTER_MOTION_MAX_AGE_MS,
   FILTER_BG_OPACITY_MUL,
   type FilterMatchMode,
   type SpreadLayoutPhase,
@@ -322,6 +323,8 @@ export function ImageParticleSimulationView({
   const hoverEnterDelayTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
   );
+  /** `null` until first qualifying pointer move/down this session; used to gate idle tile hover. */
+  const lastPointerMotionMsRef = useRef<number | null>(null);
 
   const clearHoverEnterDelay = useCallback(() => {
     if (hoverEnterDelayTimerRef.current !== null) {
@@ -330,9 +333,39 @@ export function ImageParticleSimulationView({
     }
   }, []);
 
+  useEffect(() => {
+    const markPointerActivity = (e: PointerEvent) => {
+      if (e.type === "pointermove" && e.pointerType === "mouse") {
+        if (e.movementX * e.movementX + e.movementY * e.movementY < 0.25) {
+          return;
+        }
+      }
+      lastPointerMotionMsRef.current = performance.now();
+    };
+    window.addEventListener("pointermove", markPointerActivity, {
+      passive: true,
+    });
+    window.addEventListener("pointerdown", markPointerActivity, {
+      passive: true,
+    });
+    return () => {
+      window.removeEventListener("pointermove", markPointerActivity);
+      window.removeEventListener("pointerdown", markPointerActivity);
+    };
+  }, []);
+
+  const pointerMotionRecentEnough = useCallback(() => {
+    const last = lastPointerMotionMsRef.current;
+    if (last === null) return false;
+    return (
+      performance.now() - last <= HOVER_POINTER_MOTION_MAX_AGE_MS
+    );
+  }, []);
+
   const handleTilePointerEnter = useCallback(
     (index: number) => {
       if (spreadChromeActive) return;
+      if (!pointerMotionRecentEnough()) return;
       clearHoverEnterDelay();
       const sys = systemRef.current;
       const p = sys?.particles[index];
@@ -340,6 +373,7 @@ export function ImageParticleSimulationView({
       hoverEnterDelayTimerRef.current = setTimeout(() => {
         hoverEnterDelayTimerRef.current = null;
         if (spreadChromeActiveRef.current) return;
+        if (!pointerMotionRecentEnough()) return;
         const sysInner = systemRef.current;
         const pt = sysInner?.particles[index];
         if (!pt) return;
@@ -351,7 +385,7 @@ export function ImageParticleSimulationView({
         setHoveredIndex(index);
       }, HOVER_ENTER_DELAY_MS);
     },
-    [clearHoverEnterDelay, spreadChromeActive],
+    [clearHoverEnterDelay, pointerMotionRecentEnough, spreadChromeActive],
   );
 
   const handleTilePointerLeave = useCallback(
