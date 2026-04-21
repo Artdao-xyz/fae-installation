@@ -94,13 +94,11 @@ export function LatestUpdatesPanel() {
 
   const peekClipWidthPx = useMemo(() => getLatestUpdatesPeekClipWidthPx(), []);
 
-  /** Three `lg` thumbnails + gap-8 + px-6; capped on narrow viewports. Open width via style so flex doesn’t collapse. */
   const peekClipStyle = peekOpen
     ? {
-        width: `min(${peekClipWidthPx}px, calc(100vw - 2.5rem - var(--width-filter-narrow-column)))`,
         maxWidth: `min(${peekClipWidthPx}px, calc(100vw - 2.5rem - var(--width-filter-narrow-column)))`,
       }
-    : { width: 0, maxWidth: 0 };
+    : { maxWidth: 0 };
 
   const peekClipClass = peekOpen
     ? "opacity-100"
@@ -129,7 +127,7 @@ export function LatestUpdatesPanel() {
         id={peekOpen ? panelId : undefined}
         role={peekOpen ? "region" : undefined}
         aria-label={peekOpen ? "Fellowships" : undefined}
-        className={`flex h-full min-h-0 shrink-0 overflow-hidden border-solid border-ink-primary ${FLOATING_DOCK_PEEK_CLIP_CLASS} ${peekClipClass} ${
+        className={`flex h-full min-h-0 min-w-0 shrink-0 overflow-hidden border-solid border-ink-primary ${FLOATING_DOCK_PEEK_CLIP_CLASS} ${peekClipClass} ${
           peekOpen ? "border-b-hairline" : ""
         }`}
         style={peekClipStyle}
