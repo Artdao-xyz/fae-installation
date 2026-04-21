@@ -28,8 +28,15 @@ export const HOVER_ENTER_DELAY_MS = 220;
 export const HOVER_POINTER_MOTION_MAX_AGE_MS = 1000;
 /** Minimum gap between card outer rects (px). */
 const SPREAD_GAP = 26;
-/** Non-selected tiles while spread is active (nearly invisible background). */
-export const FILTER_BG_OPACITY_MUL = 0.03;
+/**
+ * Non-selected tiles while spread is active — multiplied into particle opacity at full dim.
+ * Higher = closer to foreground; keep below 1 so matches still read as background.
+ */
+export const FILTER_BG_OPACITY_MUL = 0.08;
+/** Peak grayscale() for spread background tiles at full dim (0–1). */
+export const FILTER_BG_GRAYSCALE_MAX = 0.35;
+/** How much saturate() is reduced at full dim (1 → 1 - this). */
+export const FILTER_BG_DESAT_MUL = 0.3;
 
 /** RAF tick: idle physics vs easing into spread vs locked spread vs easing out. */
 export type SpreadLayoutPhase = "idle" | "enter" | "hold" | "leave";

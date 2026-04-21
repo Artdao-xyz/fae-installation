@@ -53,6 +53,8 @@ import {
   HOVER_CARD_MS,
   HOVER_ENTER_DELAY_MS,
   HOVER_POINTER_MOTION_MAX_AGE_MS,
+  FILTER_BG_DESAT_MUL,
+  FILTER_BG_GRAYSCALE_MAX,
   FILTER_BG_OPACITY_MUL,
   type FilterMatchMode,
   type SpreadLayoutPhase,
@@ -1322,9 +1324,11 @@ export function ImageParticleSimulationView({
             filterParts.push(`blur(${blurPx.toFixed(2)}px)`);
           }
           if (bgDimT > 0) {
-            filterParts.push(`grayscale(${(0.5 * bgDimT).toFixed(3)})`);
             filterParts.push(
-              `saturate(${(1 - 0.45 * bgDimT).toFixed(3)})`,
+              `grayscale(${(FILTER_BG_GRAYSCALE_MAX * bgDimT).toFixed(3)})`,
+            );
+            filterParts.push(
+              `saturate(${(1 - FILTER_BG_DESAT_MUL * bgDimT).toFixed(3)})`,
             );
           }
 
