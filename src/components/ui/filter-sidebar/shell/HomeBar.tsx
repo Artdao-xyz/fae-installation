@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useFilterSelection } from "@/components/ui/filter-sidebar/FilterSelectionContext";
@@ -23,34 +24,40 @@ export function HomeBar({
 }: HomeBarProps) {
   const { contentPreviewRow } = useFilterSelection();
   const [breadcrumbEntered, setBreadcrumbEntered] = useState(false);
-  const hadPreviewRef = useRef(false);
+  const prevPreviewIdRef = useRef<string | undefined>(undefined);
+
+  const previewId = contentPreviewRow?.id;
 
   useEffect(() => {
-    const id = contentPreviewRow?.id;
-    if (!id) {
-      hadPreviewRef.current = false;
-      setBreadcrumbEntered(false);
+    if (!previewId) {
+      prevPreviewIdRef.current = undefined;
       return;
     }
 
-    const opening = !hadPreviewRef.current;
-    hadPreviewRef.current = true;
+    const opening = prevPreviewIdRef.current === undefined;
+    prevPreviewIdRef.current = previewId;
 
     if (opening) {
-      setBreadcrumbEntered(false);
+      let raf0 = 0;
       let raf1 = 0;
       let raf2 = 0;
-      raf1 = requestAnimationFrame(() => {
-        raf2 = requestAnimationFrame(() => setBreadcrumbEntered(true));
+      raf0 = requestAnimationFrame(() => {
+        setBreadcrumbEntered(false);
+        raf1 = requestAnimationFrame(() => {
+          raf2 = requestAnimationFrame(() => setBreadcrumbEntered(true));
+        });
       });
       return () => {
+        cancelAnimationFrame(raf0);
         cancelAnimationFrame(raf1);
         cancelAnimationFrame(raf2);
       };
     }
 
-    setBreadcrumbEntered(true);
-  }, [contentPreviewRow]);
+    let reveal = 0;
+    reveal = requestAnimationFrame(() => setBreadcrumbEntered(true));
+    return () => cancelAnimationFrame(reveal);
+  }, [previewId]);
 
   return (
     <div
@@ -70,9 +77,12 @@ export function HomeBar({
           }`}
           aria-label="Breadcrumb"
         >
-          <img
+          <Image
             src="/svg/right-arrow.svg"
             alt=""
+            width={6}
+            height={8}
+            unoptimized
             className={breadcrumbArrowImgClassName}
             aria-hidden
           />
@@ -81,9 +91,12 @@ export function HomeBar({
           >
             Filters
           </span>
-          <img
+          <Image
             src="/svg/right-arrow.svg"
             alt=""
+            width={6}
+            height={8}
+            unoptimized
             className={breadcrumbArrowImgClassName}
             aria-hidden
           />

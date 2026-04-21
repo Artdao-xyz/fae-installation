@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useMemo, useState, type CSSProperties, type MutableRefObject, type Ref } from "react";
 import {
   SIZE_DIMS,
@@ -135,13 +136,16 @@ function ImageFrame({
       }`}
       style={{ width: dims.frame, height: dims.frame, ...frameTransitionStyle }}
     >
-      <img
+      <Image
         ref={(node) => assignRef(imageRef, node)}
         alt={imageAlt || label}
         src={imageSrc}
+        fill
+        sizes={`${dims.frame}px`}
+        unoptimized
         onLoad={() => setLoaded(true)}
         onError={() => setLoaded(true)}
-        className={`fae-thumbnail-reveal__img pointer-events-none absolute inset-0 size-full object-contain object-center ${
+        className={`fae-thumbnail-reveal__img pointer-events-none object-contain object-center ${
           loaded ? "opacity-100 scale-100" : "opacity-0 scale-[0.98]"
         }`}
         style={{

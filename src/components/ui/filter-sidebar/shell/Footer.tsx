@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { filterChromeRightEdgeClass } from "./layout-classes";
 
 type FooterProps = {
@@ -13,9 +14,12 @@ export function Footer({
     <footer
       className={`flex h-filter-chrome-bar shrink-0 items-center justify-between border-t-hairline border-solid border-ink-primary bg-surface-canvas px-3 py-0 ${filterChromeRightEdgeClass(mergeWithSubpanel)} ${className}`}
     >
-      <img
+      <Image
         src="/svg/serpentine.svg"
         alt="Serpentine"
+        width={48}
+        height={48}
+        unoptimized
         className="pointer-events-none w-12 shrink-0 object-contain"
         aria-hidden
       />

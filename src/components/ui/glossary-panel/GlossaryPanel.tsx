@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useCallback, useEffect, useId } from "react";
 import { useFloatingPanelStack } from "@/components/ui/floating-panels/FloatingPanelStackContext";
 import { FLOATING_DOCK_PEEK_CLIP_CLASS } from "@/components/ui/filter-sidebar/shell/layout-classes";
@@ -49,9 +50,12 @@ function GlossaryTabRail({
         />
         <span className={navSidebarVerticalLabelClassName}>Glossary</span>
       </div>
-      <img
+      <Image
         src="/svg/glossary.svg"
         alt=""
+        width={14}
+        height={14}
+        unoptimized
         className={`${navMarkIconImgClassName} mt-2 shrink-0`}
         aria-hidden
         draggable={false}

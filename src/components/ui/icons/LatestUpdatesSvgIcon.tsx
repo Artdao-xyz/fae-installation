@@ -1,10 +1,14 @@
+import Image from "next/image";
 import { navMarkIconImgClassName } from "./nav-sidebar-labels";
 
 export function LatestUpdatesSvgIcon({ className }: { className?: string }) {
   return (
-    <img
+    <Image
       src="/svg/latest-updates-panel.svg"
       alt=""
+      width={14}
+      height={14}
+      unoptimized
       className={`${navMarkIconImgClassName} ${className ?? ""}`}
       aria-hidden
       draggable={false}

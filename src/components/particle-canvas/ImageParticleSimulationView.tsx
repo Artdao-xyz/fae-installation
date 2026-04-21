@@ -638,6 +638,8 @@ export function ImageParticleSimulationView({
     );
 
     systemRef.current = sys;
+    // placementBounds w/h are applied without re-init via the resize effect below.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- avoid respawning when only viewport changes
   }, [contentRows, textWordsByRow]);
 
   // ---- Viewport for physics: resize without respawning (sidebar / subpanels / window) ----
