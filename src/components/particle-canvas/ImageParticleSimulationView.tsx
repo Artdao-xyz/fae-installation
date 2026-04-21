@@ -352,7 +352,10 @@ export function ImageParticleSimulationView({
   const spreadPrevSelectedRef = useRef<Set<number>>(new Set());
   const leaveFromRef = useRef<Vec3[]>([]);
   const leaveScaleFromRef = useRef<number[]>([]);
-  /** Per-index `offsetWidth` at filter-on (idle DOM), for scale continuity vs thumbnailFramePx guess. */
+  /**
+   * Per-index `offsetWidth` measured once when opening spread from idle (sm / text outer).
+   * In-place respreads must not refresh: nodes are lg-sized then and would break leave scale.
+   */
   const idleNodeWidthRef = useRef<number[] | null>(null);
   /** After leave `u>=1`, sync React to idle + re-apply DOM styles in the same tick (see flushSync in tick). */
   const leaveCompleteAfterRenderRef = useRef(false);
@@ -686,17 +689,19 @@ export function ImageParticleSimulationView({
       idleBlurRampIndicesRef.current = null;
       idleSnapshotRef.current = sysInner.particles.map(cloneParticle);
       const cfg = sysInner.cfg;
-      const idleW: number[] = new Array(sysInner.particles.length);
-      for (let ii = 0; ii < sysInner.particles.length; ii++) {
-        const el = nodeRefs.current[ii];
-        const ow = el?.offsetWidth ?? 0;
-        const pt = sysInner.particles[ii];
-        const fallbackW = pt?.isText
-          ? getThumbnailTextVariantOuterSize(thumbnailSize).width
-          : thumbnailFramePx;
-        idleW[ii] = ow > 0 ? ow : fallbackW;
+      if (!spreadInPlaceRespreadRef.current || idleNodeWidthRef.current === null) {
+        const idleW: number[] = new Array(sysInner.particles.length);
+        for (let ii = 0; ii < sysInner.particles.length; ii++) {
+          const el = nodeRefs.current[ii];
+          const ow = el?.offsetWidth ?? 0;
+          const pt = sysInner.particles[ii];
+          const fallbackW = pt?.isText
+            ? getThumbnailTextVariantOuterSize(thumbnailSize).width
+            : thumbnailFramePx;
+          idleW[ii] = ow > 0 ? ow : fallbackW;
+        }
+        idleNodeWidthRef.current = idleW;
       }
-      idleNodeWidthRef.current = idleW;
 
       const prevSpreadSelection = selectedIndicesRef.current.slice();
 
