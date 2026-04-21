@@ -5,7 +5,7 @@ import { ActivityType } from "../sections/ActivityType";
 import { ArtistsMenu } from "../sections/ArtistsMenu";
 import { EditorialMenu } from "../sections/EditorialMenu";
 import { FAEBriefingsMenu } from "../sections/FAEBriefingsMenu";
-import { FellowshipsMenu } from "../sections/FellowshipsMenu";
+import { LatestUpdatesMenu } from "../sections/LatestUpdatesMenu";
 import { FocusAreas } from "../sections/FocusAreas";
 import { Format } from "../sections/Format";
 import { NetworkMenu } from "../sections/NetworkMenu";
@@ -67,7 +67,7 @@ export function FilterOptionsPanel({
             subpanelOpen={briefingsSubpanelOpen}
             onToggleSubpanel={onToggleBriefingsSubpanel}
           />
-          <FellowshipsMenu />
+          <LatestUpdatesMenu />
           <RDProjectsMenu
             subpanelOpen={rdSubpanelOpen}
             onToggleSubpanel={onToggleRdSubpanel}

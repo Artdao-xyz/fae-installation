@@ -4,35 +4,93 @@ import {
   createContext,
   useCallback,
   useContext,
-  useLayoutEffect,
   useMemo,
   useState,
+  type Dispatch,
   type ReactNode,
+  type SetStateAction,
 } from "react";
 
-export type FloatingPanelKey = "about" | "glossary" | "fellowships";
+export type FloatingPanelKey = "about" | "glossary" | "latestUpdates";
 
 export type FloatingPanelPhase = "minimized" | "peek" | "full";
+
+export type AboutPanelView = "minimized" | "peek" | "full";
+export type DockPanelView = "minimized" | "peek";
+
+/** Right floating stack: About starts minimized; `AboutPanel` opens peek after a short delay. */
+const INITIAL_ABOUT: AboutPanelView = "minimized";
+const INITIAL_GLOSSARY: DockPanelView = "minimized";
+const INITIAL_LATEST_UPDATES: DockPanelView = "minimized";
 
 const BASE_MINIMIZED_Z = 52;
 const PEEK_BASE_Z = 54;
 const ABOUT_FULL_Z = 60;
 
+type PanelsState = {
+  about: AboutPanelView;
+  glossary: DockPanelView;
+  latestUpdates: DockPanelView;
+};
+
 type Ctx = {
   getChromeZIndex: (id: FloatingPanelKey, phase: FloatingPanelPhase) => number;
-  setPanelPhase: (id: FloatingPanelKey, phase: FloatingPanelPhase) => void;
+  aboutView: AboutPanelView;
+  setAboutView: Dispatch<SetStateAction<AboutPanelView>>;
+  glossaryView: DockPanelView;
+  setGlossaryView: Dispatch<SetStateAction<DockPanelView>>;
+  latestUpdatesView: DockPanelView;
+  setLatestUpdatesView: Dispatch<SetStateAction<DockPanelView>>;
 };
 
 const FloatingPanelStackContext = createContext<Ctx | null>(null);
 
-export function FloatingPanelStackProvider({ children }: { children: ReactNode }) {
-  const [expandedStack, setExpandedStack] = useState<FloatingPanelKey[]>([]);
+function peekOrder(p: PanelsState): FloatingPanelKey[] {
+  const order: FloatingPanelKey[] = [];
+  if (p.about === "peek") order.push("about");
+  if (p.glossary === "peek") order.push("glossary");
+  if (p.latestUpdates === "peek") order.push("latestUpdates");
+  return order;
+}
 
-  const setPanelPhase = useCallback((id: FloatingPanelKey, phase: FloatingPanelPhase) => {
-    setExpandedStack((prev) => {
-      if (phase === "minimized") return prev.filter((k) => k !== id);
-      if (prev.includes(id)) return prev;
-      return [...prev, id];
+export function FloatingPanelStackProvider({ children }: { children: ReactNode }) {
+  const [panels, setPanels] = useState<PanelsState>({
+    about: INITIAL_ABOUT,
+    glossary: INITIAL_GLOSSARY,
+    latestUpdates: INITIAL_LATEST_UPDATES,
+  });
+
+  const setAboutView = useCallback((next: SetStateAction<AboutPanelView>) => {
+    setPanels((prev) => {
+      const about = typeof next === "function" ? next(prev.about) : next;
+      const u: PanelsState = { ...prev, about };
+      /** Opening About (peek or full) dismisses Glossary only; Latest updates may stay open. */
+      if (about === "peek" || about === "full") u.glossary = "minimized";
+      return u;
+    });
+  }, []);
+
+  const setGlossaryView = useCallback((next: SetStateAction<DockPanelView>) => {
+    setPanels((prev) => {
+      const glossary = typeof next === "function" ? next(prev.glossary) : next;
+      const u: PanelsState = { ...prev, glossary };
+      /** Glossary peek closes About (any mode) and Latest updates. */
+      if (glossary === "peek") {
+        u.about = "minimized";
+        u.latestUpdates = "minimized";
+      }
+      return u;
+    });
+  }, []);
+
+  const setLatestUpdatesView = useCallback((next: SetStateAction<DockPanelView>) => {
+    setPanels((prev) => {
+      const latestUpdates =
+        typeof next === "function" ? next(prev.latestUpdates) : next;
+      const u: PanelsState = { ...prev, latestUpdates };
+      /** Opening Latest updates (peek) dismisses Glossary. */
+      if (latestUpdates === "peek") u.glossary = "minimized";
+      return u;
     });
   }, []);
 
@@ -40,15 +98,32 @@ export function FloatingPanelStackProvider({ children }: { children: ReactNode }
     (id: FloatingPanelKey, phase: FloatingPanelPhase) => {
       if (phase === "full" && id === "about") return ABOUT_FULL_Z;
       if (phase === "minimized") return BASE_MINIMIZED_Z;
-      const idx = expandedStack.indexOf(id);
+      const order = peekOrder(panels);
+      const idx = order.indexOf(id);
       return PEEK_BASE_Z + Math.max(0, idx);
     },
-    [expandedStack],
+    [panels],
   );
 
-  const value = useMemo(
-    () => ({ getChromeZIndex, setPanelPhase }),
-    [getChromeZIndex, setPanelPhase],
+  const value = useMemo<Ctx>(
+    () => ({
+      getChromeZIndex,
+      aboutView: panels.about,
+      setAboutView,
+      glossaryView: panels.glossary,
+      setGlossaryView,
+      latestUpdatesView: panels.latestUpdates,
+      setLatestUpdatesView,
+    }),
+    [
+      getChromeZIndex,
+      panels.about,
+      panels.glossary,
+      panels.latestUpdates,
+      setAboutView,
+      setGlossaryView,
+      setLatestUpdatesView,
+    ],
   );
 
   return (
@@ -64,13 +139,4 @@ export function useFloatingPanelStack() {
     throw new Error("FloatingPanelStackProvider is required");
   }
   return ctx;
-}
-
-/** Keeps stack order in sync before paint so z-index matches interaction. */
-export function useFloatingPanelPhase(id: FloatingPanelKey, phase: FloatingPanelPhase) {
-  const { setPanelPhase } = useFloatingPanelStack();
-  useLayoutEffect(() => {
-    setPanelPhase(id, phase);
-    return () => setPanelPhase(id, "minimized");
-  }, [id, phase, setPanelPhase]);
 }

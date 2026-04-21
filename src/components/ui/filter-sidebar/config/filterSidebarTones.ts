@@ -1,6 +1,6 @@
 export type FilterSidebarCategoryTone =
   | "fae-briefings"
-  | "fellowships"
+  | "latest-updates"
   | "rd"
   | "editorial"
   | "artists"
@@ -12,7 +12,7 @@ export const categoryMarkerImageSrc: Record<
   string
 > = {
   "fae-briefings": "/svg/briefing.svg",
-  fellowships: "/svg/fellowship.svg",
+  "latest-updates": "/svg/latest-updates.svg",
   /** Filename on disk is `r&d.svg`; `&` must be encoded in the URL path. */
   rd: "/svg/r%26d.svg",
   editorial: "/svg/editorial.svg",
@@ -28,9 +28,9 @@ export const toneAccentClass: Record<
     glow: "bg-filter-category-fae-briefings",
     marker: "text-filter-category-fae-briefings",
   },
-  fellowships: {
-    glow: "bg-filter-category-fellowships",
-    marker: "text-filter-category-fellowships",
+  "latest-updates": {
+    glow: "bg-filter-category-latest-updates",
+    marker: "text-filter-category-latest-updates",
   },
   rd: {
     glow: "bg-filter-category-rd",
@@ -52,7 +52,7 @@ export const toneAccentClass: Record<
 
 export const toneSelectedBorderClass: Record<FilterSidebarCategoryTone, string> = {
   "fae-briefings": "border-filter-category-fae-briefings",
-  fellowships: "border-filter-category-fellowships",
+  "latest-updates": "border-filter-category-latest-updates",
   rd: "border-filter-category-rd",
   editorial: "border-filter-category-editorial",
   artists: "border-filter-category-artists",

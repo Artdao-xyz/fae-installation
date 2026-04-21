@@ -39,3 +39,14 @@ export function getThumbnailTextVariantOuterSize(
     height: d.labelMinH + 12,
   };
 }
+
+/**
+ * Latest updates peek clip width: three `lg` full cards + horizontal gaps + horizontal padding
+ * (aligned with `LatestUpdatesPanel` row: `gap-8` + `px-6` at `sm+`).
+ */
+export function getLatestUpdatesPeekClipWidthPx(): number {
+  const { width } = getThumbnailFullCardOuterSize("lg");
+  const gapPx = 32; // gap-8 (2rem)
+  const padXPx = 24; // px-6 (1.5rem) each side
+  return 3 * width + 2 * gapPx + 2 * padXPx;
+}

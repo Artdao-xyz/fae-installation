@@ -1,9 +1,9 @@
 import { navMarkIconImgClassName } from "./nav-sidebar-labels";
 
-export function FellowshipsSvgIcon({ className }: { className?: string }) {
+export function LatestUpdatesSvgIcon({ className }: { className?: string }) {
   return (
     <img
-      src="/svg/fellowships.svg"
+      src="/svg/latest-updates-panel.svg"
       alt=""
       className={`${navMarkIconImgClassName} ${className ?? ""}`}
       aria-hidden

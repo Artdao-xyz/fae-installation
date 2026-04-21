@@ -13,6 +13,10 @@ export const FILTER_SIDEBAR_COLUMN_CLASS =
 export const FILTER_OPTIONS_PANEL_CLIP_TRANSITION_CLASS =
   "transition-[width,opacity] duration-500 ease-in-out motion-reduce:transition-none";
 
+/** About / Glossary / Latest updates peek bodies: clip with `max-width` + fade (matches filter strip timing). */
+export const FLOATING_DOCK_PEEK_CLIP_CLASS =
+  "transition-[max-width,opacity] duration-500 ease-in-out motion-reduce:transition-none";
+
 /** Domain subpanel stack column. */
 export const FILTER_SUBPANEL_COLUMN_TRANSITION_CLASS =
   "transition-[max-width,min-width,width,opacity] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] motion-reduce:transition-none";

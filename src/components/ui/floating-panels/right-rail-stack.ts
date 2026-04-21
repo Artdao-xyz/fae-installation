@@ -6,10 +6,10 @@ import { getThumbnailFullCardOuterSize } from "@/components/ui/thumbnail-full/th
  */
 export const RIGHT_FLOAT_VIEWPORT_INSET = "2.125rem";
 
-/** Matches minimized `AboutTabRail`: `min-h-[120px]`. */
-export const ABOUT_MINIMIZED_RAIL_HEIGHT_PX = 120;
-
-/** Matches `FellowshipsPanel` minimized wrapper height. */
-export function fellowshipsMinimizedOuterHeightPx(): number {
+/**
+ * Shared fixed outer height for About + Latest Updates docks (minimized and peek).
+ * Matches the Latest Updates minimized rail (thumbnail lg + padding) so the column stays aligned.
+ */
+export function floatingDockPanelOuterHeightPx(): number {
   return getThumbnailFullCardOuterSize("lg").height + 40;
 }

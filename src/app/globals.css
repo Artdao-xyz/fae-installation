@@ -57,7 +57,7 @@
   --color-surface-hover: #e0e0e0;
 
   --color-filter-category-fae-briefings: var(--color-ink-primary);
-  --color-filter-category-fellowships: #0000ff;
+  --color-filter-category-latest-updates: #0000ff;
   /** Shared selected state for filter pills (dotted / rounded / square). */
   --color-filter-pill-selection: #0000ff;
   --color-filter-category-rd: #9005cc;
@@ -86,6 +86,13 @@
   --height-format-icon: 25px;
 
   --width-about-panel: 580px;
+  /**
+   * Latest updates peek clip `max-width` only (same distance as About body); not `--width-*`
+   * so Tailwind does not emit a conflicting `w-*` utility.
+   */
+  --fae-dock-peek-body-max: calc(
+    var(--width-about-panel) - var(--width-filter-narrow-column)
+  );
   /** Glossary peek column (Figma: glossary drawer; narrower than About for reading measure). */
   --width-glossary-panel: min(
     420px,
@@ -95,7 +102,7 @@
   --width-preview-panel: 25vw;
 
   --max-height-about-panel: min(70dvh, calc(100dvh - 2.5rem));
-  --max-height-fellowships-panel: min(85dvh, calc(100dvh - 2.5rem));
+  --max-height-latest-updates-panel: min(85dvh, calc(100dvh - 2.5rem));
   --max-width-floating-panel: calc(100vw - 2.5rem);
 }
 

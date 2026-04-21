@@ -1,15 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useId, useState } from "react";
-import {
-  useFloatingPanelPhase,
-  useFloatingPanelStack,
-} from "@/components/ui/floating-panels/FloatingPanelStackContext";
+import { useCallback, useEffect, useId } from "react";
+import { useFloatingPanelStack } from "@/components/ui/floating-panels/FloatingPanelStackContext";
+import { FLOATING_DOCK_PEEK_CLIP_CLASS } from "@/components/ui/filter-sidebar/shell/layout-classes";
 import { AboutSvgIcon } from "@/components/ui/icons/AboutSvgIcon";
 import { OpenSvgIcon } from "@/components/ui/icons/OpenSvgIcon";
 import { navSidebarVerticalLabelClassName } from "@/components/ui/icons/nav-sidebar-labels";
-
-type View = "minimized" | "peek" | "full";
+import { floatingDockPanelOuterHeightPx } from "@/components/ui/floating-panels/right-rail-stack";
 
 const ABOUT_BODY = (
   <>
@@ -106,13 +103,11 @@ function AboutTabRail({
   onClick,
   ariaExpanded,
   ariaControls,
-  showRightDivider = false,
 }: {
   arrowClassName?: string;
   onClick: () => void;
   ariaExpanded: boolean;
   ariaControls: string;
-  showRightDivider?: boolean;
 }) {
   return (
     <button
@@ -120,12 +115,16 @@ function AboutTabRail({
       aria-expanded={ariaExpanded}
       aria-controls={ariaControls}
       onClick={onClick}
-      className={`flex min-h-[120px] w-filter-narrow-column shrink-0 flex-col items-center border-solid border-ink-primary bg-surface-canvas/90 py-2.5 backdrop-blur-fae-sm transition-colors hover:bg-surface-hover/80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary ${
-        showRightDivider ? "border-r-hairline" : ""
+      className={`flex h-full min-h-0 w-filter-narrow-column shrink-0 flex-col items-center self-stretch border-b-0 border-solid border-ink-primary bg-surface-canvas/90 py-2.5 backdrop-blur-fae-sm transition-colors hover:bg-surface-hover/80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary ${
+        ariaExpanded ? "border-r-hairline" : ""
       }`}
     >
       <div className="flex min-h-[72px] w-full flex-1 flex-col items-center justify-between px-0.5">
-        <OpenSvgIcon className={arrowClassName ?? ""} />
+        <OpenSvgIcon
+          className={`${arrowClassName ?? ""} transition-transform duration-500 ease-in-out motion-reduce:transition-none ${
+            ariaExpanded ? "rotate-180" : ""
+          }`}
+        />
         <span className={navSidebarVerticalLabelClassName}>About</span>
       </div>
       <AboutSvgIcon className="mt-2" />
@@ -135,66 +134,74 @@ function AboutTabRail({
 
 export function AboutPanel() {
   const panelId = useId();
-  const [view, setView] = useState<View>("minimized");
-  const { getChromeZIndex } = useFloatingPanelStack();
-  useFloatingPanelPhase("about", view);
+  const dockOuterH = floatingDockPanelOuterHeightPx();
+  const { aboutView, setAboutView, getChromeZIndex } = useFloatingPanelStack();
 
-  const openPeek = useCallback(() => setView("peek"), []);
-  const openFull = useCallback(() => setView("full"), []);
-  const closeFull = useCallback(() => setView("peek"), []);
-  const minimize = useCallback(() => setView("minimized"), []);
+  const openFull = useCallback(() => setAboutView("full"), [setAboutView]);
+  const closeFull = useCallback(() => setAboutView("peek"), [setAboutView]);
 
   useEffect(() => {
-    if (view !== "full") return;
+    if (aboutView !== "full") return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") closeFull();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [view, closeFull]);
+  }, [aboutView, closeFull]);
 
   useEffect(() => {
-    if (view !== "full") return;
+    if (aboutView !== "full") return;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = previousOverflow;
     };
-  }, [view]);
+  }, [aboutView]);
+
+  /** Start closed on load, then match the filter-sidebar-style peek open after 1s if still minimized. */
+  useEffect(() => {
+    const id = window.setTimeout(() => {
+      setAboutView((v) => (v === "minimized" ? "peek" : v));
+    }, 1000);
+    return () => window.clearTimeout(id);
+  }, [setAboutView]);
+
+  const toggleDock = useCallback(() => {
+    setAboutView((v) => (v === "peek" ? "minimized" : "peek"));
+  }, [setAboutView]);
+
+  const peekOpen = aboutView === "peek";
+  const peekClipClass = peekOpen
+    ? "max-w-[calc(var(--width-about-panel)-var(--width-filter-narrow-column))] opacity-100"
+    : "max-w-0 opacity-0 pointer-events-none";
 
   return (
     <>
-      {view === "minimized" ? (
+      {aboutView !== "full" ? (
         <div
-          className="fixed top-8.5 right-8.5 border-hairline border-solid border-ink-primary"
-          style={{ zIndex: getChromeZIndex("about", "minimized") }}
+          className={`fixed top-8.5 right-8.5 flex min-h-0 max-h-about-panel flex-row items-stretch overflow-hidden border-solid border-ink-primary bg-surface-canvas/90 shadow-none backdrop-blur-fae-md ${
+            peekOpen ? "border-hairline" : "border-hairline border-b-0"
+          }`}
+          style={{
+            zIndex: getChromeZIndex("about", peekOpen ? "peek" : "minimized"),
+            height: `${dockOuterH}px`,
+            minHeight: `${dockOuterH}px`,
+          }}
         >
           <AboutTabRail
             arrowClassName="-scale-x-100"
-            onClick={openPeek}
-            ariaExpanded={false}
+            onClick={toggleDock}
+            ariaExpanded={peekOpen}
             ariaControls={panelId}
           />
-        </div>
-      ) : null}
 
-      {view === "peek" ? (
-        <div
-          id={panelId}
-          role="region"
-          aria-label="About"
-          className="fixed top-8.5 right-8.5 flex max-h-about-panel w-about-panel overflow-hidden border-hairline border-solid border-ink-primary bg-surface-canvas/90 shadow-none backdrop-blur-fae-md motion-reduce:transition-none"
-          style={{ zIndex: getChromeZIndex("about", "peek") }}
-        >
-          <div className="flex min-h-0 min-w-0 flex-1 flex-row">
-            <AboutTabRail
-              onClick={minimize}
-              ariaExpanded={true}
-              ariaControls={panelId}
-              showRightDivider
-            />
-
-            <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+          <div
+            id={peekOpen ? panelId : undefined}
+            role={peekOpen ? "region" : undefined}
+            aria-label={peekOpen ? "About" : undefined}
+            className={`h-full min-h-0 shrink-0 overflow-hidden ${FLOATING_DOCK_PEEK_CLIP_CLASS} ${peekClipClass}`}
+          >
+            <div className="flex h-full min-h-0 w-[calc(var(--width-about-panel)-var(--width-filter-narrow-column))] shrink-0 flex-col">
               <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pt-5">
                 <div className="font-suisseintl text-xs font-normal leading-[1.6] text-ink-body">
                   {ABOUT_BODY}
@@ -216,7 +223,7 @@ export function AboutPanel() {
         </div>
       ) : null}
 
-      {view === "full" ? (
+      {aboutView === "full" ? (
         <div
           className="fixed inset-0 flex flex-col bg-surface-canvas motion-reduce:transition-none"
           style={{ zIndex: getChromeZIndex("about", "full") }}

@@ -1,14 +1,11 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useRef, useSyncExternalStore } from "react";
 import {
   FilterSidebar,
   FilterSelectionProvider,
 } from "@/components/ui/filter-sidebar";
-import { AboutPanel } from "@/components/ui/about-panel/AboutPanel";
-import { GlossaryPanel } from "@/components/ui/glossary-panel";
-import { FloatingPanelStackProvider } from "@/components/ui/floating-panels/FloatingPanelStackContext";
-import { FellowshipsPanel } from "@/components/ui/fellowships-panel/FellowshipsPanel";
 import { HeroTitleBlock } from "@/components/ui/hero-title-block";
 import { MarginGuideFrame } from "@/components/ui/margin-guide-frame";
 import { PixelTessellationBackground } from "@/components/ui/pixel-tessellation-background";
@@ -24,6 +21,14 @@ const FETCHED_WIDTH = 440 * RES_MULTIPLIER;
 const FETCHED_HEIGHT = 440 * RES_MULTIPLIER;
 const DISPLAYED_WIDTH = 75 * RES_MULTIPLIER;
 const DISPLAYED_HEIGHT = 75 * RES_MULTIPLIER;
+
+const FloatingDockMount = dynamic(
+  () =>
+    import("@/components/ui/floating-panels/FloatingDockMount").then(
+      (m) => m.FloatingDockMount,
+    ),
+  { ssr: false },
+);
 
 function readStoredMode(): Mode {
   const legacy = window.localStorage.getItem("fae-image-test-mode");
@@ -52,11 +57,7 @@ export default function Home() {
       <div className="flex min-h-screen w-full">
         <FilterSidebar />
         <PixelTessellationBackground />
-        <FloatingPanelStackProvider>
-          <AboutPanel />
-          <GlossaryPanel />
-          <FellowshipsPanel />
-        </FloatingPanelStackProvider>
+        <FloatingDockMount />
         <main className="relative z-1 flex min-h-0 min-w-0 flex-1 flex-col p-5 text-ink-body">
           <MarginGuideFrame />
           <HeroTitleBlock
