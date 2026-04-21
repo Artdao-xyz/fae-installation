@@ -67,9 +67,13 @@ export function HeroTitleBlock({ title, subtitle, className = "" }: Props) {
       ? getFilterSubpanelColumnWidthPx(innerWidth) / 2
       : 0;
 
+  /** Open: align to main column (incl. desktop 35px nudge). Closed: center in full viewport. */
   const useSubpanelShift = filtersPanelOpen && filterSubpanelsOpen;
 
-  /** Open: align to main column (incl. desktop 35px nudge). Closed: center in full viewport. */
+  /**
+   * Use Tailwind translate for normal centering; inline `transform` only when subpanel needs px shift.
+   * (Always applying translate via `style` broke alignment with `md:left-[calc(50%-…)]` in some layouts.)
+   */
   const positionClass = filtersPanelOpen
     ? `absolute top-1/2 left-1/2 md:left-[calc(50%-var(--width-filter-narrow-column))]${
         useSubpanelShift ? "" : " -translate-x-1/2 -translate-y-1/2"
@@ -80,7 +84,7 @@ export function HeroTitleBlock({ title, subtitle, className = "" }: Props) {
 
   return (
     <div
-      className={`z-20 flex flex-col items-start justify-center transition-opacity duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] motion-reduce:transition-none whitespace-nowrap ${positionClass} ${
+      className={`z-20 flex flex-col items-start justify-center whitespace-nowrap transition-opacity duration-300 ease-out motion-reduce:transition-none ${positionClass} ${
         filterActive ? "pointer-events-none opacity-0" : "opacity-100"
       } ${className}`}
       style={

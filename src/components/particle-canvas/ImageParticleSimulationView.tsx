@@ -55,6 +55,7 @@ import type {
   ImageParticleSimulationMode,
   ImageParticleSimulationStats,
 } from "./image-particle-types";
+import { IDLE_DEPTH_BLUR_DISABLED } from "./config";
 
 const ROW_IMAGE_ATTR = "data-row-image";
 
@@ -370,6 +371,10 @@ export function ImageParticleSimulationView({
     () => getThumbnailFullCardOuterSize("lg"),
     [],
   );
+
+  /** Idle orbit fits the lg full-card thumbnail inside the smaller `thumbnailFramePx` box via CSS scale. */
+  const lgFramePx = useMemo(() => getThumbnailFramePx("lg"), []);
+  const idleOrbitThumbScale = thumbnailFramePx / lgFramePx;
 
   const textIdleOuter = useMemo(
     () => getThumbnailTextVariantOuterSize(thumbnailSize),
@@ -1022,7 +1027,14 @@ export function ImageParticleSimulationView({
           const gate = Math.max(1e-4, c.blurFarGate);
           const farBlend = clamp((gate - sizeT) / gate, 0, 1);
           let blurPx = c.blurMax * farBlend * farBlend;
-          if (cardActive || spreadLayoutBg || hoverIdleDimmed) blurPx = 0;
+          if (
+            IDLE_DEPTH_BLUR_DISABLED ||
+            cardActive ||
+            spreadLayoutBg ||
+            hoverIdleDimmed
+          ) {
+            blurPx = 0;
+          }
           else {
             const t0 = idleBlurRampT0Ref.current;
             const rampSet = idleBlurRampIndicesRef.current;
@@ -1302,13 +1314,27 @@ export function ImageParticleSimulationView({
                       height: `${thumbnailFramePx}px`,
                       marginLeft: `${-thumbnailFramePx / 2}px`,
                       marginTop: `${-thumbnailFramePx / 2}px`,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
                     }
               }
             >
-              {showChromeCard ? (
+              <div
+                style={
+                  showChromeCard
+                    ? undefined
+                    : {
+                        transform: `scale(${idleOrbitThumbScale})`,
+                        transformOrigin: "center center",
+                        willChange: "transform",
+                      }
+                }
+              >
                 <Thumbnail
                   variant="full"
                   size="lg"
+                  showLabelChip={showChromeCard}
                   label={row.shortTitle}
                   imageSrc={row.imageUrl}
                   imageAlt={row.shortTitle}
@@ -1316,18 +1342,7 @@ export function ImageParticleSimulationView({
                     imgRefs.current[i] = el;
                   }}
                 />
-              ) : (
-                <Thumbnail
-                  variant="image"
-                  size={thumbnailSize}
-                  label={row.shortTitle}
-                  imageSrc={row.imageUrl}
-                  imageAlt={row.shortTitle}
-                  imageRef={(el) => {
-                    imgRefs.current[i] = el;
-                  }}
-                />
-              )}
+              </div>
             </div>
           );
         })}

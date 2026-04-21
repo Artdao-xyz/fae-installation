@@ -26,7 +26,17 @@ type BaseProps = {
 };
 
 export type ThumbnailProps =
-  | (BaseProps & { variant?: "full"; imageSrc: string; imageAlt?: string })
+  | (BaseProps & {
+      variant?: "full";
+      imageSrc: string;
+      imageAlt?: string;
+      /**
+       * `false` = collapse the label chip (orbit idle) while keeping the same image frame mounted.
+       * Avoid toggling `variant` image ↔ full — that remounts `<img>` and makes idle look soft until
+       * hover re-decodes at a larger layout box.
+       */
+      showLabelChip?: boolean;
+    })
   | (BaseProps & { variant: "text" })
   | (BaseProps & { variant: "image"; imageSrc: string; imageAlt?: string });
 
@@ -163,17 +173,27 @@ export function Thumbnail(props: ThumbnailProps) {
   const variant = props.variant ?? "full";
   const dims = SIZE_DIMS[size];
 
-  const showLabel = variant === "full" || variant === "text";
+  const suppressLabelChip =
+    variant === "full" &&
+    "showLabelChip" in props &&
+    props.showLabelChip === false;
+
+  const showLabelText = variant === "text";
   const showImage = variant === "full" || variant === "image";
   const imageSrc = "imageSrc" in props ? props.imageSrc : undefined;
   const imageAlt = "imageSrc" in props ? props.imageAlt : undefined;
 
-  const gapStyle = variant === "full" ? { gap: dims.gapPx } : undefined;
+  const gapStyle =
+    variant === "full"
+      ? { gap: suppressLabelChip ? 0 : dims.gapPx }
+      : undefined;
   const textOuter =
     variant === "text" ? getThumbnailTextVariantOuterSize(size) : null;
   /** Full card: fixed outer box so label length never changes image frame size (spread/sim). */
   const fullOuter =
-    variant === "full" ? getThumbnailFullCardOuterSize(size) : null;
+    variant === "full" && !suppressLabelChip
+      ? getThumbnailFullCardOuterSize(size)
+      : null;
 
   return (
     <div
@@ -203,7 +223,24 @@ export function Thumbnail(props: ThumbnailProps) {
         ...style,
       }}
     >
-      {showLabel && (
+      {variant === "full" && (
+        <div
+          className={
+            suppressLabelChip
+              ? "h-0 overflow-hidden opacity-0 pointer-events-none"
+              : undefined
+          }
+          aria-hidden={suppressLabelChip}
+        >
+          <LabelChip
+            label={label}
+            dims={dims}
+            labelRef={labelRef}
+            accessibilityLabel={accessibilityLabel}
+          />
+        </div>
+      )}
+      {showLabelText && (
         <LabelChip
           label={label}
           dims={dims}
@@ -213,7 +250,6 @@ export function Thumbnail(props: ThumbnailProps) {
       )}
       {showImage && imageSrc !== undefined && (
         <ImageFrame
-          key={imageSrc}
           imageSrc={imageSrc}
           imageAlt={imageAlt}
           label={label}

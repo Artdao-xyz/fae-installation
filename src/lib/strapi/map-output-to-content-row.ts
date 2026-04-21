@@ -6,13 +6,37 @@ type StrapiMedia = {
   formats?: Record<string, { url?: unknown } | undefined>;
 };
 
+/** Strapi + Cloudinary `formats` keys — try largest derivatives first when `url` is absent. */
+const STRAPI_FORMAT_URL_PRIORITY = [
+  "xlarge",
+  "large",
+  "xlarge_webp",
+  "large_webp",
+  "medium",
+  "medium_webp",
+  "small",
+  "small_webp",
+  "thumbnail",
+  "thumbnail_webp",
+] as const;
+
 function mediaPreferredUrl(media: unknown): string | null {
   if (!media || typeof media !== "object") return null;
   const m = media as StrapiMedia;
   if (typeof m.url === "string" && m.url.length > 0) return m.url;
   if (m.formats && typeof m.formats === "object") {
-    for (const key of ["small", "medium", "thumbnail", "large"] as const) {
-      const f = m.formats[key];
+    const fmt = m.formats as Record<string, { url?: unknown } | undefined>;
+    for (const key of STRAPI_FORMAT_URL_PRIORITY) {
+      const f = fmt[key];
+      if (f && typeof f.url === "string" && f.url.length > 0) return f.url;
+    }
+    for (const key of Object.keys(fmt)) {
+      if (
+        (STRAPI_FORMAT_URL_PRIORITY as readonly string[]).includes(key)
+      ) {
+        continue;
+      }
+      const f = fmt[key];
       if (f && typeof f.url === "string" && f.url.length > 0) return f.url;
     }
   }
@@ -167,8 +191,7 @@ export function mapStrapiOutputToContentRow(
   const shortTitle = shortTitleRaw || contentTitle;
 
   const thumbUrl = mediaPreferredUrl(doc.Thumbnail);
-  const imageUrl =
-    thumbUrl ?? mediaPreferredUrl(doc.Image) ?? "";
+  const imageUrl = thumbUrl ?? mediaPreferredUrl(doc.Image) ?? "";
 
   const textRaw = "Text" in doc ? doc.Text : undefined;
   const contentBlocks: BlocksContent | null = Array.isArray(textRaw)
