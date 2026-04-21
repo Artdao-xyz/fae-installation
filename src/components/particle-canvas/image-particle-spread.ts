@@ -82,6 +82,53 @@ export function pickSpreadIndicesFromRows(
   return ordered.slice(0, cap);
 }
 
+/** Image tiles before text tiles, preserving incoming order within each bucket. */
+function orderSpreadIndicesImageFirst(
+  indices: readonly number[],
+  textIndexSet: Set<number>,
+  contentRowCount: number,
+): number[] {
+  const preferImages: number[] = [];
+  const rest: number[] = [];
+  for (const i of indices) {
+    if (i < 0 || i >= contentRowCount) continue;
+    if (textIndexSet.has(i)) rest.push(i);
+    else preferImages.push(i);
+  }
+  return [...preferImages, ...rest];
+}
+
+/**
+ * Preview sources: **all linked indices** (image-first within that group) come before **any**
+ * related indices (image-first within related). Then viewport / {@link FILTER_MAX} cap — same
+ * as filter spread, without letting related image tiles displace linked text tiles.
+ */
+export function pickSpreadIndicesLinkedThenRelated(
+  contentRows: ContentRow[],
+  textIndexSet: Set<number>,
+  linkedIndices: readonly number[],
+  relatedIndices: readonly number[],
+  viewport?: { w: number; h: number } | null,
+): number[] {
+  const n = contentRows.length;
+  const linkedOrdered = orderSpreadIndicesImageFirst(
+    linkedIndices,
+    textIndexSet,
+    n,
+  );
+  const relatedOrdered = orderSpreadIndicesImageFirst(
+    relatedIndices,
+    textIndexSet,
+    n,
+  );
+  const full = [...linkedOrdered, ...relatedOrdered];
+  let cap = Math.min(FILTER_MAX, full.length);
+  if (viewport && viewport.w > 0 && viewport.h > 0) {
+    cap = Math.min(cap, maxSpreadCountForViewport(viewport.w, viewport.h));
+  }
+  return full.slice(0, cap);
+}
+
 function biasClusterTowardViewportCenter(
   pts: Vec3[],
   vw: number,

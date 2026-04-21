@@ -191,6 +191,10 @@ export const CONTENT_FIXTURE_ROWS: ContentRow[] = FIXTURE_SEED_TITLES.map(
       content: plainContent,
       contentBlocks: index === 0 ? FIXTURE_STRAPI_LIKE_BLOCKS_ROW0 : null,
       resources: pickResourcesForIndex(index),
+      linkedOutputNames:
+        index === 0 && FIXTURE_SEED_TITLES.length > 1
+          ? [FIXTURE_SEED_TITLES[1]!]
+          : [],
       focusAreas,
       activityTypes,
       year,
@@ -209,6 +213,7 @@ export function toSlimCatalogRow(row: ContentRow): ContentRow {
     content: "",
     contentBlocks: null,
     resources: [],
+    linkedOutputNames: [],
     imageGallery: [],
   };
 }

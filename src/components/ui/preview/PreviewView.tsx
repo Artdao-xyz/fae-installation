@@ -255,7 +255,7 @@ function PreviewMainContent({ row }: { row: ContentRow }) {
           <Divider />
           <div className="flex flex-col gap-2 pb-2">
             <p className="font-lust-text text-xs leading-none tracking-[-0.228px] text-ink-caption">
-              Resources
+              Sources
             </p>
             <ul className="flex list-none flex-col gap-1 p-0">
               {row.resources.map((href) => (

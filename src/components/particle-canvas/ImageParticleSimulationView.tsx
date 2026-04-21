@@ -16,6 +16,7 @@ import {
   getPreviewPanelWidthPx,
 } from "@/components/ui/filter-sidebar/shell/layout-classes";
 import { getMarginGuideInsetPx } from "@/lib/margin-guide";
+import { buildSuggestedSourceRowsSplit } from "@/lib/preview-suggested-outputs";
 import type { ContentRow } from "@/data/content-types";
 import {
   Thumbnail,
@@ -45,6 +46,7 @@ import {
 import {
   computeSpreadTargets,
   mergeInPlaceSpreadTargets,
+  pickSpreadIndicesLinkedThenRelated,
   pickSpreadIndicesFromRows,
   REGROUP_MS,
   FILTER_DIM_MS,
@@ -191,6 +193,8 @@ export function ImageParticleSimulationView({
 
   const [previewRow, setPreviewRow] = useState<ContentRow | null>(null);
   const [previewFullScreen, setPreviewFullScreen] = useState(false);
+  const previewFullScreenRef = useRef(previewFullScreen);
+  previewFullScreenRef.current = previewFullScreen;
   const previewRowRef = useRef<ContentRow | null>(null);
   previewRowRef.current = previewRow;
 
@@ -253,6 +257,31 @@ export function ImageParticleSimulationView({
 
   // ---- State ----
   const [contentRows, setContentRows] = useState<ContentRow[]>([]);
+
+  /** Linked indices first (CMS order), then related-by-taxonomy indices — spread merges with linked priority. */
+  const previewSourceIndices = useMemo(() => {
+    if (!previewRow || previewFullScreen) {
+      return { linked: [] as number[], related: [] as number[] };
+    }
+    const { linked, related } = buildSuggestedSourceRowsSplit(
+      previewRow,
+      contentCatalog,
+    );
+    const indexById = new Map(contentRows.map((r, i) => [r.id, i] as const));
+    const mapRows = (rows: ContentRow[]) => {
+      const out: number[] = [];
+      for (const r of rows) {
+        const ii = indexById.get(r.id);
+        if (ii !== undefined) out.push(ii);
+      }
+      return out;
+    };
+    return { linked: mapRows(linked), related: mapRows(related) };
+  }, [previewRow, previewFullScreen, contentCatalog, contentRows]);
+
+  const previewSourceIndicesRef = useRef(previewSourceIndices);
+  previewSourceIndicesRef.current = previewSourceIndices;
+
   const [contentTotal, setContentTotal] = useState(0);
   const [fetchDurationMs, setFetchDurationMs] = useState<number | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
@@ -657,19 +686,109 @@ export function ImageParticleSimulationView({
     let rafId = 0;
     let lastTime = performance.now();
 
+    const viewportSpread = { w: placementBounds.w, h: placementBounds.h };
+
+    const computeSpreadOrderedIndices = (): number[] => {
+      const pr = previewRowRef.current;
+      const pfs = previewFullScreenRef.current;
+      if (
+        pr &&
+        !pfs &&
+        (previewSourceIndicesRef.current.linked.length > 0 ||
+          previewSourceIndicesRef.current.related.length > 0)
+      ) {
+        return pickSpreadIndicesLinkedThenRelated(
+          contentRows,
+          textIndexSet,
+          previewSourceIndicesRef.current.linked,
+          previewSourceIndicesRef.current.related,
+          viewportSpread,
+        );
+      }
+      return pickSpreadIndicesFromRows(
+        contentRows,
+        textIndexSet,
+        spreadSelectionRef.current,
+        filterMatchModeRef.current,
+        viewportSpread,
+      );
+    };
+
+    const effectiveSpreadSig = (): string => {
+      const pr = previewRowRef.current;
+      if (
+        pr &&
+        !previewFullScreenRef.current &&
+        (previewSourceIndicesRef.current.linked.length > 0 ||
+          previewSourceIndicesRef.current.related.length > 0)
+      ) {
+        const { linked, related } = previewSourceIndicesRef.current;
+        return `pv:${pr.id}:L${linked.join(",")}/R${related.join(",")}`;
+      }
+      return spreadSignatureRef.current;
+    };
+
+    const computeSpreadActive = (orderedLen: number): boolean => {
+      const s = spreadSelectionRef.current;
+      const filterSpreadActive =
+        s.focus.size > 0 ||
+        s.activity.size > 0 ||
+        s.artists.size > 0 ||
+        s.formats.size > 0 ||
+        s.networks.size > 0;
+      const previewHasCandidates =
+        previewRowRef.current != null &&
+        !previewFullScreenRef.current &&
+        (previewSourceIndicesRef.current.linked.length > 0 ||
+          previewSourceIndicesRef.current.related.length > 0);
+      const previewSpread = previewHasCandidates && orderedLen > 0;
+      return filterSpreadActive || previewSpread;
+    };
+
+    const logPreviewCanvasSpread = (orderedPick: readonly number[]) => {
+      if (process.env.NODE_ENV !== "development") return;
+      const pr = previewRowRef.current;
+      const pfs = previewFullScreenRef.current;
+      if (!pr || pfs) return;
+      const { linked, related } = previewSourceIndicesRef.current;
+      if (linked.length === 0 && related.length === 0) return;
+
+      const slotLabel = (i: number) => {
+        const row = contentRows[i];
+        const text = textIndexSet.has(i);
+        return row
+          ? {
+              index: i,
+              id: row.id,
+              shortTitle: row.shortTitle,
+              isTextParticle: text,
+            }
+          : { index: i, id: "?", shortTitle: "?", isTextParticle: text };
+      };
+
+      console.info("[preview-spread] canvas selection", {
+        preview: { id: pr.id, title: pr.title, shortTitle: pr.shortTitle },
+        linkedOutputNames: [...pr.linkedOutputNames],
+        pools: {
+          linkedIndices: [...linked],
+          linked: linked.map(slotLabel),
+          relatedIndices: [...related],
+          related: related.map(slotLabel),
+        },
+        displayedIndices: [...orderedPick],
+        displayed: orderedPick.map(slotLabel),
+        viewport: { ...viewportSpread },
+      });
+    };
+
     const beginSpreadEnter = (now: number): boolean => {
       const sysInner = systemRef.current;
       if (!sysInner || contentRows.length === 0) return false;
 
-      const selPick = spreadSelectionRef.current;
-      const orderedPick = pickSpreadIndicesFromRows(
-        contentRows,
-        textIndexSet,
-        selPick,
-        filterMatchModeRef.current,
-        { w: placementBounds.w, h: placementBounds.h },
-      );
+      const orderedPick = computeSpreadOrderedIndices();
       if (orderedPick.length === 0) return false;
+
+      logPreviewCanvasSpread(orderedPick);
 
       const phaseBefore = spreadLayoutPhaseRef.current;
       spreadInPlaceRespreadRef.current =
@@ -685,8 +804,7 @@ export function ImageParticleSimulationView({
       hoverPinRef.current = null;
       setHoveredIndex(null);
 
-      const sigNow = spreadSignatureRef.current;
-      spreadEnterSignatureRef.current = sigNow;
+      spreadEnterSignatureRef.current = effectiveSpreadSig();
 
       idleBlurRampT0Ref.current = null;
       idleBlurRampIndicesRef.current = null;
@@ -750,22 +868,9 @@ export function ImageParticleSimulationView({
       const c = sys.cfg;
       const zRange = c.zNear - c.zFar;
 
-      const sel = spreadSelectionRef.current;
-      const spreadActive =
-        sel.focus.size > 0 ||
-        sel.activity.size > 0 ||
-        sel.artists.size > 0 ||
-        sel.formats.size > 0 ||
-        sel.networks.size > 0;
-      const sig = spreadSignatureRef.current;
-
-      const ordered = pickSpreadIndicesFromRows(
-        contentRows,
-        textIndexSet,
-        sel,
-        filterMatchModeRef.current,
-        { w: placementBounds.w, h: placementBounds.h },
-      );
+      const ordered = computeSpreadOrderedIndices();
+      const spreadActive = computeSpreadActive(ordered.length);
+      const sig = effectiveSpreadSig();
 
       const phaseNow = spreadLayoutPhaseRef.current;
 

@@ -17,6 +17,11 @@ export type ContentRow = {
   /** Strapi `Text` blocks JSON; rendered in preview via `@strapi/blocks-react-renderer`. */
   contentBlocks: BlocksContent | null;
   resources: readonly string[];
+  /**
+   * Labels from Strapi resources/links that refer to other outputs (by title / short title),
+   * not external URLs. Resolved against the catalog in the content preview.
+   */
+  linkedOutputNames: readonly string[];
   focusAreas: readonly string[];
   activityTypes: readonly string[];
   year: number;

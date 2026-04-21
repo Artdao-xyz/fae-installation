@@ -103,6 +103,111 @@ function nameFromRelationEntry(entry: unknown): string | null {
   return null;
 }
 
+/**
+ * Titles for linked `output` documents (self-referential relation). Strapi does not use
+ * `Name` on outputs — we match preview/catalog resolution: Short_Title, then full title.
+ */
+function outputEntryDisplayTitle(entry: unknown): string | null {
+  if (entry == null || typeof entry !== "object") return null;
+  const fromObj = (obj: Record<string, unknown>) => {
+    for (const key of [
+      "Short_Title",
+      "Content_Title",
+      "Name",
+      "Title",
+    ] as const) {
+      const v = obj[key];
+      if (typeof v === "string" && v.trim().length > 0) return v.trim();
+    }
+    return null;
+  };
+  const o = entry as Record<string, unknown>;
+  const direct = fromObj(o);
+  if (direct) return direct;
+  const attrs = o.attributes;
+  if (attrs && typeof attrs === "object") {
+    return fromObj(attrs as Record<string, unknown>);
+  }
+  return null;
+}
+
+/**
+ * Walks a Strapi relation value (array, `data` wrapper, nested entries) and collects
+ * one display string per linked output.
+ */
+function collectLinkedOutputTitlesFromRelationValue(
+  value: unknown,
+): string[] {
+  const out: string[] = [];
+  const visit = (node: unknown): void => {
+    if (node == null) return;
+    if (Array.isArray(node)) {
+      for (const item of node) visit(item);
+      return;
+    }
+    if (typeof node !== "object") return;
+    const o = node as Record<string, unknown>;
+    if ("data" in o) {
+      visit(o.data);
+      return;
+    }
+    const t = outputEntryDisplayTitle(o);
+    if (t) out.push(t);
+  };
+  visit(value);
+  return out;
+}
+
+/** Prefer `Links` (Strapi relation on output); other keys for alternate schemas. */
+const LINKED_OUTPUTS_RELATION_KEYS = [
+  "Links",
+  "Linked_outputs",
+  "linked_outputs",
+  "LinkedOutputs",
+  "Related_outputs",
+  "related_outputs",
+] as const;
+
+function pickLinkedOutputsRelation(
+  o: Record<string, unknown>,
+): unknown {
+  const env = process.env.STRAPI_OUTPUTS_LINKED_OUTPUTS_RELATION?.trim();
+  if (env && env in o) return o[env];
+  for (const key of LINKED_OUTPUTS_RELATION_KEYS) {
+    if (key in o) return o[key];
+  }
+  return null;
+}
+
+function linkedOutputRelationRaw(doc: Record<string, unknown>): unknown {
+  const direct = pickLinkedOutputsRelation(doc);
+  if (direct != null) return direct;
+  const attrs = doc.attributes;
+  if (attrs && typeof attrs === "object") {
+    return pickLinkedOutputsRelation(attrs as Record<string, unknown>);
+  }
+  return null;
+}
+
+function mergeOrderUniqueStrings(
+  a: readonly string[],
+  b: readonly string[],
+): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  const push = (s: string) => {
+    const t = s.trim();
+    if (!t) return;
+    const k = t.toLowerCase();
+    if (seen.has(k)) return;
+    seen.add(k);
+    out.push(t);
+  };
+  for (const x of a) push(x);
+  for (const x of b) push(x);
+  return out;
+}
+
 export function strapiDocumentDisplayName(entry: unknown): string | null {
   return nameFromRelationEntry(entry);
 }
@@ -174,41 +279,78 @@ export function strapiBlocksToPlainText(blocks: unknown): string {
   return paragraphs.join("\n\n").trim();
 }
 
-function resourcesFromDoc(doc: Record<string, unknown>): string[] {
-  const out: string[] = [];
+function isExternalResourceUrlString(s: string): boolean {
+  const t = s.trim();
+  return t.length > 0 && (/^https?:\/\//i.test(t) || t.startsWith("/"));
+}
+
+function resourcesAndLinkedNamesFromDoc(doc: Record<string, unknown>): {
+  resourceUrls: string[];
+  linkedNames: string[];
+} {
+  const resourceUrls: string[] = [];
+  const linkedNames: string[] = [];
+  const seenUrl = new Set<string>();
+  const seenLinked = new Set<string>();
+
   const pushUrl = (v: unknown) => {
     if (typeof v !== "string") return;
     const t = v.trim();
-    if (t.length === 0) return;
-    if (/^https?:\/\//i.test(t) || t.startsWith("/")) out.push(t);
+    if (t.length === 0 || !isExternalResourceUrlString(t)) return;
+    if (seenUrl.has(t)) return;
+    seenUrl.add(t);
+    resourceUrls.push(t);
   };
 
-  const raw =
-    doc.Resources ??
-    doc.resources ??
-    doc.Links ??
-    doc.links ??
-    doc.Resource_Links;
+  const pushLinked = (v: unknown) => {
+    if (typeof v !== "string") return;
+    const t = v.trim();
+    if (t.length === 0) return;
+    if (seenLinked.has(t)) return;
+    seenLinked.add(t);
+    linkedNames.push(t);
+  };
 
-  if (!Array.isArray(raw)) return out;
+  const fromComponents = doc.Resources ?? doc.resources ?? doc.Resource_Links;
+  const raw: unknown = Array.isArray(fromComponents) && fromComponents.length > 0
+    ? fromComponents
+    : Array.isArray(doc.links)
+      ? doc.links
+      : null;
+
+  if (raw == null || !Array.isArray(raw)) {
+    return { resourceUrls, linkedNames };
+  }
 
   for (const item of raw) {
-    if (typeof item === "string") pushUrl(item);
-    else if (item && typeof item === "object") {
+    if (typeof item === "string") {
+      if (isExternalResourceUrlString(item)) pushUrl(item);
+      else pushLinked(item);
+      continue;
+    }
+    if (item && typeof item === "object") {
       const o = item as Record<string, unknown>;
-      pushUrl(
+      const urlCandidate =
         o.Url ??
-          o.url ??
-          o.URL ??
-          o.link ??
-          o.Link ??
-          o.href ??
-          o.Href ??
-          o.uri,
-      );
+        o.url ??
+        o.URL ??
+        o.link ??
+        o.Link ??
+        o.href ??
+        o.Href ??
+        o.uri;
+      if (typeof urlCandidate === "string" && isExternalResourceUrlString(urlCandidate)) {
+        pushUrl(urlCandidate);
+        continue;
+      }
+      const label =
+        (typeof o.Name === "string" && o.Name.trim()) ||
+        (typeof o.Title === "string" && o.Title.trim()) ||
+        nameFromRelationEntry(o);
+      if (label) pushLinked(label);
     }
   }
-  return out;
+  return { resourceUrls, linkedNames };
 }
 
 export function mapStrapiOutputToContentRow(
@@ -247,6 +389,16 @@ export function mapStrapiOutputToContentRow(
   const yearLabel =
     dateStr.length > 0 ? dateStr : year > 0 ? String(year) : "";
 
+  const { resourceUrls, linkedNames: linkedFromResourceFields } =
+    resourcesAndLinkedNamesFromDoc(doc);
+  const linkedFromOutputRelation = collectLinkedOutputTitlesFromRelationValue(
+    linkedOutputRelationRaw(doc),
+  );
+  const linkedOutputNames = mergeOrderUniqueStrings(
+    linkedFromResourceFields,
+    linkedFromOutputRelation,
+  );
+
   return {
     id: documentId,
     title,
@@ -255,7 +407,8 @@ export function mapStrapiOutputToContentRow(
     imageGallery,
     content,
     contentBlocks,
-    resources: resourcesFromDoc(doc),
+    resources: resourceUrls,
+    linkedOutputNames,
     focusAreas: relationNames(doc.Focus),
     activityTypes: relationNames(doc.Activity),
     year,

@@ -1,7 +1,7 @@
 /**
  * Server-only Strapi `outputs` list fetch (Strapi v5).
  *
- * **List (catalog):** slim fields — no `Text` / `Resources`, minimal media + relation name fields.
+ * **List (catalog):** slim fields — no `Text` / `Resources`, minimal media + relation fields (Focus, …, `Links`, …).
  * **Detail (preview):** full document for body, resources, and image fallbacks.
  *
  * Taxonomy option lists: `GET /api/strapi/taxonomy-options`.
@@ -69,6 +69,8 @@ function appendOutputsDetailPopulate(params: URLSearchParams): void {
   params.append("populate[Activity]", "true");
   params.append("populate[Network]", "true");
   params.append("populate[Format]", "true");
+  /** Other outputs linked to this one — same as other relations; needs populate for payload. */
+  params.append("populate[Links]", "true");
 
   const outputArtistRelation = process.env.STRAPI_OUTPUTS_ARTIST_RELATION?.trim();
   if (outputArtistRelation) {
@@ -98,6 +100,13 @@ function appendOutputsListSlimQuery(params: URLSearchParams): void {
   for (const key of ["Focus", "Activity", "Network", "Format"] as const) {
     params.append(`populate[${key}][fields][0]`, "Name");
   }
+
+  /**
+   * `Links` is a relation to other `output` entries; titles come from `Short_Title` / `Content_Title`
+   * (not `Name` like Focus/Network).
+   */
+  params.append("populate[Links][fields][0]", "Short_Title");
+  params.append("populate[Links][fields][1]", "Content_Title");
 
   const outputArtistRelation = process.env.STRAPI_OUTPUTS_ARTIST_RELATION?.trim();
   if (outputArtistRelation) {
