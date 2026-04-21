@@ -1,7 +1,7 @@
 /**
  * Server-only Strapi `outputs` list fetch (Strapi v5).
  *
- * **List (catalog):** slim fields — no `Text` / `Resources`, minimal media + relation fields (Focus, …, `Links`, …).
+ * **List (catalog):** slim fields — no `Text` / `Resources`, minimal media + relation fields (Focus, …, `Links`, `Artists`, …).
  * **Detail (preview):** full document for body, resources, and image fallbacks.
  *
  * Taxonomy option lists: `GET /api/strapi/taxonomy-options`.
@@ -59,6 +59,9 @@ function strapiOutputsListStatus(): "draft" | "published" {
   return raw === "published" ? "published" : "draft";
 }
 
+/** Strapi `output` type: relation to `artist` entries (field API id in Content-Type Builder). */
+const OUTPUT_ARTIST_RELATION = "Artists";
+
 function appendOutputsDetailPopulate(params: URLSearchParams): void {
   params.append("populate[Thumbnail][fields][0]", "url");
   params.append("populate[Thumbnail][fields][1]", "formats");
@@ -71,11 +74,7 @@ function appendOutputsDetailPopulate(params: URLSearchParams): void {
   params.append("populate[Format]", "true");
   /** Other outputs linked to this one — same as other relations; needs populate for payload. */
   params.append("populate[Links]", "true");
-
-  const outputArtistRelation = process.env.STRAPI_OUTPUTS_ARTIST_RELATION?.trim();
-  if (outputArtistRelation) {
-    params.append(`populate[${outputArtistRelation}]`, "true");
-  }
+  params.append(`populate[${OUTPUT_ARTIST_RELATION}]`, "true");
 }
 
 /**
@@ -108,10 +107,7 @@ function appendOutputsListSlimQuery(params: URLSearchParams): void {
   params.append("populate[Links][fields][0]", "Short_Title");
   params.append("populate[Links][fields][1]", "Content_Title");
 
-  const outputArtistRelation = process.env.STRAPI_OUTPUTS_ARTIST_RELATION?.trim();
-  if (outputArtistRelation) {
-    params.append(`populate[${outputArtistRelation}][fields][0]`, "Name");
-  }
+  params.append(`populate[${OUTPUT_ARTIST_RELATION}]`, "true");
 }
 
 function outputsListPageParams(page: number, pageSize: number): string {

@@ -83,7 +83,12 @@ export function collectMediaGalleryUrls(raw: unknown): string[] {
 }
 
 function pickRelationLabel(obj: Record<string, unknown>): string | null {
-  for (const key of ["Name", "Title"] as const) {
+  for (const key of [
+    "Name",
+    "Title",
+    "name",
+    "title",
+  ] as const) {
     const v = obj[key];
     if (typeof v === "string" && v.trim().length > 0) return v.trim();
   }
