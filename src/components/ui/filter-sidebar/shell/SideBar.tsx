@@ -27,7 +27,11 @@ export function SideBar({
         aria-controls={filtersOpen ? filterPanelId : undefined}
         aria-label={filtersOpen ? "Collapse filters" : "Expand filters"}
       >
-        <OpenSvgIcon />
+        <OpenSvgIcon
+          className={`transition-transform duration-500 ease-in-out motion-reduce:transition-none ${
+            filtersOpen ? "-rotate-180" : ""
+          }`}
+        />
       </button>
       <div className="mt-auto flex w-full flex-col items-center gap-4 pb-3 pt-3">
         <span className={navSidebarVerticalLabelClassName} aria-hidden>

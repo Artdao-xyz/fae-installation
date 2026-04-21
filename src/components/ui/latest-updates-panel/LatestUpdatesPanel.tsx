@@ -59,7 +59,7 @@ function LatestUpdatesTabRail({
         }`}
       />
       <div className="flex shrink-0 flex-col items-center gap-2">
-        <span className={navSidebarVerticalLabelClassName}>Latest updates</span>
+        <span className={navSidebarVerticalLabelClassName}>Fellowships</span>
         <LatestUpdatesSvgIcon />
       </div>
     </button>
@@ -128,7 +128,7 @@ export function LatestUpdatesPanel() {
       <div
         id={peekOpen ? panelId : undefined}
         role={peekOpen ? "region" : undefined}
-        aria-label={peekOpen ? "Latest updates" : undefined}
+        aria-label={peekOpen ? "Fellowships" : undefined}
         className={`flex h-full min-h-0 shrink-0 overflow-hidden border-solid border-ink-primary ${FLOATING_DOCK_PEEK_CLIP_CLASS} ${peekClipClass} ${
           peekOpen ? "border-b-hairline" : ""
         }`}
