@@ -10,6 +10,7 @@ import {
   type ReactNode,
   type SetStateAction,
 } from "react";
+import { Z_INDEX } from "@/lib/z-index-scale";
 
 export type FloatingPanelKey = "about" | "glossary" | "latestUpdates";
 
@@ -23,9 +24,9 @@ const INITIAL_ABOUT: AboutPanelView = "minimized";
 const INITIAL_GLOSSARY: DockPanelView = "minimized";
 const INITIAL_LATEST_UPDATES: DockPanelView = "minimized";
 
-const BASE_MINIMIZED_Z = 52;
-const PEEK_BASE_Z = 54;
-const ABOUT_FULL_Z = 60;
+const BASE_MINIMIZED_Z = Z_INDEX.guiFloatingDock;
+const PEEK_BASE_Z = Z_INDEX.guiPeekBase;
+const ABOUT_FULL_Z = Z_INDEX.fullscreen;
 
 type PanelsState = {
   about: AboutPanelView;

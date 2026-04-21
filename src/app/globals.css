@@ -104,6 +104,23 @@
   --max-height-about-panel: min(70dvh, calc(100dvh - 2.5rem));
   --max-height-latest-updates-panel: min(85dvh, calc(100dvh - 2.5rem));
   --max-width-floating-panel: calc(100vw - 2.5rem);
+
+  /**
+   * Stacking (see `src/lib/z-index-scale.ts`).
+   * Tailwind v4: `--z-index-{name}` → utility `z-{name}`.
+   */
+  --z-index-bg-decoration: 10;
+  --z-index-page: 15;
+  --z-index-hero: 20;
+  --z-index-particles: 30;
+  --z-index-margin-guide: 34;
+  --z-index-gui: 40;
+  --z-index-gui-floating-dock: 42;
+  --z-index-gui-peek-0: 44;
+  --z-index-gui-peek-1: 45;
+  --z-index-gui-peek-2: 46;
+  --z-index-preview-docked: 47;
+  --z-index-fullscreen: 50;
 }
 
 * {

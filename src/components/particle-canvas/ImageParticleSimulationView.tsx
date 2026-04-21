@@ -106,7 +106,7 @@ export type ImageParticleSimulationViewProps = {
   speedFactor: number;
   onStatsChange?: (stats: ImageParticleSimulationStats) => void;
   config: SimConfig;
-  /** Idle text tiles: full `shortTitle` vs one keyword (default full title). Leva can override in dev. */
+  /** Idle text tiles: full `shortTitle` vs one keyword (default full title). */
   idleTextFullTitle?: boolean;
   /**
    * When set, idle orbit + spread packing use this element’s screen rect (clipped on the
@@ -115,7 +115,7 @@ export type ImageParticleSimulationViewProps = {
   placementContainerRef?: RefObject<HTMLElement | null>;
   /**
    * How spread rows are chosen from Focus + Activity + Artists selections.
-   * Default `intersection` (AND). Leva dev panel can set `union` (OR within each group).
+   * Default `intersection` (AND). Use `union` for OR within each group.
    */
   filterMatchMode?: FilterMatchMode;
 };
@@ -1415,7 +1415,7 @@ export function ImageParticleSimulationView({
 
   return (
     <section
-      className="fixed inset-0 z-0 overflow-hidden"
+      className="fixed inset-0 z-particles overflow-hidden"
       style={{ perspective: `${config.perspective}px` }}
       aria-label="3D image particle simulation"
     >

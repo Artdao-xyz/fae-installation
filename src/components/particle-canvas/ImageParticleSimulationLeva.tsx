@@ -7,28 +7,9 @@ import {
   type ImageParticleSimulationViewProps,
 } from "./ImageParticleSimulationView";
 
-type Props = Omit<
-  ImageParticleSimulationViewProps,
-  "config" | "idleTextFullTitle" | "filterMatchMode"
->;
+type Props = Omit<ImageParticleSimulationViewProps, "config">;
 
 export function ImageParticleSimulationLeva(props: Props) {
-  const idleLabel = useControls("Idle text", {
-    showFullTitle: {
-      value: true,
-      label: "Full title (not keyword)",
-    },
-  });
-
-  /** `true` = OR within each group (focus / activity / artists); `false` = AND (match every selected tag). */
-  const { cumulativeFilterMatching } = useControls("Filter matching (dev)", {
-    cumulativeFilterMatching: {
-      value: false,
-      label:
-        "Cumulative (OR within each filter group). On = widen when adding tags in the same group. Off = AND (production default).",
-    },
-  });
-
   const config = useControls({
     Depth: folder({
       perspective: { value: DEFAULTS.perspective, min: 400, max: 2000, step: 50 },
@@ -155,14 +136,5 @@ export function ImageParticleSimulationLeva(props: Props) {
     }),
   }) as SimConfig;
 
-  return (
-    <ImageParticleSimulationView
-      {...props}
-      config={config}
-      idleTextFullTitle={idleLabel.showFullTitle}
-      filterMatchMode={
-        cumulativeFilterMatching ? "union" : "intersection"
-      }
-    />
-  );
+  return <ImageParticleSimulationView {...props} config={config} />;
 }
