@@ -54,7 +54,7 @@ function LabelChip({
   return (
     <div className="flex w-full shrink-0 justify-center overflow-visible">
       <div
-        className="inline-flex w-max max-w-none items-center gap-1.5 rounded-xs bg-surface-canvas text-ink-primary"
+        className="inline-flex w-max max-w-none items-center gap-1.5 rounded-none border-b-hairline border-dotted border-ink-primary bg-[#f6f6f6] text-ink-primary"
         style={{
           minHeight: dims.labelMinH,
           padding: `6px ${dims.padX}px`,
@@ -70,7 +70,7 @@ function LabelChip({
         />
         <p
           ref={labelRef}
-          className="whitespace-nowrap font-sans font-semibold leading-tight"
+          className="whitespace-nowrap font-lust-text font-medium leading-tight"
           style={{ fontSize: dims.textPx, lineHeight: `${dims.textPx + 3}px` }}
           aria-hidden
         >

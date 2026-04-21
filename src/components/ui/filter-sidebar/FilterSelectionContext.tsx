@@ -65,6 +65,9 @@ export type FilterSelectionContextValue = {
   openContentPreview: (row: ContentRow) => void;
   /** Called by `ImageParticleSimulationView` to connect `openContentPreview` to preview state. */
   registerContentPreviewOpener: (fn: ((row: ContentRow) => void) | null) => void;
+  /** Row currently shown in the content preview (for chrome such as HomeBar breadcrumb). */
+  contentPreviewRow: ContentRow | null;
+  setContentPreviewRow: Dispatch<SetStateAction<ContentRow | null>>;
 };
 
 const FilterSelectionContext = createContext<FilterSelectionContextValue | null>(
@@ -73,6 +76,10 @@ const FilterSelectionContext = createContext<FilterSelectionContextValue | null>
 
 export function FilterSelectionProvider({ children }: { children: ReactNode }) {
   const contentPreviewOpenerRef = useRef<((row: ContentRow) => void) | null>(null);
+
+  const [contentPreviewRow, setContentPreviewRow] = useState<ContentRow | null>(
+    null,
+  );
 
   const [contentCatalog, setContentCatalog] = useState<ContentRow[]>([]);
   const [contentCatalogStatus, setContentCatalogStatus] =
@@ -390,6 +397,8 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
       filterSubpanelsOpen,
       openContentPreview,
       registerContentPreviewOpener,
+      contentPreviewRow,
+      setContentPreviewRow,
     }),
     [
       contentCatalog,
@@ -419,6 +428,7 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
       filterSubpanelsOpen,
       openContentPreview,
       registerContentPreviewOpener,
+      contentPreviewRow,
     ],
   );
 
