@@ -3,8 +3,15 @@ import {
   getThumbnailFullCardOuterSize,
   type ThumbnailSize,
 } from "@/components/ui/thumbnail-full";
+import {
+  type FilterMatchMode,
+  type TaxonomyFilterSelection,
+  rowMatchesFilterSelection,
+} from "@/lib/filter-row-match";
 import { computeOrganicSpreadLayout } from "@/lib/organic-spread-layout";
 import { clamp, v3, type Vec3 } from "./particle-system";
+
+export type { FilterMatchMode, TaxonomyFilterSelection };
 
 export const FILTER_MAX = 20;
 export const REGROUP_MS = 1000;
@@ -22,57 +29,16 @@ export const FILTER_BG_OPACITY_MUL = 0.03;
 /** RAF tick: idle physics vs easing into spread vs locked spread vs easing out. */
 export type SpreadLayoutPhase = "idle" | "enter" | "hold" | "leave";
 
-/**
- * - `intersection`: row must include **every** selected focus and **every** selected activity (AND).
- * - `union`: row matches if it has **any** selected focus (when any focus selected) and **any** selected activity (when any activity selected) — cumulative OR within each group.
- */
-export type FilterMatchMode = "intersection" | "union";
-
-function rowMatchesSpreadTags(
-  row: ContentRow,
-  focusSel: ReadonlySet<string>,
-  activitySel: ReadonlySet<string>,
-  mode: FilterMatchMode,
-): boolean {
-  if (focusSel.size === 0 && activitySel.size === 0) return false;
-
-  if (mode === "union") {
-    if (focusSel.size > 0 && !row.focusAreas.some((f) => focusSel.has(f))) {
-      return false;
-    }
-    if (
-      activitySel.size > 0 &&
-      !row.activityTypes.some((a) => activitySel.has(a))
-    ) {
-      return false;
-    }
-    return true;
-  }
-
-  if (focusSel.size > 0) {
-    for (const f of focusSel) {
-      if (!row.focusAreas.includes(f)) return false;
-    }
-  }
-  if (activitySel.size > 0) {
-    for (const a of activitySel) {
-      if (!row.activityTypes.includes(a)) return false;
-    }
-  }
-  return true;
-}
-
 /** Up to {@link FILTER_MAX} indices: eligible rows by menu tags, then prefer image tiles. */
 export function pickSpreadIndicesFromRows(
   contentRows: ContentRow[],
   textIndexSet: Set<number>,
-  focusSel: ReadonlySet<string>,
-  activitySel: ReadonlySet<string>,
+  taxonomy: TaxonomyFilterSelection,
   matchMode: FilterMatchMode = "intersection",
 ): number[] {
   const eligible: number[] = [];
   for (let i = 0; i < contentRows.length; i++) {
-    if (rowMatchesSpreadTags(contentRows[i]!, focusSel, activitySel, matchMode)) {
+    if (rowMatchesFilterSelection(contentRows[i]!, taxonomy, matchMode)) {
       eligible.push(i);
     }
   }
@@ -132,6 +98,86 @@ function biasClusterTowardViewportCenter(
   ty = clamp(ty, tyLo, tyHi);
 
   return pts.map((p) => v3(p.x + tx, p.y + ty, p.z));
+}
+
+/**
+ * In-place filter respread: each tile in `sel` is assigned a **distinct** spread
+ * anchor from the **previous** spread (`prevSpreadSelection` snapshot positions) by
+ * greedy minimum (x,y) distance — so when some cards leave, the rest **re-seat** into
+ * the closest free former slots instead of stacking or shrinking toward a centroid.
+ *
+ * If the spread **grows** (more newcomers than vacated slots), we fall back to a full
+ * organic layout for every slot.
+ */
+export function mergeInPlaceSpreadTargets(
+  sel: readonly number[],
+  prevSpreadSelection: readonly number[],
+  snapshot: ReadonlyArray<{ pos: Vec3 } | undefined>,
+  organicTargets: readonly Vec3[],
+): Vec3[] {
+  const prevSet = new Set(prevSpreadSelection);
+  const selSet = new Set(sel);
+  let freedCount = 0;
+  for (const idx of prevSpreadSelection) {
+    if (!selSet.has(idx)) freedCount += 1;
+  }
+
+  const newcomers = sel.filter((i) => !prevSet.has(i));
+  if (newcomers.length > freedCount) {
+    return sel.map(
+      (_, j) =>
+        organicTargets[j] ?? organicTargets[organicTargets.length - 1]!,
+    );
+  }
+
+  const pool: Vec3[] = [];
+  for (const idx of prevSpreadSelection) {
+    const sp = snapshot[idx]?.pos;
+    if (sp) pool.push(v3(sp.x, sp.y, sp.z));
+  }
+  if (pool.length === 0) {
+    return sel.map(
+      (_, j) =>
+        organicTargets[j] ?? organicTargets[organicTargets.length - 1]!,
+    );
+  }
+
+  const pending = new Set(sel);
+  const usedSlot = new Set<number>();
+  const targetMap = new Map<number, Vec3>();
+
+  while (pending.size > 0) {
+    let bestI = -1;
+    let bestK = -1;
+    let bestD = Infinity;
+    for (const i of pending) {
+      const p = snapshot[i]?.pos;
+      if (!p) continue;
+      for (let k = 0; k < pool.length; k++) {
+        if (usedSlot.has(k)) continue;
+        const pk = pool[k]!;
+        const dx = p.x - pk.x;
+        const dy = p.y - pk.y;
+        const d2 = dx * dx + dy * dy;
+        if (d2 < bestD) {
+          bestD = d2;
+          bestI = i;
+          bestK = k;
+        }
+      }
+    }
+    if (bestI < 0 || bestK < 0) break;
+    pending.delete(bestI);
+    usedSlot.add(bestK);
+    const t = pool[bestK]!;
+    targetMap.set(bestI, v3(t.x, t.y, t.z));
+  }
+
+  return sel.map((i, j) => {
+    const t = targetMap.get(i);
+    if (t) return t;
+    return organicTargets[j] ?? organicTargets[organicTargets.length - 1]!;
+  });
 }
 
 export function computeSpreadTargets(

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
+import { useFloatingPanelStack } from "@/components/ui/floating-panels/FloatingPanelStackContext";
 import { useFilterSelection } from "../../FilterSelectionContext";
 import { filterNetworkLabelsForSearchQuery } from "@/data/network-search-filter";
 import { FilterPill } from "../../primitives/FilterPill";
@@ -16,25 +17,22 @@ export function ArtistsDropdownPanel({
   variant = "default",
   onClearAll: onClearAllFromParent,
 }: ArtistsDropdownPanelProps) {
-  const { filterResetNonce } = useFilterSelection();
-  return (
-    <ArtistsDropdownPanelInner
-      key={filterResetNonce}
-      variant={variant}
-      onClearAll={onClearAllFromParent}
-    />
-  );
-}
-
-function ArtistsDropdownPanelInner({
-  variant = "default",
-  onClearAll: onClearAllFromParent,
-}: ArtistsDropdownPanelProps) {
-  const { filterArtistOptionLabels } = useFilterSelection();
-  const [selected, setSelected] = useState<Set<string>>(() => new Set());
+  const {
+    filterArtistOptionLabels,
+    selectedArtists,
+    toggleArtist,
+    clearSelectedArtists,
+    contentCatalog,
+    contentCatalogStatus,
+    artistOptionToggleMatchCount,
+  } = useFilterSelection();
+  const { minimizeAllFloatingPanels } = useFloatingPanelStack();
   const [searchQuery, setSearchQuery] = useState("");
 
   const searching = searchQuery.trim().length > 0;
+
+  const catalogReady =
+    contentCatalogStatus === "success" && contentCatalog.length > 0;
 
   const searchMatches = useMemo(
     () =>
@@ -42,23 +40,35 @@ function ArtistsDropdownPanelInner({
     [searchQuery, filterArtistOptionLabels],
   );
 
-  const toggle = useCallback((label: string) => {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (next.has(label)) next.delete(label);
-      else next.add(label);
-      return next;
-    });
-  }, []);
-
   const handleClearAll = useCallback(() => {
+    minimizeAllFloatingPanels();
     onClearAllFromParent?.();
-    setSelected(new Set());
-  }, [onClearAllFromParent]);
+    clearSelectedArtists();
+  }, [minimizeAllFloatingPanels, onClearAllFromParent, clearSelectedArtists]);
 
   const pillClassName = searching
     ? "box-border w-full min-w-0 max-w-full"
     : undefined;
+
+  const artistPillProps = (label: string, className?: string) => {
+    const selected = selectedArtists.has(label);
+    const count = artistOptionToggleMatchCount.get(label) ?? 0;
+    const disableAdd = catalogReady && !selected && count === 0;
+    return {
+      label,
+      tone: "artists" as const,
+      selected,
+      onPress: () => {
+        minimizeAllFloatingPanels();
+        toggleArtist(label);
+      },
+      className,
+      disabled: disableAdd,
+      title: disableAdd
+        ? "Nothing in the catalog matches this with your other filters"
+        : undefined,
+    };
+  };
 
   return (
     <FilterPillDropdown
@@ -92,13 +102,7 @@ function ArtistsDropdownPanelInner({
                   className="w-full min-w-0 shrink-0"
                   role="listitem"
                 >
-                  <FilterPill
-                    label={label}
-                    tone="artists"
-                    selected={selected.has(label)}
-                    onPress={() => toggle(label)}
-                    className={pillClassName}
-                  />
+                  <FilterPill {...artistPillProps(label, pillClassName)} />
                 </div>
               ))
             )}
@@ -110,13 +114,7 @@ function ArtistsDropdownPanelInner({
             aria-label="Artists"
           >
             {filterArtistOptionLabels.map((label) => (
-              <FilterPill
-                key={label}
-                label={label}
-                tone="artists"
-                selected={selected.has(label)}
-                onPress={() => toggle(label)}
-              />
+              <FilterPill key={label} {...artistPillProps(label)} />
             ))}
           </div>
         )}

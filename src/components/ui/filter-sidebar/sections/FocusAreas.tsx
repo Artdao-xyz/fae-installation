@@ -11,7 +11,13 @@ export function FocusAreas({ collapsed = false }: { collapsed?: boolean }) {
     toggleFocusArea,
     clearFocusAreas,
     filterFocusOptionLabels,
+    contentCatalog,
+    contentCatalogStatus,
+    focusOptionToggleMatchCount,
   } = useFilterSelection();
+
+  const catalogReady =
+    contentCatalogStatus === "success" && contentCatalog.length > 0;
 
   const toggle = useCallback(
     (label: string) => {
@@ -29,15 +35,26 @@ export function FocusAreas({ collapsed = false }: { collapsed?: boolean }) {
       scrollBody
       collapsed={collapsed}
     >
-      {filterFocusOptionLabels.map((label) => (
-        <FilterPill
-          key={label}
-          label={label}
-          variant="square"
-          selected={selectedFocusAreas.has(label)}
-          onPress={() => toggle(label)}
-        />
-      ))}
+      {filterFocusOptionLabels.map((label) => {
+        const selected = selectedFocusAreas.has(label);
+        const count = focusOptionToggleMatchCount.get(label) ?? 0;
+        const disableAdd = catalogReady && !selected && count === 0;
+        return (
+          <FilterPill
+            key={label}
+            label={label}
+            variant="square"
+            selected={selected}
+            onPress={() => toggle(label)}
+            disabled={disableAdd}
+            title={
+              disableAdd
+                ? "Nothing in the catalog matches this with your other filters"
+                : undefined
+            }
+          />
+        );
+      })}
     </FilterSidebarSection>
   );
 }

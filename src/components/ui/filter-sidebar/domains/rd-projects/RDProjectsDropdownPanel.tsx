@@ -20,6 +20,8 @@ export function RDProjectsDropdownPanel({
           key={`${label}-${index}`}
           label={label}
           tone="rd"
+          disabled
+          title="Not yet wired to the catalog"
         />
       ))}
     </FilterPillDropdown>

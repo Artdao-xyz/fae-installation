@@ -11,7 +11,6 @@ import {
 } from "react";
 import { createPortal, flushSync } from "react-dom";
 import { useFilterSelection } from "@/components/ui/filter-sidebar/FilterSelectionContext";
-import { useFloatingPanelStack } from "@/components/ui/floating-panels/FloatingPanelStackContext";
 import {
   FILTER_SUBPANELS_COLUMN_SELECTOR,
   getPreviewPanelWidthPx,
@@ -41,9 +40,11 @@ import {
   v3,
   TEXT_PARTICLE_RATIO,
   pickIdleTextWordIndex,
+  particleOrbitIdealPos,
 } from "./particle-system";
 import {
   computeSpreadTargets,
+  mergeInPlaceSpreadTargets,
   pickSpreadIndicesFromRows,
   REGROUP_MS,
   FILTER_DIM_MS,
@@ -52,6 +53,7 @@ import {
   FILTER_BG_OPACITY_MUL,
   type FilterMatchMode,
   type SpreadLayoutPhase,
+  type TaxonomyFilterSelection,
 } from "./image-particle-spread";
 import { scaleForTargetVisualWidth } from "./image-particle-scale";
 import { extractWordsFromTitle, scrambleWord } from "./image-particle-scramble";
@@ -110,8 +112,8 @@ export type ImageParticleSimulationViewProps = {
    */
   placementContainerRef?: RefObject<HTMLElement | null>;
   /**
-   * How spread rows are chosen from Focus + Activity selections.
-   * Default `union` (OR / cumulative). Leva can set `intersection` (AND) to compare.
+   * How spread rows are chosen from Focus + Activity + Artists selections.
+   * Default `intersection` (AND). Leva dev panel can set `union` (OR within each group).
    */
   filterMatchMode?: FilterMatchMode;
 };
@@ -127,13 +129,16 @@ export function ImageParticleSimulationView({
   placementContainerRef,
   filterMatchMode: filterMatchModeProp,
 }: ImageParticleSimulationViewProps) {
-  const filterMatchMode = filterMatchModeProp ?? "union";
+  const filterMatchMode = filterMatchModeProp ?? "intersection";
   const filterMatchModeRef = useRef(filterMatchMode);
   filterMatchModeRef.current = filterMatchMode;
 
   const {
     selectedFocusAreas,
     selectedActivityTypes,
+    selectedArtists,
+    selectedFormats,
+    selectedNetworks,
     filtersPanelOpen,
     setFiltersFromContentRow,
     registerContentPreviewOpener,
@@ -144,26 +149,42 @@ export function ImageParticleSimulationView({
     contentCatalogFetchMs,
   } = useFilterSelection();
 
-  const { minimizeAllFloatingPanels } = useFloatingPanelStack();
-
   const idleTextFullTitleRef = useRef(idleTextFullTitle);
   idleTextFullTitleRef.current = idleTextFullTitle;
 
-  const spreadSelectionRef = useRef({
+  const spreadSelectionRef = useRef<TaxonomyFilterSelection>({
     focus: selectedFocusAreas,
     activity: selectedActivityTypes,
+    artists: selectedArtists,
+    formats: selectedFormats,
+    networks: selectedNetworks,
   });
   spreadSelectionRef.current = {
     focus: selectedFocusAreas,
     activity: selectedActivityTypes,
+    artists: selectedArtists,
+    formats: selectedFormats,
+    networks: selectedNetworks,
   };
 
   const spreadSig = useMemo(
     () =>
       [...selectedFocusAreas].sort().join("\0") +
       "|" +
-      [...selectedActivityTypes].sort().join("\0"),
-    [selectedFocusAreas, selectedActivityTypes],
+      [...selectedActivityTypes].sort().join("\0") +
+      "|" +
+      [...selectedArtists].sort().join("\0") +
+      "|" +
+      [...selectedFormats].sort().join("\0") +
+      "|" +
+      [...selectedNetworks].sort().join("\0"),
+    [
+      selectedFocusAreas,
+      selectedActivityTypes,
+      selectedArtists,
+      selectedFormats,
+      selectedNetworks,
+    ],
   );
   const spreadSignatureRef = useRef("");
   spreadSignatureRef.current = spreadSig;
@@ -179,11 +200,10 @@ export function ImageParticleSimulationView({
 
   const handleFilteredThumbnailClick = useCallback(
     (row: ContentRow) => {
-      minimizeAllFloatingPanels();
       setFiltersFromContentRow(row);
       setPreviewRow(row);
     },
-    [minimizeAllFloatingPanels, setFiltersFromContentRow],
+    [setFiltersFromContentRow],
   );
 
   useEffect(() => {
@@ -326,8 +346,10 @@ export function ImageParticleSimulationView({
   const selectedIndicesRef = useRef<number[]>([]);
   const filterT0Ref = useRef(0);
   const spreadLayoutPhaseRef = useRef<SpreadLayoutPhase>("idle");
-  /** True during enter after swapping filters in place — skip scale/dim ramp (already at full card). */
+  /** True during enter after swapping filters in place — skip enter scale ramp for tiles already at card size. */
   const spreadInPlaceRespreadRef = useRef(false);
+  /** Selection before the current `beginSpreadEnter` — used to fade demoted tiles instead of snapping dim. */
+  const spreadPrevSelectedRef = useRef<Set<number>>(new Set());
   const leaveFromRef = useRef<Vec3[]>([]);
   const leaveScaleFromRef = useRef<number[]>([]);
   /** Per-index `offsetWidth` at filter-on (idle DOM), for scale continuity vs thumbnailFramePx guess. */
@@ -638,8 +660,7 @@ export function ImageParticleSimulationView({
       const orderedPick = pickSpreadIndicesFromRows(
         contentRows,
         textIndexSet,
-        selPick.focus,
-        selPick.activity,
+        selPick,
         filterMatchModeRef.current,
       );
       if (orderedPick.length === 0) return false;
@@ -677,6 +698,8 @@ export function ImageParticleSimulationView({
       }
       idleNodeWidthRef.current = idleW;
 
+      const prevSpreadSelection = selectedIndicesRef.current.slice();
+
       let sel = orderedPick.slice();
       const f = sel.length;
       const filteredTargets = computeSpreadTargets(
@@ -688,7 +711,19 @@ export function ImageParticleSimulationView({
       );
       const fCount = Math.min(f, filteredTargets.length);
       sel = sel.slice(0, fCount);
-      spreadTargetsRef.current = filteredTargets.slice(0, fCount);
+      const snapNow = idleSnapshotRef.current;
+      const organicSlice = filteredTargets.slice(0, fCount);
+      let nextTargets = organicSlice;
+      if (spreadInPlaceRespreadRef.current && snapNow) {
+        nextTargets = mergeInPlaceSpreadTargets(
+          sel,
+          prevSpreadSelection,
+          snapNow,
+          organicSlice,
+        );
+      }
+      spreadTargetsRef.current = nextTargets;
+      spreadPrevSelectedRef.current = new Set(selectedIndicesRef.current);
       selectedIndicesRef.current = sel;
       setSelectedFilterIndices(sel);
       setSpreadChromeActive(true);
@@ -708,14 +743,18 @@ export function ImageParticleSimulationView({
       const zRange = c.zNear - c.zFar;
 
       const sel = spreadSelectionRef.current;
-      const spreadActive = sel.focus.size > 0 || sel.activity.size > 0;
+      const spreadActive =
+        sel.focus.size > 0 ||
+        sel.activity.size > 0 ||
+        sel.artists.size > 0 ||
+        sel.formats.size > 0 ||
+        sel.networks.size > 0;
       const sig = spreadSignatureRef.current;
 
       const ordered = pickSpreadIndicesFromRows(
         contentRows,
         textIndexSet,
-        sel.focus,
-        sel.activity,
+        sel,
         filterMatchModeRef.current,
       );
 
@@ -823,6 +862,19 @@ export function ImageParticleSimulationView({
           p.vel = v3(0, 0, 0);
           p.opacity = clamp(snap[i]!.opacity + (1 - snap[i]!.opacity) * e, 0, 1);
         }
+        const prevSpreadSel = spreadPrevSelectedRef.current;
+        if (prevSpreadSel.size > 0) {
+          const selSet = new Set(selIdx);
+          for (const i of prevSpreadSel) {
+            if (selSet.has(i)) continue;
+            const p = sys.particles[i];
+            const s0 = snap[i];
+            if (!p || !s0) continue;
+            const ideal = particleOrbitIdealPos(p, c, globalTime);
+            p.pos = lerp3(s0.pos, ideal, e);
+            p.vel = v3(0, 0, 0);
+          }
+        }
         if (u >= 1) {
           for (let j = 0; j < selIdx.length; j++) {
             const i = selIdx[j]!;
@@ -885,16 +937,15 @@ export function ImageParticleSimulationView({
         let dimEnterT = 0;
         let dimLeaveT = 0;
         if (passPh === "enter" && snapForScale) {
+          const elapsedEnter = styleNow - filterT0Ref.current;
           if (spreadInPlaceRespreadRef.current) {
             enterScaleT = 1;
-            dimEnterT = 1;
           } else {
-            const elapsedEnter = styleNow - filterT0Ref.current;
             const uEnter = Math.min(1, elapsedEnter / REGROUP_MS);
             enterScaleT = smoothstep01(uEnter);
-            const uDim = Math.min(1, elapsedEnter / FILTER_DIM_MS);
-            dimEnterT = smoothstep01(uDim);
           }
+          const uDim = Math.min(1, elapsedEnter / FILTER_DIM_MS);
+          dimEnterT = smoothstep01(uDim);
         }
         if (passPh === "leave" && snapForScale) {
           const elapsedLeave = styleNow - filterT0Ref.current;
@@ -929,7 +980,12 @@ export function ImageParticleSimulationView({
           let bgDimT = 0;
           if (spreadLayoutBg) {
             if (passPh === "enter") {
-              bgDimT = spreadInPlaceRespreadRef.current ? 1 : dimEnterT;
+              const prevSel = spreadPrevSelectedRef.current;
+              const inNewSpread = selectedIndicesRef.current.includes(i);
+              const demoted = prevSel.has(i) && !inNewSpread;
+              const firstSpreadFromIdle = prevSel.size === 0;
+              bgDimT =
+                firstSpreadFromIdle || demoted ? dimEnterT : 1;
             } else if (passPh === "hold") bgDimT = 1;
             else if (passPh === "leave") bgDimT = 1 - dimLeaveT;
           } else if (hoverIdleDimmed) {
@@ -1025,10 +1081,29 @@ export function ImageParticleSimulationView({
             // offsetWidth can differ per tile (subpixel, font, layout timing) after
             // lg→sm swap — only "spread" tiles swap, which matches "only some" pops.
             const lwIdle = refPx;
-            finalScale = scaleForTargetVisualWidth(
-              refPx * apparentIdle,
-              lwIdle,
-            );
+            const prevSel = spreadPrevSelectedRef.current;
+            const demotedCard =
+              passPh === "enter" &&
+              prevSel.has(i) &&
+              !selectedIndicesRef.current.includes(i);
+            if (demotedCard && snapForScale) {
+              const uDem = Math.min(
+                1,
+                (styleNow - filterT0Ref.current) / REGROUP_MS,
+              );
+              const demoteE = smoothstep01(uDem);
+              const idleVisualW = refPx * apparentIdle;
+              const cardOuterW = filteredLgOuter.width;
+              const visualW =
+                cardOuterW * (1 - demoteE) + idleVisualW * demoteE;
+              const lwBlend = cardOuterW * (1 - demoteE) + lwIdle * demoteE;
+              finalScale = scaleForTargetVisualWidth(visualW, lwBlend);
+            } else {
+              finalScale = scaleForTargetVisualWidth(
+                refPx * apparentIdle,
+                lwIdle,
+              );
+            }
           }
           const zIndex = Math.round(
             ((p.pos.z - c.zFar) / zRange) * 1000
@@ -1196,6 +1271,8 @@ export function ImageParticleSimulationView({
     thumbnailSize,
     filteredLgOuter.width,
     filterMatchMode,
+    selectedFormats,
+    selectedNetworks,
   ]);
 
   return (

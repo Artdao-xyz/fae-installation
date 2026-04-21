@@ -50,10 +50,8 @@ export const DEFAULTS = {
 
   lifeSpeedMin: 0.08,
   lifeSpeedMax: 0.22,
-  /** Longer normalized window for fade-in (real time ∝ birthPhase / lifeSpeed). */
+  /** Normalized life window [0, birthPhase) for fade-in; fade-out uses the same length at end of life. */
   birthPhase: 0.18,
-  /** Set to `1` to disable shrink-before-respawn (tiles stay fully visible until reset). */
-  deathPhaseStart: 1,
 
   blurMax: 3.25,
   blurFarGate: 0.33,
@@ -167,6 +165,31 @@ export function apparentScaleFromParticle(
 ): number {
   const denom = Math.max(1e-3, perspective - p.pos.z);
   return Math.max(0, p.scale * (perspective / denom));
+}
+
+/**
+ * Ideal orbit anchor for `p` (matches radial spring target inside `ParticleSystem.step`).
+ * Used to ease demoted spread tiles back into the swarm without a position snap.
+ */
+export function particleOrbitIdealPos(
+  p: Particle,
+  c: SimConfig,
+  globalTime: number,
+): Vec3 {
+  const zRange = c.zNear - c.zFar;
+  const tiltRad = (c.orbitTiltDeg * Math.PI) / 180;
+  const cosT = Math.cos(tiltRad);
+  const sinT = Math.sin(tiltRad);
+  const rawTX = Math.cos(p.orbitAngle) * p.orbitRadiusX;
+  const rawTY = Math.sin(p.orbitAngle) * p.orbitRadiusY;
+  const targetX = rawTX * cosT - rawTY * sinT;
+  const targetY = rawTX * sinT + rawTY * cosT;
+  const targetZ =
+    Math.sin(p.orbitZPhase + globalTime * p.orbitZSpeed) *
+    zRange *
+    c.orbitZAmplitude;
+  const z = Math.max(c.zFar, Math.min(c.zNear, targetZ));
+  return v3(targetX, targetY, z);
 }
 
 // ---------------------------------------------------------------------------
@@ -399,15 +422,16 @@ export class ParticleSystem {
       }
 
       let lifeFactor: number;
-      if (p.life < c.birthPhase) {
-        const u = clamp(p.life / c.birthPhase, 0, 1);
-        // Smoothstep: gentler than u² — less “pop” as tiles appear.
-        lifeFactor = u * u * (3 - 2 * u);
-      } else if (c.deathPhaseStart < 1 && p.life > c.deathPhaseStart) {
-        const u =
-          1 -
-          (p.life - c.deathPhaseStart) / (1 - c.deathPhaseStart);
-        lifeFactor = Math.max(0, u * u);
+      const b = c.birthPhase;
+      /** End of “full opacity” plateau; fade-out starts after this (same smoothstep curve as fade-in). */
+      const deathStart = Math.max(b, 1 - b);
+
+      if (p.life < b) {
+        const u = clamp(p.life / b, 0, 1);
+        lifeFactor = smoothstep01(u);
+      } else if (p.life > deathStart) {
+        const u = clamp((p.life - deathStart) / (1 - deathStart), 0, 1);
+        lifeFactor = smoothstep01(1 - u);
       } else {
         lifeFactor = 1;
       }

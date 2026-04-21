@@ -1,6 +1,6 @@
 /**
- * Main filter column + domain subpanel column width: 25vw (preview dock uses `--width-preview-panel`, 30vw).
- * Options strip animates via `FILTER_OPTIONS_PANEL_CLIP_TRANSITION_CLASS`; subpanels use width transitions.
+ * Main filter chrome column: 25vw. Domain subpanel stack: 20vw (narrower than the panel).
+ * Preview dock uses `--width-preview-panel` (30vw). Options strip: `FILTER_OPTIONS_PANEL_CLIP_TRANSITION_CLASS`.
  */
 export const FILTER_SIDEBAR_COLUMN_CLASS =
   "w-[25vw] max-w-[25vw] shrink-0";
@@ -25,12 +25,13 @@ export const FILTER_SUBPANEL_COLUMN_TRANSITION_CLASS =
 export const PREVIEW_DOCK_WIDTH_TRANSITION_CLASS =
   "transition-[max-width] duration-300 ease-out motion-reduce:transition-none";
 
-/** Alias for expanded subpanel stack (same width token). */
-export const FILTER_SUBPANELS_COLUMN_EXPANDED_CLASS = FILTER_SIDEBAR_COLUMN_CLASS;
+/** Expanded domain subpanel stack column (narrower than `FILTER_SIDEBAR_COLUMN_CLASS`). */
+export const FILTER_SUBPANELS_COLUMN_EXPANDED_CLASS =
+  "w-[20vw] max-w-[20vw] shrink-0";
 
-/** Pixel width matching `FILTER_SIDEBAR_COLUMN_CLASS` (25vw). */
+/** Pixel width matching `FILTER_SUBPANELS_COLUMN_EXPANDED_CLASS` (20vw). */
 export function getFilterSubpanelColumnWidthPx(viewportWidth: number): number {
-  return viewportWidth * 0.25;
+  return viewportWidth * 0.2;
 }
 
 /** Pixel width matching `--width-preview-panel` (30vw); keep in sync with `globals.css`. */

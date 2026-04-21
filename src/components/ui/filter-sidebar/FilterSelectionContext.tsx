@@ -17,6 +17,16 @@ import {
   mergeCmsAndCatalogOptionLabels,
   uniqueSortedLabelsFromCatalog,
 } from "@/lib/content-catalog-filter-options";
+import {
+  countMatchingFilterRows,
+  toggledSet,
+  type FilterMatchMode,
+  type TaxonomyFilterSelection,
+} from "@/lib/filter-row-match";
+import { useFloatingPanelStack } from "@/components/ui/floating-panels/FloatingPanelStackContext";
+
+/** Sidebar availability hints use the same AND semantics as the default particle spread. */
+const SIDEBAR_FILTER_MATCH_MODE: FilterMatchMode = "intersection";
 
 export type ContentCatalogStatus = "loading" | "success" | "error";
 
@@ -35,17 +45,32 @@ export type FilterSelectionContextValue = {
   filterArtistOptionLabels: readonly string[];
   selectedFocusAreas: ReadonlySet<string>;
   selectedActivityTypes: ReadonlySet<string>;
+  selectedArtists: ReadonlySet<string>;
+  selectedFormats: ReadonlySet<string>;
+  selectedNetworks: ReadonlySet<string>;
+  /** FAE Briefing subpanel (not yet tied to catalog rows — cleared with Clear all). */
+  selectedFaeBriefing: string | null;
   /** Increments when `clearAllFilters` runs; local filter UIs can reset from this. */
   filterResetNonce: number;
   toggleFocusArea: (label: string) => void;
   toggleActivityType: (label: string) => void;
+  toggleArtist: (label: string) => void;
+  toggleFormat: (label: string) => void;
+  toggleNetwork: (label: string) => void;
+  setSelectedFaeBriefing: (label: string | null) => void;
   clearFocusAreas: () => void;
   clearActivityTypes: () => void;
-  /** Clears focus + activity and bumps `filterResetNonce` so Format / subpanel filters reset too. */
+  clearSelectedArtists: () => void;
+  clearSelectedFormats: () => void;
+  clearSelectedNetworks: () => void;
+  /** Clears all taxonomy + briefing + bumps `filterResetNonce` for any remaining local UIs. */
   clearAllFilters: () => void;
   setFiltersFromContentRow: (row: {
     focusAreas: readonly string[];
     activityTypes: readonly string[];
+    artists?: readonly string[];
+    formats?: readonly string[];
+    networks?: readonly string[];
   }) => void;
   /** Filter options column open (desktop layout + hero alignment). */
   filtersPanelOpen: boolean;
@@ -68,6 +93,17 @@ export type FilterSelectionContextValue = {
   /** Row currently shown in the content preview (for chrome such as HomeBar breadcrumb). */
   contentPreviewRow: ContentRow | null;
   setContentPreviewRow: Dispatch<SetStateAction<ContentRow | null>>;
+  /**
+   * Rows matching current catalog-backed filters (Focus, Activity, Artists, Format, Network), AND semantics.
+   * Used for empty-state messaging and disabling impossible options.
+   */
+  filterMatchingRowCount: number;
+  /** Catalog rows that would match if this tag were toggled (same as next click). */
+  focusOptionToggleMatchCount: ReadonlyMap<string, number>;
+  activityOptionToggleMatchCount: ReadonlyMap<string, number>;
+  artistOptionToggleMatchCount: ReadonlyMap<string, number>;
+  formatOptionToggleMatchCount: ReadonlyMap<string, number>;
+  networkOptionToggleMatchCount: ReadonlyMap<string, number>;
 };
 
 const FilterSelectionContext = createContext<FilterSelectionContextValue | null>(
@@ -75,6 +111,7 @@ const FilterSelectionContext = createContext<FilterSelectionContextValue | null>
 );
 
 export function FilterSelectionProvider({ children }: { children: ReactNode }) {
+  const { minimizeAllFloatingPanels } = useFloatingPanelStack();
   const contentPreviewOpenerRef = useRef<((row: ContentRow) => void) | null>(null);
 
   const [contentPreviewRow, setContentPreviewRow] = useState<ContentRow | null>(
@@ -250,7 +287,36 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
   const [selectedActivityTypes, setSelectedActivityTypes] = useState<Set<string>>(
     () => new Set(),
   );
+  const [selectedArtists, setSelectedArtists] = useState<Set<string>>(
+    () => new Set(),
+  );
+  const [selectedFormats, setSelectedFormats] = useState<Set<string>>(
+    () => new Set(),
+  );
+  const [selectedNetworks, setSelectedNetworks] = useState<Set<string>>(
+    () => new Set(),
+  );
+  const [selectedFaeBriefing, setSelectedFaeBriefing] = useState<string | null>(
+    null,
+  );
   const [filterResetNonce, setFilterResetNonce] = useState(0);
+
+  const taxonomySelection = useMemo(
+    (): TaxonomyFilterSelection => ({
+      focus: selectedFocusAreas,
+      activity: selectedActivityTypes,
+      artists: selectedArtists,
+      formats: selectedFormats,
+      networks: selectedNetworks,
+    }),
+    [
+      selectedFocusAreas,
+      selectedActivityTypes,
+      selectedArtists,
+      selectedFormats,
+      selectedNetworks,
+    ],
+  );
 
   const focusDerivedFromRows = useMemo(
     () => uniqueSortedLabelsFromCatalog(contentCatalog, "focusAreas"),
@@ -314,42 +380,251 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
     [taxonomyLabelsFromApi.artist, artistsDerivedFromRows],
   );
 
-  const toggleFocusArea = useCallback((label: string) => {
-    setSelectedFocusAreas((prev) => {
-      const next = new Set(prev);
-      if (next.has(label)) next.delete(label);
-      else next.add(label);
-      return next;
-    });
-  }, []);
-
-  const toggleActivityType = useCallback((label: string) => {
-    setSelectedActivityTypes((prev) => {
-      const next = new Set(prev);
-      if (next.has(label)) next.delete(label);
-      else next.add(label);
-      return next;
-    });
-  }, []);
-
-  const clearFocusAreas = useCallback(() => setSelectedFocusAreas(new Set()), []);
-  const clearActivityTypes = useCallback(
-    () => setSelectedActivityTypes(new Set()),
-    [],
+  const filterMatchingRowCount = useMemo(
+    () =>
+      countMatchingFilterRows(
+        contentCatalog,
+        taxonomySelection,
+        SIDEBAR_FILTER_MATCH_MODE,
+      ),
+    [contentCatalog, taxonomySelection],
   );
 
+  const focusOptionToggleMatchCount = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const label of filterFocusOptionLabels) {
+      const nextFocus = toggledSet(
+        selectedFocusAreas,
+        label,
+        selectedFocusAreas.has(label),
+      );
+      m.set(
+        label,
+        countMatchingFilterRows(
+          contentCatalog,
+          { ...taxonomySelection, focus: nextFocus },
+          SIDEBAR_FILTER_MATCH_MODE,
+        ),
+      );
+    }
+    return m;
+  }, [contentCatalog, filterFocusOptionLabels, taxonomySelection, selectedFocusAreas]);
+
+  const activityOptionToggleMatchCount = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const label of filterActivityOptionLabels) {
+      const nextActivity = toggledSet(
+        selectedActivityTypes,
+        label,
+        selectedActivityTypes.has(label),
+      );
+      m.set(
+        label,
+        countMatchingFilterRows(
+          contentCatalog,
+          { ...taxonomySelection, activity: nextActivity },
+          SIDEBAR_FILTER_MATCH_MODE,
+        ),
+      );
+    }
+    return m;
+  }, [
+    contentCatalog,
+    filterActivityOptionLabels,
+    taxonomySelection,
+    selectedActivityTypes,
+  ]);
+
+  const artistOptionToggleMatchCount = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const label of filterArtistOptionLabels) {
+      const nextArtists = toggledSet(
+        selectedArtists,
+        label,
+        selectedArtists.has(label),
+      );
+      m.set(
+        label,
+        countMatchingFilterRows(
+          contentCatalog,
+          { ...taxonomySelection, artists: nextArtists },
+          SIDEBAR_FILTER_MATCH_MODE,
+        ),
+      );
+    }
+    return m;
+  }, [contentCatalog, filterArtistOptionLabels, taxonomySelection, selectedArtists]);
+
+  const formatOptionToggleMatchCount = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const label of filterFormatOptionLabels) {
+      const nextFormats = toggledSet(
+        selectedFormats,
+        label,
+        selectedFormats.has(label),
+      );
+      m.set(
+        label,
+        countMatchingFilterRows(
+          contentCatalog,
+          { ...taxonomySelection, formats: nextFormats },
+          SIDEBAR_FILTER_MATCH_MODE,
+        ),
+      );
+    }
+    return m;
+  }, [contentCatalog, filterFormatOptionLabels, taxonomySelection, selectedFormats]);
+
+  const networkOptionToggleMatchCount = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const label of filterNetworkOptionLabels) {
+      const nextNetworks = toggledSet(
+        selectedNetworks,
+        label,
+        selectedNetworks.has(label),
+      );
+      m.set(
+        label,
+        countMatchingFilterRows(
+          contentCatalog,
+          { ...taxonomySelection, networks: nextNetworks },
+          SIDEBAR_FILTER_MATCH_MODE,
+        ),
+      );
+    }
+    return m;
+  }, [
+    contentCatalog,
+    filterNetworkOptionLabels,
+    taxonomySelection,
+    selectedNetworks,
+  ]);
+
+  const toggleFocusArea = useCallback(
+    (label: string) => {
+      minimizeAllFloatingPanels();
+      setSelectedFocusAreas((prev) => {
+        const next = new Set(prev);
+        if (next.has(label)) next.delete(label);
+        else next.add(label);
+        return next;
+      });
+    },
+    [minimizeAllFloatingPanels],
+  );
+
+  const toggleActivityType = useCallback(
+    (label: string) => {
+      minimizeAllFloatingPanels();
+      setSelectedActivityTypes((prev) => {
+        const next = new Set(prev);
+        if (next.has(label)) next.delete(label);
+        else next.add(label);
+        return next;
+      });
+    },
+    [minimizeAllFloatingPanels],
+  );
+
+  const toggleArtist = useCallback(
+    (label: string) => {
+      minimizeAllFloatingPanels();
+      setSelectedArtists((prev) => {
+        const next = new Set(prev);
+        if (next.has(label)) next.delete(label);
+        else next.add(label);
+        return next;
+      });
+    },
+    [minimizeAllFloatingPanels],
+  );
+
+  const toggleFormat = useCallback(
+    (label: string) => {
+      minimizeAllFloatingPanels();
+      setSelectedFormats((prev) => {
+        const next = new Set(prev);
+        if (next.has(label)) next.delete(label);
+        else next.add(label);
+        return next;
+      });
+    },
+    [minimizeAllFloatingPanels],
+  );
+
+  const toggleNetwork = useCallback(
+    (label: string) => {
+      minimizeAllFloatingPanels();
+      setSelectedNetworks((prev) => {
+        const next = new Set(prev);
+        if (next.has(label)) next.delete(label);
+        else next.add(label);
+        return next;
+      });
+    },
+    [minimizeAllFloatingPanels],
+  );
+
+  const setSelectedFaeBriefingCb = useCallback(
+    (label: string | null) => {
+      minimizeAllFloatingPanels();
+      setSelectedFaeBriefing(label);
+    },
+    [minimizeAllFloatingPanels],
+  );
+
+  const clearFocusAreas = useCallback(() => {
+    minimizeAllFloatingPanels();
+    setSelectedFocusAreas(new Set());
+  }, [minimizeAllFloatingPanels]);
+
+  const clearActivityTypes = useCallback(() => {
+    minimizeAllFloatingPanels();
+    setSelectedActivityTypes(new Set());
+  }, [minimizeAllFloatingPanels]);
+
+  const clearSelectedArtists = useCallback(() => {
+    minimizeAllFloatingPanels();
+    setSelectedArtists(new Set());
+  }, [minimizeAllFloatingPanels]);
+
+  const clearSelectedFormats = useCallback(() => {
+    minimizeAllFloatingPanels();
+    setSelectedFormats(new Set());
+  }, [minimizeAllFloatingPanels]);
+
+  const clearSelectedNetworks = useCallback(() => {
+    minimizeAllFloatingPanels();
+    setSelectedNetworks(new Set());
+  }, [minimizeAllFloatingPanels]);
+
   const clearAllFilters = useCallback(() => {
+    minimizeAllFloatingPanels();
     setSelectedFocusAreas(new Set());
     setSelectedActivityTypes(new Set());
+    setSelectedArtists(new Set());
+    setSelectedFormats(new Set());
+    setSelectedNetworks(new Set());
+    setSelectedFaeBriefing(null);
     setFilterResetNonce((n) => n + 1);
-  }, []);
+  }, [minimizeAllFloatingPanels]);
 
   const setFiltersFromContentRow = useCallback(
-    (row: { focusAreas: readonly string[]; activityTypes: readonly string[] }) => {
+    (row: {
+      focusAreas: readonly string[];
+      activityTypes: readonly string[];
+      artists?: readonly string[];
+      formats?: readonly string[];
+      networks?: readonly string[];
+    }) => {
+      minimizeAllFloatingPanels();
       setSelectedFocusAreas(new Set(row.focusAreas));
       setSelectedActivityTypes(new Set(row.activityTypes));
+      setSelectedArtists(new Set(row.artists ?? []));
+      setSelectedFormats(new Set(row.formats ?? []));
+      setSelectedNetworks(new Set(row.networks ?? []));
     },
-    [],
+    [minimizeAllFloatingPanels],
   );
 
   const openContentPreview = useCallback((row: ContentRow) => {
@@ -377,11 +652,22 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
       filterArtistOptionLabels,
       selectedFocusAreas,
       selectedActivityTypes,
+      selectedArtists,
+      selectedFormats,
+      selectedNetworks,
+      selectedFaeBriefing,
       filterResetNonce,
       toggleFocusArea,
       toggleActivityType,
+      toggleArtist,
+      toggleFormat,
+      toggleNetwork,
+      setSelectedFaeBriefing: setSelectedFaeBriefingCb,
       clearFocusAreas,
       clearActivityTypes,
+      clearSelectedArtists,
+      clearSelectedFormats,
+      clearSelectedNetworks,
       clearAllFilters,
       setFiltersFromContentRow,
       filtersPanelOpen,
@@ -399,6 +685,12 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
       registerContentPreviewOpener,
       contentPreviewRow,
       setContentPreviewRow,
+      filterMatchingRowCount,
+      focusOptionToggleMatchCount,
+      activityOptionToggleMatchCount,
+      artistOptionToggleMatchCount,
+      formatOptionToggleMatchCount,
+      networkOptionToggleMatchCount,
     }),
     [
       contentCatalog,
@@ -413,11 +705,22 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
       filterArtistOptionLabels,
       selectedFocusAreas,
       selectedActivityTypes,
+      selectedArtists,
+      selectedFormats,
+      selectedNetworks,
+      selectedFaeBriefing,
       filterResetNonce,
       toggleFocusArea,
       toggleActivityType,
+      toggleArtist,
+      toggleFormat,
+      toggleNetwork,
+      setSelectedFaeBriefingCb,
       clearFocusAreas,
       clearActivityTypes,
+      clearSelectedArtists,
+      clearSelectedFormats,
+      clearSelectedNetworks,
       clearAllFilters,
       setFiltersFromContentRow,
       filtersPanelOpen,
@@ -429,6 +732,12 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
       openContentPreview,
       registerContentPreviewOpener,
       contentPreviewRow,
+      filterMatchingRowCount,
+      focusOptionToggleMatchCount,
+      activityOptionToggleMatchCount,
+      artistOptionToggleMatchCount,
+      formatOptionToggleMatchCount,
+      networkOptionToggleMatchCount,
     ],
   );
 

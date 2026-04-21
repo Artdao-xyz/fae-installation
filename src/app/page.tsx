@@ -54,8 +54,8 @@ export default function Home() {
   );
 
   return (
-    <FilterSelectionProvider>
-      <FloatingPanelStackProvider>
+    <FloatingPanelStackProvider>
+      <FilterSelectionProvider>
         <div className="flex min-h-screen w-full">
           <FilterSidebar />
           <PixelTessellationBackground />
@@ -84,7 +84,7 @@ export default function Home() {
             </div>
           </main>
         </div>
-      </FloatingPanelStackProvider>
-    </FilterSelectionProvider>
+      </FilterSelectionProvider>
+    </FloatingPanelStackProvider>
   );
 }

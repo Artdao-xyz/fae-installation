@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
+import { useFloatingPanelStack } from "@/components/ui/floating-panels/FloatingPanelStackContext";
 import { useFilterSelection } from "../../FilterSelectionContext";
 import { filterNetworkLabelsForSearchQuery } from "@/data/network-search-filter";
 import { FilterPill } from "../../primitives/FilterPill";
@@ -16,25 +17,22 @@ export function NetworkDropdownPanel({
   variant = "default",
   onClearAll: onClearAllFromParent,
 }: NetworkDropdownPanelProps) {
-  const { filterResetNonce } = useFilterSelection();
-  return (
-    <NetworkDropdownPanelInner
-      key={filterResetNonce}
-      variant={variant}
-      onClearAll={onClearAllFromParent}
-    />
-  );
-}
-
-function NetworkDropdownPanelInner({
-  variant = "default",
-  onClearAll: onClearAllFromParent,
-}: NetworkDropdownPanelProps) {
-  const { filterNetworkOptionLabels } = useFilterSelection();
-  const [selected, setSelected] = useState<Set<string>>(() => new Set());
+  const {
+    filterNetworkOptionLabels,
+    selectedNetworks,
+    toggleNetwork,
+    clearSelectedNetworks,
+    contentCatalog,
+    contentCatalogStatus,
+    networkOptionToggleMatchCount,
+  } = useFilterSelection();
+  const { minimizeAllFloatingPanels } = useFloatingPanelStack();
   const [searchQuery, setSearchQuery] = useState("");
 
   const searching = searchQuery.trim().length > 0;
+
+  const catalogReady =
+    contentCatalogStatus === "success" && contentCatalog.length > 0;
 
   const searchMatches = useMemo(
     () =>
@@ -42,23 +40,35 @@ function NetworkDropdownPanelInner({
     [searchQuery, filterNetworkOptionLabels],
   );
 
-  const toggle = useCallback((label: string) => {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (next.has(label)) next.delete(label);
-      else next.add(label);
-      return next;
-    });
-  }, []);
-
   const handleClearAll = useCallback(() => {
+    minimizeAllFloatingPanels();
     onClearAllFromParent?.();
-    setSelected(new Set());
-  }, [onClearAllFromParent]);
+    clearSelectedNetworks();
+  }, [minimizeAllFloatingPanels, onClearAllFromParent, clearSelectedNetworks]);
 
   const pillClassName = searching
     ? "box-border w-full min-w-0 max-w-full"
     : undefined;
+
+  const networkPillProps = (label: string, className?: string) => {
+    const selected = selectedNetworks.has(label);
+    const count = networkOptionToggleMatchCount.get(label) ?? 0;
+    const disableAdd = catalogReady && !selected && count === 0;
+    return {
+      label,
+      tone: "network" as const,
+      selected,
+      onPress: () => {
+        minimizeAllFloatingPanels();
+        toggleNetwork(label);
+      },
+      className,
+      disabled: disableAdd,
+      title: disableAdd
+        ? "Nothing in the catalog matches this with your other filters"
+        : undefined,
+    };
+  };
 
   return (
     <FilterPillDropdown
@@ -92,13 +102,7 @@ function NetworkDropdownPanelInner({
                   className="w-full min-w-0 shrink-0"
                   role="listitem"
                 >
-                  <FilterPill
-                    label={label}
-                    tone="network"
-                    selected={selected.has(label)}
-                    onPress={() => toggle(label)}
-                    className={pillClassName}
-                  />
+                  <FilterPill {...networkPillProps(label, pillClassName)} />
                 </div>
               ))
             )}
@@ -110,13 +114,7 @@ function NetworkDropdownPanelInner({
             aria-label="Network"
           >
             {filterNetworkOptionLabels.map((label) => (
-              <FilterPill
-                key={label}
-                label={label}
-                tone="network"
-                selected={selected.has(label)}
-                onPress={() => toggle(label)}
-              />
+              <FilterPill key={label} {...networkPillProps(label)} />
             ))}
           </div>
         )}

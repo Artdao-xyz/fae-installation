@@ -23,6 +23,8 @@ type FilterPillProps = {
   selected?: boolean;
   onPress?: () => void;
   className?: string;
+  disabled?: boolean;
+  title?: string;
 };
 
 /**
@@ -93,6 +95,8 @@ export function FilterPill({
   selected = false,
   onPress,
   className,
+  disabled = false,
+  title,
 }: FilterPillProps) {
   const [internalOpen, setInternalOpen] = useState(false);
   const controlled = expandedProp !== undefined;
@@ -107,6 +111,7 @@ export function FilterPill({
     onExpandedChange !== undefined || expandedProp !== undefined;
 
   const toggle = () => {
+    if (disabled) return;
     if (onPress) {
       onPress();
       return;
@@ -118,18 +123,32 @@ export function FilterPill({
   const isSquare = variant === "square";
   const isDotted = variant === "dotted";
 
+  const unavailable = disabled && !selected;
+  /** `!cursor-not-allowed` beats `cursor-pointer` from `filterFramedOuterFocusClass` on dotted/rounded outers. */
+  const cursorAndFadeClass = unavailable
+    ? "!cursor-not-allowed opacity-45"
+    : "cursor-pointer";
+
   if (isDotted) {
     return (
       <button
         type="button"
         onClick={toggle}
+        disabled={unavailable}
+        aria-disabled={unavailable ? true : undefined}
+        title={title}
         aria-expanded={expandable ? isOpen : undefined}
         aria-pressed={onPress ? selected : undefined}
-        className={[filterDottedPillClassName(selected), className].filter(Boolean).join(" ")}
+        className={[
+          filterDottedPillClassName(selected),
+          cursorAndFadeClass,
+          className,
+        ]
+          .filter(Boolean)
+          .join(" ")}
         data-tone={tone}
         data-variant="dotted"
       >
-        {/* Inner span: ellipsis must apply here — not on the button (flex/truncate on buttons clips without …). */}
         <span className="block min-w-0 w-full truncate text-left">{label}</span>
       </button>
     );
@@ -140,10 +159,14 @@ export function FilterPill({
       <button
         type="button"
         onClick={toggle}
+        disabled={unavailable}
+        aria-disabled={unavailable ? true : undefined}
+        title={title}
         aria-expanded={expandable ? isOpen : undefined}
         aria-pressed={onPress ? selected : undefined}
         className={[
-          "inline-flex cursor-pointer items-center justify-start border-0 bg-transparent p-0 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ink-primary focus-visible:ring-offset-0",
+          "inline-flex items-center justify-start border-0 bg-transparent p-0 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ink-primary focus-visible:ring-offset-0",
+          cursorAndFadeClass,
           className,
         ]
           .filter(Boolean)
@@ -160,12 +183,15 @@ export function FilterPill({
     <button
       type="button"
       onClick={toggle}
+      disabled={unavailable}
+      aria-disabled={unavailable ? true : undefined}
+      title={title}
       aria-expanded={expandable ? isOpen : undefined}
       aria-pressed={onPress ? selected : undefined}
       className={[
         `fae-control-filter-outer ${filterFramedOuterFocusClass} ${
           selected ? filterFramedRoundedOuterSelectedClass : ""
-        }`,
+        } inline-flex items-baseline ${cursorAndFadeClass}`,
         className,
       ]
         .filter(Boolean)

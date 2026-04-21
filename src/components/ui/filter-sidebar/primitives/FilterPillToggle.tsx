@@ -1,3 +1,5 @@
+"use client";
+
 import type { FilterSidebarCategoryTone } from "../config/filterSidebarTones";
 import { filterDottedPillClassName } from "./filterFramedClasses";
 
@@ -6,6 +8,9 @@ type FilterPillToggleProps = {
   tone?: FilterSidebarCategoryTone;
   selected?: boolean;
   onClick?: () => void;
+  /** Dim and block presses (e.g. placeholder toggles not wired to the catalog). */
+  disabled?: boolean;
+  title?: string;
 };
 
 export function FilterPillToggle({
@@ -13,15 +18,25 @@ export function FilterPillToggle({
   tone = "fae-briefings",
   selected = false,
   onClick,
+  disabled = false,
+  title,
 }: FilterPillToggleProps) {
+  const interactive = Boolean(onClick) && !disabled;
+  const cursorClass = disabled ? "!cursor-not-allowed opacity-45" : "";
+
   return (
     <button
       type="button"
-      onClick={onClick}
-      role={onClick ? "radio" : undefined}
-      aria-checked={onClick ? selected : undefined}
+      onClick={interactive ? onClick : undefined}
+      disabled={disabled}
+      aria-disabled={disabled ? true : undefined}
+      role={interactive ? "radio" : undefined}
+      aria-checked={interactive ? selected : undefined}
+      title={title}
       data-tone={tone}
-      className={filterDottedPillClassName(selected)}
+      className={[filterDottedPillClassName(selected), cursorClass]
+        .filter(Boolean)
+        .join(" ")}
       data-name="Filters-Button-Toggle"
     >
       {label}

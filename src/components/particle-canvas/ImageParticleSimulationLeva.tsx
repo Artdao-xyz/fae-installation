@@ -20,12 +20,12 @@ export function ImageParticleSimulationLeva(props: Props) {
     },
   });
 
-  /** `true` = original OR-style (cumulative); `false` = require every selected tag (AND). */
+  /** `true` = OR within each group (focus / activity / artists); `false` = AND (match every selected tag). */
   const { cumulativeFilterMatching } = useControls("Filter matching (dev)", {
     cumulativeFilterMatching: {
-      value: true,
+      value: false,
       label:
-        "Cumulative (OR — widen when adding tags). Off = require ALL selected tags (AND). Same result if only 1 Focus + 1 Activity tag.",
+        "Cumulative (OR within each filter group). On = widen when adding tags in the same group. Off = AND (production default).",
     },
   });
 
@@ -141,12 +141,6 @@ export function ImageParticleSimulationLeva(props: Props) {
         step: 0.01,
       },
       birthPhase: { value: DEFAULTS.birthPhase, min: 0.01, max: 0.35, step: 0.01 },
-      deathPhaseStart: {
-        value: DEFAULTS.deathPhaseStart,
-        min: 0.5,
-        max: 1,
-        step: 0.01,
-      },
     }),
     Visual: folder({
       blurMax: { value: DEFAULTS.blurMax, min: 0, max: 12, step: 0.25 },

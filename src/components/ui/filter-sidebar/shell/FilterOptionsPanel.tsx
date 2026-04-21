@@ -11,6 +11,7 @@ import { Format } from "../sections/Format";
 import { NetworkMenu } from "../sections/NetworkMenu";
 import { RDProjectsMenu } from "../sections/RDProjectsMenu";
 import { Search } from "../sections/Search";
+import { FilterTaxonomyEmptyHint } from "./FilterTaxonomyEmptyHint";
 type FilterOptionsPanelProps = {
   panelId: string;
   briefingsSubpanelOpen: boolean;
@@ -49,6 +50,7 @@ export function FilterOptionsPanel({
         aria-label="Filter options"
       >
         <Search value={searchQuery} onChange={setSearchQuery} />
+        <FilterTaxonomyEmptyHint />
         <div
           className={
             searching

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback } from "react";
+import { useFloatingPanelStack } from "@/components/ui/floating-panels/FloatingPanelStackContext";
 import { useFilterSelection } from "../../FilterSelectionContext";
 import { FilterPillDropdown } from "../../primitives/FilterPillDropdown";
 import { FilterPillToggle } from "../../primitives/FilterPillToggle";
@@ -15,26 +16,24 @@ export function BriefingsDropdownPanel({
   variant = "default",
   onClearAll: onClearAllFromParent,
 }: BriefingsDropdownPanelProps) {
-  const { filterResetNonce } = useFilterSelection();
-  return (
-    <BriefingsDropdownPanelInner
-      key={filterResetNonce}
-      variant={variant}
-      onClearAll={onClearAllFromParent}
-    />
+  const { selectedFaeBriefing, setSelectedFaeBriefing } = useFilterSelection();
+  const { minimizeAllFloatingPanels } = useFloatingPanelStack();
+
+  const selectBriefing = useCallback(
+    (label: string) => {
+      minimizeAllFloatingPanels();
+      setSelectedFaeBriefing(
+        selectedFaeBriefing === label ? null : label,
+      );
+    },
+    [minimizeAllFloatingPanels, selectedFaeBriefing, setSelectedFaeBriefing],
   );
-}
 
-function BriefingsDropdownPanelInner({
-  variant = "default",
-  onClearAll: onClearAllFromParent,
-}: BriefingsDropdownPanelProps) {
-  const [selected, setSelected] = useState<string | null>(null);
-
-  const handleClearAll = () => {
+  const handleClearAll = useCallback(() => {
+    minimizeAllFloatingPanels();
     onClearAllFromParent?.();
-    setSelected(null);
-  };
+    setSelectedFaeBriefing(null);
+  }, [minimizeAllFloatingPanels, onClearAllFromParent, setSelectedFaeBriefing]);
 
   return (
     <FilterPillDropdown
@@ -52,8 +51,8 @@ function BriefingsDropdownPanelInner({
             key={label}
             label={label}
             tone="fae-briefings"
-            selected={selected === label}
-            onClick={() => setSelected(label)}
+            selected={selectedFaeBriefing === label}
+            onClick={() => selectBriefing(label)}
           />
         ))}
       </div>

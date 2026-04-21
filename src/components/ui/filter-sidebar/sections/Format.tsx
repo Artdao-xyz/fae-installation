@@ -1,29 +1,30 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
+import { useFloatingPanelStack } from "@/components/ui/floating-panels/FloatingPanelStackContext";
 import { useFilterSelection } from "../FilterSelectionContext";
 import { FormatButton } from "../domains/format/FormatButton";
 import { FilterSidebarSection } from "../primitives/FilterSidebarSection";
 
 export function Format({ collapsed = false }: { collapsed?: boolean }) {
-  const { filterResetNonce } = useFilterSelection();
-  return <FormatInner key={filterResetNonce} collapsed={collapsed} />;
-}
+  const {
+    filterFormatOptionLabels,
+    selectedFormats,
+    toggleFormat,
+    clearSelectedFormats,
+    contentCatalog,
+    contentCatalogStatus,
+    formatOptionToggleMatchCount,
+  } = useFilterSelection();
+  const { minimizeAllFloatingPanels } = useFloatingPanelStack();
 
-function FormatInner({ collapsed = false }: { collapsed?: boolean }) {
-  const { filterFormatOptionLabels } = useFilterSelection();
-  const [selected, setSelected] = useState<Set<string>>(() => new Set());
+  const catalogReady =
+    contentCatalogStatus === "success" && contentCatalog.length > 0;
 
-  const toggle = useCallback((id: string) => {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  }, []);
-
-  const clearAll = useCallback(() => setSelected(new Set()), []);
+  const clearAll = useCallback(() => {
+    minimizeAllFloatingPanels();
+    clearSelectedFormats();
+  }, [minimizeAllFloatingPanels, clearSelectedFormats]);
 
   return (
     <FilterSidebarSection
@@ -31,14 +32,28 @@ function FormatInner({ collapsed = false }: { collapsed?: boolean }) {
       onClearAll={clearAll}
       collapsed={collapsed}
     >
-      {filterFormatOptionLabels.map((label) => (
-        <FormatButton
-          key={label}
-          label={label}
-          selected={selected.has(label)}
-          onPress={() => toggle(label)}
-        />
-      ))}
+      {filterFormatOptionLabels.map((label) => {
+        const selected = selectedFormats.has(label);
+        const count = formatOptionToggleMatchCount.get(label) ?? 0;
+        const disableAdd = catalogReady && !selected && count === 0;
+        return (
+          <FormatButton
+            key={label}
+            label={label}
+            selected={selected}
+            onPress={() => {
+              minimizeAllFloatingPanels();
+              toggleFormat(label);
+            }}
+            disabled={disableAdd}
+            title={
+              disableAdd
+                ? "Nothing in the catalog matches this with your other filters"
+                : label
+            }
+          />
+        );
+      })}
     </FilterSidebarSection>
   );
 }
