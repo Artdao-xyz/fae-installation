@@ -1,5 +1,6 @@
 /**
- * Global stacking order (low → high). Keep in sync with `@theme` in `src/app/globals.css`.
+ * Global stacking order (low → high) for JS (`FloatingPanelStackContext`).
+ * Layout uses Tailwind `z-*` classes with these same integers (`z-40` sidebar, `z-[15]` main, …).
  *
  * 1. Body / page flow
  * 2. Background decoration (dotted tessellation)

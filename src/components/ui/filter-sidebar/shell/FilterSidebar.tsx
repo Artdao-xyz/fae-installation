@@ -53,9 +53,9 @@ export function FilterSidebar() {
   ]);
 
   return (
-    <div className="flex h-screen min-h-0 shrink-0 overflow-hidden z-gui w-auto min-w-0">
+    <div className="relative z-40 flex h-screen min-h-0 w-auto min-w-0 shrink-0 overflow-hidden">
       <div
-        className={`z-gui flex h-full min-h-0 flex-col items-stretch self-stretch overflow-hidden ${FILTER_SIDEBAR_COLUMN_CLASS}`}
+        className={`flex h-full min-h-0 flex-col items-stretch self-stretch overflow-hidden ${FILTER_SIDEBAR_COLUMN_CLASS}`}
       >
         <HomeBar mergeWithSubpanel={anySubpanelOpen} />
         <div

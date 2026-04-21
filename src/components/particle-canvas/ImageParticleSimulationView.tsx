@@ -1415,7 +1415,7 @@ export function ImageParticleSimulationView({
 
   return (
     <section
-      className="fixed inset-0 z-particles overflow-hidden"
+      className="fixed inset-0 z-30 overflow-hidden"
       style={{ perspective: `${config.perspective}px` }}
       aria-label="3D image particle simulation"
     >
