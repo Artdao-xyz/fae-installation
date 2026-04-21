@@ -11,7 +11,10 @@ import {
 } from "react";
 import { createPortal, flushSync } from "react-dom";
 import { useFilterSelection } from "@/components/ui/filter-sidebar/FilterSelectionContext";
-import { getFilterSubpanelColumnWidthPx } from "@/components/ui/filter-sidebar/shell/layout-classes";
+import {
+  FILTER_SUBPANELS_COLUMN_SELECTOR,
+  getFilterSubpanelColumnWidthPx,
+} from "@/components/ui/filter-sidebar/shell/layout-classes";
 import { getMarginGuideInsetPx } from "@/lib/margin-guide";
 import type { ContentRow } from "@/data/content-types";
 import {
@@ -131,7 +134,6 @@ export function ImageParticleSimulationView({
     selectedFocusAreas,
     selectedActivityTypes,
     filtersPanelOpen,
-    filterSubpanelsOpen,
     setFiltersFromContentRow,
     registerContentPreviewOpener,
     contentCatalog,
@@ -412,6 +414,11 @@ export function ImageParticleSimulationView({
       const vh = window.innerHeight;
       const reservedRight = previewRightReservationPx();
       const rightLimit = vw - reservedRight;
+      const subpanelColumnPx = (() => {
+        const el = document.querySelector(FILTER_SUBPANELS_COLUMN_SELECTOR);
+        if (!(el instanceof HTMLElement)) return 0;
+        return el.getBoundingClientRect().width;
+      })();
 
       /**
        * Filter panel closed: match fixed hero — orbit uses full viewport width (minus preview
@@ -452,11 +459,10 @@ export function ImageParticleSimulationView({
       let width = Math.max(64, right - left);
       const height = Math.max(64, r.bottom - top);
       let cx = left + width / 2;
-      /** Keep orbit center + width as if domain subpanels were closed (only extra column shifts main). */
-      if (filterSubpanelsOpen) {
-        const subW = getFilterSubpanelColumnWidthPx(vw);
-        cx -= subW / 2;
-        width += subW;
+      /** Undo main-column shrink from the domain subpanel stack (measured px tracks CSS width transition). */
+      if (subpanelColumnPx > 0) {
+        cx -= subpanelColumnPx / 2;
+        width += subpanelColumnPx;
       }
       const next: PlacementBounds = {
         cx,
@@ -471,8 +477,10 @@ export function ImageParticleSimulationView({
 
     measure();
     const el = placementContainerRef?.current;
+    const subCol = document.querySelector(FILTER_SUBPANELS_COLUMN_SELECTOR);
     const ro = new ResizeObserver(measure);
     if (el) ro.observe(el);
+    if (subCol instanceof HTMLElement) ro.observe(subCol);
     window.addEventListener("resize", measure);
     window.addEventListener("scroll", measure, true);
     return () => {
@@ -485,7 +493,6 @@ export function ImageParticleSimulationView({
     previewRow,
     previewFullScreen,
     filtersPanelOpen,
-    filterSubpanelsOpen,
   ]);
 
   // ---- Catalog from Strapi (single shared fetch in FilterSelectionProvider) ----

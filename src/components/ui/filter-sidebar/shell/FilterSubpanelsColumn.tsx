@@ -39,6 +39,7 @@ export function FilterSubpanelsColumn({
 
   return (
     <div
+      data-fae-filter-subpanels-column
       className={`flex h-full min-h-0 flex-col overflow-hidden ${FILTER_SUBPANEL_COLUMN_TRANSITION_CLASS} ${
         !filtersPanelOpen
           ? "w-0 min-w-0 max-w-0 shrink-0 border-0 opacity-0 pointer-events-none"

@@ -33,6 +33,9 @@ export function getFilterSubpanelColumnWidthPx(viewportWidth: number): number {
   return viewportWidth * 0.25;
 }
 
+/** Root of `FilterSubpanelsColumn` — `querySelector` for live width during open/close transitions. */
+export const FILTER_SUBPANELS_COLUMN_SELECTOR = "[data-fae-filter-subpanels-column]";
+
 export const SUBPANEL_COLUMN_COLLAPSED_CLASS =
   "w-0 min-w-0 max-w-0 shrink-0 overflow-hidden";
 

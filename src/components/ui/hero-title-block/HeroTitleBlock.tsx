@@ -1,22 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useFilterSelection } from "@/components/ui/filter-sidebar/FilterSelectionContext";
-import { getFilterSubpanelColumnWidthPx } from "@/components/ui/filter-sidebar/shell/layout-classes";
-
-function subscribeResize(cb: () => void) {
-  if (typeof window === "undefined") return () => {};
-  window.addEventListener("resize", cb);
-  return () => window.removeEventListener("resize", cb);
-}
-
-function useInnerWidth(): number {
-  return useSyncExternalStore(
-    subscribeResize,
-    () => window.innerWidth,
-    () => 1024,
-  );
-}
 
 type Props = {
   title: string;
@@ -24,19 +9,22 @@ type Props = {
   className?: string;
 };
 
+/**
+ * Horizontal center of the main column **as if the domain subpanel stack were closed**:
+ * `25vw` matches `FILTER_SIDEBAR_COLUMN_CLASS`; subpanel width is ignored so the title does not
+ * track that column’s animation (avoids tremor). Desktop nudge matches former `absolute` layout.
+ */
+const HERO_LEFT_FILTERS_OPEN_CLASS =
+  "left-[calc(25vw+(100vw-25vw)/2)] md:left-[calc(25vw+(100vw-25vw)/2-var(--width-filter-narrow-column))]";
+
 export function HeroTitleBlock({ title, subtitle, className = "" }: Props) {
-  const {
-    selectedFocusAreas,
-    selectedActivityTypes,
-    filtersPanelOpen,
-    filterSubpanelsOpen,
-  } = useFilterSelection();
+  const { selectedFocusAreas, selectedActivityTypes, filtersPanelOpen } =
+    useFilterSelection();
   const filterActive =
     selectedFocusAreas.size > 0 || selectedActivityTypes.size > 0;
 
   /**
    * Reveal title/subtitle on mount so they appear before Strapi-backed imagery loads in the canvas.
-   * (Position still follows `filtersPanelOpen` for layout; minor shift may occur when the panel opens.)
    */
   const heroRevealOnceRef = useRef(false);
   const [heroTextEnter, setHeroTextEnter] = useState(false);
@@ -61,39 +49,17 @@ export function HeroTitleBlock({ title, subtitle, className = "" }: Props) {
     };
   }, []);
 
-  const innerWidth = useInnerWidth();
-  const subpanelHalfPx =
-    filtersPanelOpen && filterSubpanelsOpen
-      ? getFilterSubpanelColumnWidthPx(innerWidth) / 2
-      : 0;
-
-  /** Open: align to main column (incl. desktop 35px nudge). Closed: center in full viewport. */
-  const useSubpanelShift = filtersPanelOpen && filterSubpanelsOpen;
-
-  /**
-   * Use Tailwind translate for normal centering; inline `transform` only when subpanel needs px shift.
-   * (Always applying translate via `style` broke alignment with `md:left-[calc(50%-…)]` in some layouts.)
-   */
   const positionClass = filtersPanelOpen
-    ? `absolute top-1/2 left-1/2 md:left-[calc(50%-var(--width-filter-narrow-column))]${
-        useSubpanelShift ? "" : " -translate-x-1/2 -translate-y-1/2"
-      }`
+    ? `fixed top-1/2 ${HERO_LEFT_FILTERS_OPEN_CLASS} -translate-x-1/2 -translate-y-1/2`
     : "fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2";
 
   const hiddenUntilFade = !heroTextEnter;
 
   return (
     <div
-      className={`z-20 flex flex-col items-start justify-center whitespace-nowrap transition-opacity duration-300 ease-out motion-reduce:transition-none ${positionClass} ${
+      className={`z-20 flex flex-col items-start justify-center whitespace-nowrap [transition:left_500ms_ease-in-out,opacity_300ms_ease-out] motion-reduce:transition-none ${positionClass} ${
         filterActive ? "pointer-events-none opacity-0" : "opacity-100"
       } ${className}`}
-      style={
-        useSubpanelShift
-          ? {
-              transform: `translateX(calc(-50% - ${subpanelHalfPx}px)) translateY(-50%)`,
-            }
-          : undefined
-      }
       aria-hidden={filterActive}
     >
       <div
