@@ -98,8 +98,8 @@
     420px,
     calc(100vw - 2.5rem - var(--width-filter-narrow-column))
   );
-  /** Same as filter sidebar column (`FILTER_SIDEBAR_COLUMN_CLASS`): 25vw. */
-  --width-preview-panel: 25vw;
+  /** Content preview dock (wider than filter sidebar column). */
+  --width-preview-panel: 30vw;
 
   --max-height-about-panel: min(70dvh, calc(100dvh - 2.5rem));
   --max-height-latest-updates-panel: min(85dvh, calc(100dvh - 2.5rem));
@@ -144,7 +144,7 @@
 
 @layer utilities {
   /**
-   * Preview drawer width: theme token `--width-preview-panel` (25vw); utility for explicit width.
+   * Preview drawer width: theme token `--width-preview-panel` (30vw); utility for explicit width.
    */
   .w-preview-panel {
     width: var(--width-preview-panel);

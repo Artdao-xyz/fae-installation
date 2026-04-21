@@ -28,9 +28,14 @@ export const PREVIEW_DOCK_WIDTH_TRANSITION_CLASS =
 /** Alias for expanded subpanel stack (same width token). */
 export const FILTER_SUBPANELS_COLUMN_EXPANDED_CLASS = FILTER_SIDEBAR_COLUMN_CLASS;
 
-/** Pixel width matching `FILTER_SIDEBAR_COLUMN_CLASS` / `--width-preview-panel` (hero + particle bounds). */
+/** Pixel width matching `FILTER_SIDEBAR_COLUMN_CLASS` (25vw). */
 export function getFilterSubpanelColumnWidthPx(viewportWidth: number): number {
   return viewportWidth * 0.25;
+}
+
+/** Pixel width matching `--width-preview-panel` (30vw); keep in sync with `globals.css`. */
+export function getPreviewPanelWidthPx(viewportWidth: number): number {
+  return viewportWidth * 0.3;
 }
 
 /** Root of `FilterSubpanelsColumn` — `querySelector` for live width during open/close transitions. */

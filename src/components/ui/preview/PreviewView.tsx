@@ -139,8 +139,8 @@ function PreviewMainContent({ row }: { row: ContentRow }) {
             aria-hidden
           />
         )}
-        <div className="flex min-w-0 flex-1 flex-col items-start justify-start gap-2.5 leading-none">
-          <p className="font-lust-text text-xl tracking-[-0.38px] text-black-fae">
+        <div className="flex min-w-0 flex-1 flex-col items-start justify-start gap-2.5">
+          <p className="min-w-0 max-w-full wrap-anywhere font-lust-text text-xl leading-snug tracking-[-0.38px] text-black-fae">
             {row.title}
           </p>
           {dateLine ? (

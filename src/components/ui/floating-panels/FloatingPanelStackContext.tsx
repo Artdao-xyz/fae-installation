@@ -41,6 +41,8 @@ type Ctx = {
   setGlossaryView: Dispatch<SetStateAction<DockPanelView>>;
   latestUpdatesView: DockPanelView;
   setLatestUpdatesView: Dispatch<SetStateAction<DockPanelView>>;
+  /** Closes About (including full-screen), Glossary, and Latest updates. */
+  minimizeAllFloatingPanels: () => void;
 };
 
 const FloatingPanelStackContext = createContext<Ctx | null>(null);
@@ -105,6 +107,14 @@ export function FloatingPanelStackProvider({ children }: { children: ReactNode }
     [panels],
   );
 
+  const minimizeAllFloatingPanels = useCallback(() => {
+    setPanels({
+      about: "minimized",
+      glossary: "minimized",
+      latestUpdates: "minimized",
+    });
+  }, []);
+
   const value = useMemo<Ctx>(
     () => ({
       getChromeZIndex,
@@ -114,6 +124,7 @@ export function FloatingPanelStackProvider({ children }: { children: ReactNode }
       setGlossaryView,
       latestUpdatesView: panels.latestUpdates,
       setLatestUpdatesView,
+      minimizeAllFloatingPanels,
     }),
     [
       getChromeZIndex,
@@ -123,6 +134,7 @@ export function FloatingPanelStackProvider({ children }: { children: ReactNode }
       setAboutView,
       setGlossaryView,
       setLatestUpdatesView,
+      minimizeAllFloatingPanels,
     ],
   );
 

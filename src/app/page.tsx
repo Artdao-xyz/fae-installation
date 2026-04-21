@@ -11,6 +11,7 @@ import { MarginGuideFrame } from "@/components/ui/margin-guide-frame";
 import { PixelTessellationBackground } from "@/components/ui/pixel-tessellation-background";
 import { ImageParticleSimulation } from "@/components/particle-canvas/ImageParticleSimulation";
 import { IMAGE_FETCH_LIMIT } from "@/components/particle-canvas/config";
+import { FloatingPanelStackProvider } from "@/components/ui/floating-panels/FloatingPanelStackContext";
 
 type Mode = "optimized" | "snappy";
 
@@ -54,34 +55,36 @@ export default function Home() {
 
   return (
     <FilterSelectionProvider>
-      <div className="flex min-h-screen w-full">
-        <FilterSidebar />
-        <PixelTessellationBackground />
-        <FloatingDockMount />
-        <main className="relative z-1 flex min-h-0 min-w-0 flex-1 flex-col p-5 text-ink-body">
-          <MarginGuideFrame />
-          <HeroTitleBlock
-            title="Future Art Ecosystems"
-            subtitle="Cultural Infrastructure Research"
-          />
-
-          <div
-            ref={particlePlacementRef}
-            className="relative min-h-0 w-full flex-1"
-          >
-            <ImageParticleSimulation
-              mode={mode}
-              imageLimit={imageLimit}
-              fetchedWidth={FETCHED_WIDTH}
-              fetchedHeight={FETCHED_HEIGHT}
-              displayedWidth={DISPLAYED_WIDTH}
-              displayedHeight={DISPLAYED_HEIGHT}
-              speedFactor={SPEED_FACTOR}
-              placementContainerRef={particlePlacementRef}
+      <FloatingPanelStackProvider>
+        <div className="flex min-h-screen w-full">
+          <FilterSidebar />
+          <PixelTessellationBackground />
+          <FloatingDockMount />
+          <main className="relative z-1 flex min-h-0 min-w-0 flex-1 flex-col p-5 text-ink-body">
+            <MarginGuideFrame />
+            <HeroTitleBlock
+              title="Future Art Ecosystems"
+              subtitle="Cultural Infrastructure Research"
             />
-          </div>
-        </main>
-      </div>
+
+            <div
+              ref={particlePlacementRef}
+              className="relative min-h-0 w-full flex-1"
+            >
+              <ImageParticleSimulation
+                mode={mode}
+                imageLimit={imageLimit}
+                fetchedWidth={FETCHED_WIDTH}
+                fetchedHeight={FETCHED_HEIGHT}
+                displayedWidth={DISPLAYED_WIDTH}
+                displayedHeight={DISPLAYED_HEIGHT}
+                speedFactor={SPEED_FACTOR}
+                placementContainerRef={particlePlacementRef}
+              />
+            </div>
+          </main>
+        </div>
+      </FloatingPanelStackProvider>
     </FilterSelectionProvider>
   );
 }

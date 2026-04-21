@@ -11,9 +11,10 @@ import {
 } from "react";
 import { createPortal, flushSync } from "react-dom";
 import { useFilterSelection } from "@/components/ui/filter-sidebar/FilterSelectionContext";
+import { useFloatingPanelStack } from "@/components/ui/floating-panels/FloatingPanelStackContext";
 import {
   FILTER_SUBPANELS_COLUMN_SELECTOR,
-  getFilterSubpanelColumnWidthPx,
+  getPreviewPanelWidthPx,
 } from "@/components/ui/filter-sidebar/shell/layout-classes";
 import { getMarginGuideInsetPx } from "@/lib/margin-guide";
 import type { ContentRow } from "@/data/content-types";
@@ -143,6 +144,8 @@ export function ImageParticleSimulationView({
     contentCatalogFetchMs,
   } = useFilterSelection();
 
+  const { minimizeAllFloatingPanels } = useFloatingPanelStack();
+
   const idleTextFullTitleRef = useRef(idleTextFullTitle);
   idleTextFullTitleRef.current = idleTextFullTitle;
 
@@ -176,10 +179,11 @@ export function ImageParticleSimulationView({
 
   const handleFilteredThumbnailClick = useCallback(
     (row: ContentRow) => {
+      minimizeAllFloatingPanels();
       setFiltersFromContentRow(row);
       setPreviewRow(row);
     },
-    [setFiltersFromContentRow],
+    [minimizeAllFloatingPanels, setFiltersFromContentRow],
   );
 
   useEffect(() => {
@@ -410,7 +414,7 @@ export function ImageParticleSimulationView({
       if (previewFullScreen) return 0;
       const vw = window.innerWidth;
       const inset = getMarginGuideInsetPx();
-      const panelW = getFilterSubpanelColumnWidthPx(vw);
+      const panelW = getPreviewPanelWidthPx(vw);
       return inset + panelW;
     };
 
