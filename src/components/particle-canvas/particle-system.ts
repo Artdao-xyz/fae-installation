@@ -25,39 +25,39 @@ export function v3Sub(a: Vec3, b: Vec3): Vec3 {
 // ---------------------------------------------------------------------------
 
 export const DEFAULTS = {
-  perspective: 1000,
-  zNear: 400,
-  zFar: -600,
+  perspective: 600,
+  zNear: 75,
+  zFar: -100,
 
-  drag: 2.0,
-  repulsionRadius: 110,
-  repulsionStrength: 8000,
-  turbulenceStrength: 180,
+  drag: 1.4,
+  repulsionRadius: 100,
+  repulsionStrength: 6500,
+  turbulenceStrength: 130,
   turbulenceSpeed: 1.0,
 
-  orbitSpeedMin: 0.25,
-  orbitSpeedMax: 0.6,
-  orbitRadialSpring: 0.8,
-  orbitTangentialForce: 380,
-  orbitZAmplitude: 0.48,
-  orbitZSpeedMin: 0.3,
-  orbitZSpeedMax: 0.7,
-  orbitTiltDeg: -15,
+  orbitSpeedMin: 0.15,
+  orbitSpeedMax: 0.26,
+  orbitRadialSpring: 0.3,
+  orbitTangentialForce: 160,
+  orbitZAmplitude: 0.13,
+  orbitZSpeedMin: 0.35,
+  orbitZSpeedMax: 0.45,
+  orbitTiltDeg: -30,
   /** Larger = wider radial band (inner/outer orbit radii differ more). */
-  orbitRadiusSpread: 0.3,
-  viewportPadding: 60,
-  viewportWallStrength: 3.0,
+  orbitRadiusSpread: 0.1,
+  viewportPadding: 80,
+  viewportWallStrength: 3.5,
 
-  lifeSpeedMin: 0.08,
-  lifeSpeedMax: 0.22,
+  lifeSpeedMin: 0.03,
+  lifeSpeedMax: 0.2,
   /** Normalized life window [0, birthPhase) for fade-in; fade-out uses the same length at end of life. */
-  birthPhase: 0.18,
+  birthPhase: 0.19,
 
-  blurMax: 3.25,
-  blurFarGate: 0.33,
+  blurMax: 6.0,
+  blurFarGate: 0.11,
 
-  baseScaleMin: 0.6,
-  baseScaleMax: 1.4,
+  baseScaleMin: 0.72,
+  baseScaleMax: 1.32,
 };
 
 export type SimConfig = typeof DEFAULTS;
@@ -298,7 +298,7 @@ export class ParticleSystem {
         c.orbitZSpeedMin + r(3.9) * (c.orbitZSpeedMax - c.orbitZSpeedMin),
       scale: 0,
       baseScale: isText
-        ? 1.0
+        ? 1.2
         : c.baseScaleMin + r(8.1) * (c.baseScaleMax - c.baseScaleMin),
       opacity: 0,
       isText,
