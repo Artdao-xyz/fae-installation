@@ -665,6 +665,7 @@ export function ImageParticleSimulationView({
         textIndexSet,
         selPick,
         filterMatchModeRef.current,
+        { w: placementBounds.w, h: placementBounds.h },
       );
       if (orderedPick.length === 0) return false;
 
@@ -761,9 +762,14 @@ export function ImageParticleSimulationView({
         textIndexSet,
         sel,
         filterMatchModeRef.current,
+        { w: placementBounds.w, h: placementBounds.h },
       );
 
       const phaseNow = spreadLayoutPhaseRef.current;
+
+      const spreadListMatchesOrdered =
+        ordered.length === selectedIndicesRef.current.length &&
+        ordered.every((v, i) => selectedIndicesRef.current[i] === v);
 
       /** Swap filter selection while spread is active: animate straight to new targets (no leave → idle). */
       const shouldRespreadInPlace =
@@ -773,7 +779,18 @@ export function ImageParticleSimulationView({
         spreadEnterSignatureRef.current !== null &&
         sig !== spreadEnterSignatureRef.current;
 
-      if (shouldRespreadInPlace && systemRef.current) {
+      /** Viewport / placement shrinks or grows: capped pick list changed — reflow spread count. */
+      const shouldRespreadForViewport =
+        (phaseNow === "hold" || phaseNow === "enter") &&
+        spreadActive &&
+        ordered.length > 0 &&
+        spreadEnterSignatureRef.current !== null &&
+        !spreadListMatchesOrdered;
+
+      if (
+        (shouldRespreadInPlace || shouldRespreadForViewport) &&
+        systemRef.current
+      ) {
         beginSpreadEnter(now);
       }
 

@@ -29,12 +29,38 @@ export const FILTER_BG_OPACITY_MUL = 0.03;
 /** RAF tick: idle physics vs easing into spread vs locked spread vs easing out. */
 export type SpreadLayoutPhase = "idle" | "enter" | "hold" | "leave";
 
+/**
+ * Rough max full-card spread slots for a viewport (non-overlap budget; aligns with organic pack).
+ * Smaller canvases → fewer tiles; capped at {@link FILTER_MAX}.
+ */
+export function maxSpreadCountForViewport(
+  vw: number,
+  vh: number,
+  cardSize: ThumbnailSize = "lg",
+): number {
+  if (!Number.isFinite(vw) || !Number.isFinite(vh) || vw <= 0 || vh <= 0) {
+    return 1;
+  }
+  const { width: cw, height: ch } = getThumbnailFullCardOuterSize(cardSize);
+  const gap = SPREAD_GAP;
+  const pad = 2;
+  const innerW = Math.max(0, vw - cw - 2 * pad);
+  const innerH = Math.max(0, vh - ch - 2 * pad);
+  const unitW = cw + gap;
+  const unitH = ch + gap;
+  if (unitW < 1 || unitH < 1) return 1;
+  const raw = (innerW / unitW) * (innerH / unitH) * 0.92;
+  const n = Math.ceil(raw);
+  return clamp(Math.max(1, n), 1, FILTER_MAX);
+}
+
 /** Up to {@link FILTER_MAX} indices: eligible rows by menu tags, then prefer image tiles. */
 export function pickSpreadIndicesFromRows(
   contentRows: ContentRow[],
   textIndexSet: Set<number>,
   taxonomy: TaxonomyFilterSelection,
   matchMode: FilterMatchMode = "intersection",
+  viewport?: { w: number; h: number } | null,
 ): number[] {
   const eligible: number[] = [];
   for (let i = 0; i < contentRows.length; i++) {
@@ -49,7 +75,10 @@ export function pickSpreadIndicesFromRows(
     else preferImages.push(i);
   }
   const ordered = [...preferImages, ...rest];
-  const cap = Math.min(FILTER_MAX, ordered.length);
+  let cap = Math.min(FILTER_MAX, ordered.length);
+  if (viewport && viewport.w > 0 && viewport.h > 0) {
+    cap = Math.min(cap, maxSpreadCountForViewport(viewport.w, viewport.h));
+  }
   return ordered.slice(0, cap);
 }
 
