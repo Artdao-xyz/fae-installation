@@ -1,9 +1,10 @@
 /**
- * Main filter chrome column: 25vw. Domain subpanel stack: 20vw (narrower than the panel).
- * Preview dock uses `--width-preview-panel` (30vw). Options strip: `FILTER_OPTIONS_PANEL_CLIP_TRANSITION_CLASS`.
+ * Main filter chrome column: `--width-filter-chrome-column` (25vw below 2xl, 20vw from 2xl up).
+ * Domain subpanel stack: 20vw. Preview dock: `--width-preview-panel` (30vw).
+ * Options strip: `FILTER_OPTIONS_PANEL_CLIP_TRANSITION_CLASS`.
  */
 export const FILTER_SIDEBAR_COLUMN_CLASS =
-  "w-[25vw] max-w-[25vw] shrink-0";
+  "w-[var(--width-filter-chrome-column)] max-w-[var(--width-filter-chrome-column)] shrink-0";
 
 /**
  * Filter options strip: clip with `max-width` (avoids `fr` track interpolation feeling like

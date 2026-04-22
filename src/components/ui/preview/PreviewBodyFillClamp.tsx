@@ -85,6 +85,8 @@ function shellHeightPx(el: HTMLElement): number {
   return el.clientHeight;
 }
 
+const OVERFLOW_EPS_PX = 1;
+
 type PreviewBodyFillClampProps = {
   children: ReactNode;
   /**
@@ -92,6 +94,8 @@ type PreviewBodyFillClampProps = {
    * and the line count is re-derived.
    */
   contentKey: string;
+  /** Fires when the body is (or is not) cut off by the line-clamp, at any breakpoint. */
+  onClampedChange?: (isClamped: boolean) => void;
 };
 
 /**
@@ -99,7 +103,11 @@ type PreviewBodyFillClampProps = {
  * `lineCount` so it updates). Bottom fade. Line budget: shell height, `line-height`, Strapi
  * block gaps. See `PREVIEW_BODY_LINE_BUDGET_DIVISOR` for a debug half-budget.
  */
-export function PreviewBodyFillClamp({ children, contentKey }: PreviewBodyFillClampProps) {
+export function PreviewBodyFillClamp({
+  children,
+  contentKey,
+  onClampedChange,
+}: PreviewBodyFillClampProps) {
   const shellRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const [lineCount, setLineCount] = useState(3);
@@ -118,12 +126,26 @@ export function PreviewBodyFillClamp({ children, contentKey }: PreviewBodyFillCl
     const shell = shellRef.current;
     if (!shell) return;
 
+    const scheduleClampReport = () => {
+      if (!onClampedChange) return;
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          const el = contentRef.current;
+          const isClamped = Boolean(
+            el && el.scrollHeight > el.clientHeight + OVERFLOW_EPS_PX,
+          );
+          onClampedChange(isClamped);
+        });
+      });
+    };
+
     const update = () => {
       const h = shellHeightPx(shell);
       const n = lineBudgetForContent(contentRef.current, h);
       setLineCount(
         Math.max(1, Math.floor(n / PREVIEW_BODY_LINE_BUDGET_DIVISOR)),
       );
+      scheduleClampReport();
     };
 
     update();
@@ -144,7 +166,7 @@ export function PreviewBodyFillClamp({ children, contentKey }: PreviewBodyFillCl
       alive = false;
       ro.disconnect();
     };
-  }, [contentKey]);
+  }, [contentKey, onClampedChange]);
 
   return (
     <div

@@ -265,9 +265,12 @@ function CategoryBlock({ label, children }: { label: string; children: ReactNode
 function PreviewMainContent({
   row,
   fullScreen,
+  onBodyClampedChange,
 }: {
   row: ContentRow;
   fullScreen: boolean;
+  /** Docked only: set when the line-clamped body is cut off; used for the "Show more" CTA. */
+  onBodyClampedChange?: (isClamped: boolean) => void;
 }) {
   const previewSlides = useMemo(
     () =>
@@ -419,11 +422,16 @@ function PreviewMainContent({
         <PreviewBodyFillClamp
           key={`${row.id}-blocks`}
           contentKey={`${row.id}-blocks`}
+          onClampedChange={onBodyClampedChange}
         >
           <PreviewBlocksBody content={row.contentBlocks} />
         </PreviewBodyFillClamp>
       ) : (
-        <PreviewBodyFillClamp key={`${row.id}-plain`} contentKey={row.id}>
+        <PreviewBodyFillClamp
+          key={`${row.id}-plain`}
+          contentKey={row.id}
+          onClampedChange={onBodyClampedChange}
+        >
           <RichParagraph text={row.content} preserveParagraphBreaks />
         </PreviewBodyFillClamp>
       )}
@@ -488,9 +496,9 @@ function PreviewMainContent({
 /** Fixed shell: clip width 0 → token (avoids `fr` interpolation overshoot in some browsers). */
 const previewDockedOuterClass = `fixed top-[var(--inset-margin-guide)] right-[var(--inset-margin-guide)] bottom-[var(--inset-margin-guide)] z-[47] flex min-h-0 min-w-0 justify-end overflow-hidden ${PREVIEW_DOCK_WIDTH_TRANSITION_CLASS}`;
 
-/** `minmax(0,1fr)` lets the middle row shrink; otherwise content spills under the "Show more" bar. */
-const previewDockedAsideClass =
-  "grid h-full min-h-0 w-preview-panel shrink-0 grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden border-hairline border-solid border-ink-primary bg-surface-canvas";
+/** `minmax(0,1fr)` keeps the body row from swallowing the chrome rows. */
+const previewDockedAsideBaseClass =
+  "grid h-full min-h-0 w-preview-panel shrink-0 overflow-hidden border-hairline border-solid border-ink-primary bg-surface-canvas";
 
 export const PreviewView = memo(function PreviewView({
   row,
@@ -501,6 +509,14 @@ export const PreviewView = memo(function PreviewView({
   const { closeContentPreview } = useFilterSelection();
   /** Replay open animation when switching docked ↔ full screen (same easing as filter drawer). */
   const [shellEntered, setShellEntered] = useState(false);
+  const [dockedBodyClamped, setDockedBodyClamped] = useState(false);
+
+  useEffect(() => {
+    const id = requestAnimationFrame(() => {
+      setDockedBodyClamped(false);
+    });
+    return () => cancelAnimationFrame(id);
+  }, [row.id]);
 
   useEffect(() => {
     let cancelled = false;
@@ -538,7 +554,7 @@ export const PreviewView = memo(function PreviewView({
         />
         <div className={fullScreenContentScrollClass}>
           <div className={fullScreenContentInnerClass}>
-            <PreviewMainContent row={row} fullScreen />
+            <PreviewMainContent row={row} fullScreen onBodyClampedChange={undefined} />
           </div>
         </div>
         <div className="flex shrink-0 justify-start">
@@ -568,7 +584,11 @@ export const PreviewView = memo(function PreviewView({
       role="presentation"
     >
       <aside
-        className={`${previewDockedAsideClass} ${className}`}
+        className={`${previewDockedAsideBaseClass} ${
+          dockedBodyClamped
+            ? "grid-rows-[auto_minmax(0,1fr)_auto]"
+            : "grid-rows-[auto_minmax(0,1fr)]"
+        } ${className}`}
         aria-label="Content preview"
         role="dialog"
         aria-modal="true"
@@ -578,22 +598,28 @@ export const PreviewView = memo(function PreviewView({
           onClose={closeContentPreview}
         />
         <div className="flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden px-5 pt-5 pb-0">
-          <PreviewMainContent row={row} fullScreen={false} />
+          <PreviewMainContent
+            row={row}
+            fullScreen={false}
+            onBodyClampedChange={setDockedBodyClamped}
+          />
         </div>
 
-        <div className="flex min-h-0 shrink-0 justify-start">
-          <button
-            type="button"
-            onClick={() => onFullScreenChange(true)}
-            className={fullScreenShowMoreLessButtonClass}
-            aria-label="Open full screen preview"
-          >
-            <OpenSvgIcon className="shrink-0 rotate-180" />
-            <span className={fullScreenShowMoreLessLabelClass}>
-              Show more
-            </span>
-          </button>
-        </div>
+        {dockedBodyClamped ? (
+          <div className="flex min-h-0 shrink-0 justify-start">
+            <button
+              type="button"
+              onClick={() => onFullScreenChange(true)}
+              className={fullScreenShowMoreLessButtonClass}
+              aria-label="Open full screen preview"
+            >
+              <OpenSvgIcon className="shrink-0 rotate-180" />
+              <span className={fullScreenShowMoreLessLabelClass}>
+                Show more
+              </span>
+            </button>
+          </div>
+        ) : null}
       </aside>
     </div>
   );

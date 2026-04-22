@@ -76,8 +76,15 @@
   --border-width-fine: 0.3px;
 
   --width-filter-narrow-column: 35px;
-  /** Filter options area inside the 25vw column (excluding the narrow rail). */
-  --width-filter-options: calc(25vw - var(--width-filter-narrow-column));
+  /**
+   * Main filter column width. Below 2xl: 25vw; from 2xl up: 20vw (less dominant on very wide viewports).
+   * Matches `max-width: theme(--breakpoint-2xl)` in the override block below.
+   */
+  --width-filter-chrome-column: 25vw;
+  /** Options strip = chrome column minus the narrow rail. */
+  --width-filter-options: calc(
+    var(--width-filter-chrome-column) - var(--width-filter-narrow-column)
+  );
   --inset-margin-guide: calc(var(--width-filter-narrow-column) - 1px);
   --height-filter-chrome-bar: var(--width-filter-narrow-column);
   --height-filter-narrow-toggle: 35px;
@@ -104,6 +111,13 @@
   --max-height-about-panel: min(70dvh, calc(100dvh - 2.5rem));
   --max-height-latest-updates-panel: min(85dvh, calc(100dvh - 2.5rem));
   --max-width-floating-panel: calc(100vw - 2.5rem);
+}
+
+/* Align with Tailwind default 2xl breakpoint (96rem / 1536px). */
+@media (min-width: 96rem) {
+  :root {
+    --width-filter-chrome-column: 20vw;
+  }
 }
 
 * {

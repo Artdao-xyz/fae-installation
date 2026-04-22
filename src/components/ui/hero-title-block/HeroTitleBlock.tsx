@@ -11,11 +11,11 @@ type Props = {
 
 /**
  * Horizontal center of the main column **as if the domain subpanel stack were closed**:
- * `25vw` matches `FILTER_SIDEBAR_COLUMN_CLASS`; subpanel width is ignored so the title does not
+ * `--width-filter-chrome-column` matches `FILTER_SIDEBAR_COLUMN_CLASS`; subpanel width is ignored so the title does not
  * track that column’s animation (avoids tremor). Desktop nudge matches former `absolute` layout.
  */
 const HERO_LEFT_FILTERS_OPEN_CLASS =
-  "left-[calc(25vw+(100vw-25vw)/2)] md:left-[calc(25vw+(100vw-25vw)/2-var(--width-filter-narrow-column))]";
+  "left-[calc(var(--width-filter-chrome-column)+(100vw-var(--width-filter-chrome-column))/2)] md:left-[calc(var(--width-filter-chrome-column)+(100vw-var(--width-filter-chrome-column))/2-var(--width-filter-narrow-column))]";
 
 export function HeroTitleBlock({ title, subtitle, className = "" }: Props) {
   const { selectedFocusAreas, selectedActivityTypes, filtersPanelOpen } =
