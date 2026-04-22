@@ -8,12 +8,15 @@ import {
   type TaxonomyFilterSelection,
   rowMatchesFilterSelection,
 } from "@/lib/filter-row-match";
-import { computeOrganicSpreadLayout } from "@/lib/organic-spread-layout";
+import {
+  computeOrganicSpreadLayout,
+  relaxViewportCardCenters,
+} from "@/lib/organic-spread-layout";
 import { clamp, v3, type Vec3 } from "./particle-system";
 
 export type { FilterMatchMode, TaxonomyFilterSelection };
 
-export const FILTER_MAX = 50  ;
+export const FILTER_MAX = 30  ;
 export const REGROUP_MS = 1000;
 /** Background dim (opacity + filters) eases faster than spread motion. */
 export const FILTER_DIM_MS = 320;
@@ -28,6 +31,13 @@ export const HOVER_ENTER_DELAY_MS = 220;
 export const HOVER_POINTER_MOTION_MAX_AGE_MS = 1000;
 /** Minimum gap between card outer rects (px). */
 const SPREAD_GAP = 26;
+/**
+ * After organic pack + polar sort, nudge each slot on xy so large spreads read less like a
+ * perfect lattice. Amplitude is **not** capped to ~one margin — `min(cw,ch)*fraction` is the
+ * primary scale. {@link mergeInPlaceSpreadTargets} reuses the same targets when in-place.
+ */
+const SPREAD_JITTER_FRACTION_OF_MIN_CARD = 0.18;
+const SPREAD_JITTER_MAX_PX = 56;
 /**
  * Non-selected tiles while spread is active — multiplied into particle opacity at full dim.
  * Higher = closer to foreground; keep below 1 so matches still read as background.
@@ -154,6 +164,24 @@ export function pickSpreadIndicesLinkedThenRelated(
     cap = Math.min(cap, maxSpreadCountForViewport(viewport.w, viewport.h));
   }
   return full.slice(0, cap);
+}
+
+/**
+ * Returns roughly uniform offsets in about [-1,1]×[-1,1] from a deterministic 32-bit mix.
+ * `salt` should change when viewport (or other global spread context) changes.
+ */
+function spreadJitter2dUnit(slot: number, salt: number): { jx: number; jy: number } {
+  const h0 = (Math.imul(slot, 0x7feb352d) + salt) | 0;
+  const a = (Math.imul(h0 ^ (h0 >>> 16), 0x85ebca6b) >>> 0) / 0x100000000;
+  const h1 = (Math.imul(slot * 0x1e3d, 0x5bd1e995) + (salt * 0x2f1b) + 0x9e37) | 0;
+  const b = (Math.imul(h1 ^ (h1 >>> 15), 0xc2b2ae35) >>> 0) / 0x100000000;
+  return { jx: a * 2 - 1, jy: b * 2 - 1 };
+}
+
+function spreadViewportJitterSalt(vw: number, vh: number): number {
+  const wi = Math.round(vw) | 0;
+  const hi = Math.round(vh) | 0;
+  return (Math.imul(wi, 0x1f3a2c) ^ Math.imul(hi, 0x4b19a7d1)) | 0;
 }
 
 function biasClusterTowardViewportCenter(
@@ -307,10 +335,21 @@ export function computeSpreadTargets(
     return v3(cx - vw / 2, cy - vh / 2, zFlat);
   });
   const biased = biasClusterTowardViewportCenter(raw, vw, vh, cw, ch);
-  return biased.sort((a, b) => {
+  const sorted = biased.sort((a, b) => {
     const da = Math.hypot(a.x, a.y);
     const db = Math.hypot(b.x, b.y);
     if (da !== db) return da - db;
     return Math.atan2(a.y, a.x) - Math.atan2(b.y, b.x);
   });
+  const jitterSalt = spreadViewportJitterSalt(vw, vh);
+  const countBoost = 1 + Math.min(0.55, Math.max(0, count - 4) * 0.012);
+  const baseAmp = Math.min(cw, ch) * SPREAD_JITTER_FRACTION_OF_MIN_CARD * countBoost;
+  const amp = Math.min(SPREAD_JITTER_MAX_PX, Math.max(10, baseAmp));
+  const afterJitter = sorted.map((p, j) => {
+    const { jx, jy } = spreadJitter2dUnit(j, jitterSalt);
+    return v3(p.x + jx * amp, p.y + jy * amp, p.z);
+  });
+  const work = afterJitter.map((p) => ({ px: p.x + vw / 2, py: p.y + vh / 2 }));
+  relaxViewportCardCenters(work, vw, vh, cw, ch, SPREAD_GAP);
+  return work.map((c, j) => v3(c.px - vw / 2, c.py - vh / 2, afterJitter[j]!.z));
 }

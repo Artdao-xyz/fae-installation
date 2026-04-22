@@ -582,6 +582,9 @@ export function ImageParticleSimulationView({
     const measure = () => {
       const vw = window.innerWidth;
       const vh = window.innerHeight;
+      /** Align sim height with the inner band of the margin guide (not full window). */
+      const marginGuideInset = getMarginGuideInsetPx();
+      const viewportHForSim = Math.max(64, vh - 2 * marginGuideInset);
       const reservedRight = previewRightReservationPx();
       const rightLimit = vw - reservedRight;
       const subpanelColumnPx = (() => {
@@ -613,7 +616,7 @@ export function ImageParticleSimulationView({
           cx,
           cy: vh / 2,
           w,
-          h: vh,
+          h: viewportHForSim,
         };
         setPlacementBounds((prev) =>
           approxEqualPlacementBounds(prev, next) ? prev : next,
@@ -628,7 +631,7 @@ export function ImageParticleSimulationView({
           cx: vw / 2,
           cy: vh / 2,
           w,
-          h: vh,
+          h: viewportHForSim,
         };
         setPlacementBounds((prev) =>
           approxEqualPlacementBounds(prev, next) ? prev : next,
