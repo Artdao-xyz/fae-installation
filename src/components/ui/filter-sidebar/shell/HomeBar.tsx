@@ -61,20 +61,25 @@ export function HomeBar({
 
   return (
     <div
-      className={`flex h-filter-chrome-bar min-w-0 shrink-0 items-center gap-2 border-b-hairline border-solid border-ink-primary bg-surface-canvas px-3 ${filterChromeRightEdgeClass(mergeWithSubpanel)} ${className}`}
+      className={`flex h-filter-chrome-bar min-w-0 shrink-0 border-b-hairline border-solid border-ink-primary bg-surface-canvas ${filterChromeRightEdgeClass(mergeWithSubpanel)} ${className}`}
     >
-      <Link
-        href="/"
-        onClick={(e) => {
-          if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-          e.preventDefault();
-          resetToIdle();
-        }}
-        className="flex min-w-0 shrink-0 items-center gap-2 text-ink-primary hover:opacity-80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ink-primary"
-      >
-        <HomeSvgIcon />
-        <span className={`truncate ${navSidebarLinkLabelClassName}`}>Home</span>
-      </Link>
+      <div
+        className="h-full w-filter-narrow-column shrink-0 border-r-hairline border-solid border-ink-primary"
+        aria-hidden
+      />
+      <div className="flex min-h-0 min-w-0 flex-1 items-center gap-2 overflow-hidden px-3">
+        <Link
+          href="/"
+          onClick={(e) => {
+            if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+            e.preventDefault();
+            resetToIdle();
+          }}
+          className="flex min-w-0 shrink-0 items-center gap-2 text-ink-primary hover:opacity-80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ink-primary"
+        >
+          <HomeSvgIcon />
+          <span className={`truncate ${navSidebarLinkLabelClassName}`}>Home</span>
+        </Link>
       {contentPreviewRow ? (
         <div
           className={`flex min-w-0 flex-1 items-center gap-2 ${breadcrumbFadeClassName} ${
@@ -116,6 +121,7 @@ export function HomeBar({
           </span>
         </div>
       ) : null}
+      </div>
     </div>
   );
 }
