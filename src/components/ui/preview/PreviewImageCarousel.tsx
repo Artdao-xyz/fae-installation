@@ -30,7 +30,7 @@ export function PreviewImageCarousel({ slides, alt, className = "" }: Props) {
 
   return (
     <div
-      className={`relative flex size-[205px] shrink-0 flex-col overflow-hidden rounded-[3.677px] bg-surface-canvas ${className}`}
+      className={`relative flex size-[180px] shrink-0 flex-col overflow-hidden rounded-[3.677px] bg-surface-canvas ${className}`}
       role="region"
       aria-roledescription="carousel"
       aria-label={alt}
@@ -39,7 +39,7 @@ export function PreviewImageCarousel({ slides, alt, className = "" }: Props) {
       <img
         src={src}
         alt={`${alt}${n > 1 ? ` (${index + 1} of ${n})` : ""}`}
-        className="pointer-events-none max-h-[205px] min-h-0 w-full flex-1 object-contain object-center"
+        className="pointer-events-none max-h-[180px] min-h-0 w-full flex-1 object-contain object-center"
       />
       {n > 1 ? (
         <>
