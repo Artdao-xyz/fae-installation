@@ -13,7 +13,7 @@ import { clamp, v3, type Vec3 } from "./particle-system";
 
 export type { FilterMatchMode, TaxonomyFilterSelection };
 
-export const FILTER_MAX = 20;
+export const FILTER_MAX = 50  ;
 export const REGROUP_MS = 1000;
 /** Background dim (opacity + filters) eases faster than spread motion. */
 export const FILTER_DIM_MS = 320;
@@ -64,6 +64,21 @@ export function maxSpreadCountForViewport(
   const raw = (innerW / unitW) * (innerH / unitH) * 0.92;
   const n = Math.ceil(raw);
   return clamp(Math.max(1, n), 1, FILTER_MAX);
+}
+
+/** How many `contentRows` pass the current taxonomy (same as spread eligibility, before cap). */
+export function countContentRowsMatchingFilter(
+  contentRows: ContentRow[],
+  taxonomy: TaxonomyFilterSelection,
+  matchMode: FilterMatchMode = "intersection",
+): number {
+  let n = 0;
+  for (let i = 0; i < contentRows.length; i++) {
+    if (rowMatchesFilterSelection(contentRows[i]!, taxonomy, matchMode)) {
+      n += 1;
+    }
+  }
+  return n;
 }
 
 /** Up to {@link FILTER_MAX} indices: eligible rows by menu tags, then prefer image tiles. */

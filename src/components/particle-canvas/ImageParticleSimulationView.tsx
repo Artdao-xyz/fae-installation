@@ -27,6 +27,10 @@ import {
 } from "@/components/ui/thumbnail-full";
 import { PreviewView } from "@/components/ui/preview";
 import {
+  PlacementBoundsDebugOverlay,
+  useFaePlacementDebugEnabled,
+} from "@/components/particle-canvas/placement-bounds-debug";
+import {
   ParticleSystem,
   type Particle,
   type LifeFreezeOptions,
@@ -45,6 +49,8 @@ import {
 } from "./particle-system";
 import {
   computeSpreadTargets,
+  countContentRowsMatchingFilter,
+  maxSpreadCountForViewport,
   mergeInPlaceSpreadTargets,
   pickSpreadIndicesLinkedThenRelated,
   pickSpreadIndicesFromRows,
@@ -312,6 +318,9 @@ export function ImageParticleSimulationView({
     w: 1440,
     h: 900,
   });
+  const placementBoundsRef = useRef(placementBounds);
+  placementBoundsRef.current = placementBounds;
+  const placementDebug = useFaePlacementDebugEnabled();
   /** True while spread layout chrome applies (enter → hold → leave). */
   const [spreadChromeActive, setSpreadChromeActive] = useState(false);
   const [selectedFilterIndices, setSelectedFilterIndices] = useState<number[]>(
@@ -429,6 +438,13 @@ export function ImageParticleSimulationView({
   const spreadInPlaceRespreadRef = useRef(false);
   /** Selection before the current `beginSpreadEnter` — used to fade demoted tiles instead of snapping dim. */
   const spreadPrevSelectedRef = useRef<Set<number>>(new Set());
+  /**
+   * `placementBounds.w/h` for the sim box when we last built spread targets. When it changes
+   * (e.g. preview opens) with the same index list, we respread so tiles stay in bounds.
+   */
+  const spreadLayoutPlacementWhRef = useRef<{ w: number; h: number } | null>(
+    null,
+  );
   const leaveFromRef = useRef<Vec3[]>([]);
   const leaveScaleFromRef = useRef<number[]>([]);
   /**
@@ -501,6 +517,47 @@ export function ImageParticleSimulationView({
     [selectedFilterIndices],
   );
 
+  const spreadTaxonomy: TaxonomyFilterSelection = useMemo(
+    () => ({
+      focus: selectedFocusAreas,
+      activity: selectedActivityTypes,
+      artists: selectedArtists,
+      formats: selectedFormats,
+      networks: selectedNetworks,
+    }),
+    [
+      selectedFocusAreas,
+      selectedActivityTypes,
+      selectedArtists,
+      selectedFormats,
+      selectedNetworks,
+    ],
+  );
+
+  const placementDebugStats = useMemo(() => {
+    const w = placementBounds.w;
+    const h = placementBounds.h;
+    const cap = w > 0 && h > 0 ? maxSpreadCountForViewport(w, h) : 0;
+    return {
+      totalRows: contentRows.length,
+      rowsMatchingFilter: countContentRowsMatchingFilter(
+        contentRows,
+        spreadTaxonomy,
+        filterMatchMode,
+      ),
+      viewportMaxSlots: cap,
+      spreadShown: spreadChromeActive ? selectedFilterIndices.length : null,
+    };
+  }, [
+    contentRows,
+    spreadTaxonomy,
+    filterMatchMode,
+    placementBounds.w,
+    placementBounds.h,
+    spreadChromeActive,
+    selectedFilterIndices.length,
+  ]);
+
   const nodeRefs = useRef<Array<HTMLDivElement | null>>([]);
   const imgRefs = useRef<Array<HTMLImageElement | null>>([]);
   const textRefs = useRef<Array<HTMLParagraphElement | null>>([]);
@@ -534,13 +591,26 @@ export function ImageParticleSimulationView({
       })();
 
       /**
-       * Filter panel closed: match fixed hero — orbit uses full viewport width (minus preview
-       * reservation) centered on screen. Panel open: use main column rect (sidebar toggles width).
+       * Filter options closed: keep the same vertical placement as before (`cy` + `h` use full
+       * viewport height so the sim matches the fixed hero + orbit), but drive **horizontal** size
+       * and `cx` from the main placement ref. That clears the left filter rail; `min(r.right,
+       * rightLimit)` also clips for the `fixed` preview dock, which does not narrow layout `r.right`.
        */
       if (!filtersPanelOpen) {
-        const w = Math.max(64, vw - reservedRight);
+        const elClosed = placementContainerRef?.current;
+        let w: number;
+        let cx: number;
+        if (elClosed) {
+          const r = elClosed.getBoundingClientRect();
+          const right = Math.min(r.right, rightLimit);
+          w = Math.max(64, right - r.left);
+          cx = r.left + w / 2;
+        } else {
+          w = Math.max(64, vw - reservedRight);
+          cx = vw / 2;
+        }
         const next: PlacementBounds = {
-          cx: vw / 2,
+          cx,
           cy: vh / 2,
           w,
           h: vh,
@@ -736,9 +806,16 @@ export function ImageParticleSimulationView({
     let rafId = 0;
     let lastTime = performance.now();
 
-    const viewportSpread = { w: placementBounds.w, h: placementBounds.h };
+    /** Read live sim box from ref so spread picks and targets follow mid-frame / post-resize `placementBounds`. */
+    const getViewportSpread = () => ({
+      w: placementBoundsRef.current.w,
+      h: placementBoundsRef.current.h,
+    });
+
+    const PLACEMENT_RESPREAD_EPS = 0.5;
 
     const computeSpreadOrderedIndices = (): number[] => {
+      const viewportSpread = getViewportSpread();
       const pr = previewRowRef.current;
       const pfs = previewFullScreenRef.current;
       if (
@@ -827,7 +904,7 @@ export function ImageParticleSimulationView({
         },
         displayedIndices: [...orderedPick],
         displayed: orderedPick.map(slotLabel),
-        viewport: { ...viewportSpread },
+        viewport: { ...getViewportSpread() },
       });
     };
 
@@ -841,8 +918,18 @@ export function ImageParticleSimulationView({
       logPreviewCanvasSpread(orderedPick);
 
       const phaseBefore = spreadLayoutPhaseRef.current;
+      const previousEnterSig = spreadEnterSignatureRef.current;
+      const nextEnterSig = effectiveSpreadSig();
+      /**
+       * In-place merge keeps sidebar filter changes smooth. Opening/closing **preview** switches
+       * to linked+related ordering (often new related tiles) — that needs a full organic pack, not
+       * re-seating to filter-slot positions.
+       */
+      const sameSpreadKind =
+        (previousEnterSig ?? "").startsWith("pv:") ===
+        nextEnterSig.startsWith("pv:");
       spreadInPlaceRespreadRef.current =
-        phaseBefore === "hold" || phaseBefore === "enter";
+        (phaseBefore === "hold" || phaseBefore === "enter") && sameSpreadKind;
 
       if (hoverEnterDelayTimerRef.current !== null) {
         clearTimeout(hoverEnterDelayTimerRef.current);
@@ -854,7 +941,7 @@ export function ImageParticleSimulationView({
       hoverPinRef.current = null;
       setHoveredIndex(null);
 
-      spreadEnterSignatureRef.current = effectiveSpreadSig();
+      spreadEnterSignatureRef.current = nextEnterSig;
 
       idleBlurRampT0Ref.current = null;
       idleBlurRampIndicesRef.current = null;
@@ -878,9 +965,10 @@ export function ImageParticleSimulationView({
 
       let sel = orderedPick.slice();
       const f = sel.length;
+      const pb = placementBoundsRef.current;
       const filteredTargets = computeSpreadTargets(
-        placementBounds.w,
-        placementBounds.h,
+        pb.w,
+        pb.h,
         cfg.zNear,
         f,
         "lg",
@@ -905,6 +993,7 @@ export function ImageParticleSimulationView({
       setSpreadChromeActive(true);
       filterT0Ref.current = now;
       spreadLayoutPhaseRef.current = "enter";
+      spreadLayoutPlacementWhRef.current = { w: pb.w, h: pb.h };
       return true;
     };
 
@@ -944,8 +1033,22 @@ export function ImageParticleSimulationView({
         spreadEnterSignatureRef.current !== null &&
         !spreadListMatchesOrdered;
 
+      /** Same index list and signature, but sim box w/h changed (e.g. fixed preview opened) — rebuild targets. */
+      const layoutWh = spreadLayoutPlacementWhRef.current;
+      const pbNow = placementBoundsRef.current;
+      const shouldRespreadForPlacementBounds =
+        (phaseNow === "hold" || phaseNow === "enter") &&
+        spreadActive &&
+        ordered.length > 0 &&
+        spreadEnterSignatureRef.current !== null &&
+        layoutWh !== null &&
+        (Math.abs(layoutWh.w - pbNow.w) > PLACEMENT_RESPREAD_EPS ||
+          Math.abs(layoutWh.h - pbNow.h) > PLACEMENT_RESPREAD_EPS);
+
       if (
-        (shouldRespreadInPlace || shouldRespreadForViewport) &&
+        (shouldRespreadInPlace ||
+          shouldRespreadForViewport ||
+          shouldRespreadForPlacementBounds) &&
         systemRef.current
       ) {
         beginSpreadEnter(now);
@@ -1413,6 +1516,7 @@ export function ImageParticleSimulationView({
         });
         spreadLayoutPhaseRef.current = "idle";
         spreadInPlaceRespreadRef.current = false;
+        spreadLayoutPlacementWhRef.current = null;
         spreadEnterSignatureRef.current = null;
         idleBlurRampIndicesRef.current = new Set(selLeave);
         idleBlurRampT0Ref.current = performance.now();
@@ -1464,8 +1568,13 @@ export function ImageParticleSimulationView({
       onPointerDown={(e) => {
         if (e.button !== 0) return;
         const t = e.target;
-        if (t instanceof Element && t.closest("[data-canvas-tile]")) {
-          return;
+        if (t instanceof Element) {
+          if (t.closest("[data-canvas-tile]")) return;
+          /**
+           * Portaled preview (`createPortal(…, document.body)`) still bubbles in the **React** tree
+           * to this section; a primary button hit must not run `resetToIdle`.
+           */
+          if (t.closest("[data-fae-content-preview]")) return;
         }
         resetToIdle();
       }}
@@ -1642,6 +1751,12 @@ export function ImageParticleSimulationView({
             document.body,
           )
         : null}
+      {placementDebug ? (
+        <PlacementBoundsDebugOverlay
+          bounds={placementBounds}
+          stats={placementDebugStats}
+        />
+      ) : null}
     </section>
   );
 }
