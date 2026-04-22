@@ -1,34 +1,24 @@
 "use client";
 
 import { useCallback, useId, useMemo } from "react";
+import { useFilterSelection } from "@/components/ui/filter-sidebar/FilterSelectionContext";
 import { useFloatingPanelStack } from "@/components/ui/floating-panels/FloatingPanelStackContext";
 import { FLOATING_DOCK_PEEK_CLIP_CLASS } from "@/components/ui/filter-sidebar/shell/layout-classes";
 import { OpenSvgIcon } from "@/components/ui/icons/OpenSvgIcon";
 import { LatestUpdatesSvgIcon } from "@/components/ui/icons/LatestUpdatesSvgIcon";
 import { navSidebarVerticalLabelClassName } from "@/components/ui/icons/nav-sidebar-labels";
 import { floatingDockPanelOuterHeightPx } from "@/components/ui/floating-panels/right-rail-stack";
-import {
-  Thumbnail,
-  getLatestUpdatesPeekClipWidthPx,
-} from "@/components/ui/thumbnail-full";
+import { Thumbnail } from "@/components/ui/thumbnail-full";
+import type { ContentRow } from "@/data/content-types";
 
-const LATEST_UPDATES_THUMBNAILS = [
-  {
-    label: "Synthetic Commons",
-    imageSrc: "https://picsum.photos/seed/fae-upd-1/440/440",
-    imageAlt: "Synthetic Commons",
-  },
-  {
-    label: "Protocol Garden",
-    imageSrc: "https://picsum.photos/seed/fae-upd-2/440/440",
-    imageAlt: "Protocol Garden",
-  },
-  {
-    label: "Node Atlas",
-    imageSrc: "https://picsum.photos/seed/fae-upd-3/440/440",
-    imageAlt: "Node Atlas",
-  },
-] as const;
+const LATEST_UPDATES_COUNT = 3;
+
+function updatedAtSortKeyMs(row: ContentRow): number {
+  const t = row.updatedAt?.trim();
+  if (!t) return 0;
+  const n = Date.parse(t);
+  return Number.isFinite(n) ? n : 0;
+}
 
 function LatestUpdatesTabRail({
   arrowClassName,
@@ -68,9 +58,21 @@ function LatestUpdatesTabRail({
 
 export function LatestUpdatesPanel() {
   const panelId = useId();
+  const { contentCatalog, contentCatalogStatus } = useFilterSelection();
   const { latestUpdatesView, setLatestUpdatesView, getChromeZIndex } =
     useFloatingPanelStack();
   const dockOuterH = floatingDockPanelOuterHeightPx();
+
+  const latestThumbnails = useMemo(() => {
+    if (contentCatalogStatus !== "success" || contentCatalog.length === 0) {
+      return [] as ContentRow[];
+    }
+    return [...contentCatalog]
+      .sort(
+        (a, b) => updatedAtSortKeyMs(b) - updatedAtSortKeyMs(a),
+      )
+      .slice(0, LATEST_UPDATES_COUNT);
+  }, [contentCatalog, contentCatalogStatus]);
 
   const peekOpen = latestUpdatesView === "peek";
 
@@ -78,11 +80,15 @@ export function LatestUpdatesPanel() {
     setLatestUpdatesView((v) => (v === "peek" ? "minimized" : "peek"));
   }, [setLatestUpdatesView]);
 
-  const peekClipWidthPx = useMemo(() => getLatestUpdatesPeekClipWidthPx(), []);
-
+  /**
+   * Large viewport cap so long labels + `fullCardLabelWidth="hugContent"` are not
+   * boxed by a tiny `min(fixedPx, 100vw)` (which ignored the 100px slack).
+   */
   const peekClipStyle = peekOpen
     ? {
-        maxWidth: `min(${peekClipWidthPx}px, calc(100vw - 2.5rem - var(--width-filter-narrow-column)))`,
+        maxWidth:
+          "min(1600px, calc(100vw - 2.5rem - var(--width-filter-narrow-column) - env(safe-area-inset-left, 0px)))",
+        width: "max-content" as const,
       }
     : { maxWidth: 0 };
 
@@ -120,14 +126,15 @@ export function LatestUpdatesPanel() {
       >
         <div className="flex h-full w-full min-h-0 min-w-0 flex-col justify-end overflow-x-auto overflow-y-hidden overscroll-contain">
           <div className="flex w-max shrink-0 flex-row flex-nowrap items-end gap-8 px-6 py-3">
-            {LATEST_UPDATES_THUMBNAILS.map((item) => (
+            {latestThumbnails.map((row) => (
               <Thumbnail
-                key={item.label}
+                key={row.id}
                 variant="full"
                 size="lg"
-                label={item.label}
-                imageSrc={item.imageSrc}
-                imageAlt={item.imageAlt}
+                fullCardLabelWidth="hugContent"
+                label={row.shortTitle}
+                imageSrc={row.imageUrl}
+                imageAlt={row.title}
               />
             ))}
           </div>

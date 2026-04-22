@@ -251,6 +251,22 @@ function formatsFromOutputDoc(doc: Record<string, unknown>): string[] {
   return relationNames(raw);
 }
 
+function strapiSystemTimestampIso(
+  doc: Record<string, unknown>,
+  key: "updatedAt" | "createdAt",
+): string {
+  const direct = doc[key];
+  if (typeof direct === "string" && direct.trim().length > 0) {
+    return direct.trim();
+  }
+  const attrs = doc.attributes;
+  if (attrs && typeof attrs === "object") {
+    const v = (attrs as Record<string, unknown>)[key];
+    if (typeof v === "string" && v.trim().length > 0) return v.trim();
+  }
+  return "";
+}
+
 function parseYear(dateField: unknown): number {
   if (typeof dateField === "number" && Number.isFinite(dateField))
     return dateField;
@@ -404,6 +420,10 @@ export function mapStrapiOutputToContentRow(
     linkedFromOutputRelation,
   );
 
+  const updatedAt =
+    strapiSystemTimestampIso(doc, "updatedAt") ||
+    strapiSystemTimestampIso(doc, "createdAt");
+
   return {
     id: documentId,
     title,
@@ -426,6 +446,7 @@ export function mapStrapiOutputToContentRow(
         doc.Artist ??
         doc.Artists,
     ),
+    updatedAt,
   };
 }
 

@@ -87,6 +87,8 @@ function appendOutputsListSlimQuery(params: URLSearchParams): void {
     "Content_Title",
     "Short_Title",
     "Date",
+    "updatedAt",
+    "createdAt",
   ];
   fields.forEach((f, i) => params.append(`fields[${i}]`, f));
 

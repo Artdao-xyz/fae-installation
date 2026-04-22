@@ -30,4 +30,9 @@ export type ContentRow = {
   formats: readonly string[];
   networks: readonly string[];
   artists: readonly string[];
+  /**
+   * Strapi `updatedAt` (ISO 8601) when available from the list/detail API; used for
+   * e.g. “latest updates” ordering. Empty string if missing.
+   */
+  updatedAt: string;
 };

@@ -183,6 +183,8 @@ export const CONTENT_FIXTURE_ROWS: ContentRow[] = FIXTURE_SEED_TITLES.map(
       id,
       title,
       shortTitle: title,
+      /** Stagger so “latest updates” order is deterministic in fixture mode. */
+      updatedAt: new Date(Date.UTC(2024, 0, 1 + (index % 28), 12, 0, 0)).toISOString(),
       imageUrl: `https://picsum.photos/seed/${id}/220/220.webp`,
       imageGallery: [
         `https://picsum.photos/seed/${id}-g0/440/440.webp`,

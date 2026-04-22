@@ -37,6 +37,11 @@ export type ThumbnailProps =
        * hover re-decodes at a larger layout box.
        */
       showLabelChip?: boolean;
+      /**
+       * `hugContent` = label row + card width grow with `shortTitle` (fixed 120px image below).
+       * Default `fixed` = single outer width for sim/spread; long titles may overflow the chip in layout.
+       */
+      fullCardLabelWidth?: "fixed" | "hugContent";
     })
   | (BaseProps & { variant: "text" })
   | (BaseProps & { variant: "image"; imageSrc: string; imageAlt?: string });
@@ -46,14 +51,21 @@ function LabelChip({
   dims,
   labelRef,
   accessibilityLabel,
+  rowWidth,
 }: {
   label: string;
   dims: (typeof SIZE_DIMS)[ThumbnailSize];
   labelRef?: Ref<HTMLParagraphElement | null>;
   accessibilityLabel?: string;
+  /** `hug` = width follows long labels (e.g. latest-updates strip). Default `full` = match image frame. */
+  rowWidth?: "full" | "hug";
 }) {
   return (
-    <div className="flex w-full shrink-0 justify-center overflow-visible">
+    <div
+      className={`flex shrink-0 justify-center overflow-visible ${
+        rowWidth === "hug" ? "w-max" : "w-full"
+      }`}
+    >
       <div
         className="inline-flex w-max max-w-none items-center gap-1.5 rounded-none border-b-hairline border-dotted border-ink-primary bg-[#f6f6f6] text-ink-primary"
         style={{
@@ -176,6 +188,10 @@ export function Thumbnail(props: ThumbnailProps) {
   } = props;
   const variant = props.variant ?? "full";
   const dims = SIZE_DIMS[size];
+  const fullCardLabelWidth =
+    variant === "full" && "fullCardLabelWidth" in props
+      ? (props.fullCardLabelWidth ?? "fixed")
+      : "fixed";
 
   const suppressLabelChip =
     variant === "full" &&
@@ -199,20 +215,32 @@ export function Thumbnail(props: ThumbnailProps) {
       ? getThumbnailFullCardOuterSize(size)
       : null;
 
+  const fullCardBoxStyle: CSSProperties | undefined =
+    fullOuter && fullCardLabelWidth === "hugContent"
+      ? {
+          width: "max-content",
+          minWidth: fullOuter.width,
+          maxWidth: "none",
+          minHeight: fullOuter.height,
+          boxSizing: "border-box",
+          overflow: "visible",
+        }
+      : fullOuter
+        ? {
+            width: fullOuter.width,
+            minWidth: fullOuter.width,
+            maxWidth: fullOuter.width,
+            minHeight: fullOuter.height,
+            boxSizing: "border-box",
+            overflow: "visible",
+          }
+        : undefined;
+
   return (
     <div
       className={`flex flex-col items-center min-w-0 ${className}`}
       style={{
-        ...(fullOuter
-          ? {
-              width: fullOuter.width,
-              minWidth: fullOuter.width,
-              maxWidth: fullOuter.width,
-              minHeight: fullOuter.height,
-              boxSizing: "border-box",
-              overflow: "visible",
-            }
-          : {}),
+        ...fullCardBoxStyle,
         ...(textOuter
           ? {
               width: textOuter.width,
@@ -241,6 +269,7 @@ export function Thumbnail(props: ThumbnailProps) {
             dims={dims}
             labelRef={labelRef}
             accessibilityLabel={accessibilityLabel}
+            rowWidth={fullCardLabelWidth === "hugContent" ? "hug" : "full"}
           />
         </div>
       )}

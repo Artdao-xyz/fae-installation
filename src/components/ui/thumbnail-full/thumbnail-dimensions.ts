@@ -43,10 +43,14 @@ export function getThumbnailTextVariantOuterSize(
 /**
  * Latest updates peek clip width: three `lg` full cards + horizontal gaps + horizontal padding
  * (aligned with `LatestUpdatesPanel` row: `gap-8` + `px-6` at `sm+`).
+ * Extra px: full-card width uses a short-title estimate; real labels are often wider than the
+ * image frame, so the peek needs slack so the row isn’t clipped.
  */
+const LATEST_UPDATES_PEEK_EXTRA_PX = 300;
+
 export function getLatestUpdatesPeekClipWidthPx(): number {
   const { width } = getThumbnailFullCardOuterSize("lg");
   const gapPx = 32; // gap-8 (2rem)
   const padXPx = 24; // px-6 (1.5rem) each side
-  return 3 * width + 2 * gapPx + 2 * padXPx;
+  return 3 * width + 2 * gapPx + 2 * padXPx + LATEST_UPDATES_PEEK_EXTRA_PX;
 }
