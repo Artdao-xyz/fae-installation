@@ -22,7 +22,7 @@ export function HomeBar({
   className = "",
   mergeWithSubpanel = false,
 }: HomeBarProps) {
-  const { contentPreviewRow, resetToIdle } = useFilterSelection();
+  const { contentPreviewRow, resetToIdle, closeContentPreview } = useFilterSelection();
   const [breadcrumbEntered, setBreadcrumbEntered] = useState(false);
   const prevPreviewIdRef = useRef<string | undefined>(undefined);
 
@@ -91,11 +91,14 @@ export function HomeBar({
             className={breadcrumbArrowImgClassName}
             aria-hidden
           />
-          <span
-            className={`shrink-0 ${navSidebarLinkLabelClassName} text-ink-primary`}
+          <button
+            type="button"
+            onClick={closeContentPreview}
+            className={`shrink-0 cursor-pointer bg-transparent p-0 text-left font-inherit ${navSidebarLinkLabelClassName} text-ink-primary transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ink-primary`}
+            aria-label="Return to filtered results, close preview"
           >
             Filters
-          </span>
+          </button>
           <Image
             src="/svg/right-arrow.svg"
             alt=""

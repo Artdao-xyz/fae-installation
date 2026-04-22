@@ -17,6 +17,7 @@ import {
   FilterPill,
   type FilterPillVariant,
 } from "@/components/ui/filter-sidebar/primitives/FilterPill";
+import { useFilterSelection } from "@/components/ui/filter-sidebar/FilterSelectionContext";
 import { PREVIEW_DOCK_WIDTH_TRANSITION_CLASS } from "@/components/ui/filter-sidebar/shell/layout-classes";
 import { PreviewBlocksBody } from "./PreviewBlocksBody";
 import { PreviewBodyFillClamp } from "./PreviewBodyFillClamp";
@@ -35,8 +36,6 @@ type PreviewViewProps = {
   /** When true, preview fills the viewport (docked panel hidden). */
   fullScreen: boolean;
   onFullScreenChange: (fullScreen: boolean) => void;
-  /** Dismisses the preview entirely (dock or full screen). */
-  onClose: () => void;
   className?: string;
 };
 
@@ -475,9 +474,9 @@ export const PreviewView = memo(function PreviewView({
   row,
   fullScreen,
   onFullScreenChange,
-  onClose,
   className = "",
 }: PreviewViewProps) {
+  const { closeContentPreview } = useFilterSelection();
   /** Replay open animation when switching docked ↔ full screen (same easing as filter drawer). */
   const [shellEntered, setShellEntered] = useState(false);
 
@@ -513,7 +512,7 @@ export const PreviewView = memo(function PreviewView({
       >
         <PreviewPanelCollapseBar
           ariaLabel="Close preview"
-          onClose={onClose}
+          onClose={closeContentPreview}
         />
         <div className={fullScreenContentScrollClass}>
           <div className={fullScreenContentInnerClass}>
@@ -554,7 +553,7 @@ export const PreviewView = memo(function PreviewView({
       >
         <PreviewPanelCollapseBar
           ariaLabel="Close preview"
-          onClose={onClose}
+          onClose={closeContentPreview}
         />
         <div className="flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden px-5 pt-5 pb-0">
           <PreviewMainContent row={row} fullScreen={false} />

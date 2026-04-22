@@ -83,6 +83,16 @@ export type FilterSelectionContextValue = {
     formats?: readonly string[];
     networks?: readonly string[];
   }) => void;
+  /**
+   * Remembers the current taxonomy + briefing so opening a content preview can re-apply
+   * `row` for the docked panel, then restore this when the preview closes.
+   */
+  snapshotFiltersBeforeContentPreview: () => void;
+  /**
+   * Re-applies the last `snapshotFiltersBeforeContentPreview` (if any) and clears the snapshot.
+   * Used when closing the preview to return to the previous filtered spread.
+   */
+  restoreFiltersAfterContentPreview: () => void;
   /** Filter options column open (desktop layout + hero alignment). */
   filtersPanelOpen: boolean;
   setFiltersPanelOpen: Dispatch<SetStateAction<boolean>>;
@@ -127,10 +137,20 @@ const FilterSelectionContext = createContext<FilterSelectionContextValue | null>
   null,
 );
 
+type PreviewFilterSnapshot = {
+  focusAreas: string[];
+  activityTypes: string[];
+  artists: string[];
+  formats: string[];
+  networks: string[];
+  faeBriefing: string | null;
+};
+
 export function FilterSelectionProvider({ children }: { children: ReactNode }) {
   const { minimizeAllFloatingPanels } = useFloatingPanelStack();
   const contentPreviewOpenerRef = useRef<((row: ContentRow) => void) | null>(null);
   const contentPreviewCloserRef = useRef<(() => void) | null>(null);
+  const previewFilterSnapshotRef = useRef<PreviewFilterSnapshot | null>(null);
 
   const [contentPreviewRow, setContentPreviewRow] = useState<ContentRow | null>(
     null,
@@ -646,6 +666,41 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
     [minimizeAllFloatingPanels],
   );
 
+  const clearPendingPreviewFilterSnapshot = useCallback(() => {
+    previewFilterSnapshotRef.current = null;
+  }, []);
+
+  const snapshotFiltersBeforeContentPreview = useCallback(() => {
+    previewFilterSnapshotRef.current = {
+      focusAreas: [...selectedFocusAreas],
+      activityTypes: [...selectedActivityTypes],
+      artists: [...selectedArtists],
+      formats: [...selectedFormats],
+      networks: [...selectedNetworks],
+      faeBriefing: selectedFaeBriefing,
+    };
+  }, [
+    selectedActivityTypes,
+    selectedArtists,
+    selectedFaeBriefing,
+    selectedFocusAreas,
+    selectedFormats,
+    selectedNetworks,
+  ]);
+
+  const restoreFiltersAfterContentPreview = useCallback(() => {
+    const snap = previewFilterSnapshotRef.current;
+    if (!snap) return;
+    previewFilterSnapshotRef.current = null;
+    minimizeAllFloatingPanels();
+    setSelectedFocusAreas(new Set(snap.focusAreas));
+    setSelectedActivityTypes(new Set(snap.activityTypes));
+    setSelectedArtists(new Set(snap.artists));
+    setSelectedFormats(new Set(snap.formats));
+    setSelectedNetworks(new Set(snap.networks));
+    setSelectedFaeBriefing(snap.faeBriefing);
+  }, [minimizeAllFloatingPanels]);
+
   const openContentPreview = useCallback((row: ContentRow) => {
     contentPreviewOpenerRef.current?.(row);
   }, []);
@@ -666,10 +721,11 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const resetToIdle = useCallback(() => {
+    clearPendingPreviewFilterSnapshot();
     clearAllFilters();
     setSearchQueryResetNonce((n) => n + 1);
     closeContentPreview();
-  }, [clearAllFilters, closeContentPreview]);
+  }, [clearAllFilters, clearPendingPreviewFilterSnapshot, closeContentPreview]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -714,6 +770,8 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
       clearAllFilters,
       resetToIdle,
       setFiltersFromContentRow,
+      snapshotFiltersBeforeContentPreview,
+      restoreFiltersAfterContentPreview,
       filtersPanelOpen,
       setFiltersPanelOpen,
       briefingsSubpanelOpen,
@@ -771,6 +829,8 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
       clearAllFilters,
       resetToIdle,
       setFiltersFromContentRow,
+      snapshotFiltersBeforeContentPreview,
+      restoreFiltersAfterContentPreview,
       filtersPanelOpen,
       briefingsSubpanelOpen,
       rdSubpanelOpen,

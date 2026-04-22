@@ -150,6 +150,8 @@ export function ImageParticleSimulationView({
     registerContentPreviewCloser,
     setContentPreviewRow,
     resetToIdle,
+    snapshotFiltersBeforeContentPreview,
+    restoreFiltersAfterContentPreview,
     contentCatalog,
     contentCatalogError,
     contentCatalogTotal,
@@ -204,15 +206,20 @@ export function ImageParticleSimulationView({
   previewRowRef.current = previewRow;
 
   const closePreview = useCallback(() => {
+    restoreFiltersAfterContentPreview();
     setPreviewRow(null);
-  }, []);
+    setPreviewFullScreen(false);
+  }, [restoreFiltersAfterContentPreview]);
 
   const handleFilteredThumbnailClick = useCallback(
     (row: ContentRow) => {
+      if (previewRowRef.current == null) {
+        snapshotFiltersBeforeContentPreview();
+      }
       setFiltersFromContentRow(row);
       setPreviewRow(row);
     },
-    [setFiltersFromContentRow],
+    [setFiltersFromContentRow, snapshotFiltersBeforeContentPreview],
   );
 
   useEffect(() => {
@@ -221,12 +228,9 @@ export function ImageParticleSimulationView({
   }, [registerContentPreviewOpener, handleFilteredThumbnailClick]);
 
   useEffect(() => {
-    registerContentPreviewCloser(() => {
-      setPreviewRow(null);
-      setPreviewFullScreen(false);
-    });
+    registerContentPreviewCloser(closePreview);
     return () => registerContentPreviewCloser(null);
-  }, [registerContentPreviewCloser]);
+  }, [registerContentPreviewCloser, closePreview]);
 
   useEffect(() => {
     setContentPreviewRow(previewRow);
@@ -1634,7 +1638,6 @@ export function ImageParticleSimulationView({
               row={previewRow}
               fullScreen={previewFullScreen}
               onFullScreenChange={setPreviewFullScreen}
-              onClose={closePreview}
             />,
             document.body,
           )

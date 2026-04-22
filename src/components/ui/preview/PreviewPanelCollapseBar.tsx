@@ -19,6 +19,7 @@ export function PreviewPanelCollapseBar({
     <button
       type="button"
       onClick={onClose}
+      onPointerDown={(e) => e.stopPropagation()}
       className="flex h-filter-close-bar w-full shrink-0 items-center border-b-hairline border-solid border-ink-primary bg-surface-canvas px-3 text-ink-primary hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary"
       aria-label={ariaLabel}
     >
