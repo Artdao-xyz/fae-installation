@@ -26,9 +26,7 @@ const ABOUT_BODY = (
     <p className="mb-0 leading-[1.6]">
       Through briefings, R&amp;D Labs and a growing community of artists,
       technologists, policy-makers, researchers and fellow organisations, FAE
-      develops insights, tools and projects that advance our mission. Embedded
-      in Serpentine&apos;s Arts Technologies team, FAE facilitates the emergence
-      of new systems for art, technology and society.
+      develops insights, tools and projects that advance our mission.
     </p>
   </>
 );
