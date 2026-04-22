@@ -4,8 +4,11 @@ import { useEffect, useRef, useState } from "react";
 import { useFilterSelection } from "@/components/ui/filter-sidebar/FilterSelectionContext";
 import { filterPillSelection } from "@/components/ui/filter-sidebar/primitives/filterFramedClasses";
 import { HomeSvgIcon } from "@/components/ui/icons/HomeSvgIcon";
-import { navSidebarLinkLabelClassName } from "@/components/ui/icons/nav-sidebar-labels";
 import { filterChromeRightEdgeClass } from "./layout-classes";
+
+/** Suisse Intl, 12px / regular — HomeBar breadcrumb (Home, Filters, title). */
+const homeBarBreadcrumbTypeClassName =
+  "font-suisseintl text-xs font-normal leading-5";
 
 const breadcrumbArrowImgClassName =
   "pointer-events-none block h-2.5 w-2 shrink-0 object-contain select-none opacity-80";
@@ -78,7 +81,9 @@ export function HomeBar({
           className="flex min-w-0 shrink-0 items-center gap-2 text-ink-primary hover:opacity-80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ink-primary"
         >
           <HomeSvgIcon />
-          <span className={`truncate ${navSidebarLinkLabelClassName}`}>Home</span>
+          <span className={`truncate ${homeBarBreadcrumbTypeClassName} text-ink-body`}>
+            Home
+          </span>
         </Link>
       {contentPreviewRow ? (
         <div
@@ -99,7 +104,7 @@ export function HomeBar({
           <button
             type="button"
             onClick={closeContentPreview}
-            className={`shrink-0 cursor-pointer bg-transparent p-0 text-left font-inherit ${navSidebarLinkLabelClassName} text-ink-primary transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ink-primary`}
+            className={`shrink-0 cursor-pointer bg-transparent p-0 text-left ${homeBarBreadcrumbTypeClassName} text-ink-primary transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ink-primary`}
             aria-label="Return to filtered results, close preview"
           >
             Filters
@@ -114,7 +119,7 @@ export function HomeBar({
             aria-hidden
           />
           <span
-            className={`min-w-0 flex-1 truncate font-suisseintl text-xs font-normal leading-5 ${filterPillSelection.text}`}
+            className={`min-w-0 flex-1 truncate ${homeBarBreadcrumbTypeClassName} ${filterPillSelection.text}`}
             title={contentPreviewRow.title}
           >
             {contentPreviewRow.title}
