@@ -19,7 +19,7 @@ export type FloatingPanelPhase = "minimized" | "peek" | "full";
 export type AboutPanelView = "minimized" | "peek" | "full";
 export type DockPanelView = "minimized" | "peek";
 
-/** Right floating stack: About starts minimized; `AboutPanel` opens peek after a short delay. */
+/** Right floating stack: About starts minimized; peek opens with the filter sidebar (`AboutPeekWhenFilterSidebarOpens`). */
 const INITIAL_ABOUT: AboutPanelView = "minimized";
 const INITIAL_GLOSSARY: DockPanelView = "minimized";
 const INITIAL_LATEST_UPDATES: DockPanelView = "minimized";

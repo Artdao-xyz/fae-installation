@@ -23,12 +23,13 @@ export function FilterSidebarSection({
 
   return (
     <section
-      className={`flex flex-col border-t-hairline border-solid border-ink-primary bg-surface-canvas ${
+      className={`flex flex-col bg-surface-canvas ${
         flexGrow ? "min-h-0 flex-1" : "shrink-0"
       }`}
       aria-label={title}
     >
-      <header className="flex shrink-0 items-center justify-between gap-2 px-3 py-2">
+      <div className="h-px w-full shrink-0 bg-ink-primary" aria-hidden />
+      <header className="flex shrink-0 items-center justify-between gap-2 px-3 pb-2 pt-1.5">
         <h2 className="min-w-0 flex-1 font-lust-text text-sm font-medium text-ink-body">
           {title}
         </h2>
@@ -45,7 +46,7 @@ export function FilterSidebarSection({
       {!collapsed ? (
         <div
           className={[
-            "flex flex-wrap content-start gap-1.5 px-3 py-3",
+            "flex flex-wrap content-start gap-1.5 px-3 pb-3 pt-0.5",
             scrollBody
               ? "scrollbar-hide min-h-0 flex-1 overflow-x-hidden overflow-y-auto"
               : "",

@@ -158,14 +158,6 @@ export function AboutPanel() {
     };
   }, [aboutView]);
 
-  /** Start closed on load, then match the filter-sidebar-style peek open after 1s if still minimized. */
-  useEffect(() => {
-    const id = window.setTimeout(() => {
-      setAboutView((v) => (v === "minimized" ? "peek" : v));
-    }, 1000);
-    return () => window.clearTimeout(id);
-  }, [setAboutView]);
-
   const toggleDock = useCallback(() => {
     setAboutView((v) => (v === "peek" ? "minimized" : "peek"));
   }, [setAboutView]);
