@@ -45,14 +45,14 @@ export function FilterSidebarCategoryRow({
       {showAccent ? (
         <CategoryMarkerIcon
           tone={tone}
-          className="size-4 shrink-0 object-contain"
+          className="size-5 shrink-0 object-contain"
         />
       ) : null}
       <span className="min-h-px min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-base font-medium leading-5 text-ink-body font-lust-text">
         {label}
       </span>
       {showAccent ? (
-        <CategoryRowArrowIcon className={`h-2 w-1.5 shrink-0 ${marker}`} />
+        <CategoryRowArrowIcon className={`h-2.5 w-2 shrink-0 ${marker}`} />
       ) : null}
     </button>
   );

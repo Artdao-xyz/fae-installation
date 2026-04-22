@@ -17,10 +17,10 @@ export function Footer({
       <Image
         src="/svg/serpentine.svg"
         alt="Serpentine"
-        width={48}
-        height={48}
+        width={56}
+        height={56}
         unoptimized
-        className="pointer-events-none w-12 shrink-0 object-contain"
+        className="pointer-events-none h-14 w-14 shrink-0 object-contain"
         aria-hidden
       />
       <p className="font-suisseintl text-[10px] font-medium leading-3 text-ink-caption">

@@ -6,8 +6,8 @@ export function HomeSvgIcon({ className }: { className?: string }) {
     <Image
       src="/svg/home.svg"
       alt=""
-      width={14}
-      height={14}
+      width={16}
+      height={16}
       unoptimized
       className={`${navMarkIconImgClassName} ${className ?? ""}`}
       aria-hidden

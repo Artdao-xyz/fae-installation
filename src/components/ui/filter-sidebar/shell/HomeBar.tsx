@@ -8,7 +8,7 @@ import { navSidebarLinkLabelClassName } from "@/components/ui/icons/nav-sidebar-
 import { filterChromeRightEdgeClass } from "./layout-classes";
 
 const breadcrumbArrowImgClassName =
-  "pointer-events-none block h-2 w-[6px] shrink-0 object-contain select-none opacity-80";
+  "pointer-events-none block h-2.5 w-2 shrink-0 object-contain select-none opacity-80";
 
 const breadcrumbFadeClassName =
   "transition-opacity duration-300 ease-out motion-reduce:transition-none";
@@ -80,8 +80,8 @@ export function HomeBar({
           <Image
             src="/svg/right-arrow.svg"
             alt=""
-            width={6}
-            height={8}
+            width={8}
+            height={10}
             unoptimized
             className={breadcrumbArrowImgClassName}
             aria-hidden
@@ -94,8 +94,8 @@ export function HomeBar({
           <Image
             src="/svg/right-arrow.svg"
             alt=""
-            width={6}
-            height={8}
+            width={8}
+            height={10}
             unoptimized
             className={breadcrumbArrowImgClassName}
             aria-hidden

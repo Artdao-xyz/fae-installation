@@ -6,7 +6,7 @@ export type FilterSidebarCategoryTone =
   | "artists"
   | "network";
 
-/** Pre-colored marker assets in `/public/svg/` (20×20). */
+/** Pre-colored marker assets in `/public/svg/` (20×20 source; shown at `size-5` in the filter UI). */
 export const categoryMarkerImageSrc: Record<
   FilterSidebarCategoryTone,
   string

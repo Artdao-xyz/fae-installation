@@ -6,8 +6,8 @@ export function FiltersSvgIcon({ className }: { className?: string }) {
     <Image
       src="/svg/filters.svg"
       alt=""
-      width={14}
-      height={14}
+      width={16}
+      height={16}
       unoptimized
       className={`${navMarkIconImgClassName} ${className ?? ""}`}
       aria-hidden

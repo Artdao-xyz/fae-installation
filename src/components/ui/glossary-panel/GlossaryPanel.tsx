@@ -53,8 +53,8 @@ function GlossaryTabRail({
       <Image
         src="/svg/glossary.svg"
         alt=""
-        width={14}
-        height={14}
+        width={16}
+        height={16}
         unoptimized
         className={`${navMarkIconImgClassName} mt-2 shrink-0`}
         aria-hidden

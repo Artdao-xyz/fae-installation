@@ -6,8 +6,8 @@ export function LatestUpdatesSvgIcon({ className }: { className?: string }) {
     <Image
       src="/svg/latest-updates-panel.svg"
       alt=""
-      width={14}
-      height={14}
+      width={16}
+      height={16}
       unoptimized
       className={`${navMarkIconImgClassName} ${className ?? ""}`}
       aria-hidden

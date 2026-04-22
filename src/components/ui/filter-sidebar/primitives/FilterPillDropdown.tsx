@@ -37,7 +37,7 @@ export function FilterPillDropdown({
       <header className="flex w-full shrink-0 items-center justify-between gap-2">
         <CategoryMarkerIcon
           tone={tone}
-          className="size-4 shrink-0 object-contain"
+          className="size-5 shrink-0 object-contain"
         />
         {showClearAll ? (
           <button

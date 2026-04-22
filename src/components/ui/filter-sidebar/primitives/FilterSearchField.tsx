@@ -51,7 +51,7 @@ export function FilterSearchField({
             <img
               src="/svg/delete.svg"
               alt=""
-              className="size-3 shrink-0 object-contain"
+              className="size-4 shrink-0 object-contain"
               aria-hidden
             />
           </button>
@@ -63,7 +63,7 @@ export function FilterSearchField({
             aria-label="Clear all filters"
             className={`${SEARCH_ICON_FRAME_CLASS} text-ink-primary transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ink-primary`}
           >
-            <RefreshCw className="size-3 shrink-0" strokeWidth={1.75} aria-hidden />
+            <RefreshCw className="size-4 shrink-0" strokeWidth={1.75} aria-hidden />
           </button>
         ) : null}
       </div>
