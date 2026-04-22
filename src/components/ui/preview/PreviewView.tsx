@@ -131,6 +131,9 @@ type ClampedPreviewPillsProps = {
   itemKey: string;
 };
 
+/** After real width change (e.g. window / preview panel), debounce a full re-measure. */
+const PREVIEW_PILL_WIDTH_REMEASURE_MS = 120;
+
 function ClampedPreviewPillsInner({
   items,
   docked,
@@ -140,6 +143,7 @@ function ClampedPreviewPillsInner({
 }: ClampedPreviewPillsProps) {
   const rootRef = useRef<HTMLDivElement | null>(null);
   const rowRef = useRef<HTMLDivElement | null>(null);
+  const lastInlineWidthRef = useRef<number | null>(null);
   const [visiblePrefix, setVisiblePrefix] = useState<number | null>(null);
 
   useLayoutEffect(() => {
@@ -148,14 +152,33 @@ function ClampedPreviewPillsInner({
     if (!el) return;
 
     if (visiblePrefix === null) {
-      const nRows = rowCountForPillRow(el);
-      if (nRows <= 3) {
-        queueMicrotask(() => setVisiblePrefix(items.length));
-        return;
-      }
-      const idx = firstIndexOnRowAtLeast(el, 4);
-      queueMicrotask(() => setVisiblePrefix(idx));
-      return;
+      let raf0 = 0;
+      let raf1 = 0;
+      let cancelled = false;
+      /**
+       * Read row count after the next two frames: during the docked panel `max-w` / width
+       * transition, flex may report a single “row” or wrong tops; measuring in the first
+       * useLayout pass sets `visiblePrefix === items.length` and hides +N forever at full width.
+       */
+      raf0 = requestAnimationFrame(() => {
+        raf1 = requestAnimationFrame(() => {
+          if (cancelled) return;
+          const row = rowRef.current;
+          if (!row) return;
+          const nRows = rowCountForPillRow(row);
+          const n = items.length;
+          if (nRows <= 3) {
+            setVisiblePrefix(n);
+            return;
+          }
+          setVisiblePrefix(firstIndexOnRowAtLeast(row, 4));
+        });
+      });
+      return () => {
+        cancelled = true;
+        cancelAnimationFrame(raf0);
+        cancelAnimationFrame(raf1);
+      };
     }
 
     if (visiblePrefix < items.length) {
@@ -163,17 +186,37 @@ function ClampedPreviewPillsInner({
         queueMicrotask(() => setVisiblePrefix((v) => (v !== null && v > 0 ? v - 1 : v)));
       }
     }
-  }, [docked, itemKey, items.length, visiblePrefix]);
+  }, [docked, itemKey, items, visiblePrefix]);
 
   useEffect(() => {
     if (!docked) return;
     const node = rootRef.current;
     if (!node || typeof ResizeObserver === "undefined") return;
-    const ro = new ResizeObserver(() => {
-      setVisiblePrefix(null);
+    lastInlineWidthRef.current = null;
+    let t: ReturnType<typeof setTimeout> | undefined;
+    const ro = new ResizeObserver((entries) => {
+      const e = entries[0];
+      if (!e) return;
+      const w = Math.round(e.contentRect.width);
+      const prev = lastInlineWidthRef.current;
+      if (prev === null) {
+        lastInlineWidthRef.current = w;
+        return;
+      }
+      if (Math.abs(w - prev) < 1) {
+        return;
+      }
+      lastInlineWidthRef.current = w;
+      if (t !== undefined) clearTimeout(t);
+      t = setTimeout(() => {
+        setVisiblePrefix(null);
+      }, PREVIEW_PILL_WIDTH_REMEASURE_MS);
     });
     ro.observe(node);
-    return () => ro.disconnect();
+    return () => {
+      if (t !== undefined) clearTimeout(t);
+      ro.disconnect();
+    };
   }, [docked, itemKey]);
 
   const renderPill = useCallback(

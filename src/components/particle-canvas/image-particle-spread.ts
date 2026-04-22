@@ -16,7 +16,7 @@ import { clamp, v3, type Vec3 } from "./particle-system";
 
 export type { FilterMatchMode, TaxonomyFilterSelection };
 
-export const FILTER_MAX = 30  ;
+export const FILTER_MAX = 30;
 export const REGROUP_MS = 1000;
 /** Background dim (opacity + filters) eases faster than spread motion. */
 export const FILTER_DIM_MS = 320;
@@ -29,8 +29,13 @@ export const HOVER_ENTER_DELAY_MS = 220;
  * under a stationary cursor fire spurious pointerenter.
  */
 export const HOVER_POINTER_MOTION_MAX_AGE_MS = 1000;
-/** Minimum gap between card outer rects (px). */
-const SPREAD_GAP = 26;
+/**
+ * Min clear space between card **edges** in the spread (organic pack + post-jitter relax).
+ * Packer uses image full-card `cw`×`ch` for all tiles, but `variant="text"` often renders
+ * wider; extra X (and a bit of Y) keeps titles from colliding.
+ */
+const SPREAD_GAP_X = 40;
+const SPREAD_GAP_Y = 30;
 /**
  * After organic pack + polar sort, nudge each slot on xy so large spreads read less like a
  * perfect lattice. Amplitude is **not** capped to ~one margin — `min(cw,ch)*fraction` is the
@@ -64,12 +69,11 @@ export function maxSpreadCountForViewport(
     return 1;
   }
   const { width: cw, height: ch } = getThumbnailFullCardOuterSize(cardSize);
-  const gap = SPREAD_GAP;
   const pad = 2;
   const innerW = Math.max(0, vw - cw - 2 * pad);
   const innerH = Math.max(0, vh - ch - 2 * pad);
-  const unitW = cw + gap;
-  const unitH = ch + gap;
+  const unitW = cw + SPREAD_GAP_X;
+  const unitH = ch + SPREAD_GAP_Y;
   if (unitW < 1 || unitH < 1) return 1;
   const raw = (innerW / unitW) * (innerH / unitH) * 0.92;
   const n = Math.ceil(raw);
@@ -325,7 +329,9 @@ export function computeSpreadTargets(
     viewportHeight: vh,
     cardWidth: cw,
     cardHeight: ch,
-    gap: SPREAD_GAP,
+    gap: Math.min(SPREAD_GAP_X, SPREAD_GAP_Y),
+    gapX: SPREAD_GAP_X,
+    gapY: SPREAD_GAP_Y,
     count,
   });
   const zFlat = zNear - 0.5;
@@ -350,6 +356,6 @@ export function computeSpreadTargets(
     return v3(p.x + jx * amp, p.y + jy * amp, p.z);
   });
   const work = afterJitter.map((p) => ({ px: p.x + vw / 2, py: p.y + vh / 2 }));
-  relaxViewportCardCenters(work, vw, vh, cw, ch, SPREAD_GAP);
+  relaxViewportCardCenters(work, vw, vh, cw, ch, SPREAD_GAP_X, SPREAD_GAP_Y);
   return work.map((c, j) => v3(c.px - vw / 2, c.py - vh / 2, afterJitter[j]!.z));
 }

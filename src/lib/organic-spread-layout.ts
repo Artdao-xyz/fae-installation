@@ -13,9 +13,12 @@ export function centersOverlapRect(
   by: number,
   cw: number,
   ch: number,
-  gap: number,
+  gapX: number,
+  gapY: number,
 ): boolean {
-  return Math.abs(ax - bx) < cw + gap && Math.abs(ay - by) < ch + gap;
+  return (
+    Math.abs(ax - bx) < cw + gapX && Math.abs(ay - by) < ch + gapY
+  );
 }
 
 function phyllotaxisSeed(
@@ -46,15 +49,16 @@ function separateOverlaps(
   pts: { px: number; py: number }[],
   cw: number,
   ch: number,
-  gap: number,
+  gapX: number,
+  gapY: number,
   minX: number,
   maxX: number,
   minY: number,
   maxY: number,
   maxIterations: number,
 ): void {
-  const needX = cw + gap;
-  const needY = ch + gap;
+  const needX = cw + gapX;
+  const needY = ch + gapY;
   const n = pts.length;
 
   for (let iter = 0; iter < maxIterations; iter++) {
@@ -63,7 +67,7 @@ function separateOverlaps(
       for (let j = i + 1; j < n; j++) {
         const a = pts[i]!;
         const b = pts[j]!;
-        if (!centersOverlapRect(a.px, a.py, b.px, b.py, cw, ch, gap)) {
+        if (!centersOverlapRect(a.px, a.py, b.px, b.py, cw, ch, gapX, gapY)) {
           continue;
         }
 
@@ -110,7 +114,7 @@ const OVERLAP_PAD = 2;
 
 /**
  * Pushes full-card **center** points in viewport space (0,0 = top-left) so rects
- * (cw+gap)×(ch+gap) do not overlap, then clamps to the safe padding rect.
+ * (cw+gapX)×(ch+gapY) do not overlap, then clamps to the safe padding rect.
  * Used after spread jitter; same model as phyllotaxis + {@link separateOverlaps}.
  */
 export function relaxViewportCardCenters(
@@ -119,7 +123,8 @@ export function relaxViewportCardCenters(
   vh: number,
   cw: number,
   ch: number,
-  gap: number,
+  gapX: number,
+  gapY: number,
 ): void {
   if (centers.length === 0) return;
   const minX = cw / 2 + OVERLAP_PAD;
@@ -130,7 +135,8 @@ export function relaxViewportCardCenters(
     centers,
     cw,
     ch,
-    gap,
+    gapX,
+    gapY,
     minX,
     maxX,
     minY,
@@ -159,9 +165,10 @@ function applyPhyllotaxisSeedJitter(
   maxY: number,
   cw: number,
   ch: number,
-  gap: number,
+  gapX: number,
+  gapY: number,
 ): void {
-  const cell = Math.min(cw + gap, ch + gap);
+  const cell = Math.min(cw + gapX, ch + gapY);
   const amp = cell * 0.2;
   const salt =
     (Math.round(vw) * 2654435761) ^ (Math.round(vh) * 1597334677);
@@ -185,7 +192,13 @@ export type OrganicSpreadOptions = {
   viewportHeight: number;
   cardWidth: number;
   cardHeight: number;
+  /**
+   * Minimum clear space between card **edges** (used when `gapX` / `gapY` omitted).
+   * Prefer `gapX` / `gapY` when text tiles are wider than `cardWidth` in the DOM.
+   */
   gap: number;
+  gapX?: number;
+  gapY?: number;
   count: number;
 };
 
@@ -200,6 +213,8 @@ export function computeOrganicSpreadLayout(
     gap,
     count: requested,
   } = options;
+  const gapX = options.gapX ?? gap;
+  const gapY = options.gapY ?? gap;
 
   const n = Math.max(0, Math.floor(requested));
   if (n === 0 || vw <= 0 || vh <= 0 || cw <= 0 || ch <= 0) {
@@ -235,14 +250,16 @@ export function computeOrganicSpreadLayout(
     maxY,
     cw,
     ch,
-    gap,
+    gapX,
+    gapY,
   );
 
   separateOverlaps(
     centers,
     cw,
     ch,
-    gap,
+    gapX,
+    gapY,
     minX,
     maxX,
     minY,

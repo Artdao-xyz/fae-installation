@@ -1,5 +1,5 @@
 export const SIZE_DIMS = {
-  sm: { frame: 75, labelMinH: 24, textPx: 11, gapPx: 5, chipW: 2.5, chipH: 10, padX: 10 },
+  sm: { frame: 75, labelMinH: 24, textPx: 12, gapPx: 5, chipW: 2.5, chipH: 10, padX: 10 },
   md: { frame: 120, labelMinH: 28, textPx: 12, gapPx: 6, chipW: 3, chipH: 12, padX: 12 },
   lg: { frame: 120, labelMinH: 28, textPx: 12, gapPx: 6, chipW: 3, chipH: 12, padX: 12 },
 } as const;
