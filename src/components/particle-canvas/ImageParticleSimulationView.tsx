@@ -11,10 +11,7 @@ import {
 } from "react";
 import { createPortal, flushSync } from "react-dom";
 import { useFilterSelection } from "@/components/ui/filter-sidebar/FilterSelectionContext";
-import {
-  FILTER_SUBPANELS_COLUMN_SELECTOR,
-  getPreviewPanelWidthPx,
-} from "@/components/ui/filter-sidebar/shell/layout-classes";
+import { getPreviewPanelWidthPx } from "@/components/ui/filter-sidebar/shell/layout-classes";
 import { getMarginGuideInsetPx } from "@/lib/margin-guide";
 import { buildSuggestedSourceRowsSplit } from "@/lib/preview-suggested-outputs";
 import type { ContentRow } from "@/data/content-types";
@@ -587,75 +584,36 @@ export function ImageParticleSimulationView({
       const viewportHForSim = Math.max(64, vh - 2 * marginGuideInset);
       const reservedRight = previewRightReservationPx();
       const rightLimit = vw - reservedRight;
-      const subpanelColumnPx = (() => {
-        const el = document.querySelector(FILTER_SUBPANELS_COLUMN_SELECTOR);
-        if (!(el instanceof HTMLElement)) return 0;
-        return el.getBoundingClientRect().width;
-      })();
+      const cy = vh / 2;
+      const h = viewportHForSim;
 
-      /**
-       * Filter options closed: keep the same vertical placement as before (`cy` + `h` use full
-       * viewport height so the sim matches the fixed hero + orbit), but drive **horizontal** size
-       * and `cx` from the main placement ref. That clears the left filter rail; `min(r.right,
-       * rightLimit)` also clips for the `fixed` preview dock, which does not narrow layout `r.right`.
-       */
       if (!filtersPanelOpen) {
-        const elClosed = placementContainerRef?.current;
-        let w: number;
-        let cx: number;
-        if (elClosed) {
-          const r = elClosed.getBoundingClientRect();
-          const right = Math.min(r.right, rightLimit);
-          w = Math.max(64, right - r.left);
-          cx = r.left + w / 2;
-        } else {
-          w = Math.max(64, vw - reservedRight);
-          cx = vw / 2;
-        }
-        const next: PlacementBounds = {
-          cx,
-          cy: vh / 2,
-          w,
-          h: viewportHForSim,
-        };
+        /** Sidebar (filter options) closed: center on the viewport; clip width for docked preview. */
+        const cx = vw / 2;
+        const halfW = Math.min(cx, Math.max(0, rightLimit - cx));
+        const w = Math.max(64, 2 * halfW);
+        const next: PlacementBounds = { cx, cy, w, h };
         setPlacementBounds((prev) =>
           approxEqualPlacementBounds(prev, next) ? prev : next,
         );
         return;
       }
 
+      /** Sidebar open: center in the main column to the right of the filter chrome. */
       const el = placementContainerRef?.current;
       if (!el) {
         const w = Math.max(64, rightLimit);
-        const next: PlacementBounds = {
-          cx: vw / 2,
-          cy: vh / 2,
-          w,
-          h: viewportHForSim,
-        };
+        const next: PlacementBounds = { cx: vw / 2, cy, w, h };
         setPlacementBounds((prev) =>
           approxEqualPlacementBounds(prev, next) ? prev : next,
         );
         return;
       }
       const r = el.getBoundingClientRect();
-      const left = r.left;
-      const top = r.top;
       const right = Math.min(r.right, rightLimit);
-      let width = Math.max(64, right - left);
-      const height = Math.max(64, r.bottom - top);
-      let cx = left + width / 2;
-      /** Undo main-column shrink from the domain subpanel stack (measured px tracks CSS width transition). */
-      if (subpanelColumnPx > 0) {
-        cx -= subpanelColumnPx / 2;
-        width += subpanelColumnPx;
-      }
-      const next: PlacementBounds = {
-        cx,
-        cy: top + height / 2,
-        w: width,
-        h: height,
-      };
+      const w = Math.max(64, right - r.left);
+      const cx = r.left + w / 2;
+      const next: PlacementBounds = { cx, cy, w, h };
       setPlacementBounds((prev) =>
         approxEqualPlacementBounds(prev, next) ? prev : next,
       );
@@ -663,10 +621,8 @@ export function ImageParticleSimulationView({
 
     measure();
     const el = placementContainerRef?.current;
-    const subCol = document.querySelector(FILTER_SUBPANELS_COLUMN_SELECTOR);
     const ro = new ResizeObserver(measure);
     if (el) ro.observe(el);
-    if (subCol instanceof HTMLElement) ro.observe(subCol);
     window.addEventListener("resize", measure);
     window.addEventListener("scroll", measure, true);
     return () => {
@@ -1583,7 +1539,7 @@ export function ImageParticleSimulationView({
       }}
     >
       <div
-        className="absolute"
+        className="absolute transition-[left,top,width,height] duration-500 ease-in-out motion-reduce:duration-0 motion-reduce:transition-none"
         style={{
           left: placementBounds.cx,
           top: placementBounds.cy,
