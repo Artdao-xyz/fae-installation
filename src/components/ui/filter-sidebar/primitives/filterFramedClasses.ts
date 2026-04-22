@@ -6,7 +6,6 @@ export const filterPillSelection = {
   text: "text-[color:var(--color-filter-pill-selection)]",
   border: "border-[color:var(--color-filter-pill-selection)]",
   bg: "bg-[color:var(--color-filter-pill-selection)]",
-  outline: "outline-[color:var(--color-filter-pill-selection)]",
   /** Same “mat” frame as `.fae-control-filter-outer`, but selection blue instead of ink. */
   outerMat: "!border-[color:var(--color-filter-pill-selection)] !bg-[color:var(--color-filter-pill-selection)]",
 } as const;

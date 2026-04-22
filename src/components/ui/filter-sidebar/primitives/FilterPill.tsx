@@ -64,15 +64,15 @@ function SquareCornerMarkers({ selected }: { selected: boolean }) {
 }
 
 function SquarePillFrame({ label, selected }: { label: string; selected: boolean }) {
-  const cellOutline = selected
-    ? `${filterPillSelection.text} outline-[0.5px] outline-offset-[-0.5px] ${filterPillSelection.outline}`
-    : "text-ink-primary outline-[0.5px] outline-offset-[-0.5px] outline-ink-primary";
+  const cellBorder = selected
+    ? `bg-surface-canvas ${filterPillSelection.text} border-hairline border-solid ${filterPillSelection.border}`
+    : "border-hairline border-solid border-ink-primary bg-surface-canvas text-ink-primary";
 
   return (
     <span className="relative isolate inline-flex items-center justify-center">
       <SquareCornerMarkers selected={selected} />
       <span
-        className={`relative z-10 inline-flex items-center justify-center bg-transparent ${filterPillLabelBoxClass} line-clamp-2 ${cellOutline}`}
+        className={`relative z-10 box-border inline-flex items-center justify-center ${filterPillLabelBoxClass} line-clamp-2 ${cellBorder}`}
       >
         {label}
       </span>
