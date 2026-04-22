@@ -541,6 +541,8 @@ export const PreviewView = memo(function PreviewView({
   if (fullScreen) {
     return (
       <div
+        data-fae-content-preview
+        onPointerDown={(e) => e.stopPropagation()}
         className={`${fullScreenContentShellClass} transition-opacity duration-300 ease-out motion-reduce:transition-none ${
           shellEntered ? "opacity-100" : "opacity-0"
         } motion-reduce:opacity-100`}
@@ -576,6 +578,8 @@ export const PreviewView = memo(function PreviewView({
 
   return (
     <div
+      data-fae-content-preview
+      onPointerDown={(e) => e.stopPropagation()}
       className={`${previewDockedOuterClass} ${
         shellEntered
           ? "max-w-[var(--width-preview-panel)]"
