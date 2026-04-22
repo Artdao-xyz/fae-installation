@@ -52,6 +52,11 @@ export type FilterSelectionContextValue = {
   selectedFaeBriefing: string | null;
   /** Increments when `clearAllFilters` runs; local filter UIs can reset from this. */
   filterResetNonce: number;
+  /**
+   * Increments when `resetToIdle` runs (Escape, canvas background, or legacy “refresh all”)
+   * so the search field can clear in sync.
+   */
+  searchQueryResetNonce: number;
   toggleFocusArea: (label: string) => void;
   toggleActivityType: (label: string) => void;
   toggleArtist: (label: string) => void;
@@ -65,6 +70,12 @@ export type FilterSelectionContextValue = {
   clearSelectedNetworks: () => void;
   /** Clears all taxonomy + briefing + bumps `filterResetNonce` for any remaining local UIs. */
   clearAllFilters: () => void;
+  /**
+   * Clears all filters, closes the content preview, clears the search string (see `searchQueryResetNonce`),
+   * and returns the canvas to idle — same as the old search “refresh” control. Bound to Escape and
+   * empty-canvas click from `ImageParticleSimulationView`.
+   */
+  resetToIdle: () => void;
   setFiltersFromContentRow: (row: {
     focusAreas: readonly string[];
     activityTypes: readonly string[];
@@ -307,6 +318,7 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
     null,
   );
   const [filterResetNonce, setFilterResetNonce] = useState(0);
+  const [searchQueryResetNonce, setSearchQueryResetNonce] = useState(0);
 
   const taxonomySelection = useMemo(
     (): TaxonomyFilterSelection => ({
@@ -653,6 +665,21 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
     contentPreviewCloserRef.current = fn;
   }, []);
 
+  const resetToIdle = useCallback(() => {
+    clearAllFilters();
+    setSearchQueryResetNonce((n) => n + 1);
+    closeContentPreview();
+  }, [clearAllFilters, closeContentPreview]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      resetToIdle();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [resetToIdle]);
+
   const value = useMemo<FilterSelectionContextValue>(
     () => ({
       contentCatalog,
@@ -672,6 +699,7 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
       selectedNetworks,
       selectedFaeBriefing,
       filterResetNonce,
+      searchQueryResetNonce,
       toggleFocusArea,
       toggleActivityType,
       toggleArtist,
@@ -684,6 +712,7 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
       clearSelectedFormats,
       clearSelectedNetworks,
       clearAllFilters,
+      resetToIdle,
       setFiltersFromContentRow,
       filtersPanelOpen,
       setFiltersPanelOpen,
@@ -727,6 +756,7 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
       selectedNetworks,
       selectedFaeBriefing,
       filterResetNonce,
+      searchQueryResetNonce,
       toggleFocusArea,
       toggleActivityType,
       toggleArtist,
@@ -739,6 +769,7 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
       clearSelectedFormats,
       clearSelectedNetworks,
       clearAllFilters,
+      resetToIdle,
       setFiltersFromContentRow,
       filtersPanelOpen,
       briefingsSubpanelOpen,

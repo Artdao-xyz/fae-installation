@@ -22,7 +22,7 @@ export function HomeBar({
   className = "",
   mergeWithSubpanel = false,
 }: HomeBarProps) {
-  const { contentPreviewRow } = useFilterSelection();
+  const { contentPreviewRow, resetToIdle } = useFilterSelection();
   const [breadcrumbEntered, setBreadcrumbEntered] = useState(false);
   const prevPreviewIdRef = useRef<string | undefined>(undefined);
 
@@ -65,6 +65,11 @@ export function HomeBar({
     >
       <Link
         href="/"
+        onClick={(e) => {
+          if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+          e.preventDefault();
+          resetToIdle();
+        }}
         className="flex min-w-0 shrink-0 items-center gap-2 text-ink-primary hover:opacity-80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ink-primary"
       >
         <HomeSvgIcon />

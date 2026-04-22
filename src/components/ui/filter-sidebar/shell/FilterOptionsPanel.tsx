@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useFilterSelection } from "@/components/ui/filter-sidebar/FilterSelectionContext";
 import { ActivityType } from "../sections/ActivityType";
 import { ArtistsMenu } from "../sections/ArtistsMenu";
 import { EditorialMenu } from "../sections/EditorialMenu";
@@ -35,8 +36,13 @@ export function FilterOptionsPanel({
   onToggleArtistsSubpanel,
   onToggleNetworkSubpanel,
 }: FilterOptionsPanelProps) {
+  const { searchQueryResetNonce } = useFilterSelection();
   const [searchQuery, setSearchQuery] = useState("");
   const searching = searchQuery.trim().length > 0;
+
+  useEffect(() => {
+    setSearchQuery("");
+  }, [searchQueryResetNonce]);
 
   return (
     <aside

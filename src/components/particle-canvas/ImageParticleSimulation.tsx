@@ -18,7 +18,8 @@ const ImageParticleSimulationLeva = lazy(() =>
   })),
 );
 
-const showLeva = process.env.NODE_ENV === "development";
+/** Set to `process.env.NODE_ENV === "development"` to show the Leva panel again. */
+const showLeva = false;
 
 export function ImageParticleSimulation(props: ImageParticleSimulationProps) {
   if (showLeva) {

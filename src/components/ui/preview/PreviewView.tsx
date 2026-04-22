@@ -501,16 +501,6 @@ export const PreviewView = memo(function PreviewView({
     };
   }, [fullScreen]);
 
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key !== "Escape") return;
-      if (fullScreen) onFullScreenChange(false);
-      else onClose();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [fullScreen, onClose, onFullScreenChange]);
-
   if (fullScreen) {
     return (
       <div

@@ -210,15 +210,6 @@ export function AboutPanel() {
 
   useEffect(() => {
     if (aboutView !== "full") return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") closeFull();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [aboutView, closeFull]);
-
-  useEffect(() => {
-    if (aboutView !== "full") return;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {

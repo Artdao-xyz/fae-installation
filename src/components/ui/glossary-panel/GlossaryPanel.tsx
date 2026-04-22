@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useCallback, useEffect, useId } from "react";
+import { useCallback, useId } from "react";
 import { useFloatingPanelStack } from "@/components/ui/floating-panels/FloatingPanelStackContext";
 import { FLOATING_DOCK_PEEK_CLIP_CLASS } from "@/components/ui/filter-sidebar/shell/layout-classes";
 import { OpenSvgIcon } from "@/components/ui/icons/OpenSvgIcon";
@@ -75,17 +75,6 @@ export function GlossaryPanel() {
   const toggleDock = useCallback(() => {
     setGlossaryView((v) => (v === "peek" ? "minimized" : "peek"));
   }, [setGlossaryView]);
-
-  const minimize = useCallback(() => setGlossaryView("minimized"), [setGlossaryView]);
-
-  useEffect(() => {
-    if (!peekOpen) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") minimize();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [peekOpen, minimize]);
 
   const peekClipClass = peekOpen
     ? "max-w-[var(--width-glossary-panel)] opacity-100"

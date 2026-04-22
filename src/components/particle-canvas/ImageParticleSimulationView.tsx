@@ -149,6 +149,7 @@ export function ImageParticleSimulationView({
     registerContentPreviewOpener,
     registerContentPreviewCloser,
     setContentPreviewRow,
+    resetToIdle,
     contentCatalog,
     contentCatalogError,
     contentCatalogTotal,
@@ -1456,6 +1457,14 @@ export function ImageParticleSimulationView({
       className="fixed inset-0 z-30 overflow-hidden"
       style={{ perspective: `${config.perspective}px` }}
       aria-label="3D image particle simulation"
+      onPointerDown={(e) => {
+        if (e.button !== 0) return;
+        const t = e.target;
+        if (t instanceof Element && t.closest("[data-canvas-tile]")) {
+          return;
+        }
+        resetToIdle();
+      }}
     >
       <div
         className="absolute"
@@ -1491,6 +1500,7 @@ export function ImageParticleSimulationView({
             return (
               <div
                 key={`text-${row.id}`}
+                data-canvas-tile
                 ref={(el) => {
                   nodeRefs.current[i] = el;
                 }}
@@ -1556,6 +1566,7 @@ export function ImageParticleSimulationView({
           return (
             <div
               key={row.id}
+              data-canvas-tile
               ref={(el) => {
                 nodeRefs.current[i] = el;
               }}

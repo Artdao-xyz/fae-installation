@@ -109,6 +109,7 @@
 * {
   scrollbar-width: thin;
   scrollbar-color: var(--color-ink-primary) transparent;
+  /* outline: none; */
   /* overscroll-behavior: */
 }
 

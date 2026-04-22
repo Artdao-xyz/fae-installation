@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useId, useMemo } from "react";
+import { useCallback, useId, useMemo } from "react";
 import { useFloatingPanelStack } from "@/components/ui/floating-panels/FloatingPanelStackContext";
 import { FLOATING_DOCK_PEEK_CLIP_CLASS } from "@/components/ui/filter-sidebar/shell/layout-classes";
 import { OpenSvgIcon } from "@/components/ui/icons/OpenSvgIcon";
@@ -77,20 +77,6 @@ export function LatestUpdatesPanel() {
   const toggleDock = useCallback(() => {
     setLatestUpdatesView((v) => (v === "peek" ? "minimized" : "peek"));
   }, [setLatestUpdatesView]);
-
-  const minimize = useCallback(
-    () => setLatestUpdatesView("minimized"),
-    [setLatestUpdatesView],
-  );
-
-  useEffect(() => {
-    if (!peekOpen) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") minimize();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [peekOpen, minimize]);
 
   const peekClipWidthPx = useMemo(() => getLatestUpdatesPeekClipWidthPx(), []);
 
