@@ -13,6 +13,7 @@ import { NetworkMenu } from "../sections/NetworkMenu";
 import { RDProjectsMenu } from "../sections/RDProjectsMenu";
 import { Search } from "../sections/Search";
 import { FilterTaxonomyEmptyHint } from "./FilterTaxonomyEmptyHint";
+import { filterChromeRightEdgeClass } from "./layout-classes";
 type FilterOptionsPanelProps = {
   panelId: string;
   briefingsSubpanelOpen: boolean;
@@ -39,6 +40,11 @@ export function FilterOptionsPanel({
   const { searchQueryResetNonce } = useFilterSelection();
   const [searchQuery, setSearchQuery] = useState("");
   const searching = searchQuery.trim().length > 0;
+  const anySubpanelOpen =
+    briefingsSubpanelOpen ||
+    rdSubpanelOpen ||
+    artistsSubpanelOpen ||
+    networkSubpanelOpen;
 
   useEffect(() => {
     setSearchQuery("");
@@ -46,7 +52,7 @@ export function FilterOptionsPanel({
 
   return (
     <aside
-      className="flex h-full min-h-0 w-full min-w-[285px] flex-col overflow-hidden border-r-hairline border-solid border-ink-primary"
+      className={`flex h-full min-h-0 w-full min-w-[285px] flex-col overflow-hidden border-solid border-ink-primary ${filterChromeRightEdgeClass(anySubpanelOpen)}`}
       aria-label="Filters"
     >
       <div

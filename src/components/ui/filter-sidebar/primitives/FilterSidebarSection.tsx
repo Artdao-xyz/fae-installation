@@ -28,8 +28,7 @@ export function FilterSidebarSection({
       }`}
       aria-label={title}
     >
-      <div className="h-px w-full shrink-0 bg-ink-primary" aria-hidden />
-      <header className="flex shrink-0 items-center justify-between gap-2 px-3 pb-2 pt-1.5">
+      <header className="flex shrink-0 items-center justify-between gap-2 border-t-hairline border-solid border-ink-primary px-3 pb-2 pt-1.5">
         <h2 className="min-w-0 flex-1 font-lust-text text-sm font-medium text-ink-body">
           {title}
         </h2>

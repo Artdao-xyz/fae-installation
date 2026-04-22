@@ -45,9 +45,7 @@ export const FILTER_SUBPANELS_COLUMN_SELECTOR = "[data-fae-filter-subpanels-colu
 export const SUBPANEL_COLUMN_COLLAPSED_CLASS =
   "w-0 min-w-0 max-w-0 shrink-0 overflow-hidden";
 
-/** HomeBar / Footer: invisible right border when merged so layout width matches hairline (avoids 0.5px jump). */
+/** HomeBar / Footer: no right border when a domain subpanel is open (subpanel provides the shared edge). */
 export function filterChromeRightEdgeClass(mergeWithSubpanel: boolean) {
-  return mergeWithSubpanel
-    ? "border-r-hairline border-r-transparent"
-    : "border-r-hairline";
+  return mergeWithSubpanel ? "border-r-0" : "border-r-hairline";
 }
