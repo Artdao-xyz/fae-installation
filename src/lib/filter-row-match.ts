@@ -20,6 +20,12 @@ export function rowMatchesFilterSelection(
   mode: FilterMatchMode,
 ): boolean {
   const { focus, activity, artists, formats, networks } = sel;
+  /**
+   * All dimensions empty = no taxonomy constraints — every row is eligible (unfiltered),
+   * including when the user hits “clear all” on the last active category.
+   * (Previously this returned `false` for every row, so clearing filters seemed to do nothing
+   * or “matched nothing” depending on the UI.)
+   */
   if (
     focus.size === 0 &&
     activity.size === 0 &&
@@ -27,7 +33,7 @@ export function rowMatchesFilterSelection(
     formats.size === 0 &&
     networks.size === 0
   ) {
-    return false;
+    return true;
   }
 
   if (mode === "union") {

@@ -612,42 +612,6 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
     [minimizeAllFloatingPanels],
   );
 
-  const clearFocusAreas = useCallback(() => {
-    minimizeAllFloatingPanels();
-    setSelectedFocusAreas(new Set());
-  }, [minimizeAllFloatingPanels]);
-
-  const clearActivityTypes = useCallback(() => {
-    minimizeAllFloatingPanels();
-    setSelectedActivityTypes(new Set());
-  }, [minimizeAllFloatingPanels]);
-
-  const clearSelectedArtists = useCallback(() => {
-    minimizeAllFloatingPanels();
-    setSelectedArtists(new Set());
-  }, [minimizeAllFloatingPanels]);
-
-  const clearSelectedFormats = useCallback(() => {
-    minimizeAllFloatingPanels();
-    setSelectedFormats(new Set());
-  }, [minimizeAllFloatingPanels]);
-
-  const clearSelectedNetworks = useCallback(() => {
-    minimizeAllFloatingPanels();
-    setSelectedNetworks(new Set());
-  }, [minimizeAllFloatingPanels]);
-
-  const clearAllFilters = useCallback(() => {
-    minimizeAllFloatingPanels();
-    setSelectedFocusAreas(new Set());
-    setSelectedActivityTypes(new Set());
-    setSelectedArtists(new Set());
-    setSelectedFormats(new Set());
-    setSelectedNetworks(new Set());
-    setSelectedFaeBriefing(null);
-    setFilterResetNonce((n) => n + 1);
-  }, [minimizeAllFloatingPanels]);
-
   const setFiltersFromContentRow = useCallback(
     (row: {
       focusAreas: readonly string[];
@@ -719,6 +683,59 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
   const registerContentPreviewCloser = useCallback((fn: (() => void) | null) => {
     contentPreviewCloserRef.current = fn;
   }, []);
+
+  const exitContentPreviewToFilterCanvas = useCallback(() => {
+    if (contentPreviewRow == null) return;
+    clearPendingPreviewFilterSnapshot();
+    setFiltersPanelOpen(true);
+    closeContentPreview();
+  }, [
+    contentPreviewRow,
+    clearPendingPreviewFilterSnapshot,
+    closeContentPreview,
+  ]);
+
+  const clearFocusAreas = useCallback(() => {
+    exitContentPreviewToFilterCanvas();
+    minimizeAllFloatingPanels();
+    setSelectedFocusAreas(new Set());
+  }, [exitContentPreviewToFilterCanvas, minimizeAllFloatingPanels]);
+
+  const clearActivityTypes = useCallback(() => {
+    exitContentPreviewToFilterCanvas();
+    minimizeAllFloatingPanels();
+    setSelectedActivityTypes(new Set());
+  }, [exitContentPreviewToFilterCanvas, minimizeAllFloatingPanels]);
+
+  const clearSelectedArtists = useCallback(() => {
+    exitContentPreviewToFilterCanvas();
+    minimizeAllFloatingPanels();
+    setSelectedArtists(new Set());
+  }, [exitContentPreviewToFilterCanvas, minimizeAllFloatingPanels]);
+
+  const clearSelectedFormats = useCallback(() => {
+    exitContentPreviewToFilterCanvas();
+    minimizeAllFloatingPanels();
+    setSelectedFormats(new Set());
+  }, [exitContentPreviewToFilterCanvas, minimizeAllFloatingPanels]);
+
+  const clearSelectedNetworks = useCallback(() => {
+    exitContentPreviewToFilterCanvas();
+    minimizeAllFloatingPanels();
+    setSelectedNetworks(new Set());
+  }, [exitContentPreviewToFilterCanvas, minimizeAllFloatingPanels]);
+
+  const clearAllFilters = useCallback(() => {
+    exitContentPreviewToFilterCanvas();
+    minimizeAllFloatingPanels();
+    setSelectedFocusAreas(new Set());
+    setSelectedActivityTypes(new Set());
+    setSelectedArtists(new Set());
+    setSelectedFormats(new Set());
+    setSelectedNetworks(new Set());
+    setSelectedFaeBriefing(null);
+    setFilterResetNonce((n) => n + 1);
+  }, [exitContentPreviewToFilterCanvas, minimizeAllFloatingPanels]);
 
   const resetToIdle = useCallback(() => {
     clearPendingPreviewFilterSnapshot();
