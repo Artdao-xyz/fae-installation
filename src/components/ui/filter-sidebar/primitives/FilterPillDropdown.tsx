@@ -50,7 +50,7 @@ export function FilterPillDropdown({
         ) : null}
       </header>
       <div
-        className="flex w-full flex-wrap content-start items-start"
+        className="flex w-full flex-wrap content-start items-start gap-1.5"
         data-name="Filters"
       >
         {children}

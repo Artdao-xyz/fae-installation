@@ -109,7 +109,7 @@ export function ArtistsDropdownPanel({
           </div>
         ) : (
           <div
-            className="flex w-full flex-wrap content-start items-start"
+            className="flex w-full flex-wrap content-start items-start gap-1.5"
             role="group"
             aria-label="Artists"
           >
