@@ -1,12 +1,20 @@
 "use client";
 
-import { useCallback, useEffect, useId } from "react";
+import { useCallback, useEffect, useId, useState } from "react";
 import { useFloatingPanelStack } from "@/components/ui/floating-panels/FloatingPanelStackContext";
 import { FLOATING_DOCK_PEEK_CLIP_CLASS } from "@/components/ui/filter-sidebar/shell/layout-classes";
 import { AboutSvgIcon } from "@/components/ui/icons/AboutSvgIcon";
 import { OpenSvgIcon } from "@/components/ui/icons/OpenSvgIcon";
 import { navSidebarVerticalLabelClassName } from "@/components/ui/icons/nav-sidebar-labels";
 import { floatingDockPanelOuterHeightPx } from "@/components/ui/floating-panels/right-rail-stack";
+import {
+  fullScreenContentInnerClass,
+  fullScreenContentScrollClass,
+  fullScreenContentShellClass,
+  fullScreenShowMoreLessButtonClass,
+  fullScreenShowMoreLessLabelClass,
+} from "@/components/ui/preview/fullScreenContentChrome";
+import { PreviewPanelCollapseBar } from "@/components/ui/preview/PreviewPanelCollapseBar";
 
 const ABOUT_BODY = (
   <>
@@ -36,15 +44,9 @@ const ABOUT_FULL_TEAM = [
   "Kay Watson",
 ] as const;
 
-const showMoreLessButtonClassName =
-  "inline-flex items-center gap-2 border-r-hairline border-t-hairline border-solid border-ink-primary bg-surface-canvas/90 px-5 py-4 text-left backdrop-blur-fae-sm transition-colors hover:bg-surface-hover/80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ink-primary";
-
-const showMoreLessLabelClassName =
-  "whitespace-nowrap font-fira-mono text-sm font-normal leading-[14px] text-ink-body";
-
 function AboutFullScreenBody() {
   return (
-    <div className="flex flex-col items-start gap-2.5 text-ink-body">
+    <div className="flex w-full flex-col items-start gap-5 text-ink-body">
 
       <div className="w-full font-suisseintl text-xs font-normal leading-5">
         {ABOUT_BODY}
@@ -94,6 +96,72 @@ function AboutFullScreenBody() {
           X
         </a>
       </nav>
+    </div>
+  );
+}
+
+/**
+ * Isolated so open animation runs on each mount, matching the preview full-screen enter transition.
+ */
+function AboutFullScreenView({
+  zIndex,
+  onBackToPeek,
+}: {
+  zIndex: number;
+  onBackToPeek: () => void;
+}) {
+  const [shellEntered, setShellEntered] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    let raf = 0;
+    queueMicrotask(() => {
+      if (cancelled || typeof window === "undefined") return;
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        setShellEntered(true);
+        return;
+      }
+      setShellEntered(false);
+      raf = requestAnimationFrame(() => {
+        if (!cancelled) setShellEntered(true);
+      });
+    });
+    return () => {
+      cancelled = true;
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, []);
+
+  return (
+    <div
+      className={`${fullScreenContentShellClass} transition-opacity duration-300 ease-out motion-reduce:transition-none ${
+        shellEntered ? "opacity-100" : "opacity-0"
+      } motion-reduce:opacity-100`}
+      style={{ zIndex }}
+      role="dialog"
+      aria-modal="true"
+      aria-label="About Future Art Ecosystems"
+    >
+      <PreviewPanelCollapseBar
+        ariaLabel="Back to About panel"
+        onClose={onBackToPeek}
+      />
+      <div className={fullScreenContentScrollClass}>
+        <div className={fullScreenContentInnerClass}>
+          <AboutFullScreenBody />
+        </div>
+      </div>
+      <div className="flex shrink-0 justify-start">
+        <button
+          type="button"
+          onClick={onBackToPeek}
+          className={fullScreenShowMoreLessButtonClass}
+          aria-label="Back to About panel"
+        >
+          <OpenSvgIcon className="shrink-0" />
+          <span className={fullScreenShowMoreLessLabelClass}>Show less</span>
+        </button>
+      </div>
     </div>
   );
 }
@@ -204,10 +272,12 @@ export function AboutPanel() {
                 <button
                   type="button"
                   onClick={openFull}
-                  className={showMoreLessButtonClassName}
+                  className={fullScreenShowMoreLessButtonClass}
                 >
-                  <OpenSvgIcon className="-scale-x-100" />
-                  <span className={showMoreLessLabelClassName}>Show more</span>
+                  <OpenSvgIcon className="shrink-0 rotate-180" />
+                  <span className={fullScreenShowMoreLessLabelClass}>
+                    Show more
+                  </span>
                 </button>
               </div>
             </div>
@@ -216,43 +286,10 @@ export function AboutPanel() {
       ) : null}
 
       {aboutView === "full" ? (
-        <div
-          className="fixed inset-0 flex flex-col bg-surface-canvas motion-reduce:transition-none"
-          style={{ zIndex: getChromeZIndex("about", "full") }}
-          role="dialog"
-          aria-modal="true"
-          aria-label="About Future Art Ecosystems"
-        >
-          <div className="flex shrink-0 border-b-hairline border-solid border-ink-primary bg-surface-canvas/95 backdrop-blur-fae-md">
-            <button
-              type="button"
-              onClick={closeFull}
-              className="flex h-11 w-11 shrink-0 items-center justify-center border-r-hairline border-solid border-ink-primary transition-colors hover:bg-surface-hover/80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary"
-              aria-label="Back to compact about panel"
-            >
-              <OpenSvgIcon />
-            </button>
-          </div>
-
-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-            <div className="mx-auto max-w-2xl px-6 py-8 sm:px-10 sm:py-12">
-              <AboutFullScreenBody />
-            </div>
-          </div>
-
-          <div className="shrink-0 px-6 pt-6 sm:px-10">
-            <div className="mx-auto max-w-2xl">
-              <button
-                type="button"
-                onClick={closeFull}
-                className={showMoreLessButtonClassName}
-              >
-                <OpenSvgIcon className="-scale-x-100" />
-                <span className={showMoreLessLabelClassName}>Show less</span>
-              </button>
-            </div>
-          </div>
-        </div>
+        <AboutFullScreenView
+          zIndex={getChromeZIndex("about", "full")}
+          onBackToPeek={closeFull}
+        />
       ) : null}
     </>
   );
