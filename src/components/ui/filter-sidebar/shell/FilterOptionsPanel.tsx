@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useFilterSelection } from "@/components/ui/filter-sidebar/FilterSelectionContext";
 import { ActivityType } from "../sections/ActivityType";
 import { ArtistsMenu } from "../sections/ArtistsMenu";
@@ -26,7 +26,7 @@ type FilterOptionsPanelProps = {
   onToggleNetworkSubpanel: () => void;
 };
 
-export function FilterOptionsPanel({
+function FilterOptionsPanelContent({
   panelId,
   briefingsSubpanelOpen,
   rdSubpanelOpen,
@@ -37,7 +37,6 @@ export function FilterOptionsPanel({
   onToggleArtistsSubpanel,
   onToggleNetworkSubpanel,
 }: FilterOptionsPanelProps) {
-  const { searchQueryResetNonce } = useFilterSelection();
   const [searchQuery, setSearchQuery] = useState("");
   const searching = searchQuery.trim().length > 0;
   const anySubpanelOpen =
@@ -45,10 +44,6 @@ export function FilterOptionsPanel({
     rdSubpanelOpen ||
     artistsSubpanelOpen ||
     networkSubpanelOpen;
-
-  useEffect(() => {
-    setSearchQuery("");
-  }, [searchQueryResetNonce]);
 
   return (
     <aside
@@ -98,5 +93,15 @@ export function FilterOptionsPanel({
         </div>
       </div>
     </aside>
+  );
+}
+
+export function FilterOptionsPanel(props: FilterOptionsPanelProps) {
+  const { searchQueryResetNonce } = useFilterSelection();
+  return (
+    <FilterOptionsPanelContent
+      key={searchQueryResetNonce}
+      {...props}
+    />
   );
 }

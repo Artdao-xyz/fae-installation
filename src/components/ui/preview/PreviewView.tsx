@@ -123,27 +123,24 @@ function firstIndexOnRowAtLeast(
   return i < 0 ? children.length : i;
 }
 
-function ClampedPreviewPills({
-  items,
-  docked,
-  variant,
-  tone,
-}: {
+type ClampedPreviewPillsProps = {
   items: readonly string[];
   docked: boolean;
   variant: FilterPillVariant;
   tone: FilterSidebarCategoryTone;
-}) {
+  itemKey: string;
+};
+
+function ClampedPreviewPillsInner({
+  items,
+  docked,
+  variant,
+  tone,
+  itemKey,
+}: ClampedPreviewPillsProps) {
   const rootRef = useRef<HTMLDivElement | null>(null);
   const rowRef = useRef<HTMLDivElement | null>(null);
   const [visiblePrefix, setVisiblePrefix] = useState<number | null>(null);
-
-  const itemKey = items.join("\0");
-
-  useLayoutEffect(() => {
-    if (!docked) return;
-    setVisiblePrefix(null);
-  }, [docked, itemKey]);
 
   useLayoutEffect(() => {
     if (!docked) return;
@@ -153,16 +150,17 @@ function ClampedPreviewPills({
     if (visiblePrefix === null) {
       const nRows = rowCountForPillRow(el);
       if (nRows <= 3) {
-        setVisiblePrefix(items.length);
+        queueMicrotask(() => setVisiblePrefix(items.length));
         return;
       }
-      setVisiblePrefix(firstIndexOnRowAtLeast(el, 4));
+      const idx = firstIndexOnRowAtLeast(el, 4);
+      queueMicrotask(() => setVisiblePrefix(idx));
       return;
     }
 
     if (visiblePrefix < items.length) {
       if (rowCountForPillRow(el) > 3 && visiblePrefix > 0) {
-        setVisiblePrefix(visiblePrefix - 1);
+        queueMicrotask(() => setVisiblePrefix((v) => (v !== null && v > 0 ? v - 1 : v)));
       }
     }
   }, [docked, itemKey, items.length, visiblePrefix]);
@@ -226,6 +224,30 @@ function ClampedPreviewPills({
         ) : null}
       </div>
     </div>
+  );
+}
+
+function ClampedPreviewPills({
+  items,
+  docked,
+  variant,
+  tone,
+}: {
+  items: readonly string[];
+  docked: boolean;
+  variant: FilterPillVariant;
+  tone: FilterSidebarCategoryTone;
+}) {
+  const itemKey = items.join("\0");
+  return (
+    <ClampedPreviewPillsInner
+      key={`${docked}-${itemKey}`}
+      itemKey={itemKey}
+      items={items}
+      docked={docked}
+      variant={variant}
+      tone={tone}
+    />
   );
 }
 
