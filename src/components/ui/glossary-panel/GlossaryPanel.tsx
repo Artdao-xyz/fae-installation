@@ -141,7 +141,7 @@ export function GlossaryPanel() {
                         : "border-b-hairline border-dotted border-ink-primary"
                     }`}
                   >
-                    <h3 className="m-0 w-fit max-w-full self-start border-b-hairline border-r-hairline border-dotted border-ink-primary bg-white px-1 py-1 font-fira-mono text-xs font-normal leading-5 text-ink-body">
+                    <h3 className="m-0 w-fit max-w-full self-start border-b-hairline border-r-hairline border-dotted border-ink-primary bg-white px-2 py-1 font-fira-mono text-xs font-normal leading-5 text-ink-body">
                       {entry.term}
                     </h3>
                     <p className="m-0 font-suisseintl text-xs font-normal leading-[1.6] tracking-[0.36px] text-ink-body">
