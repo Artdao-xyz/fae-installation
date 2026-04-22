@@ -59,7 +59,7 @@ function LatestUpdatesTabRail({
         }`}
       />
       <div className="flex shrink-0 flex-col items-center gap-2">
-        <span className={navSidebarVerticalLabelClassName}>Fellowships</span>
+        <span className={navSidebarVerticalLabelClassName}>Latest Updates</span>
         <LatestUpdatesSvgIcon />
       </div>
     </button>
