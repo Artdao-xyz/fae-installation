@@ -6,7 +6,7 @@ import { filterPillSelection } from "@/components/ui/filter-sidebar/primitives/f
 import { HomeSvgIcon } from "@/components/ui/icons/HomeSvgIcon";
 import { filterChromeRightEdgeClass } from "./layout-classes";
 
-/** Suisse Intl, 12px / regular — HomeBar breadcrumb (Home, Filters, title). */
+/** Suisse Intl, 12px / regular — HomeBar breadcrumb (Home → preview title when open). */
 const homeBarBreadcrumbTypeClassName =
   "font-suisseintl text-xs font-normal leading-5";
 
@@ -76,8 +76,17 @@ export function HomeBar({
           onClick={(e) => {
             if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
             e.preventDefault();
-            resetToIdle();
+            if (contentPreviewRow) {
+              closeContentPreview();
+            } else {
+              resetToIdle();
+            }
           }}
+          aria-label={
+            contentPreviewRow
+              ? "Return to filtered results, close preview"
+              : "Home"
+          }
           className="flex min-w-0 shrink-0 items-center gap-2 text-ink-primary hover:opacity-80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ink-primary"
         >
           <HomeSvgIcon />
@@ -92,23 +101,6 @@ export function HomeBar({
           }`}
           aria-label="Breadcrumb"
         >
-          <Image
-            src="/svg/right-arrow.svg"
-            alt=""
-            width={8}
-            height={10}
-            unoptimized
-            className={breadcrumbArrowImgClassName}
-            aria-hidden
-          />
-          <button
-            type="button"
-            onClick={closeContentPreview}
-            className={`shrink-0 cursor-pointer bg-transparent p-0 text-left ${homeBarBreadcrumbTypeClassName} text-ink-primary transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ink-primary`}
-            aria-label="Return to filtered results, close preview"
-          >
-            Filters
-          </button>
           <Image
             src="/svg/right-arrow.svg"
             alt=""
