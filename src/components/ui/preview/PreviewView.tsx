@@ -91,7 +91,7 @@ function RichParagraph({
   );
 }
 
-/** Read-only pills: match FilterSidebar variants; always ink (never selection blue) in preview. */
+/** Non-interactive (e.g. +N overflow chip). Actionable pills use sidebar selection styling. */
 const pillReadOnlyClass = "pointer-events-none shrink-0";
 
 const sectionLabelClass =
@@ -129,6 +129,8 @@ type ClampedPreviewPillsProps = {
   variant: FilterPillVariant;
   tone: FilterSidebarCategoryTone;
   itemKey: string;
+  isSelected: (label: string) => boolean;
+  onPillPress: (label: string) => void;
 };
 
 /** After real width change (e.g. window / preview panel), debounce a full re-measure. */
@@ -140,6 +142,8 @@ function ClampedPreviewPillsInner({
   variant,
   tone,
   itemKey,
+  isSelected,
+  onPillPress,
 }: ClampedPreviewPillsProps) {
   const rootRef = useRef<HTMLDivElement | null>(null);
   const rowRef = useRef<HTMLDivElement | null>(null);
@@ -226,11 +230,12 @@ function ClampedPreviewPillsInner({
         label={label}
         variant={variant}
         tone={tone}
-        selected={false}
-        className={pillReadOnlyClass}
+        selected={isSelected(label)}
+        onPress={() => onPillPress(label)}
+        className="shrink-0"
       />
     ),
-    [tone, variant],
+    [isSelected, onPillPress, tone, variant],
   );
 
   if (!docked) {
@@ -275,11 +280,15 @@ function ClampedPreviewPills({
   docked,
   variant,
   tone,
+  isSelected,
+  onPillPress,
 }: {
   items: readonly string[];
   docked: boolean;
   variant: FilterPillVariant;
   tone: FilterSidebarCategoryTone;
+  isSelected: (label: string) => boolean;
+  onPillPress: (label: string) => void;
 }) {
   const itemKey = items.join("\0");
   return (
@@ -290,6 +299,8 @@ function ClampedPreviewPills({
       docked={docked}
       variant={variant}
       tone={tone}
+      isSelected={isSelected}
+      onPillPress={onPillPress}
     />
   );
 }
@@ -315,6 +326,77 @@ function PreviewMainContent({
   /** Docked only: set when the line-clamped body is cut off; used for the "Show more" CTA. */
   onBodyClampedChange?: (isClamped: boolean) => void;
 }) {
+  const {
+    selectedFocusAreas,
+    selectedActivityTypes,
+    selectedArtists,
+    selectedFormats,
+    selectedNetworks,
+    toggleFocusArea,
+    toggleActivityType,
+    toggleArtist,
+    toggleFormat,
+    toggleNetwork,
+    applyPreviewPillFilterAndClose,
+  } = useFilterSelection();
+
+  const isFocusPillSelected = useCallback(
+    (l: string) => selectedFocusAreas.has(l),
+    [selectedFocusAreas],
+  );
+  const isActivityPillSelected = useCallback(
+    (l: string) => selectedActivityTypes.has(l),
+    [selectedActivityTypes],
+  );
+  const isFormatPillSelected = useCallback(
+    (l: string) => selectedFormats.has(l),
+    [selectedFormats],
+  );
+  const isNetworkPillSelected = useCallback(
+    (l: string) => selectedNetworks.has(l),
+    [selectedNetworks],
+  );
+  const isArtistPillSelected = useCallback(
+    (l: string) => selectedArtists.has(l),
+    [selectedArtists],
+  );
+
+  const onFocusPillPress = useCallback(
+    (label: string) => {
+      toggleFocusArea(label);
+      applyPreviewPillFilterAndClose();
+    },
+    [toggleFocusArea, applyPreviewPillFilterAndClose],
+  );
+  const onActivityPillPress = useCallback(
+    (label: string) => {
+      toggleActivityType(label);
+      applyPreviewPillFilterAndClose();
+    },
+    [toggleActivityType, applyPreviewPillFilterAndClose],
+  );
+  const onFormatPillPress = useCallback(
+    (label: string) => {
+      toggleFormat(label);
+      applyPreviewPillFilterAndClose();
+    },
+    [toggleFormat, applyPreviewPillFilterAndClose],
+  );
+  const onNetworkPillPress = useCallback(
+    (label: string) => {
+      toggleNetwork(label);
+      applyPreviewPillFilterAndClose();
+    },
+    [toggleNetwork, applyPreviewPillFilterAndClose],
+  );
+  const onArtistPillPress = useCallback(
+    (label: string) => {
+      toggleArtist(label);
+      applyPreviewPillFilterAndClose();
+    },
+    [toggleArtist, applyPreviewPillFilterAndClose],
+  );
+
   const previewSlides = useMemo(
     () =>
       row.imageGallery.length > 0
@@ -386,6 +468,8 @@ function PreviewMainContent({
                 docked={!fullScreen}
                 variant="square"
                 tone="fae-briefings"
+                isSelected={isFocusPillSelected}
+                onPillPress={onFocusPillPress}
               />
             </CategoryBlock>
           ) : null}
@@ -396,6 +480,8 @@ function PreviewMainContent({
                 docked={!fullScreen}
                 variant="rounded"
                 tone="fae-briefings"
+                isSelected={isActivityPillSelected}
+                onPillPress={onActivityPillPress}
               />
             </CategoryBlock>
           ) : null}
@@ -406,6 +492,8 @@ function PreviewMainContent({
                 docked={!fullScreen}
                 variant="rounded"
                 tone="fae-briefings"
+                isSelected={isFormatPillSelected}
+                onPillPress={onFormatPillPress}
               />
             </CategoryBlock>
           ) : null}
@@ -416,6 +504,8 @@ function PreviewMainContent({
                 docked={!fullScreen}
                 variant="dotted"
                 tone="network"
+                isSelected={isNetworkPillSelected}
+                onPillPress={onNetworkPillPress}
               />
             </CategoryBlock>
           ) : null}
@@ -427,8 +517,9 @@ function PreviewMainContent({
                   label={label}
                   variant="rounded"
                   tone="artists"
-                  selected={false}
-                  className={pillReadOnlyClass}
+                  selected={isArtistPillSelected(label)}
+                  onPress={() => onArtistPillPress(label)}
+                  className="shrink-0"
                 />
               ))}
             </CategoryBlock>

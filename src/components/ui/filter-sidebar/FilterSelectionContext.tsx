@@ -117,6 +117,11 @@ export type FilterSelectionContextValue = {
    */
   closeContentPreview: () => void;
   registerContentPreviewCloser: (fn: (() => void) | null) => void;
+  /**
+   * After calling a taxonomy `toggle*`, use this to close the content preview without restoring
+   * the pre-preview snapshot (keeps the new filter state) and to open the filter column.
+   */
+  applyPreviewPillFilterAndClose: () => void;
   /** Row currently shown in the content preview (for chrome such as HomeBar breadcrumb). */
   contentPreviewRow: ContentRow | null;
   setContentPreviewRow: Dispatch<SetStateAction<ContentRow | null>>;
@@ -615,6 +620,12 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
     contentPreviewCloserRef.current = fn;
   }, []);
 
+  const applyPreviewPillFilterAndClose = useCallback(() => {
+    clearPendingPreviewFilterSnapshot();
+    setFiltersPanelOpen(true);
+    closeContentPreview();
+  }, [clearPendingPreviewFilterSnapshot, setFiltersPanelOpen, closeContentPreview]);
+
   /**
    * When the user removes a filter while a content preview is open, clear the pre-preview
    * snapshot (so we do not restore filters and undo their change) and close the preview so
@@ -861,6 +872,7 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
       registerContentPreviewOpener,
       closeContentPreview,
       registerContentPreviewCloser,
+      applyPreviewPillFilterAndClose,
       contentPreviewRow,
       setContentPreviewRow,
       filterMatchingRowCount,
@@ -915,6 +927,7 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
       registerContentPreviewOpener,
       closeContentPreview,
       registerContentPreviewCloser,
+      applyPreviewPillFilterAndClose,
       contentPreviewRow,
       filterMatchingRowCount,
       focusOptionToggleMatchCount,
