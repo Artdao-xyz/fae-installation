@@ -155,6 +155,10 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
   const [contentPreviewRow, setContentPreviewRow] = useState<ContentRow | null>(
     null,
   );
+  const contentPreviewRowRef = useRef<ContentRow | null>(null);
+  useEffect(() => {
+    contentPreviewRowRef.current = contentPreviewRow;
+  }, [contentPreviewRow]);
 
   const [contentCatalog, setContentCatalog] = useState<ContentRow[]>([]);
   const [contentCatalogStatus, setContentCatalogStatus] =
@@ -539,79 +543,6 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
     selectedNetworks,
   ]);
 
-  const toggleFocusArea = useCallback(
-    (label: string) => {
-      minimizeAllFloatingPanels();
-      setSelectedFocusAreas((prev) => {
-        const next = new Set(prev);
-        if (next.has(label)) next.delete(label);
-        else next.add(label);
-        return next;
-      });
-    },
-    [minimizeAllFloatingPanels],
-  );
-
-  const toggleActivityType = useCallback(
-    (label: string) => {
-      minimizeAllFloatingPanels();
-      setSelectedActivityTypes((prev) => {
-        const next = new Set(prev);
-        if (next.has(label)) next.delete(label);
-        else next.add(label);
-        return next;
-      });
-    },
-    [minimizeAllFloatingPanels],
-  );
-
-  const toggleArtist = useCallback(
-    (label: string) => {
-      minimizeAllFloatingPanels();
-      setSelectedArtists((prev) => {
-        const next = new Set(prev);
-        if (next.has(label)) next.delete(label);
-        else next.add(label);
-        return next;
-      });
-    },
-    [minimizeAllFloatingPanels],
-  );
-
-  const toggleFormat = useCallback(
-    (label: string) => {
-      minimizeAllFloatingPanels();
-      setSelectedFormats((prev) => {
-        const next = new Set(prev);
-        if (next.has(label)) next.delete(label);
-        else next.add(label);
-        return next;
-      });
-    },
-    [minimizeAllFloatingPanels],
-  );
-
-  const toggleNetwork = useCallback(
-    (label: string) => {
-      minimizeAllFloatingPanels();
-      setSelectedNetworks((prev) => {
-        const next = new Set(prev);
-        if (next.has(label)) next.delete(label);
-        else next.add(label);
-        return next;
-      });
-    },
-    [minimizeAllFloatingPanels],
-  );
-
-  const setSelectedFaeBriefingCb = useCallback(
-    (label: string | null) => {
-      minimizeAllFloatingPanels();
-      setSelectedFaeBriefing(label);
-    },
-    [minimizeAllFloatingPanels],
-  );
-
   const setFiltersFromContentRow = useCallback(
     (row: {
       focusAreas: readonly string[];
@@ -683,6 +614,132 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
   const registerContentPreviewCloser = useCallback((fn: (() => void) | null) => {
     contentPreviewCloserRef.current = fn;
   }, []);
+
+  /**
+   * When the user removes a filter while a content preview is open, clear the pre-preview
+   * snapshot (so we do not restore filters and undo their change) and close the preview so
+   * the canvas re-sorts to the new filter state.
+   */
+  const endContentPreviewOnFilterDeselect = useCallback(() => {
+    if (contentPreviewRowRef.current == null) return;
+    clearPendingPreviewFilterSnapshot();
+    closeContentPreview();
+  }, [clearPendingPreviewFilterSnapshot, closeContentPreview]);
+
+  const toggleFocusArea = useCallback(
+    (label: string) => {
+      minimizeAllFloatingPanels();
+      if (selectedFocusAreas.has(label)) {
+        endContentPreviewOnFilterDeselect();
+      }
+      setSelectedFocusAreas((prev) => {
+        const next = new Set(prev);
+        if (next.has(label)) next.delete(label);
+        else next.add(label);
+        return next;
+      });
+    },
+    [
+      endContentPreviewOnFilterDeselect,
+      minimizeAllFloatingPanels,
+      selectedFocusAreas,
+    ],
+  );
+
+  const toggleActivityType = useCallback(
+    (label: string) => {
+      minimizeAllFloatingPanels();
+      if (selectedActivityTypes.has(label)) {
+        endContentPreviewOnFilterDeselect();
+      }
+      setSelectedActivityTypes((prev) => {
+        const next = new Set(prev);
+        if (next.has(label)) next.delete(label);
+        else next.add(label);
+        return next;
+      });
+    },
+    [
+      endContentPreviewOnFilterDeselect,
+      minimizeAllFloatingPanels,
+      selectedActivityTypes,
+    ],
+  );
+
+  const toggleArtist = useCallback(
+    (label: string) => {
+      minimizeAllFloatingPanels();
+      if (selectedArtists.has(label)) {
+        endContentPreviewOnFilterDeselect();
+      }
+      setSelectedArtists((prev) => {
+        const next = new Set(prev);
+        if (next.has(label)) next.delete(label);
+        else next.add(label);
+        return next;
+      });
+    },
+    [
+      endContentPreviewOnFilterDeselect,
+      minimizeAllFloatingPanels,
+      selectedArtists,
+    ],
+  );
+
+  const toggleFormat = useCallback(
+    (label: string) => {
+      minimizeAllFloatingPanels();
+      if (selectedFormats.has(label)) {
+        endContentPreviewOnFilterDeselect();
+      }
+      setSelectedFormats((prev) => {
+        const next = new Set(prev);
+        if (next.has(label)) next.delete(label);
+        else next.add(label);
+        return next;
+      });
+    },
+    [
+      endContentPreviewOnFilterDeselect,
+      minimizeAllFloatingPanels,
+      selectedFormats,
+    ],
+  );
+
+  const toggleNetwork = useCallback(
+    (label: string) => {
+      minimizeAllFloatingPanels();
+      if (selectedNetworks.has(label)) {
+        endContentPreviewOnFilterDeselect();
+      }
+      setSelectedNetworks((prev) => {
+        const next = new Set(prev);
+        if (next.has(label)) next.delete(label);
+        else next.add(label);
+        return next;
+      });
+    },
+    [
+      endContentPreviewOnFilterDeselect,
+      minimizeAllFloatingPanels,
+      selectedNetworks,
+    ],
+  );
+
+  const setSelectedFaeBriefingCb = useCallback(
+    (label: string | null) => {
+      minimizeAllFloatingPanels();
+      if (label === null && selectedFaeBriefing != null) {
+        endContentPreviewOnFilterDeselect();
+      }
+      setSelectedFaeBriefing(label);
+    },
+    [
+      endContentPreviewOnFilterDeselect,
+      minimizeAllFloatingPanels,
+      selectedFaeBriefing,
+    ],
+  );
 
   const exitContentPreviewToFilterCanvas = useCallback(() => {
     if (contentPreviewRow == null) return;

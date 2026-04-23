@@ -73,6 +73,18 @@ import { IDLE_DEPTH_BLUR_DISABLED } from "./config";
 
 const ROW_IMAGE_ATTR = "data-row-image";
 
+function taxonomySelectionFromContentRow(
+  row: ContentRow,
+): TaxonomyFilterSelection {
+  return {
+    focus: new Set(row.focusAreas),
+    activity: new Set(row.activityTypes),
+    artists: new Set(row.artists),
+    formats: new Set(row.formats),
+    networks: new Set(row.networks),
+  };
+}
+
 /** Imperative sync so slot `i` always shows `row`’s URL (avoids stale src when React reuses `<img>`). */
 function syncImgToContentRow(
   img: HTMLImageElement,
@@ -148,7 +160,6 @@ export function ImageParticleSimulationView({
     selectedFormats,
     selectedNetworks,
     filtersPanelOpen,
-    setFiltersFromContentRow,
     registerContentPreviewOpener,
     registerContentPreviewCloser,
     setContentPreviewRow,
@@ -219,10 +230,9 @@ export function ImageParticleSimulationView({
       if (previewRowRef.current == null) {
         snapshotFiltersBeforeContentPreview();
       }
-      setFiltersFromContentRow(row);
       setPreviewRow(row);
     },
-    [setFiltersFromContentRow, snapshotFiltersBeforeContentPreview],
+    [snapshotFiltersBeforeContentPreview],
   );
 
   useEffect(() => {
@@ -791,10 +801,19 @@ export function ImageParticleSimulationView({
           viewportSpread,
         );
       }
+      /**
+       * Docked preview without linked+related: match outputs from the opened row’s taxonomy so the
+       * spread matches the old `setFiltersFromContentRow` behaviour, while the sidebar still shows
+       * the user’s actual filter picks (no global `Set` sync).
+       */
+      const selectionForSpread: TaxonomyFilterSelection =
+        pr && !pfs
+          ? taxonomySelectionFromContentRow(pr)
+          : spreadSelectionRef.current;
       return pickSpreadIndicesFromRows(
         contentRows,
         textIndexSet,
-        spreadSelectionRef.current,
+        selectionForSpread,
         filterMatchModeRef.current,
         viewportSpread,
       );
@@ -802,16 +821,24 @@ export function ImageParticleSimulationView({
 
     const effectiveSpreadSig = (): string => {
       const pr = previewRowRef.current;
-      if (
-        pr &&
-        !previewFullScreenRef.current &&
-        (previewSourceIndicesRef.current.linked.length > 0 ||
-          previewSourceIndicesRef.current.related.length > 0)
-      ) {
-        const { linked, related } = previewSourceIndicesRef.current;
+      const pfs = previewFullScreenRef.current;
+      if (!pr || pfs) return spreadSignatureRef.current;
+      const { linked, related } = previewSourceIndicesRef.current;
+      if (linked.length > 0 || related.length > 0) {
         return `pv:${pr.id}:L${linked.join(",")}/R${related.join(",")}`;
       }
-      return spreadSignatureRef.current;
+      const t = [
+        ...pr.focusAreas,
+        "\u0000",
+        ...pr.activityTypes,
+        "\u0000",
+        ...pr.formats,
+        "\u0000",
+        ...pr.networks,
+        "\u0000",
+        ...pr.artists,
+      ].join("\t");
+      return `pv:${pr.id}:row:${t}`;
     };
 
     const computeSpreadActive = (orderedLen: number): boolean => {
@@ -822,13 +849,9 @@ export function ImageParticleSimulationView({
         s.artists.size > 0 ||
         s.formats.size > 0 ||
         s.networks.size > 0;
-      const previewHasCandidates =
-        previewRowRef.current != null &&
-        !previewFullScreenRef.current &&
-        (previewSourceIndicesRef.current.linked.length > 0 ||
-          previewSourceIndicesRef.current.related.length > 0);
-      const previewSpread = previewHasCandidates && orderedLen > 0;
-      return filterSpreadActive || previewSpread;
+      const previewDocked =
+        previewRowRef.current != null && !previewFullScreenRef.current;
+      return orderedLen > 0 && (filterSpreadActive || previewDocked);
     };
 
     const logPreviewCanvasSpread = (orderedPick: readonly number[]) => {
