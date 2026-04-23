@@ -20,6 +20,7 @@ import {
   getContentFixtureDetailByDocumentId,
 } from "@/data/content-fixture";
 import {
+  filterMergedOptionLabelsToCatalogUsed,
   mergeCmsAndCatalogOptionLabels,
   uniqueSortedLabelsFromCatalog,
 } from "@/lib/content-catalog-filter-options";
@@ -79,26 +80,31 @@ export type OfflineFixtureTaxonomyLabels = {
 export function offlineFixtureTaxonomyOrNull(): OfflineFixtureTaxonomyLabels | null {
   if (!offlineFixtureEnabled()) return null;
   const rows = CONTENT_FIXTURE_ROWS;
+  const focusUsed = uniqueSortedLabelsFromCatalog(rows, "focusAreas");
+  const activityUsed = uniqueSortedLabelsFromCatalog(rows, "activityTypes");
+  const formatsUsed = uniqueSortedLabelsFromCatalog(rows, "formats");
+  const networksUsed = uniqueSortedLabelsFromCatalog(rows, "networks");
+  const artistsUsed = uniqueSortedLabelsFromCatalog(rows, "artists");
   return {
-    focusOptionLabels: mergeCmsAndCatalogOptionLabels(
-      FOCUS_AREA_LABELS,
-      uniqueSortedLabelsFromCatalog(rows, "focusAreas"),
+    focusOptionLabels: filterMergedOptionLabelsToCatalogUsed(
+      mergeCmsAndCatalogOptionLabels(FOCUS_AREA_LABELS, focusUsed),
+      focusUsed,
     ),
-    activityOptionLabels: mergeCmsAndCatalogOptionLabels(
-      ACTIVITY_TYPE_LABELS,
-      uniqueSortedLabelsFromCatalog(rows, "activityTypes"),
+    activityOptionLabels: filterMergedOptionLabelsToCatalogUsed(
+      mergeCmsAndCatalogOptionLabels(ACTIVITY_TYPE_LABELS, activityUsed),
+      activityUsed,
     ),
-    formatOptionLabels: mergeCmsAndCatalogOptionLabels(
-      FORMAT_LABELS,
-      uniqueSortedLabelsFromCatalog(rows, "formats"),
+    formatOptionLabels: filterMergedOptionLabelsToCatalogUsed(
+      mergeCmsAndCatalogOptionLabels(FORMAT_LABELS, formatsUsed),
+      formatsUsed,
     ),
-    networkOptionLabels: mergeCmsAndCatalogOptionLabels(
-      NETWORK_LABELS,
-      uniqueSortedLabelsFromCatalog(rows, "networks"),
+    networkOptionLabels: filterMergedOptionLabelsToCatalogUsed(
+      mergeCmsAndCatalogOptionLabels(NETWORK_LABELS, networksUsed),
+      networksUsed,
     ),
-    artistOptionLabels: mergeCmsAndCatalogOptionLabels(
-      ARTIST_LABELS,
-      uniqueSortedLabelsFromCatalog(rows, "artists"),
+    artistOptionLabels: filterMergedOptionLabelsToCatalogUsed(
+      mergeCmsAndCatalogOptionLabels(ARTIST_LABELS, artistsUsed),
+      artistsUsed,
     ),
   };
 }

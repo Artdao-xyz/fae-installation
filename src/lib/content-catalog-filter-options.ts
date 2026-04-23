@@ -49,5 +49,30 @@ export function mergeCmsAndCatalogOptionLabels(
   return out;
 }
 
+/**
+ * After {@link mergeCmsAndCatalogOptionLabels}, remove Strapi options that never appear on
+ * any catalog row. Preserves merge order; `usedLabelsFromCatalog` is typically from
+ * {@link uniqueSortedLabelsFromCatalog}.
+ */
+export function filterMergedOptionLabelsToCatalogUsed(
+  mergedOrdered: readonly string[],
+  usedLabelsFromCatalog: readonly string[],
+): string[] {
+  const used = new Set(
+    usedLabelsFromCatalog
+      .map((s) => (typeof s === "string" ? s.trim() : ""))
+      .filter((s) => s.length > 0),
+  );
+  const out: string[] = [];
+  const seen = new Set<string>();
+  for (const raw of mergedOrdered) {
+    const s = typeof raw === "string" ? raw.trim() : "";
+    if (!s || seen.has(s) || !used.has(s)) continue;
+    seen.add(s);
+    out.push(s);
+  }
+  return out;
+}
+
 /** @deprecated Use {@link mergeCmsAndCatalogOptionLabels}. */
 export const mergeFormatFilterLabels = mergeCmsAndCatalogOptionLabels;
