@@ -323,7 +323,7 @@ function PreviewMainContent({
 }: {
   row: ContentRow;
   fullScreen: boolean;
-  /** Docked only: set when the line-clamped body is cut off; used for the "Show more" CTA. */
+  /** Docked: whether line-clamp hid text (drives “Show more”). */
   onBodyClampedChange?: (isClamped: boolean) => void;
 }) {
   const {
@@ -458,9 +458,9 @@ function PreviewMainContent({
   );
 
   const categoriesBlock = hasCategories ? (
-    <>
+    <div className="w-full min-w-0 shrink-0">
       <Divider />
-      <div className="flex shrink-0 flex-col gap-3">
+      <div className="flex shrink-0 flex-col gap-3 pt-2.5">
           {hasFocus ? (
             <CategoryBlock label="Focus">
               <ClampedPreviewPills
@@ -525,57 +525,36 @@ function PreviewMainContent({
             </CategoryBlock>
           ) : null}
         </div>
-    </>
+    </div>
   ) : null;
 
-  const bodyBlockFull = hasBody && (
-    <>
+  const mainBody = hasBody && (
+    <div className="min-w-0 w-full">
       <Divider />
-      {hasBlocks && row.contentBlocks ? (
-        <PreviewBlocksBody
-          key={`${row.id}-blocks`}
-          content={row.contentBlocks}
-        />
-      ) : (
-        <div
-          key={`${row.id}-plain`}
-          className="fae-preview-text-stagger flex flex-col gap-3"
-        >
-          {paragraphs.map((p, i) => (
-            <RichParagraph key={i} text={p} />
-          ))}
-        </div>
-      )}
-    </>
-  );
-
-  const bodyBlockDocked = hasBody && (
-    <>
-      <Divider />
-      {hasBlocks && row.contentBlocks ? (
-        <PreviewBodyFillClamp
-          key={`${row.id}-blocks`}
-          contentKey={`${row.id}-blocks`}
-          onClampedChange={onBodyClampedChange}
-        >
-          <PreviewBlocksBody content={row.contentBlocks} />
-        </PreviewBodyFillClamp>
-      ) : (
-        <PreviewBodyFillClamp
-          key={`${row.id}-plain`}
-          contentKey={row.id}
-          onClampedChange={onBodyClampedChange}
-        >
-          <RichParagraph text={row.content} preserveParagraphBreaks />
-        </PreviewBodyFillClamp>
-      )}
-    </>
+      <div className="pt-2.5">
+        {hasBlocks && row.contentBlocks ? (
+          <PreviewBlocksBody
+            key={`${row.id}-blocks`}
+            content={row.contentBlocks}
+          />
+        ) : (
+          <div
+            key={`${row.id}-plain`}
+            className="fae-preview-body-stack flex flex-col gap-3"
+          >
+            {paragraphs.map((p, i) => (
+              <RichParagraph key={i} text={p} />
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
   );
 
   const resourcesBlock = hasResources ? (
-    <>
+    <div className="w-full min-w-0 shrink-0">
       <Divider />
-      <div className="flex shrink-0 flex-col gap-2 pb-2">
+      <div className="flex shrink-0 flex-col gap-2 pt-2.5 pb-2">
           <p className="font-lust-text text-xs leading-none tracking-[-0.228px] text-ink-caption">
             Sources
           </p>
@@ -603,25 +582,56 @@ function PreviewMainContent({
             ))}
           </ul>
         </div>
-    </>
+    </div>
   ) : null;
 
   if (fullScreen) {
     return (
-      <>
+      <div
+        key={row.id}
+        className={`${fullScreenContentInnerClass} fae-preview-cascade w-full min-w-0`}
+      >
         {heroBlock}
         {categoriesBlock}
-        {bodyBlockFull}
+        {mainBody}
         {resourcesBlock}
-      </>
+      </div>
     );
   }
 
   return (
-    <div className="flex h-full min-h-0 w-full min-w-0 flex-col gap-5 overflow-hidden">
+    <div
+      key={row.id}
+      className="fae-preview-cascade flex h-full min-h-0 w-full min-w-0 flex-col gap-5 overflow-hidden"
+    >
       {heroBlock}
       {categoriesBlock}
-      {bodyBlockDocked}
+      {hasBody ? (
+        <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col">
+          <Divider />
+          <div className="min-h-0 min-w-0 flex-1 pt-2.5">
+            {hasBlocks && row.contentBlocks ? (
+              <PreviewBodyFillClamp
+                key={`${row.id}-blocks`}
+                contentKey={`${row.id}-blocks`}
+                onClampedChange={onBodyClampedChange}
+              >
+                <PreviewBlocksBody content={row.contentBlocks} />
+              </PreviewBodyFillClamp>
+            ) : (
+              <PreviewBodyFillClamp
+                key={`${row.id}-plain`}
+                contentKey={row.id}
+                onClampedChange={onBodyClampedChange}
+              >
+                <div className="fae-preview-body-stack">
+                  <RichParagraph text={row.content} preserveParagraphBreaks />
+                </div>
+              </PreviewBodyFillClamp>
+            )}
+          </div>
+        </div>
+      ) : null}
       {resourcesBlock}
     </div>
   );
@@ -630,7 +640,7 @@ function PreviewMainContent({
 /** Fixed shell: clip width 0 → token (avoids `fr` interpolation overshoot in some browsers). */
 const previewDockedOuterClass = `fixed top-[var(--inset-margin-guide)] right-[var(--inset-margin-guide)] bottom-[var(--inset-margin-guide)] z-[47] flex min-h-0 min-w-0 justify-end overflow-hidden ${PREVIEW_DOCK_WIDTH_TRANSITION_CLASS}`;
 
-/** `minmax(0,1fr)` keeps the body row from swallowing the chrome rows. */
+/** `minmax(0,1fr)` main row: hero + taxonomies + clamped body + resources share one scroll-free column. */
 const previewDockedAsideBaseClass =
   "grid h-full min-h-0 w-preview-panel shrink-0 overflow-hidden border-hairline border-solid border-ink-primary bg-surface-canvas";
 
@@ -677,9 +687,7 @@ export const PreviewView = memo(function PreviewView({
       <div
         data-fae-content-preview
         onPointerDown={(e) => e.stopPropagation()}
-        className={`${fullScreenContentShellClass} transition-opacity duration-300 ease-out motion-reduce:transition-none ${
-          shellEntered ? "opacity-100" : "opacity-0"
-        } motion-reduce:opacity-100`}
+        className={fullScreenContentShellClass}
         role="dialog"
         aria-modal="true"
         aria-label="Content preview full screen"
@@ -689,9 +697,7 @@ export const PreviewView = memo(function PreviewView({
           onClose={closeContentPreview}
         />
         <div className={fullScreenContentScrollClass}>
-          <div className={fullScreenContentInnerClass}>
-            <PreviewMainContent row={row} fullScreen onBodyClampedChange={undefined} />
-          </div>
+          <PreviewMainContent row={row} fullScreen />
         </div>
         <div className="flex shrink-0 justify-start">
           <button
@@ -735,21 +741,20 @@ export const PreviewView = memo(function PreviewView({
           ariaLabel="Close preview"
           onClose={closeContentPreview}
         />
-        <div className="flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden px-5 pt-5 pb-0">
+        <div className="min-h-0 overflow-hidden px-5 pt-5 pb-0">
           <PreviewMainContent
             row={row}
             fullScreen={false}
             onBodyClampedChange={setDockedBodyClamped}
           />
         </div>
-
         {dockedBodyClamped ? (
-          <div className="flex min-h-0 shrink-0 justify-start">
+          <div className="flex min-h-0 shrink-0 justify-start self-stretch">
             <button
               type="button"
               onClick={() => onFullScreenChange(true)}
               className={fullScreenShowMoreLessButtonClass}
-              aria-label="Open full screen preview"
+              aria-label="View full text in full screen preview"
             >
               <OpenSvgIcon className="shrink-0 rotate-180" />
               <span className={fullScreenShowMoreLessLabelClass}>

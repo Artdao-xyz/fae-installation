@@ -17,6 +17,10 @@ import {
 } from "@/components/ui/filter-sidebar/shell/layout-classes";
 import { getMarginGuideInsetPx } from "@/lib/margin-guide";
 import { buildSuggestedSourceRowsSplit } from "@/lib/preview-suggested-outputs";
+import {
+  fetchPreviewOutputDetail,
+  getCachedPreviewDetailRow,
+} from "@/lib/preview-output-detail";
 import type { ContentRow } from "@/data/content-types";
 import {
   Thumbnail,
@@ -224,6 +228,15 @@ export function ImageParticleSimulationView({
   const previewRowRef = useRef<ContentRow | null>(null);
   previewRowRef.current = previewRow;
 
+  /** Start full preview (text, resources, …) on hover; click only fetches if cache still cold. */
+  const prefetchOutputDetailOnHover = useCallback((documentId: string) => {
+    if (process.env.NODE_ENV === "development") {
+      // eslint-disable-next-line no-console -- debug visibility for preview prefetch
+      console.log("[preview] hover → fetchPreviewOutputDetail", documentId);
+    }
+    void fetchPreviewOutputDetail(documentId);
+  }, []);
+
   const closePreview = useCallback(() => {
     restoreFiltersAfterContentPreview();
     setPreviewRow(null);
@@ -235,7 +248,28 @@ export function ImageParticleSimulationView({
       if (previewRowRef.current == null) {
         snapshotFiltersBeforeContentPreview();
       }
-      setPreviewRow(row);
+      const hit = getCachedPreviewDetailRow(row.id);
+      setPreviewRow(hit ? { ...row, ...hit } : row);
+      if (hit) {
+        if (process.env.NODE_ENV === "development") {
+          // eslint-disable-next-line no-console -- debug visibility for preview open path
+          console.log(
+            "[preview] click → cache warm, skip fetch",
+            row.id,
+          );
+        }
+        return;
+      }
+      if (process.env.NODE_ENV === "development") {
+        // eslint-disable-next-line no-console -- debug visibility for preview open path
+        console.log("[preview] click → cache cold, fetch", row.id);
+      }
+      void fetchPreviewOutputDetail(row.id).then((full) => {
+        if (!full) return;
+        setPreviewRow((prev) =>
+          prev?.id === row.id ? { ...prev, ...full } : prev,
+        );
+      });
     },
     [snapshotFiltersBeforeContentPreview],
   );
@@ -256,36 +290,6 @@ export function ImageParticleSimulationView({
 
   useEffect(() => {
     setPreviewFullScreen(false);
-  }, [previewRow?.id]);
-
-  /** Catalog rows are slim (no `Text` / `Resources`); hydrate full output for preview. */
-  useEffect(() => {
-    const id = previewRow?.id;
-    if (!id) return;
-    const ac = new AbortController();
-    void (async () => {
-      try {
-        const res = await fetch(
-          `/api/strapi/outputs/${encodeURIComponent(id)}`,
-          { signal: ac.signal, credentials: "same-origin" },
-        );
-        if (!res.ok) return;
-        const body: unknown = await res.json();
-        if (
-          ac.signal.aborted ||
-          !body ||
-          typeof body !== "object" ||
-          !("row" in body)
-        ) {
-          return;
-        }
-        const row = (body as { row: ContentRow }).row;
-        setPreviewRow((prev) => (prev?.id === id ? { ...prev, ...row } : prev));
-      } catch {
-        /* aborted or network */
-      }
-    })();
-    return () => ac.abort();
   }, [previewRow?.id]);
 
   const spreadEnterSignatureRef = useRef<string | null>(null);
@@ -1628,8 +1632,15 @@ export function ImageParticleSimulationView({
                 className={`absolute left-1/2 top-1/2 will-change-[transform,opacity,filter] ${
                   opensPreviewOnClick ? "cursor-pointer " : ""
                 }${spreadDimmed ? "pointer-events-none" : "pointer-events-auto"}`}
-                onPointerEnter={() => handleTilePointerEnter(i)}
-                onPointerLeave={() => handleTilePointerLeave(i)}
+                onPointerEnter={() => {
+                  handleTilePointerEnter(i);
+                  if (opensPreviewOnClick) {
+                    prefetchOutputDetailOnHover(row.id);
+                  }
+                }}
+                onPointerLeave={() => {
+                  handleTilePointerLeave(i);
+                }}
                 onClick={
                   opensPreviewOnClick
                     ? (e) => {
@@ -1694,8 +1705,15 @@ export function ImageParticleSimulationView({
               className={`absolute left-1/2 top-1/2 will-change-[transform,opacity,filter] ${
                 opensPreviewOnClick ? "cursor-pointer " : ""
               }${spreadDimmed ? "pointer-events-none" : "pointer-events-auto"}`}
-              onPointerEnter={() => handleTilePointerEnter(i)}
-              onPointerLeave={() => handleTilePointerLeave(i)}
+              onPointerEnter={() => {
+                handleTilePointerEnter(i);
+                if (opensPreviewOnClick) {
+                  prefetchOutputDetailOnHover(row.id);
+                }
+              }}
+              onPointerLeave={() => {
+                handleTilePointerLeave(i);
+              }}
               onClick={
                 opensPreviewOnClick
                   ? (e) => {

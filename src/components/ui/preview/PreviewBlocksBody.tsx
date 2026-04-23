@@ -9,7 +9,7 @@ const bodyText =
 /** Strapi blocks → React, styled to match preview typography. */
 export function PreviewBlocksBody({ content }: { content: BlocksContent }) {
   return (
-    <div className="fae-preview-text-stagger flex min-w-0 flex-col gap-3">
+    <div className="fae-preview-body-stack flex min-w-0 flex-col gap-3">
       <BlocksRenderer
         content={content}
         blocks={{
