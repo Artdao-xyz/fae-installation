@@ -468,28 +468,29 @@ function PreviewMainContent({
         : "";
 
   const heroBlock = (
-    <div className="flex w-full shrink-0 items-start gap-5">
-      {previewSlides.length > 0 ? (
-        <PreviewImageCarousel
-          key={previewSlides.join("\0")}
-          slides={previewSlides}
-          alt={row.title}
-        />
-      ) : (
-        <div
-          className="relative flex size-[180px] shrink-0 items-center justify-center overflow-hidden rounded-[3.677px] bg-surface-canvas"
-          aria-hidden
-        />
-      )}
-      <div className="flex min-w-0 flex-1 flex-col items-start justify-start gap-2.5">
-        <p className="min-w-0 max-w-full wrap-anywhere font-lust-text text-xl leading-snug tracking-[-0.38px] text-black-fae">
-          {row.title}
+    <div className="flex w-full shrink-0 flex-col gap-2.5">
+      <p className="min-w-0 max-w-full wrap-anywhere font-lust-text text-xl leading-snug tracking-[-0.38px] text-black-fae">
+        {row.title}
+      </p>
+      {dateLine ? (
+        <p className="w-full min-w-0 font-lust-text text-xs leading-none tracking-[-0.228px] text-black-fae">
+          {dateLine}
         </p>
-        {dateLine ? (
-          <p className="font-lust-text text-xs tracking-[-0.228px] text-black-fae">
-            {dateLine}
-          </p>
-        ) : null}
+      ) : null}
+      <Divider />
+      <div className="flex shrink-0 flex-col">
+        {previewSlides.length > 0 ? (
+          <PreviewImageCarousel
+            key={previewSlides.join("\0")}
+            slides={previewSlides}
+            alt={row.title}
+          />
+        ) : (
+          <div
+            className="relative flex h-[200px] w-full max-w-[280px] shrink-0 items-center justify-center overflow-hidden rounded-[3.677px] bg-surface-canvas"
+            aria-hidden
+          />
+        )}
       </div>
     </div>
   );
@@ -785,7 +786,7 @@ export const PreviewView = memo(function PreviewView({
         <div className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain px-5 pt-5 pb-6">
           <PreviewMainContent row={row} fullScreen={false} />
         </div>
-        <div className="shrink-0 pt-6">
+        <div className="shrink-0">
           <button
             type="button"
             onClick={() => onFullScreenChange(true)}

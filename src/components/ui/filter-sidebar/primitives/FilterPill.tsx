@@ -9,6 +9,8 @@ import {
   filterFramedRoundedOuterSelectedClass,
   filterPillLabelBoxClass,
   filterPillSelection,
+  filterPillSingleLayerBrightnessHoverClass,
+  interactiveChromeMatClass,
 } from "./filterFramedClasses";
 
 export type FilterPillVariant = "rounded" | "square" | "dotted";
@@ -63,10 +65,16 @@ function SquareCornerMarkers({ selected }: { selected: boolean }) {
   );
 }
 
-function SquarePillFrame({ label, selected }: { label: string; selected: boolean }) {
+function SquarePillFrame({
+  label,
+  selected,
+}: {
+  label: string;
+  selected: boolean;
+}) {
   const cellBorder = selected
-    ? `bg-surface-canvas ${filterPillSelection.text} border-hairline border-solid ${filterPillSelection.border}`
-    : "border-hairline border-solid border-ink-primary bg-surface-canvas text-ink-primary";
+    ? `${interactiveChromeMatClass} ${filterPillSelection.text} border-hairline border-solid ${filterPillSelection.border}`
+    : `${interactiveChromeMatClass} border-hairline border-solid border-ink-primary text-ink-primary`;
 
   return (
     <span className="relative isolate inline-flex items-center justify-center">
@@ -77,12 +85,6 @@ function SquarePillFrame({ label, selected }: { label: string; selected: boolean
         {label}
       </span>
     </span>
-  );
-}
-
-function RoundedPillLabel({ label, selected }: { label: string; selected: boolean }) {
-  return (
-    <span className={filterFramedRoundedInnerClass(selected)}>{label}</span>
   );
 }
 
@@ -166,6 +168,7 @@ export function FilterPill({
         aria-pressed={onPress ? selected : undefined}
         className={[
           "inline-flex items-center justify-start border-0 bg-transparent p-0 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ink-primary focus-visible:ring-offset-0",
+          filterPillSingleLayerBrightnessHoverClass,
           cursorAndFadeClass,
           className,
         ]
@@ -189,7 +192,7 @@ export function FilterPill({
       aria-expanded={expandable ? isOpen : undefined}
       aria-pressed={onPress ? selected : undefined}
       className={[
-        `fae-control-filter-outer ${filterFramedOuterFocusClass} ${
+        `fae-control-filter-outer ${filterFramedOuterFocusClass} ${filterPillSingleLayerBrightnessHoverClass} ${
           selected ? filterFramedRoundedOuterSelectedClass : ""
         } inline-flex items-baseline ${cursorAndFadeClass}`,
         className,
@@ -199,7 +202,7 @@ export function FilterPill({
       data-tone={tone}
       data-variant="rounded"
     >
-      <RoundedPillLabel label={label} selected={selected} />
+      <span className={filterFramedRoundedInnerClass(selected)}>{label}</span>
     </button>
   );
 }

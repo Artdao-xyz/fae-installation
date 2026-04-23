@@ -4,6 +4,7 @@ import {
   filterFramedOuterFocusClass,
   filterFramedRoundedInnerClass,
   filterFramedRoundedOuterSelectedClass,
+  filterPillSingleLayerBrightnessHoverClass,
 } from "../../primitives/filterFramedClasses";
 
 type FormatButtonProps = {
@@ -38,7 +39,7 @@ export function FormatButton({
       aria-label={label}
       aria-pressed={selected}
       title={title ?? label}
-      className={`fae-control-filter-outer inline-flex max-w-full shrink-0 items-baseline ${filterFramedOuterFocusClass} ${
+      className={`fae-control-filter-outer inline-flex max-w-full shrink-0 items-baseline ${filterFramedOuterFocusClass} ${filterPillSingleLayerBrightnessHoverClass} ${
         selected ? filterFramedRoundedOuterSelectedClass : ""
       } ${cursorClass}`}
     >

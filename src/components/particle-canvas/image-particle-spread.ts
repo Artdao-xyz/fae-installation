@@ -39,7 +39,7 @@ const SPREAD_GAP_Y = 30;
 /**
  * After organic pack + polar sort, nudge each slot on xy so large spreads read less like a
  * perfect lattice. Amplitude is **not** capped to ~one margin — `min(cw,ch)*fraction` is the
- * primary scale. {@link mergeInPlaceSpreadTargets} reuses the same targets when in-place.
+ * primary scale.
  */
 const SPREAD_JITTER_FRACTION_OF_MIN_CARD = 0.18;
 const SPREAD_JITTER_MAX_PX = 56;
@@ -235,86 +235,6 @@ function biasClusterTowardViewportCenter(
   return pts.map((p) => v3(p.x + tx, p.y + ty, p.z));
 }
 
-/**
- * In-place filter respread: each tile in `sel` is assigned a **distinct** spread
- * anchor from the **previous** spread (`prevSpreadSelection` snapshot positions) by
- * greedy minimum (x,y) distance — so when some cards leave, the rest **re-seat** into
- * the closest free former slots instead of stacking or shrinking toward a centroid.
- *
- * If the spread **grows** (more newcomers than vacated slots), we fall back to a full
- * organic layout for every slot.
- */
-export function mergeInPlaceSpreadTargets(
-  sel: readonly number[],
-  prevSpreadSelection: readonly number[],
-  snapshot: ReadonlyArray<{ pos: Vec3 } | undefined>,
-  organicTargets: readonly Vec3[],
-): Vec3[] {
-  const prevSet = new Set(prevSpreadSelection);
-  const selSet = new Set(sel);
-  let freedCount = 0;
-  for (const idx of prevSpreadSelection) {
-    if (!selSet.has(idx)) freedCount += 1;
-  }
-
-  const newcomers = sel.filter((i) => !prevSet.has(i));
-  if (newcomers.length > freedCount) {
-    return sel.map(
-      (_, j) =>
-        organicTargets[j] ?? organicTargets[organicTargets.length - 1]!,
-    );
-  }
-
-  const pool: Vec3[] = [];
-  for (const idx of prevSpreadSelection) {
-    const sp = snapshot[idx]?.pos;
-    if (sp) pool.push(v3(sp.x, sp.y, sp.z));
-  }
-  if (pool.length === 0) {
-    return sel.map(
-      (_, j) =>
-        organicTargets[j] ?? organicTargets[organicTargets.length - 1]!,
-    );
-  }
-
-  const pending = new Set(sel);
-  const usedSlot = new Set<number>();
-  const targetMap = new Map<number, Vec3>();
-
-  while (pending.size > 0) {
-    let bestI = -1;
-    let bestK = -1;
-    let bestD = Infinity;
-    for (const i of pending) {
-      const p = snapshot[i]?.pos;
-      if (!p) continue;
-      for (let k = 0; k < pool.length; k++) {
-        if (usedSlot.has(k)) continue;
-        const pk = pool[k]!;
-        const dx = p.x - pk.x;
-        const dy = p.y - pk.y;
-        const d2 = dx * dx + dy * dy;
-        if (d2 < bestD) {
-          bestD = d2;
-          bestI = i;
-          bestK = k;
-        }
-      }
-    }
-    if (bestI < 0 || bestK < 0) break;
-    pending.delete(bestI);
-    usedSlot.add(bestK);
-    const t = pool[bestK]!;
-    targetMap.set(bestI, v3(t.x, t.y, t.z));
-  }
-
-  return sel.map((i, j) => {
-    const t = targetMap.get(i);
-    if (t) return t;
-    return organicTargets[j] ?? organicTargets[organicTargets.length - 1]!;
-  });
-}
-
 export function computeSpreadTargets(
   vw: number,
   vh: number,
@@ -322,6 +242,11 @@ export function computeSpreadTargets(
   count: number,
   /** Card footprint for packing + center bias (e.g. filtered `lg`, background `sm`). */
   cardSize: ThumbnailSize = "lg",
+  /**
+   * Must change on each filter or preview spread layout so the pack is not identical for the same
+   * viewport + count (otherwise a new row can land on the same coordinates as a previous one).
+   */
+  layoutSalt: number = 0,
 ): Vec3[] {
   const { width: cw, height: ch } = getThumbnailFullCardOuterSize(cardSize);
   const { positions } = computeOrganicSpreadLayout({
@@ -333,6 +258,7 @@ export function computeSpreadTargets(
     gapX: SPREAD_GAP_X,
     gapY: SPREAD_GAP_Y,
     count,
+    layoutSalt,
   });
   const zFlat = zNear - 0.5;
   const raw = positions.map((pos) => {
@@ -347,7 +273,8 @@ export function computeSpreadTargets(
     if (da !== db) return da - db;
     return Math.atan2(a.y, a.x) - Math.atan2(b.y, b.x);
   });
-  const jitterSalt = spreadViewportJitterSalt(vw, vh);
+  const jitterSalt =
+    (spreadViewportJitterSalt(vw, vh) ^ (layoutSalt | 0)) | 0;
   const countBoost = 1 + Math.min(0.55, Math.max(0, count - 4) * 0.012);
   const baseAmp = Math.min(cw, ch) * SPREAD_JITTER_FRACTION_OF_MIN_CARD * countBoost;
   const amp = Math.min(SPREAD_JITTER_MAX_PX, Math.max(10, baseAmp));

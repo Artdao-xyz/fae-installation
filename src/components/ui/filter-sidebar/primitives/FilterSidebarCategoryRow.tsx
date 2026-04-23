@@ -1,6 +1,10 @@
 import { CategoryMarkerIcon } from "./CategoryMarkerIcon";
 import type { FilterSidebarCategoryTone } from "../config/filterSidebarTones";
 import { toneAccentClass } from "../config/filterSidebarTones";
+import {
+  interactiveChromeHoverClass,
+  interactiveChromeMatClass,
+} from "./filterFramedClasses";
 
 export function FilterSidebarCategoryRow({
   label,
@@ -21,7 +25,7 @@ export function FilterSidebarCategoryRow({
       type="button"
       onClick={onClick}
       aria-expanded={expanded}
-      className="relative flex w-full items-center gap-2 border-t-hairline border-solid border-ink-primary bg-surface-canvas py-[7px] pl-3 pr-[15px] text-left backdrop-blur-fae-sm hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary"
+      className={`relative flex w-full items-center gap-2 border-t-hairline border-solid border-ink-primary py-[7px] pl-3 pr-[15px] text-left ${interactiveChromeMatClass} ${interactiveChromeHoverClass} focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary`}
       data-name="Filters-Button-Dropdown"
     >
       {showAccent ? (

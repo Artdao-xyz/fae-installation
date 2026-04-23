@@ -56,7 +56,6 @@ import {
   computeSpreadTargets,
   countContentRowsMatchingFilter,
   maxSpreadCountForViewport,
-  mergeInPlaceSpreadTargets,
   pickSpreadIndicesLinkedThenRelated,
   pickSpreadIndicesFromRows,
   REGROUP_MS,
@@ -251,6 +250,9 @@ export function ImageParticleSimulationView({
   );
   const spreadSignatureRef = useRef("");
   spreadSignatureRef.current = spreadSig;
+
+  /** Increments on each filter or preview spread layout so pack geometry is never identical to the previous run. */
+  const spreadLayoutSaltRef = useRef(0);
 
   const [previewRow, setPreviewRow] = useState<ContentRow | null>(null);
   const [previewFullScreen, setPreviewFullScreen] = useState(false);
@@ -1016,9 +1018,10 @@ export function ImageParticleSimulationView({
         viewportSpread,
       );
       const k = Math.min(raw.length, nPool);
+      const catalogIndices = raw.slice(0, k);
       return {
         poolIndices: Array.from({ length: k }, (_, i) => i),
-        patch: { type: "filter", catalogIndices: raw.slice(0, k) },
+        patch: { type: "filter", catalogIndices },
       };
     };
 
@@ -1077,9 +1080,8 @@ export function ImageParticleSimulationView({
       const previousEnterSig = spreadEnterSignatureRef.current;
       const nextEnterSig = effectiveSpreadSig();
       /**
-       * In-place merge keeps sidebar filter changes smooth. Opening/closing **preview** switches
-       * to linked+related ordering (often new related tiles) — that needs a full organic pack, not
-       * re-seating to filter-slot positions.
+       * In-place: both filter and preview use a fresh salted `computeSpreadTargets` pack (no merge).
+       * Regroup lerp in `enter` still runs; merge was the source of bad cross-tile shuffling.
        */
       const sameSpreadKind =
         (previousEnterSig ?? "").startsWith("pv:") ===
@@ -1117,33 +1119,25 @@ export function ImageParticleSimulationView({
         idleNodeWidthRef.current = idleW;
       }
 
-      const prevSpreadSelection = selectedIndicesRef.current.slice();
+      const beforeSpreadSel = selectedIndicesRef.current.slice();
 
       let sel = orderedPick.slice();
       const f = sel.length;
       const pb = placementBoundsRef.current;
+      const packSalt = ++spreadLayoutSaltRef.current;
       const filteredTargets = computeSpreadTargets(
         pb.w,
         pb.h,
         cfg.zNear,
         f,
         "lg",
+        packSalt,
       );
       const fCount = Math.min(f, filteredTargets.length);
       sel = sel.slice(0, fCount);
-      const snapNow = idleSnapshotRef.current;
-      const organicSlice = filteredTargets.slice(0, fCount);
-      let nextTargets = organicSlice;
-      if (spreadInPlaceRespreadRef.current && snapNow) {
-        nextTargets = mergeInPlaceSpreadTargets(
-          sel,
-          prevSpreadSelection,
-          snapNow,
-          organicSlice,
-        );
-      }
+      const nextTargets = filteredTargets.slice(0, fCount);
       spreadTargetsRef.current = nextTargets;
-      spreadPrevSelectedRef.current = new Set(selectedIndicesRef.current);
+      spreadPrevSelectedRef.current = new Set(beforeSpreadSel);
       selectedIndicesRef.current = sel;
       setSelectedFilterIndices(sel);
       setSpreadChromeActive(true);

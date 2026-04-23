@@ -28,15 +28,19 @@ function phyllotaxisSeed(
   aMax: number,
   bMax: number,
   margin: number,
+  /** Rotates the spiral; must change between filter applications so the pack is not identical. */
+  layoutSalt: number = 0,
 ): { px: number; py: number }[] {
   const ae = aMax * margin;
   const be = bMax * margin;
   const denom = Math.sqrt(Math.max(1, n) - 0.5);
+  const theta0 =
+    ((Math.imul(layoutSalt | 0, 0x1a2b3c4d) >>> 0) / 0x100000000) * 2 * Math.PI;
   const out: { px: number; py: number }[] = [];
   for (let i = 0; i < n; i++) {
     const t = i + 0.5;
     const r = Math.sqrt(t) / denom;
-    const theta = i * GOLDEN_ANGLE;
+    const theta = i * GOLDEN_ANGLE + theta0;
     out.push({
       px: cx + ae * r * Math.cos(theta),
       py: cy + be * r * Math.sin(theta),
@@ -167,11 +171,14 @@ function applyPhyllotaxisSeedJitter(
   ch: number,
   gapX: number,
   gapY: number,
+  layoutSalt: number = 0,
 ): void {
   const cell = Math.min(cw + gapX, ch + gapY);
   const amp = cell * 0.2;
   const salt =
-    (Math.round(vw) * 2654435761) ^ (Math.round(vh) * 1597334677);
+    (Math.round(vw) * 2654435761) ^
+    (Math.round(vh) * 1597334677) ^
+    (layoutSalt | 0);
   for (let i = 0; i < centers.length; i++) {
     const h0 = (Math.imul(i, 0x7feb352d) + salt) | 0;
     const a = (Math.imul(h0 ^ (h0 >>> 16), 0x85ebca6b) >>> 0) / 0x100000000;
@@ -200,6 +207,11 @@ export type OrganicSpreadOptions = {
   gapX?: number;
   gapY?: number;
   count: number;
+  /**
+   * Varies phyllotaxis + pre-separation jitter so a new run is not the same as the last
+   * for identical viewport and count.
+   */
+  layoutSalt?: number;
 };
 
 export function computeOrganicSpreadLayout(
@@ -221,6 +233,8 @@ export function computeOrganicSpreadLayout(
     return { positions: [], placed: 0 };
   }
 
+  const layoutSalt = options.layoutSalt ?? 0;
+
   const pad = 2;
   const cx = vw / 2;
   const cy = vh / 2;
@@ -234,7 +248,15 @@ export function computeOrganicSpreadLayout(
 
   const phyllMargin = phyllMarginForCount(n);
 
-  const centers = phyllotaxisSeed(n, cx, cy, aMax, bMax, phyllMargin);
+  const centers = phyllotaxisSeed(
+    n,
+    cx,
+    cy,
+    aMax,
+    bMax,
+    phyllMargin,
+    layoutSalt,
+  );
   for (const c of centers) {
     c.px = clamp(c.px, minX, maxX);
     c.py = clamp(c.py, minY, maxY);
@@ -252,6 +274,7 @@ export function computeOrganicSpreadLayout(
     ch,
     gapX,
     gapY,
+    layoutSalt,
   );
 
   separateOverlaps(

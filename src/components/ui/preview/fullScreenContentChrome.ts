@@ -1,3 +1,8 @@
+import {
+  interactiveChromeHoverClass,
+  interactiveChromeMatClass,
+} from "@/components/ui/filter-sidebar/primitives/filterFramedClasses";
+
 /**
  * Shared full-screen “content” shell (inset, border) and “Show more / Show less” control.
  * Used by the preview and About full-screen views.
@@ -18,8 +23,13 @@ export const fullScreenContentScrollClass =
 export const fullScreenContentInnerClass =
   "mx-auto flex max-w-3xl flex-col gap-5";
 
-export const fullScreenShowMoreLessButtonClass =
-  "inline-flex w-fit items-center gap-2 self-start border-t-hairline border-r-hairline border-solid border-ink-primary px-5 py-3 font-fira-mono text-sm text-black-fae transition-colors hover:bg-black-fae/10 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ink-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface-canvas";
+/** Same mat + hover as subpanel category rows and filter pills. */
+export const fullScreenShowMoreLessButtonClass = [
+  "inline-flex w-fit items-center gap-2 self-start border-t-hairline border-r-hairline border-solid border-ink-primary px-5 py-3 font-fira-mono text-sm text-black-fae",
+  interactiveChromeMatClass,
+  interactiveChromeHoverClass,
+  "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary",
+].join(" ");
 
 export const fullScreenShowMoreLessLabelClass =
   "select-none text-[13px] leading-none tracking-wide";
