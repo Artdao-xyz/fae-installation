@@ -11,7 +11,7 @@ import {
 const DEFAULT_LINE_HEIGHT_PX = 19.2;
 const HEIGHT_SAFETY_PX = 2;
 /** Keep the last line(s) out of the zone where the fade + next panel row (e.g. “Show more”) read as clipping. */
-const BOTTOM_CLEARANCE_PX = 10;
+const BOTTOM_CLEARANCE_PX = 42;
 
 const PREVIEW_BODY_LINE_BUDGET_DIVISOR = 1;
 
@@ -166,7 +166,7 @@ export function PreviewBodyFillClamp({
         {children}
       </div>
       <div
-        className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-4 bg-linear-to-t from-surface-canvas from-0% via-surface-canvas/95 via-35% to-transparent to-100%"
+        className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-16 bg-linear-to-t from-surface-canvas from-0% via-surface-canvas/90 via-50% to-transparent to-100%"
         aria-hidden
       />
     </div>

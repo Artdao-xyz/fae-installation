@@ -39,7 +39,7 @@ export function PreviewImageCarousel({ slides, alt, className = "" }: Props) {
       <img
         src={src}
         alt={`${alt}${n > 1 ? ` (${index + 1} of ${n})` : ""}`}
-        className="pointer-events-none max-h-[180px] min-h-0 w-full flex-1 object-contain object-center"
+        className="pointer-events-none max-h-[180px] min-h-0 w-full flex-1 object-contain object-top"
       />
       {n > 1 ? (
         <>
