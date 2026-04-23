@@ -164,6 +164,7 @@ export function ImageParticleSimulationView({
     selectedNetworks,
     filtersPanelOpen,
     filterSubpanelsOpen,
+    openContentPreview,
     registerContentPreviewOpener,
     registerContentPreviewCloser,
     setContentPreviewRow,
@@ -1633,7 +1634,7 @@ export function ImageParticleSimulationView({
                   opensPreviewOnClick
                     ? (e) => {
                         e.stopPropagation();
-                        handleFilteredThumbnailClick(row);
+                        openContentPreview(row);
                       }
                     : undefined
                 }
@@ -1699,7 +1700,7 @@ export function ImageParticleSimulationView({
                 opensPreviewOnClick
                   ? (e) => {
                       e.stopPropagation();
-                      handleFilteredThumbnailClick(row);
+                      openContentPreview(row);
                     }
                   : undefined
               }

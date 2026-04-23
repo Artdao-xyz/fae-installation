@@ -601,9 +601,13 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
     setSelectedFaeBriefing(snap.faeBriefing);
   }, [minimizeAllFloatingPanels]);
 
-  const openContentPreview = useCallback((row: ContentRow) => {
-    contentPreviewOpenerRef.current?.(row);
-  }, []);
+  const openContentPreview = useCallback(
+    (row: ContentRow) => {
+      minimizeAllFloatingPanels();
+      contentPreviewOpenerRef.current?.(row);
+    },
+    [minimizeAllFloatingPanels],
+  );
 
   const registerContentPreviewOpener = useCallback(
     (fn: ((row: ContentRow) => void) | null) => {
