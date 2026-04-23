@@ -58,3 +58,24 @@ export const toneSelectedBorderClass: Record<FilterSidebarCategoryTone, string> 
   artists: "border-filter-category-artists",
   network: "border-filter-category-network",
 };
+
+/**
+ * Subpanel parent row when a filter in that group is on: category color at 5% into the canvas.
+ * `!` so it wins over default mat.
+ */
+export const categorySubpanelLabelSelectionBgClass: Record<
+  FilterSidebarCategoryTone,
+  string
+> = {
+  "fae-briefings":
+    "!bg-[color:color-mix(in_srgb,var(--color-filter-category-fae-briefings)_5%,var(--color-surface-canvas))]",
+  "latest-updates":
+    "!bg-[color:color-mix(in_srgb,var(--color-filter-category-latest-updates)_5%,var(--color-surface-canvas))]",
+  rd: "!bg-[color:color-mix(in_srgb,var(--color-filter-category-rd)_5%,var(--color-surface-canvas))]",
+  editorial:
+    "!bg-[color:color-mix(in_srgb,var(--color-filter-category-editorial)_5%,var(--color-surface-canvas))]",
+  artists:
+    "!bg-[color:color-mix(in_srgb,var(--color-filter-category-artists)_5%,var(--color-surface-canvas))]",
+  network:
+    "!bg-[color:color-mix(in_srgb,var(--color-filter-category-network)_5%,var(--color-surface-canvas))]",
+};

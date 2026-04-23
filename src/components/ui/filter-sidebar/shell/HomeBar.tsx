@@ -17,7 +17,7 @@ const breadcrumbFadeClassName =
   "transition-opacity duration-300 ease-out motion-reduce:transition-none";
 
 const resetFiltersButtonClassName =
-  "inline-flex shrink-0 items-center justify-center p-1 leading-[0] transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ink-primary";
+  "inline-flex shrink-0 items-center justify-center border-hairline border-dotted border-transparent bg-transparent p-1 leading-[0] transition-[opacity,border-color,background-color] hover:border-ink-primary hover:bg-[#F7F7F7] hover:opacity-90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ink-primary";
 
 type HomeBarProps = {
   className?: string;

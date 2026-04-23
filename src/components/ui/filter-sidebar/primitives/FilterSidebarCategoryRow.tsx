@@ -1,34 +1,53 @@
 import { CategoryMarkerIcon } from "./CategoryMarkerIcon";
 import type { FilterSidebarCategoryTone } from "../config/filterSidebarTones";
-import { toneAccentClass } from "../config/filterSidebarTones";
+import {
+  categorySubpanelLabelSelectionBgClass,
+  toneAccentClass,
+} from "../config/filterSidebarTones";
 import {
   interactiveChromeHoverClass,
   interactiveChromeMatClass,
 } from "./filterFramedClasses";
+
+const matBaseTransitionClass =
+  "backdrop-blur-fae-sm transition-colors duration-150 motion-reduce:transition-none";
 
 export function FilterSidebarCategoryRow({
   label,
   tone,
   expanded,
   onClick,
+  /** A filter in this category’s subpanel is active — highlight the row/label. */
+  hasSubpanelSelection,
 }: {
   label: string;
   tone: FilterSidebarCategoryTone;
   expanded?: boolean;
   onClick?: () => void;
+  hasSubpanelSelection?: boolean;
 }) {
   const { glow } = toneAccentClass[tone];
   const showAccent = expanded === true;
+  const hasSelection = hasSubpanelSelection === true;
+  /** Left stripe: open subpanel, or a filter in this subpanel is active (clear category cue). */
+  const showLeftCategoryStripe = showAccent || hasSelection;
+  const matClass = hasSelection
+    ? `${matBaseTransitionClass} ${categorySubpanelLabelSelectionBgClass[tone]}`
+    : interactiveChromeMatClass;
+  const hoverClass = hasSelection
+    ? "hover:brightness-[0.96] motion-reduce:hover:brightness-100"
+    : interactiveChromeHoverClass;
 
   return (
     <button
       type="button"
       onClick={onClick}
       aria-expanded={expanded}
-      className={`relative flex w-full items-center gap-2 border-t-hairline border-solid border-ink-primary py-[7px] pl-3 pr-[15px] text-left ${interactiveChromeMatClass} ${interactiveChromeHoverClass} focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary`}
+      data-fae-subpanel-filter-active={hasSelection ? "true" : undefined}
+      className={`relative flex w-full items-center gap-2 border-t-hairline border-solid border-ink-primary py-[7px] pl-3 pr-[15px] text-left ${matClass} ${hoverClass} focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary`}
       data-name="Filters-Button-Dropdown"
     >
-      {showAccent ? (
+      {showLeftCategoryStripe ? (
         <span
           className={`pointer-events-none absolute inset-y-0 left-0 w-[3px] ${glow}`}
           aria-hidden
