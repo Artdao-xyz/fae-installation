@@ -75,12 +75,18 @@
   --border-width-hairline: 0.5px;
   --border-width-fine: 0.3px;
 
+  /**
+   * `2k` / `min-[2000px]` — wide & “2K-class” viewports; available as the `2k:` Tailwind variant.
+   * (Tailwind default screens stop at `2xl` / 96rem; this is additive.)
+   */
+  --breakpoint-2k: 2000px;
+
   --width-filter-narrow-column: 35px;
   /**
-   * Main filter column width. Below 2xl: 25vw; from 2xl up: 20vw (less dominant on very wide viewports).
-   * Matches `max-width: theme(--breakpoint-2xl)` in the override block below.
+   * Main filter column width (px only). Below `lg` uses a default; `lg` / `xl` / `2xl` / `2k` are set in media
+   * queries below (align with Tailwind: 64rem, 80rem, 96rem, plus 2000px for 2K).
    */
-  --width-filter-chrome-column: 25vw;
+  --width-filter-chrome-column: 260px;
   /** Options strip = chrome column minus the narrow rail. */
   --width-filter-options: calc(
     var(--width-filter-chrome-column) - var(--width-filter-narrow-column)
@@ -113,10 +119,28 @@
   --max-width-floating-panel: calc(100vw - 2.5rem);
 }
 
-/* Align with Tailwind default 2xl breakpoint (96rem / 1536px). */
+/* Tailwind `lg` (64rem / 1024px). */
+@media (min-width: 64rem) {
+  :root {
+    --width-filter-chrome-column: 380px;
+  }
+}
+/* Tailwind `xl` (80rem / 1280px). */
+@media (min-width: 80rem) {
+  :root {
+    --width-filter-chrome-column: 440px;
+  }
+}
+/* Tailwind `2xl` (96rem / 1536px). */
 @media (min-width: 96rem) {
   :root {
-    --width-filter-chrome-column: 20vw;
+    --width-filter-chrome-column: 430px;
+  }
+}
+/* 2K+ viewports (2000px) — e.g. large / QHD-class widths; `2k` screen in @theme. */
+@media (min-width: 2000px) {
+  :root {
+    --width-filter-chrome-column: 380px;
   }
 }
 
