@@ -647,11 +647,11 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
   }, [clearPendingPreviewFilterSnapshot, setFiltersPanelOpen, closeContentPreview]);
 
   /**
-   * When the user removes a filter while a content preview is open, clear the pre-preview
-   * snapshot (so we do not restore filters and undo their change) and close the preview so
-   * the canvas re-sorts to the new filter state.
+   * When the user changes a sidebar / subpanel filter while content preview is open, clear
+   * the pre-preview snapshot (so we do not restore filters and undo their change) and close
+   * the preview so the canvas shows the new filter result set.
    */
-  const endContentPreviewOnFilterDeselect = useCallback(() => {
+  const endContentPreviewOnSidebarFilterChange = useCallback(() => {
     if (contentPreviewRowRef.current == null) return;
     clearPendingPreviewFilterSnapshot();
     closeContentPreview();
@@ -660,9 +660,7 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
   const toggleFocusArea = useCallback(
     (label: string) => {
       minimizeAllFloatingPanels();
-      if (selectedFocusAreas.has(label)) {
-        endContentPreviewOnFilterDeselect();
-      }
+      endContentPreviewOnSidebarFilterChange();
       setSelectedFocusAreas((prev) => {
         const next = new Set(prev);
         if (next.has(label)) next.delete(label);
@@ -670,19 +668,13 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
         return next;
       });
     },
-    [
-      endContentPreviewOnFilterDeselect,
-      minimizeAllFloatingPanels,
-      selectedFocusAreas,
-    ],
+    [endContentPreviewOnSidebarFilterChange, minimizeAllFloatingPanels],
   );
 
   const toggleActivityType = useCallback(
     (label: string) => {
       minimizeAllFloatingPanels();
-      if (selectedActivityTypes.has(label)) {
-        endContentPreviewOnFilterDeselect();
-      }
+      endContentPreviewOnSidebarFilterChange();
       setSelectedActivityTypes((prev) => {
         const next = new Set(prev);
         if (next.has(label)) next.delete(label);
@@ -690,19 +682,13 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
         return next;
       });
     },
-    [
-      endContentPreviewOnFilterDeselect,
-      minimizeAllFloatingPanels,
-      selectedActivityTypes,
-    ],
+    [endContentPreviewOnSidebarFilterChange, minimizeAllFloatingPanels],
   );
 
   const toggleArtist = useCallback(
     (label: string) => {
       minimizeAllFloatingPanels();
-      if (selectedArtists.has(label)) {
-        endContentPreviewOnFilterDeselect();
-      }
+      endContentPreviewOnSidebarFilterChange();
       setSelectedArtists((prev) => {
         const next = new Set(prev);
         if (next.has(label)) next.delete(label);
@@ -710,19 +696,13 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
         return next;
       });
     },
-    [
-      endContentPreviewOnFilterDeselect,
-      minimizeAllFloatingPanels,
-      selectedArtists,
-    ],
+    [endContentPreviewOnSidebarFilterChange, minimizeAllFloatingPanels],
   );
 
   const toggleFormat = useCallback(
     (label: string) => {
       minimizeAllFloatingPanels();
-      if (selectedFormats.has(label)) {
-        endContentPreviewOnFilterDeselect();
-      }
+      endContentPreviewOnSidebarFilterChange();
       setSelectedFormats((prev) => {
         const next = new Set(prev);
         if (next.has(label)) next.delete(label);
@@ -730,19 +710,13 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
         return next;
       });
     },
-    [
-      endContentPreviewOnFilterDeselect,
-      minimizeAllFloatingPanels,
-      selectedFormats,
-    ],
+    [endContentPreviewOnSidebarFilterChange, minimizeAllFloatingPanels],
   );
 
   const toggleNetwork = useCallback(
     (label: string) => {
       minimizeAllFloatingPanels();
-      if (selectedNetworks.has(label)) {
-        endContentPreviewOnFilterDeselect();
-      }
+      endContentPreviewOnSidebarFilterChange();
       setSelectedNetworks((prev) => {
         const next = new Set(prev);
         if (next.has(label)) next.delete(label);
@@ -750,26 +724,16 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
         return next;
       });
     },
-    [
-      endContentPreviewOnFilterDeselect,
-      minimizeAllFloatingPanels,
-      selectedNetworks,
-    ],
+    [endContentPreviewOnSidebarFilterChange, minimizeAllFloatingPanels],
   );
 
   const setSelectedFaeBriefingCb = useCallback(
     (label: string | null) => {
       minimizeAllFloatingPanels();
-      if (label === null && selectedFaeBriefing != null) {
-        endContentPreviewOnFilterDeselect();
-      }
+      endContentPreviewOnSidebarFilterChange();
       setSelectedFaeBriefing(label);
     },
-    [
-      endContentPreviewOnFilterDeselect,
-      minimizeAllFloatingPanels,
-      selectedFaeBriefing,
-    ],
+    [endContentPreviewOnSidebarFilterChange, minimizeAllFloatingPanels],
   );
 
   const exitContentPreviewToFilterCanvas = useCallback(() => {
