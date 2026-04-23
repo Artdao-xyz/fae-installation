@@ -1,13 +1,7 @@
 "use client";
 
-const SEARCH_ICON_FRAME_CLASS =
-  "inline-flex shrink-0 items-center justify-center border-hairline border-dotted border-ink-primary bg-[#ECECEC] p-1";
-
 const CLEAR_SEARCH_ICON_FRAME_CLASS =
   "inline-grid shrink-0 size-[1.5rem] place-items-center border-hairline border-dotted border-ink-primary bg-[#ECECEC] p-0 leading-[0]";
-
-/** Renders the “clear all filters” (refresh) control when `onRefreshFilters` is passed from `Search`. */
-const SHOW_FILTER_CLEAR_ALL_BUTTON = true;
 
 export type FilterSearchFieldProps = {
   id: string;
@@ -15,8 +9,6 @@ export type FilterSearchFieldProps = {
   label: string;
   value: string;
   onChange: (value: string) => void;
-  /** When set, shows a control that clears global filters (and typically the field via `onChange`). */
-  onRefreshFilters?: () => void;
   placeholder?: string;
 };
 
@@ -25,7 +17,6 @@ export function FilterSearchField({
   label,
   value,
   onChange,
-  onRefreshFilters,
   placeholder = "Search",
 }: FilterSearchFieldProps) {
   return (
@@ -56,22 +47,6 @@ export function FilterSearchField({
               src="/svg/delete.svg"
               alt=""
               className="block size-4 max-h-4 max-w-4 shrink-0 object-contain object-center m-0"
-              aria-hidden
-            />
-          </button>
-        ) : null}
-        {SHOW_FILTER_CLEAR_ALL_BUTTON && onRefreshFilters ? (
-          <button
-            type="button"
-            onClick={onRefreshFilters}
-            aria-label="Clear all filters"
-            className={`${SEARCH_ICON_FRAME_CLASS} transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ink-primary`}
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element -- small static chrome icon */}
-            <img
-              src="/svg/search.svg"
-              alt=""
-              className="m-0 block size-4 max-h-4 max-w-4 shrink-0 object-contain object-center"
               aria-hidden
             />
           </button>

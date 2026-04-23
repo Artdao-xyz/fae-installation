@@ -69,12 +69,15 @@ export type FilterSelectionContextValue = {
   clearSelectedArtists: () => void;
   clearSelectedFormats: () => void;
   clearSelectedNetworks: () => void;
-  /** Clears all taxonomy + briefing + bumps `filterResetNonce` for any remaining local UIs. */
+  /**
+   * Clears all taxonomy + briefing, collapses domain subpanels, minimizes floating panels, and bumps
+   * `filterResetNonce` for any remaining local UIs.
+   */
   clearAllFilters: () => void;
   /**
-   * Clears all filters, closes the content preview, clears the search string (see `searchQueryResetNonce`),
-   * and returns the canvas to idle — same as the old search “refresh” control. Bound to Escape and
-   * empty-canvas click from `ImageParticleSimulationView`.
+   * Clears all filters, closes domain subpanels, closes the content preview, clears the search string
+   * (see `searchQueryResetNonce`), and returns the canvas to idle. Bound to breadcrumb reset, Escape,
+   * and empty-canvas click from `ImageParticleSimulationView`.
    */
   resetToIdle: () => void;
   setFiltersFromContentRow: (row: {
@@ -780,6 +783,10 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
   const clearAllFilters = useCallback(() => {
     exitContentPreviewToFilterCanvas();
     minimizeAllFloatingPanels();
+    setBriefingsSubpanelOpen(false);
+    setRdSubpanelOpen(false);
+    setNetworkSubpanelOpen(false);
+    setArtistsSubpanelOpen(false);
     setSelectedFocusAreas(new Set());
     setSelectedActivityTypes(new Set());
     setSelectedArtists(new Set());

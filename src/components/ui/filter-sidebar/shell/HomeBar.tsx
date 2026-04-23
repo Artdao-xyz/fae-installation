@@ -16,6 +16,9 @@ const breadcrumbArrowImgClassName =
 const breadcrumbFadeClassName =
   "transition-opacity duration-300 ease-out motion-reduce:transition-none";
 
+const resetFiltersButtonClassName =
+  "inline-flex shrink-0 items-center justify-center p-1 leading-[0] transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ink-primary";
+
 type HomeBarProps = {
   className?: string;
   mergeWithSubpanel?: boolean;
@@ -71,53 +74,71 @@ export function HomeBar({
         aria-hidden
       />
       <div className="flex min-h-0 min-w-0 flex-1 items-center gap-2 overflow-hidden px-3">
-        <Link
-          href="/"
-          onClick={(e) => {
-            if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-            e.preventDefault();
-            if (contentPreviewRow) {
-              closeContentPreview();
-            } else {
-              resetToIdle();
+        <div className="flex min-h-0 min-w-0 flex-1 items-center gap-2 overflow-hidden">
+          <Link
+            href="/"
+            onClick={(e) => {
+              if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+              e.preventDefault();
+              if (contentPreviewRow) {
+                closeContentPreview();
+              } else {
+                resetToIdle();
+              }
+            }}
+            aria-label={
+              contentPreviewRow
+                ? "Return to filtered results, close preview"
+                : "Home"
             }
-          }}
-          aria-label={
-            contentPreviewRow
-              ? "Return to filtered results, close preview"
-              : "Home"
-          }
-          className="flex min-w-0 shrink-0 items-center gap-2 text-ink-primary hover:opacity-80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ink-primary"
+            className="flex min-w-0 shrink-0 items-center gap-2 text-ink-primary hover:opacity-80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ink-primary"
+          >
+            <HomeSvgIcon />
+            <span className={`truncate ${homeBarBreadcrumbTypeClassName} text-ink-body`}>
+              Home
+            </span>
+          </Link>
+          {contentPreviewRow ? (
+            <div
+              className={`flex min-w-0 flex-1 items-center gap-2 ${breadcrumbFadeClassName} ${
+                breadcrumbEntered ? "opacity-100" : "opacity-0"
+              }`}
+              aria-label="Breadcrumb"
+            >
+              <Image
+                src="/svg/right-arrow.svg"
+                alt=""
+                width={8}
+                height={10}
+                unoptimized
+                className={breadcrumbArrowImgClassName}
+                aria-hidden
+              />
+              <span
+                className={`min-w-0 flex-1 truncate ${homeBarBreadcrumbTypeClassName} ${filterPillSelection.text}`}
+                title={contentPreviewRow.title}
+              >
+                {contentPreviewRow.title}
+              </span>
+            </div>
+          ) : null}
+        </div>
+        <button
+          type="button"
+          onClick={resetToIdle}
+          aria-label="Clear all filters"
+          className={resetFiltersButtonClassName}
         >
-          <HomeSvgIcon />
-          <span className={`truncate ${homeBarBreadcrumbTypeClassName} text-ink-body`}>
-            Home
-          </span>
-        </Link>
-      {contentPreviewRow ? (
-        <div
-          className={`flex min-w-0 flex-1 items-center gap-2 ${breadcrumbFadeClassName} ${
-            breadcrumbEntered ? "opacity-100" : "opacity-0"
-          }`}
-          aria-label="Breadcrumb"
-        >
-          <Image
-            src="/svg/right-arrow.svg"
+          {/* eslint-disable-next-line @next/next/no-img-element -- small static chrome icon */}
+          <img
+            src="/svg/reset.svg"
             alt=""
-            width={8}
-            height={10}
-            unoptimized
-            className={breadcrumbArrowImgClassName}
+            width={17}
+            height={14}
+            className="m-0 block h-3.5 w-auto max-h-3.5 shrink-0 object-contain object-center"
             aria-hidden
           />
-          <span
-            className={`min-w-0 flex-1 truncate ${homeBarBreadcrumbTypeClassName} ${filterPillSelection.text}`}
-            title={contentPreviewRow.title}
-          >
-            {contentPreviewRow.title}
-          </span>
-        </div>
-      ) : null}
+        </button>
       </div>
     </div>
   );

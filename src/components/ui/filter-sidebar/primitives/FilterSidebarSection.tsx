@@ -38,7 +38,7 @@ export function FilterSidebarSection({
             onClick={onClearAll}
             className="flex shrink-0 cursor-pointer items-center gap-1 font-fira-mono text-[8px] font-medium leading-2 text-ink-primary underline decoration-solid underline-offset-2 transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ink-primary focus-visible:ring-offset-0 tracking-tighter"
           >
-            clear all
+            reset
           </button>
         ) : null}
       </header>
