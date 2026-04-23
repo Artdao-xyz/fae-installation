@@ -1,15 +1,13 @@
 "use client";
 
-import { RefreshCw } from "lucide-react";
-
 const SEARCH_ICON_FRAME_CLASS =
-  "inline-flex shrink-0 items-center justify-center border-hairline border-dotted border-ink-primary bg-[#ffffff] p-1";
+  "inline-flex shrink-0 items-center justify-center border-hairline border-dotted border-ink-primary bg-[#ECECEC] p-1";
 
 const CLEAR_SEARCH_ICON_FRAME_CLASS =
   "inline-grid shrink-0 size-[1.5rem] place-items-center border-hairline border-dotted border-ink-primary bg-[#ECECEC] p-0 leading-[0]";
 
-/** Set to `true` to show the “clear all filters” (refresh) control again. */
-const SHOW_FILTER_CLEAR_ALL_BUTTON = false;
+/** Renders the “clear all filters” (refresh) control when `onRefreshFilters` is passed from `Search`. */
+const SHOW_FILTER_CLEAR_ALL_BUTTON = true;
 
 export type FilterSearchFieldProps = {
   id: string;
@@ -67,9 +65,15 @@ export function FilterSearchField({
             type="button"
             onClick={onRefreshFilters}
             aria-label="Clear all filters"
-            className={`${SEARCH_ICON_FRAME_CLASS} text-ink-primary transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ink-primary`}
+            className={`${SEARCH_ICON_FRAME_CLASS} transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ink-primary`}
           >
-            <RefreshCw className="size-4 shrink-0" strokeWidth={1.75} aria-hidden />
+            {/* eslint-disable-next-line @next/next/no-img-element -- small static chrome icon */}
+            <img
+              src="/svg/search.svg"
+              alt=""
+              className="m-0 block size-4 max-h-4 max-w-4 shrink-0 object-contain object-center"
+              aria-hidden
+            />
           </button>
         ) : null}
       </div>
