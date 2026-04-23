@@ -80,6 +80,9 @@ import { IDLE_DEPTH_BLUR_DISABLED } from "./config";
 
 const ROW_IMAGE_ATTR = "data-row-image";
 
+/** `FILTER_SUBPANEL_COLUMN_TRANSITION_CLASS` is 300ms; add buffer so `measure` runs after width settles. */
+const SUBPANEL_PLACEMENT_SETTLE_MS = 360;
+
 function taxonomySelectionFromContentRow(
   row: ContentRow,
 ): TaxonomyFilterSelection {
@@ -112,7 +115,8 @@ function syncImgToContentRow(
 type PlacementBounds = { cx: number; cy: number; w: number; h: number };
 
 function approxEqualPlacementBounds(a: PlacementBounds, b: PlacementBounds) {
-  const eps = 0.5;
+  /** Slightly looser to avoid `sys.resize` on every 1px step when RO is noisy. */
+  const eps = 2;
   return (
     Math.abs(a.cx - b.cx) <= eps &&
     Math.abs(a.cy - b.cy) <= eps &&
@@ -586,6 +590,51 @@ export function ImageParticleSimulationView({
   const filterSubpanelsOpenRef = useRef(filterSubpanelsOpen);
   filterSubpanelsOpenRef.current = filterSubpanelsOpen;
 
+  const subpanelOpenPrevForPlacementRef = useRef(filterSubpanelsOpen);
+  const subpanelCloseSettlingRef = useRef(false);
+  const subpanelSettleTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
+  const subpanelSettleLayoutPrevRef = useRef(filterSubpanelsOpen);
+  const [settleAfterSubpanelCloseNonce, setSettleAfterSubpanelCloseNonce] =
+    useState(0);
+
+  /** Synchronous: before any `useLayoutEffect`, so the first `measure` after a close sees "settling". */
+  if (subpanelOpenPrevForPlacementRef.current && !filterSubpanelsOpen) {
+    subpanelCloseSettlingRef.current = true;
+  } else if (filterSubpanelsOpen) {
+    subpanelCloseSettlingRef.current = false;
+  }
+  subpanelOpenPrevForPlacementRef.current = filterSubpanelsOpen;
+
+  useLayoutEffect(() => {
+    if (filterSubpanelsOpen) {
+      if (subpanelSettleTimeoutRef.current) {
+        clearTimeout(subpanelSettleTimeoutRef.current);
+        subpanelSettleTimeoutRef.current = null;
+      }
+      subpanelSettleLayoutPrevRef.current = filterSubpanelsOpen;
+      return;
+    }
+    if (subpanelSettleLayoutPrevRef.current && !filterSubpanelsOpen) {
+      if (subpanelSettleTimeoutRef.current) {
+        clearTimeout(subpanelSettleTimeoutRef.current);
+      }
+      subpanelSettleTimeoutRef.current = setTimeout(() => {
+        subpanelSettleTimeoutRef.current = null;
+        subpanelCloseSettlingRef.current = false;
+        setSettleAfterSubpanelCloseNonce((n) => n + 1);
+      }, SUBPANEL_PLACEMENT_SETTLE_MS);
+    }
+    subpanelSettleLayoutPrevRef.current = filterSubpanelsOpen;
+    return () => {
+      if (subpanelSettleTimeoutRef.current) {
+        clearTimeout(subpanelSettleTimeoutRef.current);
+        subpanelSettleTimeoutRef.current = null;
+      }
+    };
+  }, [filterSubpanelsOpen]);
+
   // ---- Placement (main column below hero; minus preview drawer when open) ----
   useLayoutEffect(() => {
     /** Width reserved on the right: margin guide inset + docked preview panel (matches `PreviewView`). */
@@ -599,11 +648,10 @@ export function ImageParticleSimulationView({
     };
 
     /**
-     * `isWindowResize`: only `resize` re-measures while a subpanel is open. ResizeObserver/scroll
-     * on the placement `main` child would run when a subpanel opens and would re-run the same
-     * 500ms placement transition as the main filter drawer. Ignoring those keeps bounds identical
-     * to “filters open, no subpanel”. Real viewport resizes use a subpanel-width offset so `cx`/`w`
-     * stay correct with the same math as the main open/close transition.
+     * Domain subpanels (briefings, R&D, artists, network): ignore `ResizeObserver` / scroll while a
+     * subpanel is open, and for ~360ms after it closes (column width is still animating) so
+     * `placementBounds` do not chase intermediate widths. A single re-measure runs when settling
+     * ends. Real viewport resizes use `isWindowResize` and may apply `subW`.
      */
     const measure = (isWindowResize: boolean) => {
       const vw = window.innerWidth;
@@ -638,7 +686,10 @@ export function ImageParticleSimulationView({
         return;
       }
 
-      if (filterSubpanelsOpenRef.current && !isWindowResize) {
+      if (
+        (filterSubpanelsOpenRef.current || subpanelCloseSettlingRef.current) &&
+        !isWindowResize
+      ) {
         return;
       }
 
@@ -660,22 +711,38 @@ export function ImageParticleSimulationView({
     const onResize = () => {
       measure(true);
     };
+
+    let roScrollRafId = 0;
     const onRoOrScroll = () => {
-      measure(false);
+      if (roScrollRafId !== 0) return;
+      roScrollRafId = requestAnimationFrame(() => {
+        roScrollRafId = 0;
+        measure(false);
+      });
     };
 
-    onRoOrScroll();
+    measure(false);
     const el = placementContainerRef?.current;
     const ro = new ResizeObserver(onRoOrScroll);
     if (el) ro.observe(el);
     window.addEventListener("resize", onResize);
     window.addEventListener("scroll", onRoOrScroll, true);
     return () => {
+      if (roScrollRafId !== 0) {
+        cancelAnimationFrame(roScrollRafId);
+        roScrollRafId = 0;
+      }
       ro.disconnect();
       window.removeEventListener("resize", onResize);
       window.removeEventListener("scroll", onRoOrScroll, true);
     };
-  }, [placementContainerRef, previewRow, previewFullScreen, filtersPanelOpen]);
+  }, [
+    placementContainerRef,
+    previewRow,
+    previewFullScreen,
+    filtersPanelOpen,
+    settleAfterSubpanelCloseNonce,
+  ]);
 
   // ---- Catalog from Strapi (single shared fetch in FilterSelectionProvider) ----
   useEffect(() => {
