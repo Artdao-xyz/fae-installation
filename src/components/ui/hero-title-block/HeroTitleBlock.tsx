@@ -18,10 +18,31 @@ const HERO_LEFT_FILTERS_OPEN_CLASS =
   "left-[calc(var(--width-filter-chrome-column)+(100vw-var(--width-filter-chrome-column))/2)] md:left-[calc(var(--width-filter-chrome-column)+(100vw-var(--width-filter-chrome-column))/2-var(--width-filter-narrow-column))]";
 
 export function HeroTitleBlock({ title, subtitle, className = "" }: Props) {
-  const { selectedFocusAreas, selectedActivityTypes, filtersPanelOpen } =
-    useFilterSelection();
-  const filterActive =
-    selectedFocusAreas.size > 0 || selectedActivityTypes.size > 0;
+  const {
+    selectedFocusAreas,
+    selectedActivityTypes,
+    selectedArtists,
+    selectedFormats,
+    selectedNetworks,
+    selectedFaeBriefing,
+    contentPreviewRow,
+    filtersPanelOpen,
+  } = useFilterSelection();
+
+  /**
+   * Title/subtitle only in true idle: no taxonomy, no briefing, no content preview.
+   * (Previously only Focus+Activity hid the hero, so subpanel-only filters still showed it.)
+   */
+  const isHeroIdle =
+    selectedFocusAreas.size === 0 &&
+    selectedActivityTypes.size === 0 &&
+    selectedArtists.size === 0 &&
+    selectedFormats.size === 0 &&
+    selectedNetworks.size === 0 &&
+    selectedFaeBriefing == null &&
+    contentPreviewRow == null;
+
+  const hideHero = !isHeroIdle;
 
   /**
    * Reveal title/subtitle on mount so they appear before Strapi-backed imagery loads in the canvas.
@@ -58,9 +79,9 @@ export function HeroTitleBlock({ title, subtitle, className = "" }: Props) {
   return (
     <div
       className={`z-20 flex flex-col items-start justify-center whitespace-nowrap [transition:left_500ms_ease-in-out,opacity_300ms_ease-out] motion-reduce:transition-none ${positionClass} ${
-        filterActive ? "pointer-events-none opacity-0" : "opacity-100"
+        hideHero ? "pointer-events-none opacity-0" : "opacity-100"
       } ${className}`}
-      aria-hidden={filterActive}
+      aria-hidden={hideHero}
     >
       <div
         className={`font-lust-text justify-start text-6xl leading-[65px] text-black-fae ${
