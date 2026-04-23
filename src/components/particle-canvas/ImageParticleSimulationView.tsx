@@ -11,7 +11,10 @@ import {
 } from "react";
 import { createPortal, flushSync } from "react-dom";
 import { useFilterSelection } from "@/components/ui/filter-sidebar/FilterSelectionContext";
-import { getPreviewPanelWidthPx } from "@/components/ui/filter-sidebar/shell/layout-classes";
+import {
+  getFilterSubpanelColumnWidthPx,
+  getPreviewPanelWidthPx,
+} from "@/components/ui/filter-sidebar/shell/layout-classes";
 import { getMarginGuideInsetPx } from "@/lib/margin-guide";
 import { buildSuggestedSourceRowsSplit } from "@/lib/preview-suggested-outputs";
 import type { ContentRow } from "@/data/content-types";
@@ -160,6 +163,7 @@ export function ImageParticleSimulationView({
     selectedFormats,
     selectedNetworks,
     filtersPanelOpen,
+    filterSubpanelsOpen,
     registerContentPreviewOpener,
     registerContentPreviewCloser,
     setContentPreviewRow,
@@ -574,6 +578,9 @@ export function ImageParticleSimulationView({
   const textWordsByRowRef = useRef(textWordsByRow);
   textWordsByRowRef.current = textWordsByRow;
 
+  const filterSubpanelsOpenRef = useRef(filterSubpanelsOpen);
+  filterSubpanelsOpenRef.current = filterSubpanelsOpen;
+
   // ---- Placement (main column below hero; minus preview drawer when open) ----
   useLayoutEffect(() => {
     /** Width reserved on the right: margin guide inset + docked preview panel (matches `PreviewView`). */
@@ -586,7 +593,14 @@ export function ImageParticleSimulationView({
       return inset + panelW;
     };
 
-    const measure = () => {
+    /**
+     * `isWindowResize`: only `resize` re-measures while a subpanel is open. ResizeObserver/scroll
+     * on the placement `main` child would run when a subpanel opens and would re-run the same
+     * 500ms placement transition as the main filter drawer. Ignoring those keeps bounds identical
+     * to “filters open, no subpanel”. Real viewport resizes use a subpanel-width offset so `cx`/`w`
+     * stay correct with the same math as the main open/close transition.
+     */
+    const measure = (isWindowResize: boolean) => {
       const vw = window.innerWidth;
       const vh = window.innerHeight;
       /** Align sim height with the inner band of the margin guide (not full window). */
@@ -609,7 +623,6 @@ export function ImageParticleSimulationView({
         return;
       }
 
-      /** Sidebar open: center in the main column to the right of the filter chrome. */
       const el = placementContainerRef?.current;
       if (!el) {
         const w = Math.max(64, rightLimit);
@@ -619,33 +632,45 @@ export function ImageParticleSimulationView({
         );
         return;
       }
+
+      if (filterSubpanelsOpenRef.current && !isWindowResize) {
+        return;
+      }
+
       const r = el.getBoundingClientRect();
       const right = Math.min(r.right, rightLimit);
-      const w = Math.max(64, right - r.left);
-      const cx = r.left + w / 2;
+      const subW =
+        filterSubpanelsOpenRef.current && isWindowResize
+          ? getFilterSubpanelColumnWidthPx(vw)
+          : 0;
+      const leftV = r.left - subW;
+      const w = Math.max(64, right - leftV);
+      const cx = leftV + w / 2;
       const next: PlacementBounds = { cx, cy, w, h };
       setPlacementBounds((prev) =>
         approxEqualPlacementBounds(prev, next) ? prev : next,
       );
     };
 
-    measure();
+    const onResize = () => {
+      measure(true);
+    };
+    const onRoOrScroll = () => {
+      measure(false);
+    };
+
+    onRoOrScroll();
     const el = placementContainerRef?.current;
-    const ro = new ResizeObserver(measure);
+    const ro = new ResizeObserver(onRoOrScroll);
     if (el) ro.observe(el);
-    window.addEventListener("resize", measure);
-    window.addEventListener("scroll", measure, true);
+    window.addEventListener("resize", onResize);
+    window.addEventListener("scroll", onRoOrScroll, true);
     return () => {
       ro.disconnect();
-      window.removeEventListener("resize", measure);
-      window.removeEventListener("scroll", measure, true);
+      window.removeEventListener("resize", onResize);
+      window.removeEventListener("scroll", onRoOrScroll, true);
     };
-  }, [
-    placementContainerRef,
-    previewRow,
-    previewFullScreen,
-    filtersPanelOpen,
-  ]);
+  }, [placementContainerRef, previewRow, previewFullScreen, filtersPanelOpen]);
 
   // ---- Catalog from Strapi (single shared fetch in FilterSelectionProvider) ----
   useEffect(() => {
