@@ -722,9 +722,9 @@ export const PreviewView = memo(function PreviewView({
       onPointerDown={(e) => e.stopPropagation()}
       className={`${previewDockedOuterClass} ${
         shellEntered
-          ? "max-w-[var(--width-preview-panel)]"
+          ? "max-w-(--width-preview-panel)"
           : "max-w-0"
-      } motion-reduce:max-w-[var(--width-preview-panel)]`}
+      } motion-reduce:max-w-(--width-preview-panel)`}
       role="presentation"
     >
       <aside
