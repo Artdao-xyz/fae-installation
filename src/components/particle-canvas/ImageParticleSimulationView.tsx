@@ -1611,6 +1611,11 @@ export function ImageParticleSimulationView({
             }
           }
 
+          /** Hovered card stays at full alpha (depth/sim can make `p.opacity` < 1 for other tiles). */
+          if (hoverCardActive) {
+            outOpacity = 1;
+          }
+
           const filterParts: string[] = [];
           if (blurPx >= 0.03) {
             filterParts.push(`blur(${blurPx.toFixed(2)}px)`);
