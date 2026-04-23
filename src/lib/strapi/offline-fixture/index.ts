@@ -32,23 +32,11 @@ import {
   NETWORK_LABELS,
 } from "@/data/content-taxonomy";
 
-let loggedStrapiDataSource = false;
-
 /** `1` / `true` / `yes` = test fixture; `0` / `false` / `no` / unset / anything else = hit Strapi. */
 export function offlineFixtureEnabled(): boolean {
   const raw = process.env.FAE_USE_STRAPI_FIXTURE?.trim() ?? "";
   const v = raw.toLowerCase();
-  const on = v === "1" || v === "true" || v === "yes";
-
-  if (!loggedStrapiDataSource) {
-    loggedStrapiDataSource = true;
-    const label = on
-      ? `TEST MODE (fixture) — FAE_USE_STRAPI_FIXTURE=${raw}`
-      : `LIVE — Strapi API (FAE_USE_STRAPI_FIXTURE=${raw.length > 0 ? raw : "unset/0"})`;
-    console.info(`[Strapi] ${label}`);
-  }
-
-  return on;
+  return v === "1" || v === "true" || v === "yes";
 }
 
 export type OfflineFixtureCatalogResult = {
@@ -60,12 +48,6 @@ export type OfflineFixtureCatalogResult = {
 export function offlineFixtureCatalogOrNull(): OfflineFixtureCatalogResult | null {
   if (!offlineFixtureEnabled()) return null;
   const rows = getContentFixtureCatalogRows();
-  if (process.env.NODE_ENV === "development") {
-    console.info("[Strapi] outputs catalog (offline fixture)", {
-      rowCount: rows.length,
-      total: rows.length,
-    });
-  }
   return { rows, total: rows.length, durationMs: 0 };
 }
 

@@ -20,11 +20,11 @@ import {
 import { useFilterSelection } from "@/components/ui/filter-sidebar/FilterSelectionContext";
 import { PREVIEW_DOCK_WIDTH_TRANSITION_CLASS } from "@/components/ui/filter-sidebar/shell/layout-classes";
 import { PreviewBlocksBody } from "./PreviewBlocksBody";
-import { PreviewBodyFillClamp } from "./PreviewBodyFillClamp";
 import {
   fullScreenContentInnerClass,
   fullScreenContentScrollClass,
   fullScreenContentShellClass,
+  fullScreenContentShellEnterTransitionClass,
   fullScreenShowMoreLessButtonClass,
   fullScreenShowMoreLessLabelClass,
 } from "./fullScreenContentChrome";
@@ -91,14 +91,27 @@ function RichParagraph({
   );
 }
 
-/** Non-interactive (e.g. +N overflow chip). Actionable pills use sidebar selection styling. */
-const pillReadOnlyClass = "pointer-events-none shrink-0";
-
 const sectionLabelClass =
   "w-[72px] shrink-0 font-lust-text text-xs font-normal leading-none tracking-[-0.228px] text-ink-body";
 
 const clampPillRowClass =
   "flex min-h-0 w-full min-w-0 flex-wrap content-start gap-1.5 gap-y-1.5";
+
+/** Selected pills first, then original order within each group. */
+function sortPillsSelectedFirst(
+  list: readonly string[],
+  isSelected: (label: string) => boolean,
+): string[] {
+  return [...list]
+    .map((label, order) => ({ label, order }))
+    .sort((a, b) => {
+      const sa = isSelected(a.label) ? 0 : 1;
+      const sb = isSelected(b.label) ? 0 : 1;
+      if (sa !== sb) return sa - sb;
+      return a.order - b.order;
+    })
+    .map((x) => x.label);
+}
 
 function rowCountForPillRow(container: HTMLElement): number {
   const children = Array.from(container.children) as HTMLElement[];
@@ -145,13 +158,28 @@ function ClampedPreviewPillsInner({
   isSelected,
   onPillPress,
 }: ClampedPreviewPillsProps) {
+  const itemsSorted = useMemo(
+    () => sortPillsSelectedFirst(items, isSelected),
+    [items, isSelected],
+  );
+  const selectionLayoutSig = useMemo(
+    () =>
+      `${itemKey}\0${items.map((l) => (isSelected(l) ? 1 : 0)).join("")}`,
+    [itemKey, items, isSelected],
+  );
   const rootRef = useRef<HTMLDivElement | null>(null);
   const rowRef = useRef<HTMLDivElement | null>(null);
   const lastInlineWidthRef = useRef<number | null>(null);
   const [visiblePrefix, setVisiblePrefix] = useState<number | null>(null);
+  const [overflowExpanded, setOverflowExpanded] = useState(false);
+
+  useEffect(() => {
+    setVisiblePrefix(null);
+    setOverflowExpanded(false);
+  }, [selectionLayoutSig]);
 
   useLayoutEffect(() => {
-    if (!docked) return;
+    if (!docked || overflowExpanded) return;
     const el = rowRef.current;
     if (!el) return;
 
@@ -170,7 +198,7 @@ function ClampedPreviewPillsInner({
           const row = rowRef.current;
           if (!row) return;
           const nRows = rowCountForPillRow(row);
-          const n = items.length;
+          const n = itemsSorted.length;
           if (nRows <= 3) {
             setVisiblePrefix(n);
             return;
@@ -185,12 +213,12 @@ function ClampedPreviewPillsInner({
       };
     }
 
-    if (visiblePrefix < items.length) {
+    if (visiblePrefix < itemsSorted.length) {
       if (rowCountForPillRow(el) > 3 && visiblePrefix > 0) {
         queueMicrotask(() => setVisiblePrefix((v) => (v !== null && v > 0 ? v - 1 : v)));
       }
     }
-  }, [docked, itemKey, items, visiblePrefix]);
+  }, [docked, itemKey, itemsSorted, overflowExpanded, visiblePrefix]);
 
   useEffect(() => {
     if (!docked) return;
@@ -214,6 +242,7 @@ function ClampedPreviewPillsInner({
       if (t !== undefined) clearTimeout(t);
       t = setTimeout(() => {
         setVisiblePrefix(null);
+        setOverflowExpanded(false);
       }, PREVIEW_PILL_WIDTH_REMEASURE_MS);
     });
     ro.observe(node);
@@ -239,21 +268,31 @@ function ClampedPreviewPillsInner({
   );
 
   if (!docked) {
-    return items.map((label) => renderPill(label));
+    return itemsSorted.map((label) => renderPill(label));
+  }
+
+  if (overflowExpanded) {
+    return (
+      <div className="w-full min-w-0" ref={rootRef}>
+        <div ref={rowRef} className={clampPillRowClass}>
+          {itemsSorted.map((label) => renderPill(label))}
+        </div>
+      </div>
+    );
   }
 
   if (visiblePrefix === null) {
     return (
       <div className="w-full min-w-0" ref={rootRef}>
         <div ref={rowRef} className={clampPillRowClass}>
-          {items.map((label) => renderPill(label))}
+          {itemsSorted.map((label) => renderPill(label))}
         </div>
       </div>
     );
   }
 
-  const overflow = items.length - visiblePrefix;
-  const vis = items.slice(0, visiblePrefix);
+  const overflow = itemsSorted.length - visiblePrefix;
+  const vis = itemsSorted.slice(0, visiblePrefix);
 
   return (
     <div className="w-full min-w-0" ref={rootRef}>
@@ -266,8 +305,9 @@ function ClampedPreviewPillsInner({
             variant={variant}
             tone={tone}
             selected={false}
-            className={pillReadOnlyClass}
-            title={`${overflow} more in this category`}
+            onPress={() => setOverflowExpanded(true)}
+            className="shrink-0"
+            title={`Show ${overflow} more`}
           />
         ) : null}
       </div>
@@ -319,12 +359,9 @@ function CategoryBlock({ label, children }: { label: string; children: ReactNode
 function PreviewMainContent({
   row,
   fullScreen,
-  onBodyClampedChange,
 }: {
   row: ContentRow;
   fullScreen: boolean;
-  /** Docked: whether line-clamp hid text (drives “Show more”). */
-  onBodyClampedChange?: (isClamped: boolean) => void;
 }) {
   const {
     selectedFocusAreas,
@@ -511,7 +548,10 @@ function PreviewMainContent({
           ) : null}
           {hasArtists ? (
             <CategoryBlock label="Artist">
-              {row.artists.map((label) => (
+              {sortPillsSelectedFirst(
+                row.artists,
+                isArtistPillSelected,
+              ).map((label) => (
                 <FilterPill
                   key={label}
                   label={label}
@@ -585,53 +625,15 @@ function PreviewMainContent({
     </div>
   ) : null;
 
-  if (fullScreen) {
-    return (
-      <div
-        key={row.id}
-        className={`${fullScreenContentInnerClass} fae-preview-cascade w-full min-w-0`}
-      >
-        {heroBlock}
-        {categoriesBlock}
-        {mainBody}
-        {resourcesBlock}
-      </div>
-    );
-  }
+  const mainColumnClass = fullScreen
+    ? `${fullScreenContentInnerClass} fae-preview-cascade w-full min-w-0`
+    : "fae-preview-cascade w-full min-w-0 flex flex-col gap-5";
 
   return (
-    <div
-      key={row.id}
-      className="fae-preview-cascade flex h-full min-h-0 w-full min-w-0 flex-col gap-5 overflow-hidden"
-    >
+    <div key={row.id} className={mainColumnClass}>
       {heroBlock}
       {categoriesBlock}
-      {hasBody ? (
-        <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col">
-          <Divider />
-          <div className="min-h-0 min-w-0 flex-1 pt-2.5">
-            {hasBlocks && row.contentBlocks ? (
-              <PreviewBodyFillClamp
-                key={`${row.id}-blocks`}
-                contentKey={`${row.id}-blocks`}
-                onClampedChange={onBodyClampedChange}
-              >
-                <PreviewBlocksBody content={row.contentBlocks} />
-              </PreviewBodyFillClamp>
-            ) : (
-              <PreviewBodyFillClamp
-                key={`${row.id}-plain`}
-                contentKey={row.id}
-                onClampedChange={onBodyClampedChange}
-              >
-                <div className="fae-preview-body-stack">
-                  <RichParagraph text={row.content} preserveParagraphBreaks />
-                </div>
-              </PreviewBodyFillClamp>
-            )}
-          </div>
-        </div>
-      ) : null}
+      {mainBody}
       {resourcesBlock}
     </div>
   );
@@ -640,9 +642,74 @@ function PreviewMainContent({
 /** Fixed shell: clip width 0 → token (avoids `fr` interpolation overshoot in some browsers). */
 const previewDockedOuterClass = `fixed top-[var(--inset-margin-guide)] right-[var(--inset-margin-guide)] bottom-[var(--inset-margin-guide)] z-[47] flex min-h-0 min-w-0 justify-end overflow-hidden ${PREVIEW_DOCK_WIDTH_TRANSITION_CLASS}`;
 
-/** `minmax(0,1fr)` main row: hero + taxonomies + clamped body + resources share one scroll-free column. */
+/** Collapse bar + scrollable main column. */
 const previewDockedAsideBaseClass =
-  "grid h-full min-h-0 w-preview-panel shrink-0 overflow-hidden border-hairline border-solid border-ink-primary bg-surface-canvas";
+  "flex h-full min-h-0 w-preview-panel min-w-0 shrink-0 flex-col overflow-hidden border-hairline border-solid border-ink-primary bg-surface-canvas";
+
+/**
+ * Full-screen content preview. Open opacity matches `AboutFullScreenView` (mount → fade in).
+ * Isolated so the enter transition runs on each full-screen mount.
+ */
+function ContentPreviewFullScreenView({
+  row,
+  onShowLess,
+  onClose,
+}: {
+  row: ContentRow;
+  onShowLess: () => void;
+  onClose: () => void;
+}) {
+  const [shellEntered, setShellEntered] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    let raf = 0;
+    queueMicrotask(() => {
+      if (cancelled || typeof window === "undefined") return;
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        setShellEntered(true);
+        return;
+      }
+      setShellEntered(false);
+      raf = requestAnimationFrame(() => {
+        if (!cancelled) setShellEntered(true);
+      });
+    });
+    return () => {
+      cancelled = true;
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, []);
+
+  return (
+    <div
+      data-fae-content-preview
+      onPointerDown={(e) => e.stopPropagation()}
+      className={`${fullScreenContentShellClass} ${fullScreenContentShellEnterTransitionClass} ${
+        shellEntered ? "scale-100 opacity-100" : "scale-95 opacity-0"
+      } motion-reduce:scale-100 motion-reduce:opacity-100`}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Content preview full screen"
+    >
+      <PreviewPanelCollapseBar ariaLabel="Close preview" onClose={onClose} />
+      <div className={fullScreenContentScrollClass}>
+        <PreviewMainContent row={row} fullScreen />
+      </div>
+      <div className="flex shrink-0 justify-start">
+        <button
+          type="button"
+          onClick={onShowLess}
+          className={fullScreenShowMoreLessButtonClass}
+          aria-label="Exit full screen preview"
+        >
+          <OpenSvgIcon className="shrink-0" />
+          <span className={fullScreenShowMoreLessLabelClass}>Show less</span>
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export const PreviewView = memo(function PreviewView({
   row,
@@ -651,16 +718,17 @@ export const PreviewView = memo(function PreviewView({
   className = "",
 }: PreviewViewProps) {
   const { closeContentPreview } = useFilterSelection();
-  /** Replay open animation when switching docked ↔ full screen (same easing as filter drawer). */
+  /** Docked panel: `max-w` 0 → token (replays when leaving full screen). */
   const [shellEntered, setShellEntered] = useState(false);
-  const [dockedBodyClamped, setDockedBodyClamped] = useState(false);
 
   useEffect(() => {
-    const id = requestAnimationFrame(() => {
-      setDockedBodyClamped(false);
-    });
-    return () => cancelAnimationFrame(id);
-  }, [row.id]);
+    if (!fullScreen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [fullScreen]);
 
   useEffect(() => {
     let cancelled = false;
@@ -684,35 +752,12 @@ export const PreviewView = memo(function PreviewView({
 
   if (fullScreen) {
     return (
-      <div
-        data-fae-content-preview
-        onPointerDown={(e) => e.stopPropagation()}
-        className={fullScreenContentShellClass}
-        role="dialog"
-        aria-modal="true"
-        aria-label="Content preview full screen"
-      >
-        <PreviewPanelCollapseBar
-          ariaLabel="Close preview"
-          onClose={closeContentPreview}
-        />
-        <div className={fullScreenContentScrollClass}>
-          <PreviewMainContent row={row} fullScreen />
-        </div>
-        <div className="flex shrink-0 justify-start">
-          <button
-            type="button"
-            onClick={() => onFullScreenChange(false)}
-            className={fullScreenShowMoreLessButtonClass}
-            aria-label="Exit full screen preview"
-          >
-            <OpenSvgIcon className="shrink-0" />
-            <span className={fullScreenShowMoreLessLabelClass}>
-              Show less
-            </span>
-          </button>
-        </div>
-      </div>
+      <ContentPreviewFullScreenView
+        key={row.id}
+        row={row}
+        onShowLess={() => onFullScreenChange(false)}
+        onClose={closeContentPreview}
+      />
     );
   }
 
@@ -728,11 +773,7 @@ export const PreviewView = memo(function PreviewView({
       role="presentation"
     >
       <aside
-        className={`${previewDockedAsideBaseClass} ${
-          dockedBodyClamped
-            ? "grid-rows-[auto_minmax(0,1fr)_auto]"
-            : "grid-rows-[auto_minmax(0,1fr)]"
-        } ${className}`}
+        className={`${previewDockedAsideBaseClass} ${className}`}
         aria-label="Content preview"
         role="dialog"
         aria-modal="true"
@@ -741,28 +782,22 @@ export const PreviewView = memo(function PreviewView({
           ariaLabel="Close preview"
           onClose={closeContentPreview}
         />
-        <div className="min-h-0 overflow-hidden px-5 pt-5 pb-0">
-          <PreviewMainContent
-            row={row}
-            fullScreen={false}
-            onBodyClampedChange={setDockedBodyClamped}
-          />
+        <div className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain px-5 pt-5 pb-6">
+          <PreviewMainContent row={row} fullScreen={false} />
         </div>
-        {dockedBodyClamped ? (
-          <div className="flex min-h-0 shrink-0 justify-start self-stretch">
-            <button
-              type="button"
-              onClick={() => onFullScreenChange(true)}
-              className={fullScreenShowMoreLessButtonClass}
-              aria-label="View full text in full screen preview"
-            >
-              <OpenSvgIcon className="shrink-0 rotate-180" />
-              <span className={fullScreenShowMoreLessLabelClass}>
-                Show more
-              </span>
-            </button>
-          </div>
-        ) : null}
+        <div className="shrink-0 pt-6">
+          <button
+            type="button"
+            onClick={() => onFullScreenChange(true)}
+            className={fullScreenShowMoreLessButtonClass}
+            aria-label="View full content in full screen"
+          >
+            <OpenSvgIcon className="shrink-0 rotate-180" />
+            <span className={fullScreenShowMoreLessLabelClass}>
+              View more
+            </span>
+          </button>
+        </div>
       </aside>
     </div>
   );

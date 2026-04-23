@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import { fetchStrapiOutputDetailByDocumentId } from "@/lib/strapi/fetch-outputs-list";
 
 /**
- * Full Strapi output for preview (Text blocks, resources, full media).
- * Catalog rows from `GET /api/strapi/outputs` are intentionally slim.
+ * Strapi output for preview (one row). Text/body, media, taxonomies, and `Source` → `resources`
+ * use the same detail populate (including hover prefetch of body text + sources in one request).
  */
 export async function GET(
   _request: Request,
@@ -11,14 +11,15 @@ export async function GET(
 ) {
   const { documentId } = await segmentContext.params;
   try {
-    const row = await fetchStrapiOutputDetailByDocumentId(documentId);
+    const row = await fetchStrapiOutputDetailByDocumentId(documentId, {
+      includeSources: true,
+    });
     if (!row) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
     return NextResponse.json({ row });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
-    console.error("[Strapi] output detail error", message);
     return NextResponse.json({ error: message }, { status: 502 });
   }
 }

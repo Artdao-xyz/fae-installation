@@ -20,17 +20,6 @@ export async function GET() {
 
     const durationMs = Math.round(performance.now() - started);
 
-    if (process.env.NODE_ENV === "development") {
-      console.info("[Strapi] taxonomy options", {
-        durationMs,
-        focusOptionsCount: focusOptionLabels.length,
-        activityOptionsCount: activityOptionLabels.length,
-        formatOptionsCount: formatOptionLabels.length,
-        networkOptionsCount: networkOptionLabels.length,
-        artistOptionsCount: artistOptionLabels.length,
-      });
-    }
-
     return NextResponse.json({
       durationMs,
       focusOptionLabels,
@@ -41,7 +30,6 @@ export async function GET() {
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
-    console.error("[Strapi] taxonomy options error", message);
     return NextResponse.json({ error: message }, { status: 502 });
   }
 }

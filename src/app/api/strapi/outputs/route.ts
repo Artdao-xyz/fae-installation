@@ -13,23 +13,9 @@ export async function GET() {
   try {
     const { rows, total, durationMs } = await fetchStrapiOutputsCatalogOnly();
 
-    if (process.env.NODE_ENV === "development") {
-      const resolvedStatus =
-        process.env.STRAPI_OUTPUTS_STATUS?.trim().toLowerCase() === "published"
-          ? "published"
-          : "draft";
-      console.info("[Strapi] outputs catalog", {
-        rowCount: rows.length,
-        total,
-        durationMs,
-        status: resolvedStatus,
-      });
-    }
-
     return NextResponse.json({ rows, total, durationMs });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
-    console.error("[Strapi] outputs catalog error", message);
     return NextResponse.json({ error: message }, { status: 502 });
   }
 }

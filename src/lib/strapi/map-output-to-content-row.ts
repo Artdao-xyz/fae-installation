@@ -305,6 +305,15 @@ function isExternalResourceUrlString(s: string): boolean {
   return t.length > 0 && (/^https?:\/\//i.test(t) || t.startsWith("/"));
 }
 
+/** Strapi v4 `attributes`; v5 is often flat — merge for URL/label resolution on components. */
+function strapiEntryFields(o: Record<string, unknown>): Record<string, unknown> {
+  const attrs = o.attributes;
+  if (attrs && typeof attrs === "object" && !Array.isArray(attrs)) {
+    return { ...o, ...(attrs as Record<string, unknown>) };
+  }
+  return o;
+}
+
 function resourcesAndLinkedNamesFromDoc(doc: Record<string, unknown>): {
   resourceUrls: string[];
   linkedNames: string[];
@@ -332,9 +341,40 @@ function resourcesAndLinkedNamesFromDoc(doc: Record<string, unknown>): {
     linkedNames.push(t);
   };
 
-  const fromComponents = doc.Resources ?? doc.resources ?? doc.Resource_Links;
-  const raw: unknown = Array.isArray(fromComponents) && fromComponents.length > 0
-    ? fromComponents
+  /**
+   * Strapi `Source` on output can be:
+   * - A **single** component `{ id, links: [ { id, url, label } ] }` (v5, document API).
+   * - A **repeatable** list of component rows (array), or `Sources` / legacy `Resources`.
+   */
+  let fromCms: unknown =
+    doc.Sources ??
+    doc.sources ??
+    doc.Source ??
+    doc.source ??
+    doc.Resources ??
+    doc.resources ??
+    doc.Resource_Links;
+  if (
+    fromCms &&
+    typeof fromCms === "object" &&
+    !Array.isArray(fromCms) &&
+    "data" in (fromCms as object)
+  ) {
+    fromCms = (fromCms as { data: unknown }).data;
+  }
+  if (
+    fromCms &&
+    typeof fromCms === "object" &&
+    !Array.isArray(fromCms) &&
+    "links" in (fromCms as object)
+  ) {
+    const nest = (fromCms as { links?: unknown }).links;
+    if (Array.isArray(nest)) {
+      fromCms = nest;
+    }
+  }
+  const raw: unknown = Array.isArray(fromCms) && fromCms.length > 0
+    ? fromCms
     : Array.isArray(doc.links)
       ? doc.links
       : null;
@@ -350,7 +390,7 @@ function resourcesAndLinkedNamesFromDoc(doc: Record<string, unknown>): {
       continue;
     }
     if (item && typeof item === "object") {
-      const o = item as Record<string, unknown>;
+      const o = strapiEntryFields(item as Record<string, unknown>);
       const urlCandidate =
         o.Url ??
         o.url ??
@@ -365,6 +405,7 @@ function resourcesAndLinkedNamesFromDoc(doc: Record<string, unknown>): {
         continue;
       }
       const label =
+        (typeof o.label === "string" && o.label.trim()) ||
         (typeof o.Name === "string" && o.Name.trim()) ||
         (typeof o.Title === "string" && o.Title.trim()) ||
         nameFromRelationEntry(o);
@@ -372,6 +413,25 @@ function resourcesAndLinkedNamesFromDoc(doc: Record<string, unknown>): {
     }
   }
   return { resourceUrls, linkedNames };
+}
+
+/**
+ * Strapi v5 `find` often returns a flat document; v4/REST can nest fields under `attributes`.
+ * Merges so `mapStrapiOutputToContentRow` sees `documentId`, `Text`, etc. at the top level.
+ */
+export function strapiOutputEntryToFlatRecord(
+  entry: unknown,
+): Record<string, unknown> | null {
+  if (entry == null || typeof entry !== "object" || Array.isArray(entry)) {
+    return null;
+  }
+  const o = entry as Record<string, unknown>;
+  const attrs = o.attributes;
+  if (attrs && typeof attrs === "object" && !Array.isArray(attrs)) {
+    const a = attrs as Record<string, unknown>;
+    return { ...a, ...o };
+  }
+  return o;
 }
 
 export function mapStrapiOutputToContentRow(
@@ -396,6 +456,7 @@ export function mapStrapiOutputToContentRow(
   const thumbUrl = mediaPreferredUrl(doc.Thumbnail);
   const imageUrl = thumbUrl ?? imageGallery[0] ?? "";
 
+  /** Same `doc` as `Sources` / `Source` (below) — one Strapi detail response, one map pass. */
   const textRaw = "Text" in doc ? doc.Text : undefined;
   const contentBlocks: BlocksContent | null = Array.isArray(textRaw)
     ? (textRaw as BlocksContent)

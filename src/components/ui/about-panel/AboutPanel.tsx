@@ -11,6 +11,7 @@ import {
   fullScreenContentInnerClass,
   fullScreenContentScrollClass,
   fullScreenContentShellClass,
+  fullScreenContentShellEnterTransitionClass,
   fullScreenShowMoreLessButtonClass,
   fullScreenShowMoreLessLabelClass,
 } from "@/components/ui/preview/fullScreenContentChrome";
@@ -132,9 +133,9 @@ function AboutFullScreenView({
 
   return (
     <div
-      className={`${fullScreenContentShellClass} transition-opacity duration-300 ease-out motion-reduce:transition-none ${
-        shellEntered ? "opacity-100" : "opacity-0"
-      } motion-reduce:opacity-100`}
+      className={`${fullScreenContentShellClass} ${fullScreenContentShellEnterTransitionClass} ${
+        shellEntered ? "scale-100 opacity-100" : "scale-95 opacity-0"
+      } motion-reduce:scale-100 motion-reduce:opacity-100`}
       style={{ zIndex }}
       role="dialog"
       aria-modal="true"

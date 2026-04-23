@@ -17,6 +17,7 @@ import {
   mapStrapiOutputToContentRow,
   mapStrapiOutputsPayloadToContentRows,
   strapiDocumentDisplayName,
+  strapiOutputEntryToFlatRecord,
 } from "@/lib/strapi/map-output-to-content-row";
 import {
   offlineFixtureCatalogOrNull,
@@ -64,7 +65,10 @@ function strapiOutputsListStatus(): "draft" | "published" {
 /** Strapi `output` type: relation to `artist` entries (field API id in Content-Type Builder). */
 const OUTPUT_ARTIST_RELATION = "Artists";
 
-function appendOutputsDetailPopulate(params: URLSearchParams): void {
+function appendOutputsDetailPopulate(
+  params: URLSearchParams,
+  options: { includeSources: boolean },
+): void {
   params.append("populate[Thumbnail][fields][0]", "url");
   params.append("populate[Thumbnail][fields][1]", "formats");
   /** Repeatable `Image` — request url + formats for each entry (carousel in preview). */
@@ -76,6 +80,13 @@ function appendOutputsDetailPopulate(params: URLSearchParams): void {
   params.append("populate[Format]", "true");
   /** Other outputs linked to this one — same as other relations; needs populate for payload. */
   params.append("populate[Links]", "true");
+  /**
+   * Repeatable `Source` on output (CTB API id `Source`); nest `links` for relations on each entry.
+   * Omitted when `includeSources: false` (e.g. retry after a failed request with `Source` populate).
+   */
+  if (options.includeSources) {
+    params.append("populate[Source][populate][links]", "true");
+  }
   params.append(`populate[${OUTPUT_ARTIST_RELATION}]`, "true");
 }
 
@@ -268,45 +279,71 @@ export async function fetchStrapiOutputsCatalogOnly(options?: {
 }
 
 /**
- * One output by `documentId` — full populate for preview (body, resources, media).
+ * One output by `documentId`. `includeSources: true` (default) loads `Text` and `Source` in one
+ * query; set `includeSources: false` only to retry without the `Source` populate if Strapi errors.
  */
 export async function fetchStrapiOutputDetailByDocumentId(
   documentId: string,
+  options?: { includeSources?: boolean },
 ): Promise<ContentRow | null> {
   const trimmed = documentId.trim();
   if (!trimmed) return null;
+  const includeSources = options?.includeSources !== false;
 
   const offlineRow = offlineFixtureDetailIfEnabled(trimmed);
-  if (offlineRow !== undefined) return offlineRow;
+  if (offlineRow !== undefined) {
+    if (!includeSources) {
+      return { ...offlineRow, resources: [] } as ContentRow;
+    }
+    return offlineRow;
+  }
 
   const base = strapiBaseUrl();
   const token = process.env.STRAPI_API_TOKEN?.trim();
 
-  const params = new URLSearchParams();
-  params.append("status", strapiOutputsListStatus());
-  params.append("pagination[pageSize]", "1");
-  params.append("filters[documentId][$eq]", trimmed);
-  appendOutputsDetailPopulate(params);
+  const queryStrapiOutputDetail = async (
+    withSources: boolean,
+  ): Promise<ContentRow | null> => {
+    const params = new URLSearchParams();
+    params.append("status", strapiOutputsListStatus());
+    params.append("pagination[pageSize]", "1");
+    params.append("filters[documentId][$eq]", trimmed);
+    appendOutputsDetailPopulate(params, { includeSources: withSources });
 
-  const url = `${base}/api/outputs?${params.toString()}`;
-  const headers: HeadersInit = { Accept: "application/json" };
-  if (token) headers.Authorization = `Bearer ${token}`;
+    const url = `${base}/api/outputs?${params.toString()}`;
+    const headers: HeadersInit = { Accept: "application/json" };
+    if (token) headers.Authorization = `Bearer ${token}`;
 
-  const res = await fetch(url, {
-    headers,
-    next: { revalidate: STRAPI_REVALIDATE_SECONDS },
-  });
+    const res = await fetch(url, {
+      headers,
+      next: { revalidate: STRAPI_REVALIDATE_SECONDS },
+    });
 
-  const body = (await res.json()) as StrapiOutputsListUnknown;
+    const body = (await res.json()) as StrapiOutputsListUnknown;
 
-  if (!res.ok) {
-    return null;
+    if (!res.ok) {
+      return null;
+    }
+
+    const data = body.data;
+    if (!Array.isArray(data) || data.length === 0) return null;
+    const flat = strapiOutputEntryToFlatRecord(data[0]);
+    if (!flat) return null;
+    return mapStrapiOutputToContentRow(flat);
+  };
+
+  const wantSourcesFirst = includeSources;
+  let usedSources = wantSourcesFirst;
+  let row = await queryStrapiOutputDetail(usedSources);
+  if (!row && wantSourcesFirst) {
+    usedSources = false;
+    row = await queryStrapiOutputDetail(false);
   }
 
-  const data = body.data;
-  if (!Array.isArray(data) || data.length === 0) return null;
-  const first = data[0];
-  if (!first || typeof first !== "object") return null;
+  const rowOut: ContentRow | null =
+    row && !usedSources
+      ? ({ ...row, resources: [] } as ContentRow)
+      : row;
 
-  return mapStrapiOutputToContentRow(first as Record<string, unknown>);
+  return rowOut;
 }

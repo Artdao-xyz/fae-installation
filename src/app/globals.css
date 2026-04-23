@@ -221,8 +221,8 @@ button {
 }
 
 /**
- * `fae-preview-body-stack` — layout hook for line-budget math in `PreviewBodyFillClamp` (gap
- * between blocks). No animation on those children.
+ * `fae-preview-body-stack` — vertical stack of preview body blocks (gap between children).
+ * No animation on those children.
  *
  * `fae-preview-cascade` — staggered section reveal (unlayered so Tailwind utilities don’t win).
  * See block after `@layer utilities` below.

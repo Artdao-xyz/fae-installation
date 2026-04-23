@@ -18,6 +18,7 @@ import {
 import { getMarginGuideInsetPx } from "@/lib/margin-guide";
 import { buildSuggestedSourceRowsSplit } from "@/lib/preview-suggested-outputs";
 import {
+  fetchPreviewBodyOnHover,
   fetchPreviewOutputDetail,
   getCachedPreviewDetailRow,
 } from "@/lib/preview-output-detail";
@@ -258,13 +259,24 @@ export function ImageParticleSimulationView({
   const previewRowRef = useRef<ContentRow | null>(null);
   previewRowRef.current = previewRow;
 
-  /** Start full preview (text, resources, …) on hover; click only fetches if cache still cold. */
+  /**
+   * Hover: same output detail as click (`Text` + `Source` + media + taxonomies in one request).
+   * Merges into the open panel; keeps existing `resources` when the patch has none. Full row is
+   * cached on open via `fetchPreviewOutputDetail` when the user clicks.
+   */
   const prefetchOutputDetailOnHover = useCallback((documentId: string) => {
-    if (process.env.NODE_ENV === "development") {
-      // eslint-disable-next-line no-console -- debug visibility for preview prefetch
-      console.log("[preview] hover → fetchPreviewOutputDetail", documentId);
-    }
-    void fetchPreviewOutputDetail(documentId);
+    void fetchPreviewBodyOnHover(documentId).then((patch) => {
+      if (!patch) return;
+      setPreviewRow((prev) => {
+        if (prev?.id !== documentId) return prev;
+        return {
+          ...prev,
+          ...patch,
+          resources:
+            patch.resources.length > 0 ? patch.resources : prev.resources,
+        };
+      });
+    });
   }, []);
 
   const closePreview = useCallback(() => {
@@ -281,21 +293,20 @@ export function ImageParticleSimulationView({
       const hit = getCachedPreviewDetailRow(row.id);
       setPreviewRow(hit ? { ...row, ...hit } : row);
       if (hit) {
-        if (process.env.NODE_ENV === "development") {
-          // eslint-disable-next-line no-console -- debug visibility for preview open path
-          console.log(
-            "[preview] click → cache warm, skip fetch",
-            row.id,
-          );
-        }
+        // eslint-disable-next-line no-console -- intentional: inspect Sources on click
+        console.log("[preview] sources (click)", {
+          id: row.id,
+          resources: hit.resources,
+        });
         return;
-      }
-      if (process.env.NODE_ENV === "development") {
-        // eslint-disable-next-line no-console -- debug visibility for preview open path
-        console.log("[preview] click → cache cold, fetch", row.id);
       }
       void fetchPreviewOutputDetail(row.id).then((full) => {
         if (!full) return;
+        // eslint-disable-next-line no-console -- intentional: inspect Sources on click
+        console.log("[preview] sources (click)", {
+          id: row.id,
+          resources: full.resources,
+        });
         setPreviewRow((prev) =>
           prev?.id === row.id ? { ...prev, ...full } : prev,
         );
@@ -1049,42 +1060,6 @@ export function ImageParticleSimulationView({
       return orderedLen > 0 && (filterSpreadActive || previewDocked);
     };
 
-    const logPreviewCanvasSpread = (orderedPick: readonly number[]) => {
-      if (process.env.NODE_ENV !== "development") return;
-      const pr = previewRowRef.current;
-      const pfs = previewFullScreenRef.current;
-      if (!pr || pfs) return;
-      const { linked, related } = previewSourceIndicesRef.current;
-      if (linked.length === 0 && related.length === 0) return;
-
-      const slotLabel = (i: number) => {
-        const row = displayContentRowsRef.current[i];
-        const text = textIndexSet.has(i);
-        return row
-          ? {
-              index: i,
-              id: row.id,
-              shortTitle: row.shortTitle,
-              isTextParticle: text,
-            }
-          : { index: i, id: "?", shortTitle: "?", isTextParticle: text };
-      };
-
-      console.info("[preview-spread] canvas selection", {
-        preview: { id: pr.id, title: pr.title, shortTitle: pr.shortTitle },
-        linkedOutputNames: [...pr.linkedOutputNames],
-        pools: {
-          linkedIndices: [...linked],
-          linked: linked.map(slotLabel),
-          relatedIndices: [...related],
-          related: related.map(slotLabel),
-        },
-        displayedIndices: [...orderedPick],
-        displayed: orderedPick.map(slotLabel),
-        viewport: { ...getViewportSpread() },
-      });
-    };
-
     const beginSpreadEnter = (now: number): boolean => {
       postLeaveContentRevealRef.current = null;
       const sysInner = systemRef.current;
@@ -1097,8 +1072,6 @@ export function ImageParticleSimulationView({
       flushSync(() => {
         setSpreadDisplayPatchRef.current(spreadPatch);
       });
-
-      logPreviewCanvasSpread(orderedPick);
 
       const phaseBefore = spreadLayoutPhaseRef.current;
       const previousEnterSig = spreadEnterSignatureRef.current;
