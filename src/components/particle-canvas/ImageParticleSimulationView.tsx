@@ -1557,8 +1557,8 @@ export function ImageParticleSimulationView({
           const showHoverCard = hoveredIndex === i && !spreadChromeActive;
           const showChromeCard = showFilteredCard || showHoverCard;
           const spreadDimmed = spreadChromeActive && !showFilteredCard;
-          /** Preview opens only from a tile in the active filter spread (not in idle hover). */
-          const opensPreviewOnClick = showFilteredCard;
+          /** Preview: a tile in the active filter spread, or any output tile while idle (orbit). */
+          const opensPreviewOnClick = showFilteredCard || !spreadChromeActive;
 
           if (isText) {
             const rowWords = textWordsByRow[i] ?? [];
