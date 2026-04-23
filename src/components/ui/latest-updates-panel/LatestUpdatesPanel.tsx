@@ -58,7 +58,8 @@ function LatestUpdatesTabRail({
 
 export function LatestUpdatesPanel() {
   const panelId = useId();
-  const { contentCatalog, contentCatalogStatus } = useFilterSelection();
+  const { contentCatalog, contentCatalogStatus, openContentPreview } =
+    useFilterSelection();
   const { latestUpdatesView, setLatestUpdatesView, getChromeZIndex } =
     useFloatingPanelStack();
   const dockOuterH = floatingDockPanelOuterHeightPx();
@@ -127,15 +128,22 @@ export function LatestUpdatesPanel() {
         <div className="flex h-full w-full min-h-0 min-w-0 flex-col justify-end overflow-x-auto overflow-y-hidden overscroll-contain">
           <div className="flex w-max shrink-0 flex-row flex-nowrap items-end gap-8 px-6 py-3">
             {latestThumbnails.map((row) => (
-              <Thumbnail
+              <button
                 key={row.id}
-                variant="full"
-                size="lg"
-                fullCardLabelWidth="hugContent"
-                label={row.shortTitle}
-                imageSrc={row.imageUrl}
-                imageAlt={row.title}
-              />
+                type="button"
+                className="shrink-0 cursor-pointer border-0 bg-transparent p-0 text-left focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ink-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface-canvas"
+                onClick={() => openContentPreview(row)}
+                aria-label={`Open preview: ${row.shortTitle}`}
+              >
+                <Thumbnail
+                  variant="full"
+                  size="lg"
+                  fullCardLabelWidth="hugContent"
+                  label={row.shortTitle}
+                  imageSrc={row.imageUrl}
+                  imageAlt={row.title}
+                />
+              </button>
             ))}
           </div>
         </div>
