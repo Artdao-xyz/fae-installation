@@ -8,19 +8,23 @@ import { LatestUpdatesPanel } from "@/components/ui/latest-updates-panel/LatestU
 import { useFloatingPanelStack } from "./FloatingPanelStackContext";
 
 /**
- * When the filter options column opens (catalog + taxonomy ready), open About
- * to peek in the same turn so both enter together (replaces a fixed delay on About).
+ * On first open of the filter options column, peek About in the same turn so both
+ * enter together (replaces a fixed delay on About). We only do this **once** after
+ * load: a later false→true on the sidebar (user closed and reopened) must not
+ * re-trigger About peek, which looked like a duplicate "load" animation.
  */
 function AboutPeekWhenFilterSidebarOpens() {
   const { filtersPanelOpen } = useFilterSelection();
   const { setAboutView } = useFloatingPanelStack();
   const prevFiltersOpen = useRef(false);
+  const didInitialAboutPeekRef = useRef(false);
 
   useEffect(() => {
-    if (filtersPanelOpen && !prevFiltersOpen.current) {
-      setAboutView((v) => (v === "minimized" ? "peek" : v));
-    }
+    const justOpened = filtersPanelOpen && !prevFiltersOpen.current;
     prevFiltersOpen.current = filtersPanelOpen;
+    if (!justOpened || didInitialAboutPeekRef.current) return;
+    setAboutView((v) => (v === "minimized" ? "peek" : v));
+    didInitialAboutPeekRef.current = true;
   }, [filtersPanelOpen, setAboutView]);
 
   return null;
