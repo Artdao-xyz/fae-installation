@@ -41,6 +41,7 @@ function readStoredMode(): Mode {
 
 export default function Home() {
   const particlePlacementRef = useRef<HTMLDivElement>(null);
+  /** Swarm size cap; full catalog + filters still load in `FilterSelectionProvider`. */
   const imageLimit = IMAGE_FETCH_LIMIT > 0 ? IMAGE_FETCH_LIMIT : undefined;
 
   const mode = useSyncExternalStore(

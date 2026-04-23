@@ -79,6 +79,9 @@ import type {
 import { IDLE_DEPTH_BLUR_DISABLED } from "./config";
 
 const ROW_IMAGE_ATTR = "data-row-image";
+/** When leaving a filter spread, fade out “injected” row pixels in this segment of the leave (0–1 t). */
+const PATCHED_ROW_EXIT_FADE_START_U = 0.4;
+const POST_LEAVE_SWARM_REVEAL_MS = 360;
 
 /** `FILTER_SUBPANEL_COLUMN_TRANSITION_CLASS` is 300ms; add buffer so `measure` runs after width settles. */
 const SUBPANEL_PLACEMENT_SETTLE_MS = 360;
@@ -94,6 +97,25 @@ function taxonomySelectionFromContentRow(
     networks: new Set(row.networks),
   };
 }
+
+function buildTextIndexSetForCount(count: number): Set<number> {
+  if (count === 0) return new Set();
+  const set = new Set<number>();
+  const textCount = Math.max(1, Math.floor(count * TEXT_PARTICLE_RATIO));
+  const step = Math.max(1, Math.floor(count / textCount));
+  for (let t = 0; t < textCount; t++) {
+    const idx =
+      (t * step +
+        Math.floor(seededRand(t + 777.3) * step * 0.4)) %
+      count;
+    set.add(idx);
+  }
+  return set;
+}
+
+type SpreadDisplayPatch =
+  | { type: "filter"; catalogIndices: number[] }
+  | { type: "preview"; rows: ContentRow[] };
 
 /** Imperative sync so slot `i` always shows `row`’s URL (avoids stale src when React reuses `<img>`). */
 function syncImgToContentRow(
@@ -127,6 +149,10 @@ function approxEqualPlacementBounds(a: PlacementBounds, b: PlacementBounds) {
 
 export type ImageParticleSimulationViewProps = {
   mode: ImageParticleSimulationMode;
+  /**
+   * Max particle slots for the idle swarm (and base preloads). Spreads may replace the first
+   * *k* slots with rows from the full fetched catalog (filters, preview) without increasing N.
+   */
   imageLimit?: number;
   fetchedWidth: number;
   fetchedHeight: number;
@@ -299,9 +325,58 @@ export function ImageParticleSimulationView({
   const spreadEnterSignatureRef = useRef<string | null>(null);
 
   // ---- State ----
-  const [contentRows, setContentRows] = useState<ContentRow[]>([]);
+  /**
+   * Idle swarm: fixed prefix of the catalog (performance). Spreads can temporarily override the
+   * first k slots with rows from the full catalog via `spreadDisplayPatch`.
+   */
+  const swarmRows = useMemo((): ContentRow[] => {
+    if (contentCatalog.length === 0) return [];
+    if (imageLimit !== undefined && imageLimit > 0) {
+      return contentCatalog.slice(0, imageLimit);
+    }
+    return [...contentCatalog];
+  }, [contentCatalog, imageLimit]);
 
-  /** Linked indices first (CMS order), then related-by-taxonomy indices — spread merges with linked priority. */
+  const [spreadDisplayPatch, setSpreadDisplayPatch] =
+    useState<SpreadDisplayPatch | null>(null);
+
+  const catalogTextIndexSet = useMemo(
+    () => buildTextIndexSetForCount(contentCatalog.length),
+    [contentCatalog.length],
+  );
+
+  const displayContentRows = useMemo((): ContentRow[] => {
+    if (!spreadDisplayPatch) return swarmRows;
+    if (spreadDisplayPatch.type === "filter") {
+      const out = swarmRows.slice();
+      for (let j = 0; j < spreadDisplayPatch.catalogIndices.length; j++) {
+        const ci = spreadDisplayPatch.catalogIndices[j];
+        if (ci === undefined || j >= out.length) continue;
+        out[j] = contentCatalog[ci]!;
+      }
+      return out;
+    }
+    const out = swarmRows.slice();
+    for (let s = 0; s < spreadDisplayPatch.rows.length; s++) {
+      if (s < out.length) out[s] = spreadDisplayPatch.rows[s]!;
+    }
+    return out;
+  }, [swarmRows, contentCatalog, spreadDisplayPatch]);
+
+  const contentCatalogRef = useRef(contentCatalog);
+  contentCatalogRef.current = contentCatalog;
+  const catalogTextIndexSetRef = useRef(catalogTextIndexSet);
+  catalogTextIndexSetRef.current = catalogTextIndexSet;
+  const displayContentRowsRef = useRef(displayContentRows);
+  displayContentRowsRef.current = displayContentRows;
+  const swarmSizeRef = useRef(0);
+  swarmSizeRef.current = swarmRows.length;
+  const swarmRowsRef = useRef(swarmRows);
+  swarmRowsRef.current = swarmRows;
+  const setSpreadDisplayPatchRef = useRef(setSpreadDisplayPatch);
+  setSpreadDisplayPatchRef.current = setSpreadDisplayPatch;
+
+  /** Consecutive pool slots: linked rows then related — matches `rows` in spread preview patch. */
   const previewSourceIndices = useMemo(() => {
     if (!previewRow || previewFullScreen) {
       return { linked: [] as number[], related: [] as number[] };
@@ -310,17 +385,14 @@ export function ImageParticleSimulationView({
       previewRow,
       contentCatalog,
     );
-    const indexById = new Map(contentRows.map((r, i) => [r.id, i] as const));
-    const mapRows = (rows: ContentRow[]) => {
-      const out: number[] = [];
-      for (const r of rows) {
-        const ii = indexById.get(r.id);
-        if (ii !== undefined) out.push(ii);
-      }
-      return out;
-    };
-    return { linked: mapRows(linked), related: mapRows(related) };
-  }, [previewRow, previewFullScreen, contentCatalog, contentRows]);
+    const n = swarmRows.length;
+    if (n === 0) return { linked: [], related: [] };
+    const lCap = Math.min(linked.length, n);
+    const rCap = Math.min(related.length, Math.max(0, n - lCap));
+    const linkedIdx = Array.from({ length: lCap }, (_, i) => i);
+    const relatedIdx = Array.from({ length: rCap }, (_, i) => lCap + i);
+    return { linked: linkedIdx, related: relatedIdx };
+  }, [previewRow, previewFullScreen, contentCatalog, swarmRows.length]);
 
   const previewSourceIndicesRef = useRef(previewSourceIndices);
   previewSourceIndicesRef.current = previewSourceIndices;
@@ -453,6 +525,14 @@ export function ImageParticleSimulationView({
   const spreadTargetsRef = useRef<Vec3[]>([]);
   const selectedIndicesRef = useRef<number[]>([]);
   const filterT0Ref = useRef(0);
+  /**
+   * After a patched slot clears to swarm, per-slot alpha ramp 0→1 so the idle thumbnail doesn’t pop.
+   * Cleared in `beginSpreadEnter` and when the reveal window completes.
+   */
+  const postLeaveContentRevealRef = useRef<{
+    t0: number;
+    slots: Set<number>;
+  } | null>(null);
   const spreadLayoutPhaseRef = useRef<SpreadLayoutPhase>("idle");
   /** True during enter after swapping filters in place — skip enter scale ramp for tiles already at card size. */
   const spreadInPlaceRespreadRef = useRef(false);
@@ -488,16 +568,16 @@ export function ImageParticleSimulationView({
   const idlePhysicsSkipFramesRef = useRef(0);
 
   const textWordsByRow = useMemo(
-    () => contentRows.map((r) => extractWordsFromTitle(r.title)),
-    [contentRows],
+    () => displayContentRows.map((r) => extractWordsFromTitle(r.title)),
+    [displayContentRows],
   );
 
   const textIndexSet = useMemo(() => {
-    const count = contentRows.length;
+    const count = swarmRows.length;
     if (count === 0) return new Set<number>();
     const set = new Set<number>();
     const textCount = Math.max(1, Math.floor(count * TEXT_PARTICLE_RATIO));
-    const step = Math.floor(count / textCount);
+    const step = Math.max(1, Math.floor(count / textCount));
     for (let t = 0; t < textCount; t++) {
       const idx =
         (t * step +
@@ -506,7 +586,7 @@ export function ImageParticleSimulationView({
       set.add(idx);
     }
     return set;
-  }, [contentRows.length]);
+  }, [swarmRows.length]);
 
   const thumbnailSize = useMemo<ThumbnailSize>(() => {
     const d = Math.min(displayedWidth, displayedHeight);
@@ -559,9 +639,9 @@ export function ImageParticleSimulationView({
     const h = placementBounds.h;
     const cap = w > 0 && h > 0 ? maxSpreadCountForViewport(w, h) : 0;
     return {
-      totalRows: contentRows.length,
+      totalRows: swarmRows.length,
       rowsMatchingFilter: countContentRowsMatchingFilter(
-        contentRows,
+        contentCatalog,
         spreadTaxonomy,
         filterMatchMode,
       ),
@@ -569,7 +649,8 @@ export function ImageParticleSimulationView({
       spreadShown: spreadChromeActive ? selectedFilterIndices.length : null,
     };
   }, [
-    contentRows,
+    contentCatalog,
+    swarmRows.length,
     spreadTaxonomy,
     filterMatchMode,
     placementBounds.w,
@@ -744,30 +825,19 @@ export function ImageParticleSimulationView({
     settleAfterSubpanelCloseNonce,
   ]);
 
-  // ---- Catalog from Strapi (single shared fetch in FilterSelectionProvider) ----
+  // ---- Catalog metadata (list lives in `FilterSelectionProvider`; sim uses `swarmRows` + spread patch) ----
   useEffect(() => {
     setFetchError(contentCatalogError);
     setFetchDurationMs(contentCatalogFetchMs);
-    const capped =
-      imageLimit !== undefined && imageLimit > 0
-        ? contentCatalog.slice(0, imageLimit)
-        : [...contentCatalog];
-    setContentRows(capped);
     setContentTotal(contentCatalogTotal);
-  }, [
-    contentCatalog,
-    contentCatalogError,
-    contentCatalogFetchMs,
-    contentCatalogTotal,
-    imageLimit,
-  ]);
+  }, [contentCatalogError, contentCatalogFetchMs, contentCatalogTotal]);
 
   // ---- Preload images ----
   useEffect(() => {
     setLoadedCount(0);
     setErrorCount(0);
     setLoadDurationMs(null);
-    if (contentRows.length === 0) return;
+    if (displayContentRows.length === 0) return;
 
     let cancelled = false;
     let loaded = 0;
@@ -782,11 +852,11 @@ export function ImageParticleSimulationView({
       else loaded++;
       setLoadedCount(loaded);
       setErrorCount(errors);
-      if (handled >= contentRows.length)
+      if (handled >= displayContentRows.length)
         setLoadDurationMs(Math.round(performance.now() - start));
     };
 
-    for (const row of contentRows) {
+    for (const row of displayContentRows) {
       const img = new window.Image();
       let settled = false;
       const settle = (isError: boolean) => {
@@ -805,10 +875,10 @@ export function ImageParticleSimulationView({
     return () => {
       cancelled = true;
     };
-  }, [contentRows]);
+  }, [displayContentRows]);
 
   // ---- Stats ----
-  const totalImages = contentRows.length;
+  const totalImages = displayContentRows.length;
   const loadDone =
     totalImages > 0 && loadedCount + errorCount >= totalImages;
 
@@ -817,7 +887,7 @@ export function ImageParticleSimulationView({
       loadedCount,
       errorCount,
       loadDurationMs,
-      contentRowsCount: contentRows.length,
+      contentRowsCount: displayContentRows.length,
       contentTotal,
       fetchDurationMs,
       fetchError,
@@ -828,7 +898,7 @@ export function ImageParticleSimulationView({
     loadedCount,
     errorCount,
     loadDurationMs,
-    contentRows.length,
+    displayContentRows.length,
     contentTotal,
     fetchDurationMs,
     fetchError,
@@ -837,16 +907,16 @@ export function ImageParticleSimulationView({
     onStatsChange,
   ]);
 
-  // ---- Init system (respawn only when row count / text words change) ----
+  // ---- Init system (respawn only when swarm size / text words change) ----
   useEffect(() => {
-    if (contentRows.length === 0) {
+    if (swarmRows.length === 0) {
       systemRef.current = null;
       return;
     }
     const sys = new ParticleSystem();
     sys.cfg = { ...configRef.current };
     sys.init(
-      contentRows.length,
+      swarmRows.length,
       textWordsByRowRef.current,
       placementBounds.w,
       placementBounds.h,
@@ -855,19 +925,19 @@ export function ImageParticleSimulationView({
     systemRef.current = sys;
     // placementBounds w/h are applied without re-init via the resize effect below.
     // eslint-disable-next-line react-hooks/exhaustive-deps -- avoid respawning when only viewport changes
-  }, [contentRows, textWordsByRow]);
+  }, [swarmRows.length, textWordsByRow]);
 
   // ---- Viewport for physics: resize without respawning (sidebar / subpanels / window) ----
   useEffect(() => {
     const sys = systemRef.current;
-    if (!sys || contentRows.length === 0) return;
+    if (!sys || swarmRows.length === 0) return;
     sys.resize(placementBounds.w, placementBounds.h);
-  }, [placementBounds.w, placementBounds.h, contentRows.length]);
+  }, [placementBounds.w, placementBounds.h, swarmRows.length]);
 
   // ---- Animation loop ----
   useEffect(() => {
     const sys = systemRef.current;
-    if (!sys || contentRows.length === 0) return;
+    if (!sys || swarmRows.length === 0) return;
 
     let rafId = 0;
     let lastTime = performance.now();
@@ -880,41 +950,69 @@ export function ImageParticleSimulationView({
 
     const PLACEMENT_RESPREAD_EPS = 0.5;
 
-    const computeSpreadOrderedIndices = (): number[] => {
+    /**
+     * Filter picks use the full catalog, then map to the first k swarm slots (0..k-1) with
+     * `SpreadDisplayPatch` so tiles outside the idle prefix can still appear. Preview linked+related
+     * still uses per-slot pool indices from `pickSpreadIndicesLinkedThenRelated`.
+     */
+    const getSpreadPickResult = (): {
+      poolIndices: number[];
+      patch: SpreadDisplayPatch;
+    } => {
       const viewportSpread = getViewportSpread();
       const pr = previewRowRef.current;
       const pfs = previewFullScreenRef.current;
+      const cat = contentCatalogRef.current;
+      const nPool = swarmSizeRef.current;
+      if (nPool === 0) {
+        return { poolIndices: [], patch: { type: "filter", catalogIndices: [] } };
+      }
+      const poolRows = swarmRowsRef.current;
       if (
         pr &&
         !pfs &&
         (previewSourceIndicesRef.current.linked.length > 0 ||
           previewSourceIndicesRef.current.related.length > 0)
       ) {
-        return pickSpreadIndicesLinkedThenRelated(
-          contentRows,
+        const pool = pickSpreadIndicesLinkedThenRelated(
+          poolRows,
           textIndexSet,
           previewSourceIndicesRef.current.linked,
           previewSourceIndicesRef.current.related,
           viewportSpread,
         );
+        const { linked, related } = buildSuggestedSourceRowsSplit(pr, cat);
+        const lCap = Math.min(linked.length, nPool);
+        const rCap = Math.min(
+          related.length,
+          Math.max(0, nPool - lCap),
+        );
+        const rows: ContentRow[] = [
+          ...linked.slice(0, lCap),
+          ...related.slice(0, rCap),
+        ];
+        return { poolIndices: pool, patch: { type: "preview", rows } };
       }
-      /**
-       * Docked preview without linked+related: match outputs from the opened row’s taxonomy so the
-       * spread matches the old `setFiltersFromContentRow` behaviour, while the sidebar still shows
-       * the user’s actual filter picks (no global `Set` sync).
-       */
       const selectionForSpread: TaxonomyFilterSelection =
         pr && !pfs
           ? taxonomySelectionFromContentRow(pr)
           : spreadSelectionRef.current;
-      return pickSpreadIndicesFromRows(
-        contentRows,
-        textIndexSet,
+      const raw = pickSpreadIndicesFromRows(
+        cat,
+        catalogTextIndexSetRef.current,
         selectionForSpread,
         filterMatchModeRef.current,
         viewportSpread,
       );
+      const k = Math.min(raw.length, nPool);
+      return {
+        poolIndices: Array.from({ length: k }, (_, i) => i),
+        patch: { type: "filter", catalogIndices: raw.slice(0, k) },
+      };
     };
+
+    const computeSpreadOrderedIndices = (): number[] =>
+      getSpreadPickResult().poolIndices;
 
     const effectiveSpreadSig = (): string => {
       const pr = previewRowRef.current;
@@ -960,7 +1058,7 @@ export function ImageParticleSimulationView({
       if (linked.length === 0 && related.length === 0) return;
 
       const slotLabel = (i: number) => {
-        const row = contentRows[i];
+        const row = displayContentRowsRef.current[i];
         const text = textIndexSet.has(i);
         return row
           ? {
@@ -988,11 +1086,17 @@ export function ImageParticleSimulationView({
     };
 
     const beginSpreadEnter = (now: number): boolean => {
+      postLeaveContentRevealRef.current = null;
       const sysInner = systemRef.current;
-      if (!sysInner || contentRows.length === 0) return false;
+      if (!sysInner || swarmSizeRef.current === 0) return false;
 
-      const orderedPick = computeSpreadOrderedIndices();
+      const { poolIndices: orderedPick, patch: spreadPatch } =
+        getSpreadPickResult();
       if (orderedPick.length === 0) return false;
+
+      flushSync(() => {
+        setSpreadDisplayPatchRef.current(spreadPatch);
+      });
 
       logPreviewCanvasSpread(orderedPick);
 
@@ -1152,7 +1256,7 @@ export function ImageParticleSimulationView({
       const shouldSpreadEnter =
         spreadLayoutPhaseRef.current === "idle" &&
         spreadActive &&
-        contentRows.length > 0 &&
+        swarmSizeRef.current > 0 &&
         ordered.length > 0 &&
         (spreadEnterSignatureRef.current === null ||
           sig !== spreadEnterSignatureRef.current);
@@ -1504,7 +1608,35 @@ export function ImageParticleSimulationView({
 
           const dimOpacityMul =
             1 + (FILTER_BG_OPACITY_MUL - 1) * bgDimT;
-          const outOpacity = clamp(p.opacity * dimOpacityMul, 0, 1);
+          let outOpacity = clamp(p.opacity * dimOpacityMul, 0, 1);
+          if (passPh === "leave" && cardActive) {
+            const dr = displayContentRowsRef.current[i];
+            const sr = swarmRowsRef.current[i];
+            if (dr && sr && dr.id !== sr.id) {
+              const uL = Math.min(
+                1,
+                (styleNow - filterT0Ref.current) / REGROUP_MS,
+              );
+              const uExit = smoothstep01(
+                Math.max(
+                  0,
+                  Math.min(
+                    1,
+                    (uL - PATCHED_ROW_EXIT_FADE_START_U) /
+                      (1 - PATCHED_ROW_EXIT_FADE_START_U),
+                  ),
+                ),
+              );
+              outOpacity *= 1 - uExit;
+            }
+          } else if (passPh === "idle") {
+            const prc = postLeaveContentRevealRef.current;
+            if (prc?.slots.has(i)) {
+              const tr =
+                (styleNow - prc.t0) / POST_LEAVE_SWARM_REVEAL_MS;
+              outOpacity *= smoothstep01(Math.min(1, tr));
+            }
+          }
 
           const filterParts: string[] = [];
           if (blurPx >= 0.03) {
@@ -1534,14 +1666,14 @@ export function ImageParticleSimulationView({
           if (p.isText) {
             if (cardActive) {
               const img = imgRefs.current[i];
-              const row = contentRows[i];
+              const row = displayContentRowsRef.current[i];
               if (img && row) {
                 syncImgToContentRow(img, row);
               }
             } else {
               const textEl = textRefs.current[i];
               if (textEl) {
-                const row = contentRows[i];
+                const row = displayContentRowsRef.current[i];
                 const useFull = idleTextFullTitleRef.current;
                 const rowWords = wordsByRow[i];
                 const chunk = useFull
@@ -1565,11 +1697,19 @@ export function ImageParticleSimulationView({
             }
           } else {
             const img = imgRefs.current[i];
-            const row = contentRows[i];
+            const row = displayContentRowsRef.current[i];
             if (img && row) {
               syncImgToContentRow(img, row);
             }
           }
+        }
+        const prcDone = postLeaveContentRevealRef.current;
+        if (
+          prcDone &&
+          passPh === "idle" &&
+          styleNow - prcDone.t0 >= POST_LEAVE_SWARM_REVEAL_MS
+        ) {
+          postLeaveContentRevealRef.current = null;
         }
       };
 
@@ -1580,6 +1720,20 @@ export function ImageParticleSimulationView({
         leaveCompleteAfterRenderRef.current = false;
         const snapDone = idleSnapshotRef.current;
         const selLeave = [...selectedIndicesRef.current];
+        const revealSlots = new Set<number>();
+        for (const i of selLeave) {
+          const dr = displayContentRowsRef.current[i];
+          const sr = swarmRowsRef.current[i];
+          if (dr && sr && dr.id !== sr.id) revealSlots.add(i);
+        }
+        if (revealSlots.size > 0) {
+          postLeaveContentRevealRef.current = {
+            t0: performance.now(),
+            slots: revealSlots,
+          };
+        } else {
+          postLeaveContentRevealRef.current = null;
+        }
         if (snapDone && sys) {
           for (const si of selLeave) {
             const s = snapDone[si];
@@ -1590,6 +1744,7 @@ export function ImageParticleSimulationView({
         spreadTargetsRef.current = [];
         selectedIndicesRef.current = [];
         flushSync(() => {
+          setSpreadDisplayPatchRef.current(null);
           setSelectedFilterIndices([]);
           setSpreadChromeActive(false);
         });
@@ -1626,7 +1781,8 @@ export function ImageParticleSimulationView({
     rafId = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(rafId);
   }, [
-    contentRows,
+    swarmRows.length,
+    contentCatalog.length,
     speedFactor,
     placementBounds.w,
     placementBounds.h,
@@ -1635,6 +1791,7 @@ export function ImageParticleSimulationView({
     thumbnailSize,
     filteredLgOuter.width,
     filterMatchMode,
+    textWordsByRow,
     selectedFormats,
     selectedNetworks,
   ]);
@@ -1670,7 +1827,7 @@ export function ImageParticleSimulationView({
         }}
       >
         <div className="relative h-full w-full" style={{ transformStyle: "preserve-3d" }}>
-        {contentRows.map((row, i) => {
+        {displayContentRows.map((row, i) => {
           const isText = textIndexSet.has(i);
           const showFilteredCard =
             selectedFilterSet.has(i) && spreadChromeActive;
@@ -1691,7 +1848,7 @@ export function ImageParticleSimulationView({
 
             return (
               <div
-                key={`text-${row.id}`}
+                key={`swarm-tile-text-${i}`}
                 data-canvas-tile
                 ref={(el) => {
                   nodeRefs.current[i] = el;
@@ -1764,7 +1921,7 @@ export function ImageParticleSimulationView({
 
           return (
             <div
-              key={row.id}
+              key={`swarm-tile-${i}`}
               data-canvas-tile
               ref={(el) => {
                 nodeRefs.current[i] = el;

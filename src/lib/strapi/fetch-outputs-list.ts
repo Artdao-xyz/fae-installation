@@ -2,6 +2,8 @@
  * Server-only Strapi `outputs` list fetch (Strapi v5).
  *
  * **List (catalog):** slim fields — no `Text` / `Resources`, minimal media + relation fields (Focus, …, `Links`, `Artists`, …).
+ * Merges every page until Strapi returns a short/empty page — not limited by
+ * `NEXT_PUBLIC_IMAGE_FETCH_LIMIT` (that only caps the client particle layer).
  * **Detail (preview):** full document for body, resources, and image fallbacks.
  *
  * Taxonomy option lists: `GET /api/strapi/taxonomy-options`.

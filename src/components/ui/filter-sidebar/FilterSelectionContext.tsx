@@ -32,7 +32,7 @@ const SIDEBAR_FILTER_MATCH_MODE: FilterMatchMode = "intersection";
 export type ContentCatalogStatus = "loading" | "success" | "error";
 
 export type FilterSelectionContextValue = {
-  /** Full Strapi-backed catalog (one shared fetch for search + particles). */
+  /** Full Strapi-backed catalog from `GET /api/strapi/outputs` (all pages); not truncated by particle `imageLimit`. */
   contentCatalog: ContentRow[];
   contentCatalogStatus: ContentCatalogStatus;
   contentCatalogError: string | null;
