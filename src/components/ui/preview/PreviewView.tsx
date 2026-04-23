@@ -162,21 +162,11 @@ function ClampedPreviewPillsInner({
     () => sortPillsSelectedFirst(items, isSelected),
     [items, isSelected],
   );
-  const selectionLayoutSig = useMemo(
-    () =>
-      `${itemKey}\0${items.map((l) => (isSelected(l) ? 1 : 0)).join("")}`,
-    [itemKey, items, isSelected],
-  );
   const rootRef = useRef<HTMLDivElement | null>(null);
   const rowRef = useRef<HTMLDivElement | null>(null);
   const lastInlineWidthRef = useRef<number | null>(null);
   const [visiblePrefix, setVisiblePrefix] = useState<number | null>(null);
   const [overflowExpanded, setOverflowExpanded] = useState(false);
-
-  useEffect(() => {
-    setVisiblePrefix(null);
-    setOverflowExpanded(false);
-  }, [selectionLayoutSig]);
 
   useLayoutEffect(() => {
     if (!docked || overflowExpanded) return;
@@ -331,9 +321,14 @@ function ClampedPreviewPills({
   onPillPress: (label: string) => void;
 }) {
   const itemKey = items.join("\0");
+  const selectionLayoutSig = useMemo(
+    () =>
+      `${itemKey}\0${items.map((l) => (isSelected(l) ? 1 : 0)).join("")}`,
+    [itemKey, items, isSelected],
+  );
   return (
     <ClampedPreviewPillsInner
-      key={`${docked}-${itemKey}`}
+      key={`${docked}-${selectionLayoutSig}`}
       itemKey={itemKey}
       items={items}
       docked={docked}

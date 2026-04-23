@@ -295,7 +295,6 @@ export function ImageParticleSimulationView({
       const hit = getCachedPreviewDetailRow(row.id);
       setPreviewRow(hit ? { ...row, ...hit } : row);
       if (hit) {
-        // eslint-disable-next-line no-console -- intentional: inspect Sources on click
         console.log("[preview] sources (click)", {
           id: row.id,
           resources: hit.resources,
@@ -304,7 +303,6 @@ export function ImageParticleSimulationView({
       }
       void fetchPreviewOutputDetail(row.id).then((full) => {
         if (!full) return;
-        // eslint-disable-next-line no-console -- intentional: inspect Sources on click
         console.log("[preview] sources (click)", {
           id: row.id,
           resources: full.resources,
