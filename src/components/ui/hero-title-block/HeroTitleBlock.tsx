@@ -78,7 +78,7 @@ export function HeroTitleBlock({ title, subtitle, className = "" }: Props) {
 
   return (
     <div
-      className={`z-20 flex flex-col items-start justify-center whitespace-nowrap [transition:left_500ms_ease-in-out,opacity_300ms_ease-out] motion-reduce:transition-none ${positionClass} ${
+      className={`z-20 flex flex-col items-start justify-center whitespace-nowrap [transition:opacity_300ms_ease-out] lg:[transition:left_500ms_ease-in-out,opacity_300ms_ease-out] motion-reduce:transition-none ${positionClass} ${
         hideHero ? "pointer-events-none opacity-0" : "opacity-100"
       } ${className}`}
       aria-hidden={hideHero}

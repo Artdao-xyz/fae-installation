@@ -19,7 +19,10 @@ import { HeroTitleBlock } from "@/components/ui/hero-title-block";
 import { MarginGuideFrame } from "@/components/ui/margin-guide-frame";
 import { PixelTessellationBackground } from "@/components/ui/pixel-tessellation-background";
 import { ImageParticleSimulation } from "@/components/particle-canvas/ImageParticleSimulation";
-import { IMAGE_FETCH_LIMIT } from "@/components/particle-canvas/config";
+import {
+  IMAGE_FETCH_LIMIT,
+  IMAGE_FETCH_LIMIT_MOBILE,
+} from "@/components/particle-canvas/config";
 import {
   FloatingPanelStackProvider,
   useFloatingPanelStack,
@@ -35,7 +38,7 @@ const FETCHED_HEIGHT = 440 * RES_MULTIPLIER;
 const DISPLAYED_WIDTH = 75 * RES_MULTIPLIER;
 const DISPLAYED_HEIGHT = 75 * RES_MULTIPLIER;
 
-/** Set to `true` to remove the particle layer (mobile still uses a hidden sim + filter grid when needed). */
+/** Set to `true` to remove the particle layer entirely. */
 const HIDE_PARTICLE_CANVAS = false;
 
 const FloatingDockMount = dynamic(
@@ -57,7 +60,15 @@ function readStoredMode(): Mode {
 function ParticleCanvasField() {
   const particlePlacementRef = useRef<HTMLDivElement>(null);
   const { hasActiveTaxonomyFilters } = useFilterSelection();
-  const imageLimit = IMAGE_FETCH_LIMIT > 0 ? IMAGE_FETCH_LIMIT : undefined;
+  const isMaxLg = useIsMaxLg();
+  const imageLimit = useMemo(() => {
+    const desktop = IMAGE_FETCH_LIMIT > 0 ? IMAGE_FETCH_LIMIT : undefined;
+    if (!isMaxLg) return desktop;
+    if (IMAGE_FETCH_LIMIT_MOBILE === 0) return desktop;
+    const mobile = IMAGE_FETCH_LIMIT_MOBILE;
+    if (desktop !== undefined) return Math.min(mobile, desktop);
+    return mobile;
+  }, [isMaxLg]);
   const mode = useSyncExternalStore(
     (onStoreChange) => {
       const onStorage = () => onStoreChange();
@@ -84,7 +95,16 @@ function ParticleCanvasField() {
         displayedHeight={DISPLAYED_HEIGHT}
         speedFactor={SPEED_FACTOR}
         placementContainerRef={particlePlacementRef}
-        rootClassName="max-lg:pointer-events-none max-lg:opacity-0 max-lg:z-[5]"
+        rootClassName={[
+          "max-lg:pointer-events-none",
+          /**
+           * Mobile filtered results use the thumbnail grid only; hide the idle orbit so the view
+           * reads as “results”, not orbit + grid. Desktop still uses spread on the canvas.
+           */
+          isMaxLg && hasActiveTaxonomyFilters ? "max-lg:opacity-0" : "",
+        ]
+          .filter(Boolean)
+          .join(" ")}
       />
       <MobileFilteredThumbnailGrid />
     </div>

@@ -15,6 +15,7 @@ import {
   getFilterSubpanelColumnWidthPx,
   getPreviewPanelWidthPx,
 } from "@/components/ui/filter-sidebar/shell/layout-classes";
+import { useIsMaxLg } from "@/components/ui/filter-sidebar/shell/useIsMaxLg";
 import { getMarginGuideInsetPx } from "@/lib/margin-guide";
 import { buildSuggestedSourceRowsSplit } from "@/lib/preview-suggested-outputs";
 import {
@@ -212,7 +213,12 @@ export function ImageParticleSimulationView({
     contentCatalogError,
     contentCatalogTotal,
     contentCatalogFetchMs,
+    searchQueryResetNonce,
   } = useFilterSelection();
+
+  const isMaxLg = useIsMaxLg();
+  const isMaxLgRef = useRef(isMaxLg);
+  isMaxLgRef.current = isMaxLg;
 
   const idleTextFullTitleRef = useRef(idleTextFullTitle);
   idleTextFullTitleRef.current = idleTextFullTitle;
@@ -455,6 +461,32 @@ export function ImageParticleSimulationView({
     }
   }, []);
 
+  const clearIdleHoverState = useCallback(() => {
+    clearHoverEnterDelay();
+    hoverPhaseRef.current = null;
+    hoverAnimT0Ref.current = 0;
+    hoverSlotRef.current = null;
+    hoverPinRef.current = null;
+    setHoveredIndex(null);
+  }, [clearHoverEnterDelay]);
+
+  const beginIdleHoverExpand = useCallback(
+    (index: number) => {
+      if (spreadChromeActiveRef.current) return;
+      clearHoverEnterDelay();
+      const sysInner = systemRef.current;
+      const pt = sysInner?.particles[index];
+      if (!pt) return;
+      const t = performance.now();
+      hoverPhaseRef.current = "in";
+      hoverAnimT0Ref.current = t;
+      hoverSlotRef.current = index;
+      hoverPinRef.current = { slot: index, pos: { ...pt.pos } };
+      setHoveredIndex(index);
+    },
+    [clearHoverEnterDelay],
+  );
+
   useEffect(() => {
     const markPointerActivity = (e: PointerEvent) => {
       if (e.type === "pointermove" && e.pointerType === "mouse") {
@@ -486,6 +518,7 @@ export function ImageParticleSimulationView({
 
   const handleTilePointerEnter = useCallback(
     (index: number) => {
+      if (isMaxLg) return;
       if (spreadChromeActive) return;
       if (!pointerMotionRecentEnough()) return;
       clearHoverEnterDelay();
@@ -496,43 +529,70 @@ export function ImageParticleSimulationView({
         hoverEnterDelayTimerRef.current = null;
         if (spreadChromeActiveRef.current) return;
         if (!pointerMotionRecentEnough()) return;
-        const sysInner = systemRef.current;
-        const pt = sysInner?.particles[index];
-        if (!pt) return;
-        const t = performance.now();
-        hoverPhaseRef.current = "in";
-        hoverAnimT0Ref.current = t;
-        hoverSlotRef.current = index;
-        hoverPinRef.current = { slot: index, pos: { ...pt.pos } };
-        setHoveredIndex(index);
+        beginIdleHoverExpand(index);
       }, HOVER_ENTER_DELAY_MS);
     },
-    [clearHoverEnterDelay, pointerMotionRecentEnough, spreadChromeActive],
+    [
+      beginIdleHoverExpand,
+      clearHoverEnterDelay,
+      isMaxLg,
+      pointerMotionRecentEnough,
+      spreadChromeActive,
+    ],
   );
 
   const handleTilePointerLeave = useCallback(
     (index: number) => {
+      if (isMaxLg) return;
       clearHoverEnterDelay();
       if (hoverSlotRef.current !== index) return;
       hoverPhaseRef.current = "out";
       hoverAnimT0Ref.current = performance.now();
     },
-    [clearHoverEnterDelay],
+    [clearHoverEnterDelay, isMaxLg],
   );
 
   useEffect(() => {
     if (!spreadChromeActive) return;
-    clearHoverEnterDelay();
-    hoverPhaseRef.current = null;
-    hoverAnimT0Ref.current = 0;
-    hoverSlotRef.current = null;
-    hoverPinRef.current = null;
-    setHoveredIndex(null);
-  }, [spreadChromeActive, clearHoverEnterDelay]);
+    clearIdleHoverState();
+  }, [spreadChromeActive, clearIdleHoverState]);
+
+  useEffect(() => {
+    if (previewRow != null) {
+      clearIdleHoverState();
+    }
+  }, [previewRow, clearIdleHoverState]);
+
+  useEffect(() => {
+    if (searchQueryResetNonce === 0) return;
+    clearIdleHoverState();
+  }, [searchQueryResetNonce, clearIdleHoverState]);
 
   useEffect(() => {
     return () => clearHoverEnterDelay();
   }, [clearHoverEnterDelay]);
+
+  const handleTilePreviewClick = useCallback(
+    (row: ContentRow, slotIndex: number) => {
+      if (isMaxLg && !spreadChromeActiveRef.current) {
+        /** `hoverSlotRef` updates synchronously in `beginIdleHoverExpand` so a 2nd tap works before `hoveredIndex` commits. */
+        if (hoverSlotRef.current === slotIndex) {
+          openContentPreview(row);
+        } else {
+          prefetchOutputDetailOnHover(row.id);
+          beginIdleHoverExpand(slotIndex);
+        }
+        return;
+      }
+      openContentPreview(row);
+    },
+    [
+      beginIdleHoverExpand,
+      isMaxLg,
+      openContentPreview,
+      prefetchOutputDetailOnHover,
+    ],
+  );
 
   const idleSnapshotRef = useRef<Particle[] | null>(null);
   /** Inner spread slots — filter-matching tiles (center-first). */
@@ -1063,7 +1123,13 @@ export function ImageParticleSimulationView({
         s.networks.size > 0;
       const previewDocked =
         previewRowRef.current != null && !previewFullScreenRef.current;
-      return orderedLen > 0 && (filterSpreadActive || previewDocked);
+      /**
+       * Mobile (`max-lg`): taxonomy matches are shown in `MobileFilteredThumbnailGrid`; skip the spread
+       * packer for filters only. Preview-linked spread still uses `previewDocked` on all viewports.
+       */
+      const filterSpreadOnCanvas =
+        filterSpreadActive && !isMaxLgRef.current;
+      return orderedLen > 0 && (filterSpreadOnCanvas || previewDocked);
     };
 
     const beginSpreadEnter = (now: number): boolean => {
@@ -1787,11 +1853,12 @@ export function ImageParticleSimulationView({
            */
           if (t.closest("[data-fae-content-preview]")) return;
         }
+        clearIdleHoverState();
         resetToIdle();
       }}
     >
       <div
-        className="absolute transition-[left,top,width,height] duration-500 ease-in-out motion-reduce:duration-0 motion-reduce:transition-none"
+        className="absolute transition-[left,top,width,height] duration-500 ease-in-out motion-reduce:duration-0 motion-reduce:transition-none max-lg:transition-none max-lg:duration-0"
         style={{
           left: placementBounds.cx,
           top: placementBounds.cy,
@@ -1844,7 +1911,7 @@ export function ImageParticleSimulationView({
                   opensPreviewOnClick
                     ? (e) => {
                         e.stopPropagation();
-                        openContentPreview(row);
+                        handleTilePreviewClick(row, i);
                       }
                     : undefined
                 }
@@ -1917,7 +1984,7 @@ export function ImageParticleSimulationView({
                 opensPreviewOnClick
                   ? (e) => {
                       e.stopPropagation();
-                      openContentPreview(row);
+                      handleTilePreviewClick(row, i);
                     }
                   : undefined
               }

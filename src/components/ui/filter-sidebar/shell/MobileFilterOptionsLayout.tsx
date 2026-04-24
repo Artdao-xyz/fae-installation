@@ -12,7 +12,12 @@ import { FocusAreas } from "../sections/FocusAreas";
 import { FilterTaxonomyEmptyHint } from "./FilterTaxonomyEmptyHint";
 import { MobileFormatScrollRow } from "./MobileFormatScrollRow";
 import type { FilterSidebarCategoryTone } from "../config/filterSidebarTones";
+import { filterPillSelection } from "@/components/ui/filter-sidebar/primitives/filterFramedClasses";
 import { filterChromeRightEdgeClass } from "./layout-classes";
+
+/** Recolor static SVG assets via `background-color` + mask (fills are fixed in the files). */
+const FILTER_ACTION_ICON_MASK_BASE =
+  "block shrink-0 [mask-size:contain] [mask-position:center] [mask-repeat:no-repeat] [-webkit-mask-size:contain] [-webkit-mask-position:center] [-webkit-mask-repeat:no-repeat]";
 
 const MOBILE_FILTER_ACTIONS_LABEL_CLASS =
   "text-[#303030] text-xs font-normal font-lust-text leading-4 tracking-wide";
@@ -41,9 +46,14 @@ export function MobileFilterOptionsLayout({
     selectedFaeBriefing,
     selectedArtists,
     selectedNetworks,
+    hasActiveTaxonomyFilters,
+    filterMatchingRowCount,
     clearAllFilters,
     setFiltersPanelOpen,
   } = useFilterSelection();
+
+  const filterActionsIconActive =
+    hasActiveTaxonomyFilters || selectedFaeBriefing != null;
 
   const rail = useCallback(
     (
@@ -160,30 +170,43 @@ export function MobileFilterOptionsLayout({
         <button
           type="button"
           onClick={clearAllFilters}
-          className="flex h-11 min-w-0 flex-1 basis-0 items-center justify-center gap-2 transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary"
+          className="flex h-11 min-w-0 flex-1 basis-0 items-center justify-center gap-2 pr-3 text-xs transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary"
         >
-          {/* eslint-disable-next-line @next/next/no-img-element -- static chrome icon */}
-          <img
-            src="/svg/delete.svg"
-            alt=""
-            className="m-0 block size-4 max-h-4 max-w-4 shrink-0 object-contain object-center"
+          <span
+            className={`m-0 size-4 max-h-4 max-w-4 ${FILTER_ACTION_ICON_MASK_BASE} ${
+              filterActionsIconActive
+                ? filterPillSelection.bg
+                : "bg-ink-primary"
+            } mask-[url('/svg/delete.svg')] [-webkit-mask-image:url('/svg/delete.svg')]`}
             aria-hidden
           />
-          <span className={MOBILE_FILTER_ACTIONS_LABEL_CLASS}>Clear Filters</span>
+          <span className={MOBILE_FILTER_ACTIONS_LABEL_CLASS}>
+            Clear Filters
+          </span>
         </button>
         <button
           type="button"
           onClick={() => setFiltersPanelOpen(false)}
-          className="ml-3 flex h-11 min-w-0 flex-1 basis-0 items-center justify-center gap-2 transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary"
+          className="flex h-11 min-w-0 flex-1 basis-0 items-center justify-center gap-2 border-l-hairline border-solid border-ink-primary pl-3 text-xs transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary"
         >
-          <span className={MOBILE_FILTER_ACTIONS_LABEL_CLASS}>Apply Filters</span>
-          {/* eslint-disable-next-line @next/next/no-img-element -- static chrome icon */}
-          <img
-            src="/svg/right-arrow.svg"
-            alt=""
-            width={8}
-            height={10}
-            className="m-0 block h-2.5 w-2 max-h-2.5 max-w-2 shrink-0 object-contain"
+          <span className="flex min-w-0 flex-wrap items-baseline justify-center gap-x-1">
+            {hasActiveTaxonomyFilters ? (
+              <span
+                className={`shrink-0 tabular-nums ${filterPillSelection.text}`}
+              >
+                ({filterMatchingRowCount})
+              </span>
+            ) : null}
+            <span className={`min-w-0 ${MOBILE_FILTER_ACTIONS_LABEL_CLASS}`}>
+              Apply Filters
+            </span>
+          </span>
+          <span
+            className={`m-0 h-2.5 w-2 max-h-2.5 max-w-2 ${FILTER_ACTION_ICON_MASK_BASE} ${
+              filterActionsIconActive
+                ? filterPillSelection.bg
+                : "bg-ink-primary"
+            } mask-[url('/svg/right-arrow.svg')] [-webkit-mask-image:url('/svg/right-arrow.svg')]`}
             aria-hidden
           />
         </button>
