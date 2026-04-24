@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useId, useState } from "react";
 import { useFloatingPanelStack } from "@/components/ui/floating-panels/FloatingPanelStackContext";
 import { FLOATING_DOCK_PEEK_CLIP_CLASS } from "@/components/ui/filter-sidebar/shell/layout-classes";
+import { useIsMaxLg } from "@/components/ui/filter-sidebar/shell/useIsMaxLg";
 import { AboutSvgIcon } from "@/components/ui/icons/AboutSvgIcon";
 import { OpenSvgIcon } from "@/components/ui/icons/OpenSvgIcon";
 import { navSidebarVerticalLabelClassName } from "@/components/ui/icons/nav-sidebar-labels";
@@ -16,88 +17,8 @@ import {
   fullScreenShowMoreLessLabelClass,
 } from "@/components/ui/preview/fullScreenContentChrome";
 import { PreviewPanelCollapseBar } from "@/components/ui/preview/PreviewPanelCollapseBar";
-
-const ABOUT_BODY = (
-  <>
-    <p className="mb-0 leading-[1.6]">
-      Future Art Ecosystems is a project for building 21st century cultural
-      infrastructure to support art and advanced technologies for the public good.
-    </p>
-    <p className="mb-0 leading-[1.6]">&nbsp;</p>
-    <p className="mb-0 leading-[1.6]">
-      Through briefings, R&amp;D Labs and a growing community of artists,
-      technologists, policy-makers, researchers and fellow organisations, FAE
-      develops insights, tools and projects that advance our mission.
-    </p>
-  </>
-);
-
-const ABOUT_FULL_TEAM = [
-  "Tamar Clarke-Brown",
-  "Tommie Introna",
-  "Victoria Ivanova",
-  "Eva Jäger",
-  "Lina Martin-Chan",
-  "Vi Trinh",
-  "Ruth Waters",
-  "Kay Watson",
-] as const;
-
-function AboutFullScreenBody() {
-  return (
-    <div className="flex w-full flex-col items-start gap-5 text-ink-body">
-
-      <div className="w-full font-suisseintl text-xs font-normal leading-5">
-        {ABOUT_BODY}
-      </div>
-
-      <ul className="m-0 w-full list-none p-0 font-suisseintl text-xs font-normal leading-5">
-        {ABOUT_FULL_TEAM.map((name) => (
-          <li key={name} className="p-0">
-            {name}
-          </li>
-        ))}
-      </ul>
-
-      <p className="mb-0 font-suisseintl text-xs font-normal leading-5">
-        You can explore our Twitch archive, or tune in live for special events.
-        To get more involved, join our Telegram community, sign up to our
-        monthly newsletter and take part in our quarterly Community Call. For
-        partnerships and other inquiries, please email us.
-      </p>
-
-      <nav
-        className="flex flex-wrap items-center gap-x-5 gap-y-2 font-fira-mono text-xs font-normal text-ink-body"
-        aria-label="Social and community links"
-      >
-        <a
-          href="#"
-          className="underline decoration-solid underline-offset-2 hover:opacity-80"
-        >
-          Twitch
-        </a>
-        <a
-          href="#"
-          className="underline decoration-solid underline-offset-2 hover:opacity-80"
-        >
-          Telegram
-        </a>
-        <a
-          href="#"
-          className="underline decoration-solid underline-offset-2 hover:opacity-80"
-        >
-          Newsletter
-        </a>
-        <a
-          href="#"
-          className="underline decoration-solid underline-offset-2 hover:opacity-80"
-        >
-          X
-        </a>
-      </nav>
-    </div>
-  );
-}
+import { AboutPanelRichContent, ABOUT_BODY } from "./AboutShared";
+import { MobileAboutSheet } from "./MobileAboutSheet";
 
 /**
  * Isolated so open animation runs on each mount, matching the preview full-screen enter transition.
@@ -147,7 +68,7 @@ function AboutFullScreenView({
       />
       <div className={fullScreenContentScrollClass}>
         <div className={fullScreenContentInnerClass}>
-          <AboutFullScreenBody />
+          <AboutPanelRichContent />
         </div>
       </div>
       <div className="flex shrink-0 justify-start">
@@ -201,11 +122,19 @@ function AboutTabRail({
 
 export function AboutPanel() {
   const panelId = useId();
+  const isMaxLg = useIsMaxLg();
   const dockOuterH = floatingDockPanelOuterHeightPx();
   const { aboutView, setAboutView, getChromeZIndex } = useFloatingPanelStack();
 
   const openFull = useCallback(() => setAboutView("full"), [setAboutView]);
-  const closeFull = useCallback(() => setAboutView("peek"), [setAboutView]);
+  const closeFull = useCallback(() => {
+    setAboutView(() =>
+      typeof window !== "undefined" &&
+      window.matchMedia("(max-width: 1023px)").matches
+        ? "minimized"
+        : "peek",
+    );
+  }, [setAboutView]);
 
   useEffect(() => {
     if (aboutView !== "full") return;
@@ -229,7 +158,7 @@ export function AboutPanel() {
     <>
       {aboutView !== "full" ? (
         <div
-          className={`fixed top-8.5 right-8.5 flex min-h-0 max-h-about-panel flex-row items-stretch overflow-hidden border-solid border-ink-primary bg-surface-canvas/90 shadow-none backdrop-blur-fae-md ${
+          className={`fixed top-8.5 right-8.5 hidden min-h-0 max-h-about-panel flex-row items-stretch overflow-hidden border-solid border-ink-primary bg-surface-canvas/90 shadow-none backdrop-blur-fae-md lg:flex ${
             peekOpen ? "border-hairline" : "border-hairline border-b-0"
           }`}
           style={{
@@ -275,7 +204,13 @@ export function AboutPanel() {
         </div>
       ) : null}
 
-      {aboutView === "full" ? (
+      {aboutView === "full" && isMaxLg ? (
+        <MobileAboutSheet
+          zIndex={getChromeZIndex("about", "full")}
+          onClose={closeFull}
+        />
+      ) : null}
+      {aboutView === "full" && !isMaxLg ? (
         <AboutFullScreenView
           zIndex={getChromeZIndex("about", "full")}
           onBackToPeek={closeFull}

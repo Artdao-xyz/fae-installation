@@ -50,3 +50,20 @@ export const SUBPANEL_COLUMN_COLLAPSED_CLASS =
 export function filterChromeRightEdgeClass(mergeWithSubpanel: boolean) {
   return mergeWithSubpanel ? "border-r-0" : "border-r-hairline";
 }
+
+/**
+ * `max-lg` overlays (filter sheet, About): below `MobileSiteHeader` (safe area + `h-11`).
+ * Pair with `max-lg:h-auto` on the same `fixed` node — `h-full` + `top`/`bottom` fills the viewport
+ * and ignores `bottom`.
+ */
+export const MOBILE_OVERLAY_TOP_CLASS =
+  "max-lg:top-[calc(env(safe-area-inset-top,0px)+2.75rem)]";
+
+/**
+ * Stack above the Serpentine bar: `h-11` footer row + home indicator (`max-lg` matches other chrome strips).
+ * While the filter sheet is open the “Filters” row is hidden, so this must not include that bar.
+ */
+export const MOBILE_OVERLAY_BOTTOM_ABOVE_FOOTER_CLASS =
+  "max-lg:bottom-[calc(env(safe-area-inset-bottom,0px)+2.75rem)]";
+
+export const MOBILE_OVERLAY_X_CLASS = "max-lg:left-0 max-lg:right-0";

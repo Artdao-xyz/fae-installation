@@ -15,7 +15,7 @@ export function Footer({
 }: FooterProps) {
   return (
     <footer
-      className={`flex h-filter-chrome-bar shrink-0 border-t-hairline border-solid border-ink-primary bg-surface-canvas ${filterChromeRightEdgeClass(mergeWithSubpanel)} ${className}`}
+      className={`flex h-11 shrink-0 border-t-hairline border-solid border-ink-primary bg-surface-canvas max-lg:border-r-0 lg:h-filter-chrome-bar ${filterChromeRightEdgeClass(mergeWithSubpanel)} ${className}`}
     >
       <div
         className="hidden h-full w-filter-narrow-column shrink-0 border-r-hairline border-solid border-ink-primary lg:block"
@@ -28,7 +28,7 @@ export function Footer({
           width={56}
           height={56}
           unoptimized
-          className="pointer-events-none h-14 w-14 shrink-0 object-contain"
+          className="pointer-events-none max-lg:size-11 shrink-0 object-contain lg:h-14 lg:w-14"
           aria-hidden
         />
         {showYear ? (

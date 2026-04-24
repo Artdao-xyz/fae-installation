@@ -120,7 +120,7 @@ export function MobileFilterOptionsLayout({
             <ActivityType collapsed={false} chromeless />
           ) : null}
           {active === "briefings" ? (
-            <div className="min-h-0 flex-1 overflow-y-auto p-2">
+            <div className="w-full shrink-0 p-2">
               <BriefingsDropdownPanel variant="subcolumn" mobilePane />
             </div>
           ) : null}
@@ -130,7 +130,7 @@ export function MobileFilterOptionsLayout({
             </p>
           ) : null}
           {active === "rd" ? (
-            <div className="min-h-0 flex-1 overflow-y-auto p-2">
+            <div className="w-full shrink-0 p-2">
               <RDProjectsDropdownPanel variant="subcolumn" mobilePane />
             </div>
           ) : null}
@@ -140,12 +140,12 @@ export function MobileFilterOptionsLayout({
             </p>
           ) : null}
           {active === "artists" ? (
-            <div className="min-h-0 flex-1 overflow-y-auto p-2">
+            <div className="w-full shrink-0 p-2">
               <ArtistsDropdownPanel variant="subcolumn" mobilePane />
             </div>
           ) : null}
           {active === "network" ? (
-            <div className="min-h-0 flex-1 overflow-y-auto p-2">
+            <div className="w-full shrink-0 p-2">
               <NetworkDropdownPanel variant="subcolumn" mobilePane />
             </div>
           ) : null}

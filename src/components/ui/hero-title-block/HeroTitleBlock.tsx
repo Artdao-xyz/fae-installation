@@ -84,7 +84,7 @@ export function HeroTitleBlock({ title, subtitle, className = "" }: Props) {
       aria-hidden={hideHero}
     >
       <div
-        className={`font-lust-text justify-start text-6xl leading-[65px] text-black-fae ${
+        className={`font-lust-text justify-start text-6xl leading-[65px] text-black-fae max-lg:text-4xl max-lg:leading-[2.5rem] ${
           heroTextEnter ? "fae-hero-title-line" : ""
         }`}
         style={
@@ -96,7 +96,7 @@ export function HeroTitleBlock({ title, subtitle, className = "" }: Props) {
         {title}
       </div>
       <div
-        className={`font-fira-mono justify-start text-sm font-medium leading-4 text-black-fae/50 ${
+        className={`font-fira-mono justify-start text-sm font-medium leading-4 text-black-fae/50 max-lg:text-xs max-lg:leading-snug ${
           heroTextEnter ? "fae-hero-subtitle-line" : ""
         }`}
         style={

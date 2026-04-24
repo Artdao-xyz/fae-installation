@@ -38,12 +38,14 @@ function AboutPeekWhenFilterSidebarOpens() {
  */
 export function FloatingDockMount() {
   return (
-    // TEMP: hide About / Glossary / Latest updates rails on mobile only (`lg`+ unchanged).
-    <div className="hidden lg:contents">
-      <AboutPeekWhenFilterSidebarOpens />
+    <>
+      {/* About is opened from `MobileSiteHeader` on `max-lg`; dock peek rail stays `lg+` only inside `AboutPanel`. */}
       <AboutPanel />
-      <GlossaryPanel />
-      <LatestUpdatesPanel />
-    </div>
+      <div className="hidden lg:contents">
+        <AboutPeekWhenFilterSidebarOpens />
+        <GlossaryPanel />
+        <LatestUpdatesPanel />
+      </div>
+    </>
   );
 }

@@ -11,6 +11,9 @@ import { MobileFiltersCloseHeader } from "./MobileFiltersCloseHeader";
 import {
   FILTER_OPTIONS_PANEL_CLIP_TRANSITION_CLASS,
   FILTER_SIDEBAR_COLUMN_CLASS,
+  MOBILE_OVERLAY_BOTTOM_ABOVE_FOOTER_CLASS,
+  MOBILE_OVERLAY_TOP_CLASS,
+  MOBILE_OVERLAY_X_CLASS,
 } from "./layout-classes";
 import { SideBar } from "./SideBar";
 
@@ -96,7 +99,8 @@ export function FilterSidebar() {
       <div
         className={`z-50 flex h-full min-h-0 flex-col items-stretch self-stretch overflow-hidden ${FILTER_SIDEBAR_COLUMN_CLASS} ${
           filtersOpen
-            ? "max-lg:fixed max-lg:inset-0 max-lg:z-50 max-lg:h-[100dvh] max-lg:min-h-0 max-lg:w-full max-lg:min-w-0 max-lg:max-w-none max-lg:shrink-0 max-lg:transition-none"
+            ? /** `h-full` + `fixed` + `top`/`bottom` makes browsers ignore `bottom` (full viewport). */
+              `max-lg:fixed max-lg:z-50 max-lg:h-auto max-lg:min-h-0 max-lg:w-full max-lg:min-w-0 max-lg:max-w-none max-lg:shrink-0 max-lg:transition-none ${MOBILE_OVERLAY_TOP_CLASS} ${MOBILE_OVERLAY_BOTTOM_ABOVE_FOOTER_CLASS} ${MOBILE_OVERLAY_X_CLASS}`
             : "max-lg:hidden"
         }`}
       >
@@ -153,9 +157,15 @@ export function FilterSidebar() {
         <Footer className="max-lg:hidden" mergeWithSubpanel={anySubpanelOpen} />
       </div>
       {isMaxLg ? null : subpanelsColumn}
-      {isMaxLg && !filtersOpen ? (
-        <div className="fixed inset-x-0 bottom-0 z-40 flex flex-col border-t-hairline border-solid border-ink-primary bg-surface-canvas lg:hidden">
-          <MobileFiltersBar onOpen={toggleFiltersOpen} />
+      {isMaxLg ? (
+        <div
+          className={`fixed inset-x-0 bottom-0 z-40 flex flex-col border-t-hairline border-solid border-ink-primary bg-surface-canvas lg:hidden ${
+            filtersOpen ? "pb-[env(safe-area-inset-bottom,0px)]" : ""
+          }`}
+        >
+          {filtersOpen ? null : (
+            <MobileFiltersBar onOpen={toggleFiltersOpen} />
+          )}
           <Footer showYear={false} mergeWithSubpanel={false} />
         </div>
       ) : null}

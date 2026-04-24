@@ -35,7 +35,7 @@ export function FilterPillDropdown({
     <div
       className={
         isSubcolumn
-          ? "relative flex w-full shrink-0 flex-col gap-2 bg-surface-canvas px-3 py-3 backdrop-blur-fae-md"
+          ? "relative flex w-full shrink-0 flex-col gap-2 self-start bg-surface-canvas px-3 py-2 backdrop-blur-fae-md"
           : "relative flex w-full flex-col gap-2 border-t-hairline border-r-hairline border-solid border-ink-primary bg-surface-canvas px-3 py-3 backdrop-blur-fae-md"
       }
       data-name="Dropdown - Category/Selected"

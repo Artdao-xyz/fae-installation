@@ -29,6 +29,14 @@ import { useFloatingPanelStack } from "@/components/ui/floating-panels/FloatingP
 /** Sidebar availability hints use the same AND semantics as the default particle spread. */
 const SIDEBAR_FILTER_MATCH_MODE: FilterMatchMode = "intersection";
 
+/** Matches Tailwind `lg` (64rem). Auto-opening the filter column is desktop-only; mobile sheet stays closed until the user taps Filters. */
+function shouldAutoOpenFiltersPanel(): boolean {
+  return (
+    typeof window !== "undefined" &&
+    window.matchMedia("(min-width: 1024px)").matches
+  );
+}
+
 export type ContentCatalogStatus = "loading" | "success" | "error";
 
 export type FilterSelectionContextValue = {
@@ -298,7 +306,7 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
           });
         }
 
-        if (!cancelled) setFiltersPanelOpen(true);
+        if (!cancelled && shouldAutoOpenFiltersPanel()) setFiltersPanelOpen(true);
       } catch (e) {
         if (cancelled) return;
         setContentCatalog([]);
@@ -323,7 +331,7 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  /** Closed until catalog + taxonomy pipeline finishes so layout doesn’t jump with empty filters. */
+  /** Starts closed; opens after catalog + taxonomy load only at `lg+` (see `shouldAutoOpenFiltersPanel`). */
   const [filtersPanelOpen, setFiltersPanelOpen] = useState(false);
   const [briefingsSubpanelOpen, setBriefingsSubpanelOpen] = useState(false);
   const [rdSubpanelOpen, setRdSubpanelOpen] = useState(false);
@@ -649,7 +657,7 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
 
   const applyPreviewPillFilterAndClose = useCallback(() => {
     clearPendingPreviewFilterSnapshot();
-    setFiltersPanelOpen(true);
+    if (shouldAutoOpenFiltersPanel()) setFiltersPanelOpen(true);
     closeContentPreview();
   }, [clearPendingPreviewFilterSnapshot, setFiltersPanelOpen, closeContentPreview]);
 
@@ -746,7 +754,7 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
   const exitContentPreviewToFilterCanvas = useCallback(() => {
     if (contentPreviewRow == null) return;
     clearPendingPreviewFilterSnapshot();
-    setFiltersPanelOpen(true);
+    if (shouldAutoOpenFiltersPanel()) setFiltersPanelOpen(true);
     closeContentPreview();
   }, [
     contentPreviewRow,
