@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/filter-sidebar";
 import { MobileFilteredThumbnailGrid } from "@/components/ui/filter-sidebar/shell/MobileFilteredThumbnailGrid";
 import { MobileSiteHeader } from "@/components/ui/filter-sidebar/shell/MobileSiteHeader";
+import { mobileMainScrollInsetClassName } from "@/components/ui/filter-sidebar/shell/layout-classes";
 import { HeroTitleBlock } from "@/components/ui/hero-title-block";
 import { MarginGuideFrame } from "@/components/ui/margin-guide-frame";
 import { PixelTessellationBackground } from "@/components/ui/pixel-tessellation-background";
@@ -87,20 +88,29 @@ function ParticleCanvasField() {
 }
 
 function HomeContent() {
-  const { filterSearchQuery, setFilterSearchQuery, filtersPanelOpen } =
-    useFilterSelection();
+  const {
+    filterSearchQuery,
+    setFilterSearchQuery,
+    filtersPanelOpen,
+    hasActiveTaxonomyFilters,
+  } = useFilterSelection();
   const { aboutView } = useFloatingPanelStack();
   const searching = filterSearchQuery.trim().length > 0;
   /** Mobile landing search sits under `MobileSiteHeader`; hide it while filter sheet or About is open. */
   const hideMobileLandingSearch =
     filtersPanelOpen || aboutView === "full";
 
+  const mobileScrollInsetClass = mobileMainScrollInsetClassName({
+    filtersPanelOpen,
+    hasActiveTaxonomyFilters,
+  });
+
   return (
     <div className="flex min-h-screen w-full max-lg:h-dvh max-lg:min-h-0 max-lg:max-h-dvh max-lg:overflow-hidden">
       <FilterSidebar />
       <PixelTessellationBackground />
       <FloatingDockMount />
-      <main className="relative z-15 flex min-h-0 min-w-0 flex-1 flex-col p-5 text-ink-body max-lg:min-h-0 max-lg:overflow-hidden max-lg:p-0 max-lg:pb-[calc(1.25rem+env(safe-area-inset-bottom,0px)+6.3125rem)] lg:overflow-visible">
+      <main className="relative z-15 flex min-h-0 min-w-0 flex-1 flex-col p-5 text-ink-body max-lg:min-h-0 max-lg:overflow-hidden max-lg:p-0 lg:overflow-visible">
         <div className="pointer-events-none max-lg:hidden" aria-hidden>
           <MarginGuideFrame />
         </div>
@@ -124,13 +134,17 @@ function HomeContent() {
           />
         </div>
 
-        <div className="relative z-10 flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-y-auto overscroll-contain max-lg:min-h-0 lg:flex-none lg:overflow-visible">
-          <HeroTitleBlock
-            title="Future Art Ecosystems"
-            subtitle="Cultural Infrastructure Research"
-          />
+        <div
+          className={`relative z-10 flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-y-auto overscroll-contain max-lg:min-h-0 lg:flex-none lg:overflow-visible ${mobileScrollInsetClass}`}
+        >
+          <div className="flex w-full min-h-min flex-col">
+            <HeroTitleBlock
+              title="Future Art Ecosystems"
+              subtitle="Cultural Infrastructure Research"
+            />
 
-          {HIDE_PARTICLE_CANVAS ? null : <ParticleCanvasField />}
+            {HIDE_PARTICLE_CANVAS ? null : <ParticleCanvasField />}
+          </div>
         </div>
       </main>
     </div>

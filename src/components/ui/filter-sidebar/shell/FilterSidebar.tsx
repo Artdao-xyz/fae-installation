@@ -158,11 +158,7 @@ export function FilterSidebar() {
       </div>
       {isMaxLg ? null : subpanelsColumn}
       {isMaxLg ? (
-        <div
-          className={`fixed inset-x-0 bottom-0 z-40 flex flex-col border-t-hairline border-solid border-ink-primary bg-surface-canvas lg:hidden ${
-            filtersOpen ? "pb-[env(safe-area-inset-bottom,0px)]" : ""
-          }`}
-        >
+        <div className="fixed inset-x-0 bottom-0 z-40 flex flex-col border-t-hairline border-solid border-ink-primary bg-surface-canvas pb-[env(safe-area-inset-bottom,0px)] lg:hidden">
           {filtersOpen ? null : (
             <MobileFiltersBar onOpen={toggleFiltersOpen} />
           )}

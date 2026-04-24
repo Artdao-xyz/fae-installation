@@ -735,8 +735,10 @@ export function ImageParticleSimulationView({
     /** Width reserved on the right: margin guide inset + docked preview panel (matches `PreviewView`). */
     const previewRightReservationPx = () => {
       if (!previewRow) return 0;
-      if (previewFullScreen) return 0;
       const vw = window.innerWidth;
+      /** `max-lg`: preview is a sheet overlay, not the docked panel — do not reserve width. */
+      if (vw < 1024) return 0;
+      if (previewFullScreen) return 0;
       const inset = getMarginGuideInsetPx();
       const panelW = getPreviewPanelWidthPx(vw);
       return inset + panelW;

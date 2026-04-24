@@ -28,7 +28,7 @@ export function Footer({
           width={56}
           height={56}
           unoptimized
-          className="pointer-events-none max-lg:size-11 shrink-0 object-contain lg:h-14 lg:w-14"
+          className="pointer-events-none shrink-0 object-contain lg:h-14"
           aria-hidden
         />
         {showYear ? (

@@ -7,10 +7,10 @@ type MobileFiltersBarProps = {
   onOpen: () => void;
 };
 
-/** Bottom entry when the narrow filter rail is hidden (`max-lg`). */
+/** Bottom entry when the narrow filter rail is hidden (`max-lg`). Same height as `Footer` (`h-11`); safe area lives on the fixed parent. */
 export function MobileFiltersBar({ onOpen }: MobileFiltersBarProps) {
   return (
-    <div className="flex w-full items-center justify-center border-t-hairline border-solid border-ink-primary bg-surface-canvas px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur-fae-sm">
+    <div className="flex h-11 w-full shrink-0 items-center justify-center bg-surface-canvas px-3 backdrop-blur-fae-sm">
       <button
         type="button"
         onClick={onOpen}
