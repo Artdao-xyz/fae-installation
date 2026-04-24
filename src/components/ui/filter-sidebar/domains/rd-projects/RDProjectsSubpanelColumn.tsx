@@ -16,7 +16,7 @@ export function RDProjectsSubpanelColumn({
 }: RDProjectsSubpanelColumnProps) {
   return (
     <div
-      className={`flex max-h-full w-full shrink-0 flex-col overflow-hidden border-l-0 border-r-hairline border-t-hairline border-solid border-ink-primary bg-surface-canvas ${
+      className={`flex max-h-full w-full shrink-0 flex-col overflow-hidden border-l-0 border-r-hairline border-solid border-ink-primary bg-surface-canvas ${
         mergeTopBorder ? "border-t-0" : "border-t-hairline"
       }`}
       role="complementary"

@@ -7,28 +7,9 @@ import {
   type ImageParticleSimulationViewProps,
 } from "./ImageParticleSimulationView";
 
-type Props = Omit<
-  ImageParticleSimulationViewProps,
-  "config" | "idleTextFullTitle" | "filterMatchMode"
->;
+type Props = Omit<ImageParticleSimulationViewProps, "config">;
 
 export function ImageParticleSimulationLeva(props: Props) {
-  const idleLabel = useControls("Idle text", {
-    showFullTitle: {
-      value: false,
-      label: "Full title (not keyword)",
-    },
-  });
-
-  /** `true` = original OR-style (cumulative); `false` = require every selected tag (AND). */
-  const { cumulativeFilterMatching } = useControls("Filter matching (dev)", {
-    cumulativeFilterMatching: {
-      value: true,
-      label:
-        "Cumulative (OR — widen when adding tags). Off = require ALL selected tags (AND). Same result if only 1 Focus + 1 Activity tag.",
-    },
-  });
-
   const config = useControls({
     Depth: folder({
       perspective: { value: DEFAULTS.perspective, min: 400, max: 2000, step: 50 },
@@ -141,12 +122,6 @@ export function ImageParticleSimulationLeva(props: Props) {
         step: 0.01,
       },
       birthPhase: { value: DEFAULTS.birthPhase, min: 0.01, max: 0.35, step: 0.01 },
-      deathPhaseStart: {
-        value: DEFAULTS.deathPhaseStart,
-        min: 0.5,
-        max: 1,
-        step: 0.01,
-      },
     }),
     Visual: folder({
       blurMax: { value: DEFAULTS.blurMax, min: 0, max: 12, step: 0.25 },
@@ -161,14 +136,5 @@ export function ImageParticleSimulationLeva(props: Props) {
     }),
   }) as SimConfig;
 
-  return (
-    <ImageParticleSimulationView
-      {...props}
-      config={config}
-      idleTextFullTitle={idleLabel.showFullTitle}
-      filterMatchMode={
-        cumulativeFilterMatching ? "union" : "intersection"
-      }
-    />
-  );
+  return <ImageParticleSimulationView {...props} config={config} />;
 }

@@ -17,7 +17,7 @@ export function MobileFiltersCloseHeader({ onClose }: MobileFiltersCloseHeaderPr
       <button
         type="button"
         onClick={onClose}
-        className="flex min-h-11 w-full items-center justify-center gap-2 px-3 text-ink-primary transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary"
+        className="flex h-11 w-full items-center justify-center gap-2 px-3 text-ink-primary transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary"
         aria-label="Close filters"
       >
         <OpenSvgIcon className="rotate-180" />

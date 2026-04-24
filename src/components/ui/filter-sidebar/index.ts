@@ -6,5 +6,8 @@ export {
   FilterSelectionProvider,
   useFilterSelection,
 } from "./FilterSelectionContext";
-export type { FilterSelectionContextValue } from "./FilterSelectionContext";
+export type {
+  ContentCatalogStatus,
+  FilterSelectionContextValue,
+} from "./FilterSelectionContext";
 export type { FilterSidebarCategoryTone } from "./config/filterSidebarTones";

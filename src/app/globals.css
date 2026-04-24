@@ -57,7 +57,7 @@
   --color-surface-hover: #e0e0e0;
 
   --color-filter-category-fae-briefings: var(--color-ink-primary);
-  --color-filter-category-fellowships: #0000ff;
+  --color-filter-category-latest-updates: #0000ff;
   /** Shared selected state for filter pills (dotted / rounded / square). */
   --color-filter-pill-selection: #0000ff;
   --color-filter-category-rd: #9005cc;
@@ -75,7 +75,22 @@
   --border-width-hairline: 0.5px;
   --border-width-fine: 0.3px;
 
+  /**
+   * `2k` / `min-[2000px]` — wide & “2K-class” viewports; available as the `2k:` Tailwind variant.
+   * (Tailwind default screens stop at `2xl` / 96rem; this is additive.)
+   */
+  --breakpoint-2k: 2000px;
+
   --width-filter-narrow-column: 35px;
+  /**
+   * Main filter column width (px only). Below `lg` uses a default; `lg` / `xl` / `2xl` / `2k` are set in media
+   * queries below (align with Tailwind: 64rem, 80rem, 96rem, plus 2000px for 2K).
+   */
+  --width-filter-chrome-column: 260px;
+  /** Options strip = chrome column minus the narrow rail. */
+  --width-filter-options: calc(
+    var(--width-filter-chrome-column) - var(--width-filter-narrow-column)
+  );
   --inset-margin-guide: calc(var(--width-filter-narrow-column) - 1px);
   --height-filter-chrome-bar: var(--width-filter-narrow-column);
   --height-filter-narrow-toggle: 35px;
@@ -84,21 +99,56 @@
   --height-format-icon: 25px;
 
   --width-about-panel: 580px;
+  /**
+   * Latest updates peek clip `max-width` only (same distance as About body); not `--width-*`
+   * so Tailwind does not emit a conflicting `w-*` utility.
+   */
+  --fae-dock-peek-body-max: calc(
+    var(--width-about-panel) - var(--width-filter-narrow-column)
+  );
   /** Glossary peek column (Figma: glossary drawer; narrower than About for reading measure). */
   --width-glossary-panel: min(
     420px,
     calc(100vw - 2.5rem - var(--width-filter-narrow-column))
   );
-  --width-preview-panel: min(100vw - 1rem, 432px);
+  /** Content preview dock (wider than filter sidebar column). */
+  --width-preview-panel: 30vw;
 
   --max-height-about-panel: min(70dvh, calc(100dvh - 2.5rem));
-  --max-height-updates-panel: min(85dvh, calc(100dvh - 2.5rem));
+  --max-height-latest-updates-panel: min(85dvh, calc(100dvh - 2.5rem));
   --max-width-floating-panel: calc(100vw - 2.5rem);
+}
+
+/* Tailwind `lg` (64rem / 1024px). */
+@media (min-width: 64rem) {
+  :root {
+    --width-filter-chrome-column: 380px;
+  }
+}
+/* Tailwind `xl` (80rem / 1280px). */
+@media (min-width: 80rem) {
+  :root {
+    --width-filter-chrome-column: 440px;
+  }
+}
+/* Tailwind `2xl` (96rem / 1536px). */
+@media (min-width: 96rem) {
+  :root {
+    --width-filter-chrome-column: 430px;
+  }
+}
+/* 2K+ viewports (2000px) — e.g. large / QHD-class widths; `2k` screen in @theme. */
+@media (min-width: 2000px) {
+  :root {
+    --width-filter-chrome-column: 380px;
+  }
 }
 
 * {
   scrollbar-width: thin;
   scrollbar-color: var(--color-ink-primary) transparent;
+  /* outline: none; */
+  /* overscroll-behavior: */
 }
 
 *::-webkit-scrollbar {
@@ -133,8 +183,7 @@
 
 @layer utilities {
   /**
-   * Preview drawer width: theme token uses `min()`; ensure the utility exists (Tailwind may not
-   * emit `w-preview-panel` from `--width-preview-panel` in all configs).
+   * Preview drawer width: theme token `--width-preview-panel` (30vw); utility for explicit width.
    */
   .w-preview-panel {
     width: var(--width-preview-panel);
@@ -175,11 +224,63 @@ button {
   cursor: pointer;
 }
 
+@keyframes fae-hero-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fae-preview-text-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(-0.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/**
+ * `fae-preview-body-stack` — vertical stack of preview body blocks (gap between children).
+ * No animation on those children.
+ *
+ * `fae-preview-cascade` — staggered section reveal (unlayered so Tailwind utilities don’t win).
+ * See block after `@layer utilities` below.
+ */
+@layer utilities {
+  /** Home hero: title then subtitle on load (`HeroTitleBlock`). */
+  .fae-hero-title-line {
+    opacity: 0;
+    animation: fae-hero-fade-in 0.55s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+
+  .fae-hero-subtitle-line {
+    opacity: 0;
+    animation: fae-hero-fade-in 0.55s cubic-bezier(0.4, 0, 0.2, 1) 0.1s forwards;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .fae-thumbnail-reveal,
   .fae-thumbnail-reveal__img,
   .fae-pixel-tessellation-bg {
     transition: none !important;
+  }
+
+  .fae-preview-cascade > * {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .fae-hero-title-line,
+  .fae-hero-subtitle-line {
+    animation: none !important;
+    opacity: 1 !important;
   }
 }
 
@@ -191,4 +292,29 @@ body {
     var(--color-page-gradient-center) 50%,
     var(--color-page-gradient-edge) 100%
   );
+}
+
+/* Content preview: section cascade (outside @layer so it applies reliably) */
+.fae-preview-cascade > * {
+  opacity: 0;
+  animation: fae-preview-text-reveal 0.48s cubic-bezier(0.33, 1, 0.68, 1) forwards;
+}
+
+.fae-preview-cascade > *:nth-child(1) {
+  animation-delay: 0ms;
+}
+.fae-preview-cascade > *:nth-child(2) {
+  animation-delay: 50ms;
+}
+.fae-preview-cascade > *:nth-child(3) {
+  animation-delay: 100ms;
+}
+.fae-preview-cascade > *:nth-child(4) {
+  animation-delay: 150ms;
+}
+.fae-preview-cascade > *:nth-child(5) {
+  animation-delay: 200ms;
+}
+.fae-preview-cascade > *:nth-child(6) {
+  animation-delay: 250ms;
 }

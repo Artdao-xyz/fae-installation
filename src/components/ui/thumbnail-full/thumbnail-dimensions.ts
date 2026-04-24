@@ -1,7 +1,7 @@
 export const SIZE_DIMS = {
-  sm: { frame: 75, labelMinH: 24, textPx: 11, gapPx: 5, chipW: 2.5, chipH: 10, padX: 10 },
+  sm: { frame: 75, labelMinH: 24, textPx: 12, gapPx: 5, chipW: 2.5, chipH: 10, padX: 10 },
   md: { frame: 120, labelMinH: 28, textPx: 12, gapPx: 6, chipW: 3, chipH: 12, padX: 12 },
-  lg: { frame: 156, labelMinH: 28, textPx: 12, gapPx: 6, chipW: 3, chipH: 12, padX: 12 },
+  lg: { frame: 120, labelMinH: 28, textPx: 12, gapPx: 6, chipW: 3, chipH: 12, padX: 12 },
 } as const;
 
 export type ThumbnailSize = keyof typeof SIZE_DIMS;
@@ -38,4 +38,19 @@ export function getThumbnailTextVariantOuterSize(
     width: outer.width,
     height: d.labelMinH + 12,
   };
+}
+
+/**
+ * Latest updates peek clip width: three `lg` full cards + horizontal gaps + horizontal padding
+ * (aligned with `LatestUpdatesPanel` row: `gap-8` + `px-6` at `sm+`).
+ * Extra px: full-card width uses a short-title estimate; real labels are often wider than the
+ * image frame, so the peek needs slack so the row isn’t clipped.
+ */
+const LATEST_UPDATES_PEEK_EXTRA_PX = 300;
+
+export function getLatestUpdatesPeekClipWidthPx(): number {
+  const { width } = getThumbnailFullCardOuterSize("lg");
+  const gapPx = 32; // gap-8 (2rem)
+  const padXPx = 24; // px-6 (1.5rem) each side
+  return 3 * width + 2 * gapPx + 2 * padXPx + LATEST_UPDATES_PEEK_EXTRA_PX;
 }

@@ -13,12 +13,16 @@ type SearchProps = {
   fieldId?: string;
 };
 
-export function Search({ value, onChange, fieldId = "filter-search" }: SearchProps) {
-  const { openContentPreview } = useFilterSelection();
+export function Search({
+  value,
+  onChange,
+  fieldId = "filter-search",
+}: SearchProps) {
+  const { openContentPreview, contentCatalog } = useFilterSelection();
 
   const results = useMemo(
-    () => filterContentRowsForSearchQuery(value),
-    [value],
+    () => filterContentRowsForSearchQuery(value, contentCatalog),
+    [value, contentCatalog],
   );
   const searching = value.trim().length > 0;
 

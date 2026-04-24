@@ -1,23 +1,22 @@
+"use client";
+
+import { useFilterSelection } from "../FilterSelectionContext";
 import { FilterSidebarCategoryRow } from "../primitives/FilterSidebarCategoryRow";
 
 type NetworkMenuProps = {
   subpanelOpen: boolean;
   onToggleSubpanel: () => void;
-  mobileFillCell?: boolean;
 };
 
-export function NetworkMenu({
-  subpanelOpen,
-  onToggleSubpanel,
-  mobileFillCell,
-}: NetworkMenuProps) {
+export function NetworkMenu({ subpanelOpen, onToggleSubpanel }: NetworkMenuProps) {
+  const { selectedNetworks } = useFilterSelection();
   return (
     <FilterSidebarCategoryRow
       label="Network"
       tone="network"
       expanded={subpanelOpen}
       onClick={onToggleSubpanel}
-      mobileFillCell={mobileFillCell}
+      hasSubpanelSelection={selectedNetworks.size > 0}
     />
   );
 }

@@ -1,13 +1,17 @@
 "use client";
 
-import { useCallback, useId, useState, useSyncExternalStore } from "react";
+import { useCallback, useId, useSyncExternalStore, type ReactElement } from "react";
+import { useFilterSelection } from "@/components/ui/filter-sidebar/FilterSelectionContext";
 import { FilterOptionsPanel } from "./FilterOptionsPanel";
 import { FilterSubpanelsColumn } from "./FilterSubpanelsColumn";
 import { Footer } from "./Footer";
 import { HomeBar } from "./HomeBar";
-import { FILTER_SIDEBAR_COLUMN_CLASS } from "./layout-classes";
 import { MobileFiltersBar } from "./MobileFiltersBar";
 import { MobileFiltersCloseHeader } from "./MobileFiltersCloseHeader";
+import {
+  FILTER_OPTIONS_PANEL_CLIP_TRANSITION_CLASS,
+  FILTER_SIDEBAR_COLUMN_CLASS,
+} from "./layout-classes";
 import { SideBar } from "./SideBar";
 
 function subscribeMaxLg(onChange: () => void) {
@@ -26,53 +30,30 @@ function getMaxLgServerSnapshot() {
 }
 
 export function FilterSidebar() {
+  const {
+    filtersPanelOpen: filtersOpen,
+    setFiltersPanelOpen: setFiltersOpen,
+    briefingsSubpanelOpen,
+    setBriefingsSubpanelOpen,
+    rdSubpanelOpen,
+    setRdSubpanelOpen,
+    networkSubpanelOpen,
+    setNetworkSubpanelOpen,
+    artistsSubpanelOpen,
+    setArtistsSubpanelOpen,
+  } = useFilterSelection();
+  const panelId = useId();
   const isMaxLg = useSyncExternalStore(
     subscribeMaxLg,
     getMaxLgSnapshot,
     getMaxLgServerSnapshot,
   );
-  const [filtersOpen, setFiltersOpen] = useState(false);
-  const [briefingsSubpanelOpen, setBriefingsSubpanelOpen] = useState(false);
-  const [rdSubpanelOpen, setRdSubpanelOpen] = useState(false);
-  const [networkSubpanelOpen, setNetworkSubpanelOpen] = useState(false);
-  const panelId = useId();
 
   const anySubpanelOpen =
-    briefingsSubpanelOpen || rdSubpanelOpen || networkSubpanelOpen;
-
-  /** Only one domain subpanel open at a time (Briefings vs R&D vs Network). */
-  const onToggleBriefingsSubpanel = useCallback(() => {
-    setBriefingsSubpanelOpen((o) => {
-      const next = !o;
-      if (next) {
-        setRdSubpanelOpen(false);
-        setNetworkSubpanelOpen(false);
-      }
-      return next;
-    });
-  }, []);
-
-  const onToggleRdSubpanel = useCallback(() => {
-    setRdSubpanelOpen((o) => {
-      const next = !o;
-      if (next) {
-        setBriefingsSubpanelOpen(false);
-        setNetworkSubpanelOpen(false);
-      }
-      return next;
-    });
-  }, []);
-
-  const onToggleNetworkSubpanel = useCallback(() => {
-    setNetworkSubpanelOpen((o) => {
-      const next = !o;
-      if (next) {
-        setBriefingsSubpanelOpen(false);
-        setRdSubpanelOpen(false);
-      }
-      return next;
-    });
-  }, []);
+    briefingsSubpanelOpen ||
+    rdSubpanelOpen ||
+    artistsSubpanelOpen ||
+    networkSubpanelOpen;
 
   const toggleFiltersOpen = useCallback(() => {
     setFiltersOpen((open) => {
@@ -80,15 +61,38 @@ export function FilterSidebar() {
       if (!next) {
         setBriefingsSubpanelOpen(false);
         setRdSubpanelOpen(false);
+        setArtistsSubpanelOpen(false);
         setNetworkSubpanelOpen(false);
       }
       return next;
     });
-  }, []);
+  }, [
+    setFiltersOpen,
+    setBriefingsSubpanelOpen,
+    setRdSubpanelOpen,
+    setArtistsSubpanelOpen,
+    setNetworkSubpanelOpen,
+  ]);
+
+  const subpanelsColumn: ReactElement = (
+    <FilterSubpanelsColumn
+      filtersPanelOpen={filtersOpen}
+      anySubpanelOpen={anySubpanelOpen}
+      briefingsSubpanelOpen={briefingsSubpanelOpen}
+      rdSubpanelOpen={rdSubpanelOpen}
+      artistsSubpanelOpen={artistsSubpanelOpen}
+      networkSubpanelOpen={networkSubpanelOpen}
+      onCloseBriefings={() => setBriefingsSubpanelOpen(false)}
+      onCloseRd={() => setRdSubpanelOpen(false)}
+      onCloseArtists={() => setArtistsSubpanelOpen(false)}
+      onCloseNetwork={() => setNetworkSubpanelOpen(false)}
+    />
+  );
+
+  const showOptionsPanel = !isMaxLg || filtersOpen;
 
   return (
-    <div className="relative flex h-screen min-h-0 shrink-0 overflow-hidden z-50 w-auto min-w-0">
-      {/* `lg+`: fixed-width column. `max-lg`: full-screen only while filters overlay is open. */}
+    <div className="relative z-40 flex h-screen min-h-0 w-auto min-w-0 shrink-0 overflow-hidden">
       <div
         className={`z-50 flex h-full min-h-0 flex-col items-stretch self-stretch overflow-hidden ${FILTER_SIDEBAR_COLUMN_CLASS} ${
           filtersOpen
@@ -101,7 +105,7 @@ export function FilterSidebar() {
         ) : null}
         <HomeBar className="max-lg:hidden" mergeWithSubpanel={anySubpanelOpen} />
         <div
-          className={`flex min-h-0 min-w-0 flex-1 flex-row overflow-hidden ${
+          className={`flex min-h-0 min-w-0 flex-1 flex-row overflow-hidden transition-colors duration-500 ease-in-out motion-reduce:transition-none ${
             filtersOpen ? "bg-surface-canvas" : "bg-transparent"
           }`}
         >
@@ -112,49 +116,43 @@ export function FilterSidebar() {
               filterPanelId={panelId}
             />
           </div>
-          {filtersOpen ? (
-            <FilterOptionsPanel
-              panelId={panelId}
-              briefingsSubpanelOpen={briefingsSubpanelOpen}
-              rdSubpanelOpen={rdSubpanelOpen}
-              networkSubpanelOpen={networkSubpanelOpen}
-              onToggleBriefingsSubpanel={onToggleBriefingsSubpanel}
-              onToggleRdSubpanel={onToggleRdSubpanel}
-              onToggleNetworkSubpanel={onToggleNetworkSubpanel}
-              onCloseBriefings={() => setBriefingsSubpanelOpen(false)}
-              onCloseRd={() => setRdSubpanelOpen(false)}
-              onCloseNetwork={() => setNetworkSubpanelOpen(false)}
-              mobileSubpanelsColumn={
-                isMaxLg ? (
-                  <FilterSubpanelsColumn
-                    className="w-full min-w-0 max-w-none"
-                    anySubpanelOpen={anySubpanelOpen}
-                    briefingsSubpanelOpen={briefingsSubpanelOpen}
-                    rdSubpanelOpen={rdSubpanelOpen}
-                    networkSubpanelOpen={networkSubpanelOpen}
-                    onCloseBriefings={() => setBriefingsSubpanelOpen(false)}
-                    onCloseRd={() => setRdSubpanelOpen(false)}
-                    onCloseNetwork={() => setNetworkSubpanelOpen(false)}
-                  />
-                ) : null
-              }
-            />
-          ) : null}
+          <div
+            className={`h-full min-h-0 shrink-0 overflow-hidden ${FILTER_OPTIONS_PANEL_CLIP_TRANSITION_CLASS} max-lg:min-w-0 ${
+              filtersOpen
+                ? "w-[var(--width-filter-options)] max-lg:w-full max-lg:flex-1 opacity-100"
+                : "pointer-events-none w-0 max-lg:w-0 opacity-0"
+            }`}
+          >
+            <div className="h-full min-h-0 w-[var(--width-filter-options)] max-lg:w-full min-w-0 overflow-hidden">
+              {showOptionsPanel ? (
+                <FilterOptionsPanel
+                  panelId={panelId}
+                  briefingsSubpanelOpen={briefingsSubpanelOpen}
+                  rdSubpanelOpen={rdSubpanelOpen}
+                  artistsSubpanelOpen={artistsSubpanelOpen}
+                  networkSubpanelOpen={networkSubpanelOpen}
+                  onToggleBriefingsSubpanel={() =>
+                    setBriefingsSubpanelOpen((o) => !o)
+                  }
+                  onToggleRdSubpanel={() => setRdSubpanelOpen((o) => !o)}
+                  onToggleArtistsSubpanel={() =>
+                    setArtistsSubpanelOpen((o) => !o)
+                  }
+                  onToggleNetworkSubpanel={() =>
+                    setNetworkSubpanelOpen((o) => !o)
+                  }
+                  mobileSubpanelsColumn={
+                    isMaxLg ? undefined : subpanelsColumn
+                  }
+                />
+              ) : null}
+            </div>
+          </div>
+          <div className="min-h-0 min-w-0 flex-1 max-lg:hidden" aria-hidden />
         </div>
         <Footer className="max-lg:hidden" mergeWithSubpanel={anySubpanelOpen} />
       </div>
-      {filtersOpen && !isMaxLg ? (
-        <FilterSubpanelsColumn
-          anySubpanelOpen={anySubpanelOpen}
-          briefingsSubpanelOpen={briefingsSubpanelOpen}
-          rdSubpanelOpen={rdSubpanelOpen}
-          networkSubpanelOpen={networkSubpanelOpen}
-          onCloseBriefings={() => setBriefingsSubpanelOpen(false)}
-          onCloseRd={() => setRdSubpanelOpen(false)}
-          onCloseNetwork={() => setNetworkSubpanelOpen(false)}
-        />
-      ) : null}
-
+      {isMaxLg ? null : subpanelsColumn}
       {isMaxLg && !filtersOpen ? (
         <div className="fixed inset-x-0 bottom-0 z-40 flex flex-col border-t-hairline border-solid border-ink-primary bg-surface-canvas lg:hidden">
           <MobileFiltersBar onOpen={toggleFiltersOpen} />

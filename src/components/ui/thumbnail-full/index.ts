@@ -1,5 +1,6 @@
 export { Thumbnail, type ThumbnailProps } from "./Thumbnail";
 export {
+  getLatestUpdatesPeekClipWidthPx,
   getThumbnailFramePx,
   getThumbnailFullCardOuterSize,
   getThumbnailTextVariantOuterSize,

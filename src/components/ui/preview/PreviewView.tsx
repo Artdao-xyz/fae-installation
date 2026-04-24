@@ -1,20 +1,41 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import {
+  memo,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import type { ContentRow } from "@/data/content-types";
 import { OpenSvgIcon } from "@/components/ui/icons/OpenSvgIcon";
-import { FilterPill } from "@/components/ui/filter-sidebar/primitives/FilterPill";
+import type { FilterSidebarCategoryTone } from "@/components/ui/filter-sidebar/config/filterSidebarTones";
+import {
+  FilterPill,
+  type FilterPillVariant,
+} from "@/components/ui/filter-sidebar/primitives/FilterPill";
+import { useFilterSelection } from "@/components/ui/filter-sidebar/FilterSelectionContext";
+import { PREVIEW_DOCK_WIDTH_TRANSITION_CLASS } from "@/components/ui/filter-sidebar/shell/layout-classes";
+import { PreviewBlocksBody } from "./PreviewBlocksBody";
+import {
+  fullScreenContentInnerClass,
+  fullScreenContentScrollClass,
+  fullScreenContentShellClass,
+  fullScreenContentShellEnterTransitionClass,
+  fullScreenShowMoreLessButtonClass,
+  fullScreenShowMoreLessLabelClass,
+} from "./fullScreenContentChrome";
+import { PreviewImageCarousel } from "./PreviewImageCarousel";
 import { PreviewPanelCollapseBar } from "./PreviewPanelCollapseBar";
 
 type PreviewViewProps = {
   row: ContentRow;
-  /** When true, only the narrow edge strip is shown (same width as filter rail). */
-  collapsed: boolean;
-  onCollapsedChange: (collapsed: boolean) => void;
   /** When true, preview fills the viewport (docked panel hidden). */
   fullScreen: boolean;
   onFullScreenChange: (fullScreen: boolean) => void;
-  onClose: () => void;
   className?: string;
 };
 
@@ -42,10 +63,20 @@ function resourceLinkLabel(url: string): string {
   }
 }
 
-function RichParagraph({ text }: { text: string }) {
+function RichParagraph({
+  text,
+  preserveParagraphBreaks = false,
+}: {
+  text: string;
+  preserveParagraphBreaks?: boolean;
+}) {
   const segments = text.split(/(\*[^*]+\*)/g);
   return (
-    <p className="mb-0 font-suisseintl text-xs font-normal leading-[1.6] tracking-[0.36px] text-ink-caption">
+    <p
+      className={`mb-0 font-suisseintl text-xs font-normal leading-[1.6] tracking-[0.36px] text-ink-caption${
+        preserveParagraphBreaks ? " whitespace-pre-line" : ""
+      }`}
+    >
       {segments.map((seg, i) => {
         if (seg.startsWith("*") && seg.endsWith("*") && seg.length >= 2) {
           return (
@@ -60,249 +91,710 @@ function RichParagraph({ text }: { text: string }) {
   );
 }
 
-/** Read-only pills: match FilterSidebar variants; always ink (never selection blue) in preview. */
-const pillReadOnlyClass = "pointer-events-none shrink-0";
-
 const sectionLabelClass =
   "w-[72px] shrink-0 font-lust-text text-xs font-normal leading-none tracking-[-0.228px] text-ink-body";
 
-function PreviewMainContent({ row }: { row: ContentRow }) {
+const clampPillRowClass =
+  "flex min-h-0 w-full min-w-0 flex-wrap content-start gap-1.5 gap-y-1.5";
+
+/** Selected pills first, then original order within each group. */
+function sortPillsSelectedFirst(
+  list: readonly string[],
+  isSelected: (label: string) => boolean,
+): string[] {
+  return [...list]
+    .map((label, order) => ({ label, order }))
+    .sort((a, b) => {
+      const sa = isSelected(a.label) ? 0 : 1;
+      const sb = isSelected(b.label) ? 0 : 1;
+      if (sa !== sb) return sa - sb;
+      return a.order - b.order;
+    })
+    .map((x) => x.label);
+}
+
+function rowCountForPillRow(container: HTMLElement): number {
+  const children = Array.from(container.children) as HTMLElement[];
+  if (children.length === 0) return 0;
+  return new Set(children.map((c) => Math.round(c.offsetTop))).size;
+}
+
+/** Returns index of the first child that sits on the (1-based) `minRow1Based`-th line, or `childCount` if there are fewer row breaks. */
+function firstIndexOnRowAtLeast(
+  container: HTMLElement,
+  minRow1Based: number,
+): number {
+  const children = Array.from(container.children) as HTMLElement[];
+  if (children.length === 0) return 0;
+  const tops = children.map((c) => c.offsetTop);
+  const u = [...new Set(tops.map((t) => Math.round(t)))].sort(
+    (a, b) => a - b,
+  );
+  if (u.length < minRow1Based) return children.length;
+  const y = u[minRow1Based - 1];
+  const i = children.findIndex((c) => Math.round(c.offsetTop) === y);
+  return i < 0 ? children.length : i;
+}
+
+type ClampedPreviewPillsProps = {
+  items: readonly string[];
+  docked: boolean;
+  variant: FilterPillVariant;
+  tone: FilterSidebarCategoryTone;
+  itemKey: string;
+  isSelected: (label: string) => boolean;
+  onPillPress: (label: string) => void;
+};
+
+/** After real width change (e.g. window / preview panel), debounce a full re-measure. */
+const PREVIEW_PILL_WIDTH_REMEASURE_MS = 120;
+
+function ClampedPreviewPillsInner({
+  items,
+  docked,
+  variant,
+  tone,
+  itemKey,
+  isSelected,
+  onPillPress,
+}: ClampedPreviewPillsProps) {
+  const itemsSorted = useMemo(
+    () => sortPillsSelectedFirst(items, isSelected),
+    [items, isSelected],
+  );
+  const rootRef = useRef<HTMLDivElement | null>(null);
+  const rowRef = useRef<HTMLDivElement | null>(null);
+  const lastInlineWidthRef = useRef<number | null>(null);
+  const [visiblePrefix, setVisiblePrefix] = useState<number | null>(null);
+  const [overflowExpanded, setOverflowExpanded] = useState(false);
+
+  useLayoutEffect(() => {
+    if (!docked || overflowExpanded) return;
+    const el = rowRef.current;
+    if (!el) return;
+
+    if (visiblePrefix === null) {
+      let raf0 = 0;
+      let raf1 = 0;
+      let cancelled = false;
+      /**
+       * Read row count after the next two frames: during the docked panel `max-w` / width
+       * transition, flex may report a single “row” or wrong tops; measuring in the first
+       * useLayout pass sets `visiblePrefix === items.length` and hides +N forever at full width.
+       */
+      raf0 = requestAnimationFrame(() => {
+        raf1 = requestAnimationFrame(() => {
+          if (cancelled) return;
+          const row = rowRef.current;
+          if (!row) return;
+          const nRows = rowCountForPillRow(row);
+          const n = itemsSorted.length;
+          if (nRows <= 3) {
+            setVisiblePrefix(n);
+            return;
+          }
+          setVisiblePrefix(firstIndexOnRowAtLeast(row, 4));
+        });
+      });
+      return () => {
+        cancelled = true;
+        cancelAnimationFrame(raf0);
+        cancelAnimationFrame(raf1);
+      };
+    }
+
+    if (visiblePrefix < itemsSorted.length) {
+      if (rowCountForPillRow(el) > 3 && visiblePrefix > 0) {
+        queueMicrotask(() => setVisiblePrefix((v) => (v !== null && v > 0 ? v - 1 : v)));
+      }
+    }
+  }, [docked, itemKey, itemsSorted, overflowExpanded, visiblePrefix]);
+
+  useEffect(() => {
+    if (!docked) return;
+    const node = rootRef.current;
+    if (!node || typeof ResizeObserver === "undefined") return;
+    lastInlineWidthRef.current = null;
+    let t: ReturnType<typeof setTimeout> | undefined;
+    const ro = new ResizeObserver((entries) => {
+      const e = entries[0];
+      if (!e) return;
+      const w = Math.round(e.contentRect.width);
+      const prev = lastInlineWidthRef.current;
+      if (prev === null) {
+        lastInlineWidthRef.current = w;
+        return;
+      }
+      if (Math.abs(w - prev) < 1) {
+        return;
+      }
+      lastInlineWidthRef.current = w;
+      if (t !== undefined) clearTimeout(t);
+      t = setTimeout(() => {
+        setVisiblePrefix(null);
+        setOverflowExpanded(false);
+      }, PREVIEW_PILL_WIDTH_REMEASURE_MS);
+    });
+    ro.observe(node);
+    return () => {
+      if (t !== undefined) clearTimeout(t);
+      ro.disconnect();
+    };
+  }, [docked, itemKey]);
+
+  const renderPill = useCallback(
+    (label: string) => (
+      <FilterPill
+        key={label}
+        label={label}
+        variant={variant}
+        tone={tone}
+        selected={isSelected(label)}
+        onPress={() => onPillPress(label)}
+        className="shrink-0"
+      />
+    ),
+    [isSelected, onPillPress, tone, variant],
+  );
+
+  if (!docked) {
+    return itemsSorted.map((label) => renderPill(label));
+  }
+
+  if (overflowExpanded) {
+    return (
+      <div className="w-full min-w-0" ref={rootRef}>
+        <div ref={rowRef} className={clampPillRowClass}>
+          {itemsSorted.map((label) => renderPill(label))}
+        </div>
+      </div>
+    );
+  }
+
+  if (visiblePrefix === null) {
+    return (
+      <div className="w-full min-w-0" ref={rootRef}>
+        <div ref={rowRef} className={clampPillRowClass}>
+          {itemsSorted.map((label) => renderPill(label))}
+        </div>
+      </div>
+    );
+  }
+
+  const overflow = itemsSorted.length - visiblePrefix;
+  const vis = itemsSorted.slice(0, visiblePrefix);
+
+  return (
+    <div className="w-full min-w-0" ref={rootRef}>
+      <div ref={rowRef} className={clampPillRowClass}>
+        {vis.map((label) => renderPill(label))}
+        {overflow > 0 ? (
+          <FilterPill
+            key="__overflow__"
+            label={`+${overflow}`}
+            variant={variant}
+            tone={tone}
+            selected={false}
+            onPress={() => setOverflowExpanded(true)}
+            className="shrink-0"
+            title={`Show ${overflow} more`}
+          />
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+function ClampedPreviewPills({
+  items,
+  docked,
+  variant,
+  tone,
+  isSelected,
+  onPillPress,
+}: {
+  items: readonly string[];
+  docked: boolean;
+  variant: FilterPillVariant;
+  tone: FilterSidebarCategoryTone;
+  isSelected: (label: string) => boolean;
+  onPillPress: (label: string) => void;
+}) {
+  const itemKey = items.join("\0");
+  const selectionLayoutSig = useMemo(
+    () =>
+      `${itemKey}\0${items.map((l) => (isSelected(l) ? 1 : 0)).join("")}`,
+    [itemKey, items, isSelected],
+  );
+  return (
+    <ClampedPreviewPillsInner
+      key={`${docked}-${selectionLayoutSig}`}
+      itemKey={itemKey}
+      items={items}
+      docked={docked}
+      variant={variant}
+      tone={tone}
+      isSelected={isSelected}
+      onPillPress={onPillPress}
+    />
+  );
+}
+
+function CategoryBlock({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="flex min-h-0 gap-2.5">
+      <p className={sectionLabelClass}>{label}</p>
+      <div className="flex min-h-0 min-w-0 flex-1 flex-wrap content-start gap-1.5 gap-y-1.5">
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function PreviewMainContent({
+  row,
+  fullScreen,
+}: {
+  row: ContentRow;
+  fullScreen: boolean;
+}) {
+  const {
+    selectedFocusAreas,
+    selectedActivityTypes,
+    selectedArtists,
+    selectedFormats,
+    selectedNetworks,
+    toggleFocusArea,
+    toggleActivityType,
+    toggleArtist,
+    toggleFormat,
+    toggleNetwork,
+    applyPreviewPillFilterAndClose,
+  } = useFilterSelection();
+
+  const isFocusPillSelected = useCallback(
+    (l: string) => selectedFocusAreas.has(l),
+    [selectedFocusAreas],
+  );
+  const isActivityPillSelected = useCallback(
+    (l: string) => selectedActivityTypes.has(l),
+    [selectedActivityTypes],
+  );
+  const isFormatPillSelected = useCallback(
+    (l: string) => selectedFormats.has(l),
+    [selectedFormats],
+  );
+  const isNetworkPillSelected = useCallback(
+    (l: string) => selectedNetworks.has(l),
+    [selectedNetworks],
+  );
+  const isArtistPillSelected = useCallback(
+    (l: string) => selectedArtists.has(l),
+    [selectedArtists],
+  );
+
+  const onFocusPillPress = useCallback(
+    (label: string) => {
+      toggleFocusArea(label);
+      applyPreviewPillFilterAndClose();
+    },
+    [toggleFocusArea, applyPreviewPillFilterAndClose],
+  );
+  const onActivityPillPress = useCallback(
+    (label: string) => {
+      toggleActivityType(label);
+      applyPreviewPillFilterAndClose();
+    },
+    [toggleActivityType, applyPreviewPillFilterAndClose],
+  );
+  const onFormatPillPress = useCallback(
+    (label: string) => {
+      toggleFormat(label);
+      applyPreviewPillFilterAndClose();
+    },
+    [toggleFormat, applyPreviewPillFilterAndClose],
+  );
+  const onNetworkPillPress = useCallback(
+    (label: string) => {
+      toggleNetwork(label);
+      applyPreviewPillFilterAndClose();
+    },
+    [toggleNetwork, applyPreviewPillFilterAndClose],
+  );
+  const onArtistPillPress = useCallback(
+    (label: string) => {
+      toggleArtist(label);
+      applyPreviewPillFilterAndClose();
+    },
+    [toggleArtist, applyPreviewPillFilterAndClose],
+  );
+
+  const previewSlides = useMemo(
+    () =>
+      row.imageGallery.length > 0
+        ? row.imageGallery
+        : row.imageUrl
+          ? [row.imageUrl]
+          : [],
+    [row.imageGallery, row.imageUrl],
+  );
+
   const paragraphs = useMemo(
-    () => row.content.split(/\n\n+/).filter(Boolean),
+    () => row.content.split(/\n\n+/).map((p) => p.trim()).filter(Boolean),
     [row.content],
   );
 
-  return (
-    <>
-      <div className="flex w-full shrink-0 items-start gap-5">
-        <div className="relative size-[205px] shrink-0 overflow-hidden rounded-[3.677px]">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={row.imageUrl}
-            alt={row.title}
-            className="pointer-events-none size-full object-cover"
-          />
-        </div>
-        <div className="flex min-w-0 flex-1 flex-col items-start justify-start gap-2.5 leading-none">
-          <p className="font-lust-text text-xl tracking-[-0.38px] text-black-fae">{row.title}</p>
-          <p className="font-lust-text text-xs tracking-[-0.228px] text-black-fae">{row.year}</p>
-        </div>
-      </div>
+  const hasFocus = row.focusAreas.length > 0;
+  const hasActivity = row.activityTypes.length > 0;
+  const hasFormats = row.formats.length > 0;
+  const hasNetworks = row.networks.length > 0;
+  const hasArtists = row.artists.length > 0;
+  const hasCategories =
+    hasFocus || hasActivity || hasFormats || hasNetworks || hasArtists;
+  const hasBlocks =
+    row.contentBlocks !== null && row.contentBlocks.length > 0;
+  const hasBody = hasBlocks || paragraphs.length > 0;
+  const hasResources = row.resources.length > 0;
+  const dateLine =
+    row.yearLabel.trim().length > 0
+      ? row.yearLabel
+      : row.year > 0
+        ? String(row.year)
+        : "";
 
+  const heroBlock = (
+    <div className="flex w-full shrink-0 flex-col gap-2.5">
+      <p className="min-w-0 max-w-full wrap-anywhere font-lust-text text-xl leading-snug tracking-[-0.38px] text-black-fae">
+        {row.title}
+      </p>
+      {dateLine ? (
+        <p className="w-full min-w-0 font-lust-text text-xs leading-none tracking-[-0.228px] text-black-fae">
+          {dateLine}
+        </p>
+      ) : null}
       <Divider />
+      <div className="flex shrink-0 flex-col">
+        {previewSlides.length > 0 ? (
+          <PreviewImageCarousel
+            key={previewSlides.join("\0")}
+            slides={previewSlides}
+            alt={row.title}
+          />
+        ) : (
+          <div
+            className="relative flex h-[200px] w-full max-w-[280px] shrink-0 items-center justify-center overflow-hidden rounded-[3.677px] bg-surface-canvas"
+            aria-hidden
+          />
+        )}
+      </div>
+    </div>
+  );
 
-      <div className="flex flex-col gap-3">
-        <div className="flex gap-2.5">
-          <p className={sectionLabelClass}>Focus</p>
-          <div className="flex min-w-0 flex-1 flex-wrap gap-1.5 gap-y-1.5">
-            {row.focusAreas.map((label) => (
-              <FilterPill
-                key={label}
-                label={label}
+  const categoriesBlock = hasCategories ? (
+    <div className="w-full min-w-0 shrink-0">
+      <Divider />
+      <div className="flex shrink-0 flex-col gap-3 pt-2.5">
+          {hasFocus ? (
+            <CategoryBlock label="Focus">
+              <ClampedPreviewPills
+                items={row.focusAreas}
+                docked={!fullScreen}
                 variant="square"
                 tone="fae-briefings"
-                selected={false}
-                className={pillReadOnlyClass}
+                isSelected={isFocusPillSelected}
+                onPillPress={onFocusPillPress}
               />
-            ))}
-          </div>
-        </div>
-
-        <div className="flex gap-2.5">
-          <p className={sectionLabelClass}>Activity</p>
-          <div className="flex min-w-0 flex-1 flex-wrap gap-x-1.5 gap-y-1.5">
-            {row.activityTypes.map((label) => (
-              <FilterPill
-                key={label}
-                label={label}
+            </CategoryBlock>
+          ) : null}
+          {hasActivity ? (
+            <CategoryBlock label="Activity">
+              <ClampedPreviewPills
+                items={row.activityTypes}
+                docked={!fullScreen}
                 variant="rounded"
                 tone="fae-briefings"
-                selected={false}
-                className={pillReadOnlyClass}
+                isSelected={isActivityPillSelected}
+                onPillPress={onActivityPillPress}
               />
-            ))}
-          </div>
-        </div>
-
-        <div className="flex gap-2.5">
-          <p className={sectionLabelClass}>Format</p>
-          <div className="flex flex-wrap gap-1.5">
-            {row.formats.map((label) => (
-              <FilterPill
-                key={label}
-                label={label}
+            </CategoryBlock>
+          ) : null}
+          {hasFormats ? (
+            <CategoryBlock label="Format">
+              <ClampedPreviewPills
+                items={row.formats}
+                docked={!fullScreen}
                 variant="rounded"
                 tone="fae-briefings"
-                selected={false}
-                className={pillReadOnlyClass}
+                isSelected={isFormatPillSelected}
+                onPillPress={onFormatPillPress}
               />
-            ))}
-          </div>
-        </div>
-
-        <div className="flex gap-2.5">
-          <p className={sectionLabelClass}>Network</p>
-          <div className="flex min-w-0 flex-1 flex-wrap gap-1.5 gap-y-1.5">
-            {row.networks.map((label) => (
-              <FilterPill
-                key={label}
-                label={label}
+            </CategoryBlock>
+          ) : null}
+          {hasNetworks ? (
+            <CategoryBlock label="Network">
+              <ClampedPreviewPills
+                items={row.networks}
+                docked={!fullScreen}
                 variant="dotted"
                 tone="network"
-                selected={false}
-                className={pillReadOnlyClass}
+                isSelected={isNetworkPillSelected}
+                onPillPress={onNetworkPillPress}
               />
+            </CategoryBlock>
+          ) : null}
+          {hasArtists ? (
+            <CategoryBlock label="Artist">
+              {sortPillsSelectedFirst(
+                row.artists,
+                isArtistPillSelected,
+              ).map((label) => (
+                <FilterPill
+                  key={label}
+                  label={label}
+                  variant="rounded"
+                  tone="artists"
+                  selected={isArtistPillSelected(label)}
+                  onPress={() => onArtistPillPress(label)}
+                  className="shrink-0"
+                />
+              ))}
+            </CategoryBlock>
+          ) : null}
+        </div>
+    </div>
+  ) : null;
+
+  const mainBody = hasBody && (
+    <div className="min-w-0 w-full">
+      <Divider />
+      <div className="pt-2.5">
+        {hasBlocks && row.contentBlocks ? (
+          <PreviewBlocksBody
+            key={`${row.id}-blocks`}
+            content={row.contentBlocks}
+          />
+        ) : (
+          <div
+            key={`${row.id}-plain`}
+            className="fae-preview-body-stack flex flex-col gap-3"
+          >
+            {paragraphs.map((p, i) => (
+              <RichParagraph key={i} text={p} />
             ))}
           </div>
+        )}
+      </div>
+    </div>
+  );
+
+  const resourcesBlock = hasResources ? (
+    <div className="w-full min-w-0 shrink-0">
+      <Divider />
+      <div className="flex shrink-0 flex-col gap-2 pt-2.5 pb-2">
+          <p className="font-lust-text text-xs leading-none tracking-[-0.228px] text-ink-caption">
+            Sources
+          </p>
+          <ul className="flex list-none flex-col gap-1 p-0">
+            {row.resources.map((href) => (
+              <li key={href} className="leading-none">
+                <a
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex max-w-full items-center gap-1.5 rounded-sm bg-surface-canvas/90 py-0 pl-0 pr-0 font-fira-mono text-[10px] leading-[14px] text-ink-body underline decoration-solid [text-decoration-skip-ink:none] backdrop-blur-fae-md hover:bg-surface-hover/80"
+                >
+                  <span className="min-w-0 truncate">
+                    {resourceLinkLabel(href)}
+                  </span>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src="/svg/blue-arrow.svg"
+                    alt=""
+                    className="h-[7px] w-[5px] shrink-0 object-contain"
+                    aria-hidden
+                  />
+                </a>
+              </li>
+            ))}
+          </ul>
         </div>
-      </div>
+    </div>
+  ) : null;
 
-      <Divider />
+  const mainColumnClass = fullScreen
+    ? `${fullScreenContentInnerClass} fae-preview-cascade w-full min-w-0`
+    : "fae-preview-cascade w-full min-w-0 flex flex-col gap-5";
 
-      <div className="flex flex-col gap-0">
-        {paragraphs.map((p, i) => (
-          <RichParagraph key={i} text={p} />
-        ))}
-      </div>
-
-      <Divider />
-
-      <div className="flex flex-col gap-2 pb-2">
-        <p className="font-lust-text text-xs leading-none tracking-[-0.228px] text-ink-caption">
-          Resources
-        </p>
-        <ul className="flex list-none flex-col gap-1 p-0">
-          {row.resources.map((href) => (
-            <li key={href} className="leading-none">
-              <a
-                href={href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex max-w-full items-center gap-1.5 rounded-sm bg-surface-canvas/90 py-0 pl-0 pr-0 font-fira-mono text-[10px] leading-[14px] text-ink-body underline decoration-solid [text-decoration-skip-ink:none] backdrop-blur-fae-md hover:bg-surface-hover/80"
-              >
-                <span className="min-w-0 truncate">{resourceLinkLabel(href)}</span>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src="/svg/blue-arrow.svg"
-                  alt=""
-                  className="h-[7px] w-[5px] shrink-0 object-contain"
-                  aria-hidden
-                />
-              </a>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </>
+  return (
+    <div key={row.id} className={mainColumnClass}>
+      {heroBlock}
+      {categoriesBlock}
+      {mainBody}
+      {resourcesBlock}
+    </div>
   );
 }
 
-const dockedShellClass =
-  "fixed top-[var(--inset-margin-guide)] right-[var(--inset-margin-guide)] bottom-[var(--inset-margin-guide)] z-55 flex shrink-0 flex-col border-hairline border-solid border-ink-primary bg-surface-canvas motion-reduce:transition-none";
+/** Fixed shell: clip width 0 → token (avoids `fr` interpolation overshoot in some browsers). */
+const previewDockedOuterClass = `fixed top-[var(--inset-margin-guide)] right-[var(--inset-margin-guide)] bottom-[var(--inset-margin-guide)] z-[47] flex min-h-0 min-w-0 justify-end overflow-hidden ${PREVIEW_DOCK_WIDTH_TRANSITION_CLASS}`;
 
-/** Same inset as legacy margin guide / `--inset-margin-guide` (narrow column − 1px). */
-const fullScreenShellClass =
-  "fixed top-[var(--inset-margin-guide)] right-[var(--inset-margin-guide)] bottom-[var(--inset-margin-guide)] left-[var(--inset-margin-guide)] z-[62] flex min-h-0 min-w-0 flex-col overflow-hidden border-hairline border-solid border-ink-primary bg-surface-canvas motion-reduce:transition-none";
+/** Collapse bar + scrollable main column. */
+const previewDockedAsideBaseClass =
+  "flex h-full min-h-0 w-preview-panel min-w-0 shrink-0 flex-col overflow-hidden border-hairline border-solid border-ink-primary bg-surface-canvas";
 
-const showMoreButtonClass =
-  "inline-flex w-fit items-center gap-2 self-start border-t-hairline border-r-hairline border-solid border-ink-primary px-5 py-3 font-fira-mono text-sm text-black-fae transition-colors hover:bg-black-fae/10 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ink-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface-canvas";
-
-export function PreviewView({
+/**
+ * Full-screen content preview. Open opacity matches `AboutFullScreenView` (mount → fade in).
+ * Isolated so the enter transition runs on each full-screen mount.
+ */
+function ContentPreviewFullScreenView({
   row,
-  collapsed,
-  onCollapsedChange,
-  fullScreen,
-  onFullScreenChange,
+  onShowLess,
   onClose,
-  className = "",
-}: PreviewViewProps) {
+}: {
+  row: ContentRow;
+  onShowLess: () => void;
+  onClose: () => void;
+}) {
+  const [shellEntered, setShellEntered] = useState(false);
+
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key !== "Escape") return;
-      onClose();
+    let cancelled = false;
+    let raf = 0;
+    queueMicrotask(() => {
+      if (cancelled || typeof window === "undefined") return;
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        setShellEntered(true);
+        return;
+      }
+      setShellEntered(false);
+      raf = requestAnimationFrame(() => {
+        if (!cancelled) setShellEntered(true);
+      });
+    });
+    return () => {
+      cancelled = true;
+      if (raf) cancelAnimationFrame(raf);
     };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
-
-  if (fullScreen) {
-    return (
-      <div
-        className={fullScreenShellClass}
-        role="dialog"
-        aria-modal="true"
-        aria-label="Content preview full screen"
-      >
-        <PreviewPanelCollapseBar
-          ariaLabel="Close preview"
-          onClose={onClose}
-        />
-        <div className="scrollbar-hide min-h-0 flex-1 overflow-y-auto px-6 py-6 md:px-12 md:py-8">
-          <div className="mx-auto flex max-w-3xl flex-col gap-5">
-            <PreviewMainContent row={row} />
-          </div>
-        </div>
-        <div className="flex shrink-0 justify-start">
-          <button
-            type="button"
-            onClick={onClose}
-            className={showMoreButtonClass}
-            aria-label="Close preview"
-          >
-            <OpenSvgIcon className="shrink-0" />
-            <span className="select-none text-[13px] leading-none tracking-wide">Show less</span>
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (collapsed) {
-    return (
-      <aside
-        className={`${dockedShellClass} w-filter-narrow-column min-w-0 overflow-hidden ${className}`}
-        aria-label="Preview collapsed"
-      >
-        <button
-          type="button"
-          onClick={() => onCollapsedChange(false)}
-          className="flex min-h-0 w-full flex-1 flex-col items-center border-0 bg-surface-canvas pt-3 text-ink-primary hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary"
-          aria-label="Expand preview"
-        >
-          <OpenSvgIcon className="rotate-180" />
-        </button>
-      </aside>
-    );
-  }
+  }, []);
 
   return (
-    <aside
-      className={`${dockedShellClass} w-preview-panel ${className}`}
-      aria-label="Content preview"
+    <div
+      data-fae-content-preview
+      onPointerDown={(e) => e.stopPropagation()}
+      className={`${fullScreenContentShellClass} ${fullScreenContentShellEnterTransitionClass} ${
+        shellEntered ? "scale-100 opacity-100" : "scale-95 opacity-0"
+      } motion-reduce:scale-100 motion-reduce:opacity-100`}
       role="dialog"
       aria-modal="true"
+      aria-label="Content preview full screen"
     >
-      <PreviewPanelCollapseBar
-        ariaLabel="Close preview"
-        onClose={onClose}
-      />
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-        <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-5 pt-5 pb-4 scrollbar-hide">
-          <PreviewMainContent row={row} />
-        </div>
+      <PreviewPanelCollapseBar ariaLabel="Close preview" onClose={onClose} />
+      <div className={fullScreenContentScrollClass}>
+        <PreviewMainContent row={row} fullScreen />
       </div>
-
       <div className="flex shrink-0 justify-start">
         <button
           type="button"
-          onClick={() => onFullScreenChange(true)}
-          className={showMoreButtonClass}
-          aria-label="Open full screen preview"
+          onClick={onShowLess}
+          className={fullScreenShowMoreLessButtonClass}
+          aria-label="Exit full screen preview"
         >
-          <OpenSvgIcon className="shrink-0 rotate-180" />
-          <span className="select-none text-[13px] leading-none tracking-wide">Show more</span>
+          <OpenSvgIcon className="shrink-0" />
+          <span className={fullScreenShowMoreLessLabelClass}>Show less</span>
         </button>
       </div>
-    </aside>
+    </div>
   );
 }
+
+export const PreviewView = memo(function PreviewView({
+  row,
+  fullScreen,
+  onFullScreenChange,
+  className = "",
+}: PreviewViewProps) {
+  const { closeContentPreview } = useFilterSelection();
+  /** Docked panel: `max-w` 0 → token (replays when leaving full screen). */
+  const [shellEntered, setShellEntered] = useState(false);
+
+  useEffect(() => {
+    if (!fullScreen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [fullScreen]);
+
+  useEffect(() => {
+    let cancelled = false;
+    let raf = 0;
+    queueMicrotask(() => {
+      if (cancelled || typeof window === "undefined") return;
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        setShellEntered(true);
+        return;
+      }
+      setShellEntered(false);
+      raf = requestAnimationFrame(() => {
+        if (!cancelled) setShellEntered(true);
+      });
+    });
+    return () => {
+      cancelled = true;
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, [fullScreen]);
+
+  if (fullScreen) {
+    return (
+      <ContentPreviewFullScreenView
+        key={row.id}
+        row={row}
+        onShowLess={() => onFullScreenChange(false)}
+        onClose={closeContentPreview}
+      />
+    );
+  }
+
+  return (
+    <div
+      data-fae-content-preview
+      onPointerDown={(e) => e.stopPropagation()}
+      className={`${previewDockedOuterClass} ${
+        shellEntered
+          ? "max-w-(--width-preview-panel)"
+          : "max-w-0"
+      } motion-reduce:max-w-(--width-preview-panel)`}
+      role="presentation"
+    >
+      <aside
+        className={`${previewDockedAsideBaseClass} ${className}`}
+        aria-label="Content preview"
+        role="dialog"
+        aria-modal="true"
+      >
+        <PreviewPanelCollapseBar
+          ariaLabel="Close preview"
+          onClose={closeContentPreview}
+        />
+        <div className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain px-5 pt-5 pb-6">
+          <PreviewMainContent row={row} fullScreen={false} />
+        </div>
+        <div className="shrink-0">
+          <button
+            type="button"
+            onClick={() => onFullScreenChange(true)}
+            className={fullScreenShowMoreLessButtonClass}
+            aria-label="View full content in full screen"
+          >
+            <OpenSvgIcon className="shrink-0 rotate-180" />
+            <span className={fullScreenShowMoreLessLabelClass}>
+              View more
+            </span>
+          </button>
+        </div>
+      </aside>
+    </div>
+  );
+});

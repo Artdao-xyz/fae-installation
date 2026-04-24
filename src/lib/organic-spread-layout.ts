@@ -13,9 +13,12 @@ export function centersOverlapRect(
   by: number,
   cw: number,
   ch: number,
-  gap: number,
+  gapX: number,
+  gapY: number,
 ): boolean {
-  return Math.abs(ax - bx) < cw + gap && Math.abs(ay - by) < ch + gap;
+  return (
+    Math.abs(ax - bx) < cw + gapX && Math.abs(ay - by) < ch + gapY
+  );
 }
 
 function phyllotaxisSeed(
@@ -25,15 +28,19 @@ function phyllotaxisSeed(
   aMax: number,
   bMax: number,
   margin: number,
+  /** Rotates the spiral; must change between filter applications so the pack is not identical. */
+  layoutSalt: number = 0,
 ): { px: number; py: number }[] {
   const ae = aMax * margin;
   const be = bMax * margin;
   const denom = Math.sqrt(Math.max(1, n) - 0.5);
+  const theta0 =
+    ((Math.imul(layoutSalt | 0, 0x1a2b3c4d) >>> 0) / 0x100000000) * 2 * Math.PI;
   const out: { px: number; py: number }[] = [];
   for (let i = 0; i < n; i++) {
     const t = i + 0.5;
     const r = Math.sqrt(t) / denom;
-    const theta = i * GOLDEN_ANGLE;
+    const theta = i * GOLDEN_ANGLE + theta0;
     out.push({
       px: cx + ae * r * Math.cos(theta),
       py: cy + be * r * Math.sin(theta),
@@ -46,15 +53,16 @@ function separateOverlaps(
   pts: { px: number; py: number }[],
   cw: number,
   ch: number,
-  gap: number,
+  gapX: number,
+  gapY: number,
   minX: number,
   maxX: number,
   minY: number,
   maxY: number,
   maxIterations: number,
 ): void {
-  const needX = cw + gap;
-  const needY = ch + gap;
+  const needX = cw + gapX;
+  const needY = ch + gapY;
   const n = pts.length;
 
   for (let iter = 0; iter < maxIterations; iter++) {
@@ -63,7 +71,7 @@ function separateOverlaps(
       for (let j = i + 1; j < n; j++) {
         const a = pts[i]!;
         const b = pts[j]!;
-        if (!centersOverlapRect(a.px, a.py, b.px, b.py, cw, ch, gap)) {
+        if (!centersOverlapRect(a.px, a.py, b.px, b.py, cw, ch, gapX, gapY)) {
           continue;
         }
 
@@ -106,13 +114,104 @@ function separateOverlaps(
 
 const SEPARATE_ITER = 64;
 
+const OVERLAP_PAD = 2;
+
+/**
+ * Pushes full-card **center** points in viewport space (0,0 = top-left) so rects
+ * (cw+gapX)×(ch+gapY) do not overlap, then clamps to the safe padding rect.
+ * Used after spread jitter; same model as phyllotaxis + {@link separateOverlaps}.
+ */
+export function relaxViewportCardCenters(
+  centers: { px: number; py: number }[],
+  vw: number,
+  vh: number,
+  cw: number,
+  ch: number,
+  gapX: number,
+  gapY: number,
+): void {
+  if (centers.length === 0) return;
+  const minX = cw / 2 + OVERLAP_PAD;
+  const maxX = vw - cw / 2 - OVERLAP_PAD;
+  const minY = ch / 2 + OVERLAP_PAD;
+  const maxY = vh - ch / 2 - OVERLAP_PAD;
+  separateOverlaps(
+    centers,
+    cw,
+    ch,
+    gapX,
+    gapY,
+    minX,
+    maxX,
+    minY,
+    maxY,
+    SEPARATE_ITER,
+  );
+}
+/**
+ * Looser phyllotaxis fill when there are many tiles (room to waste; feels less like a tight lattice).
+ */
+function phyllMarginForCount(n: number): number {
+  return 0.68 + Math.min(0.14, Math.max(0, n - 10) * 0.004);
+}
+
+/**
+ * Deterministic nudge on each center **before** overlap separation so the physics step
+ * starts from a less regular point set (post-hoc pixel jitter alone was too weak).
+ */
+function applyPhyllotaxisSeedJitter(
+  centers: { px: number; py: number }[],
+  vw: number,
+  vh: number,
+  minX: number,
+  maxX: number,
+  minY: number,
+  maxY: number,
+  cw: number,
+  ch: number,
+  gapX: number,
+  gapY: number,
+  layoutSalt: number = 0,
+): void {
+  const cell = Math.min(cw + gapX, ch + gapY);
+  const amp = cell * 0.2;
+  const salt =
+    (Math.round(vw) * 2654435761) ^
+    (Math.round(vh) * 1597334677) ^
+    (layoutSalt | 0);
+  for (let i = 0; i < centers.length; i++) {
+    const h0 = (Math.imul(i, 0x7feb352d) + salt) | 0;
+    const a = (Math.imul(h0 ^ (h0 >>> 16), 0x85ebca6b) >>> 0) / 0x100000000;
+    const h1 = (Math.imul(i * 0x1e3d, 0x5bd1e995) + (salt * 0x2f1b)) | 0;
+    const b = (Math.imul(h1 ^ (h1 >>> 15), 0xc2b2ae35) >>> 0) / 0x100000000;
+    const ux = a * 2 - 1;
+    const vy = b * 2 - 1;
+    const c = centers[i]!;
+    c.px += ux * amp;
+    c.py += vy * amp;
+    c.px = clamp(c.px, minX, maxX);
+    c.py = clamp(c.py, minY, maxY);
+  }
+}
+
 export type OrganicSpreadOptions = {
   viewportWidth: number;
   viewportHeight: number;
   cardWidth: number;
   cardHeight: number;
+  /**
+   * Minimum clear space between card **edges** (used when `gapX` / `gapY` omitted).
+   * Prefer `gapX` / `gapY` when text tiles are wider than `cardWidth` in the DOM.
+   */
   gap: number;
+  gapX?: number;
+  gapY?: number;
   count: number;
+  /**
+   * Varies phyllotaxis + pre-separation jitter so a new run is not the same as the last
+   * for identical viewport and count.
+   */
+  layoutSalt?: number;
 };
 
 export function computeOrganicSpreadLayout(
@@ -126,11 +225,15 @@ export function computeOrganicSpreadLayout(
     gap,
     count: requested,
   } = options;
+  const gapX = options.gapX ?? gap;
+  const gapY = options.gapY ?? gap;
 
   const n = Math.max(0, Math.floor(requested));
   if (n === 0 || vw <= 0 || vh <= 0 || cw <= 0 || ch <= 0) {
     return { positions: [], placed: 0 };
   }
+
+  const layoutSalt = options.layoutSalt ?? 0;
 
   const pad = 2;
   const cx = vw / 2;
@@ -143,19 +246,43 @@ export function computeOrganicSpreadLayout(
   const minY = ch / 2 + pad;
   const maxY = vh - ch / 2 - pad;
 
-  const phyllMargin = 0.68;
+  const phyllMargin = phyllMarginForCount(n);
 
-  const centers = phyllotaxisSeed(n, cx, cy, aMax, bMax, phyllMargin);
+  const centers = phyllotaxisSeed(
+    n,
+    cx,
+    cy,
+    aMax,
+    bMax,
+    phyllMargin,
+    layoutSalt,
+  );
   for (const c of centers) {
     c.px = clamp(c.px, minX, maxX);
     c.py = clamp(c.py, minY, maxY);
   }
 
+  applyPhyllotaxisSeedJitter(
+    centers,
+    vw,
+    vh,
+    minX,
+    maxX,
+    minY,
+    maxY,
+    cw,
+    ch,
+    gapX,
+    gapY,
+    layoutSalt,
+  );
+
   separateOverlaps(
     centers,
     cw,
     ch,
-    gap,
+    gapX,
+    gapY,
     minX,
     maxX,
     minY,

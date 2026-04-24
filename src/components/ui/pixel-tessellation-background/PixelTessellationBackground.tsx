@@ -153,6 +153,12 @@ export function PixelTessellationBackground({ className = "" }: Props) {
     ro.observe(canvas);
     syncCanvasSize();
 
+    /** Mobile: URL bar, keyboard, pinch-zoom change the visual viewport without always firing element ResizeObserver reliably. */
+    const vv = window.visualViewport;
+    const onVisualViewportChange = () => syncCanvasSize();
+    vv?.addEventListener("resize", onVisualViewportChange);
+    vv?.addEventListener("scroll", onVisualViewportChange);
+
     let last = performance.now();
 
     const frame = (now: number) => {
@@ -232,13 +238,15 @@ export function PixelTessellationBackground({ className = "" }: Props) {
     return () => {
       img.removeEventListener("load", rebuildPatternFromImage);
       ro.disconnect();
+      vv?.removeEventListener("resize", onVisualViewportChange);
+      vv?.removeEventListener("scroll", onVisualViewportChange);
       cancelAnimationFrame(rafRef.current);
     };
   }, []);
 
   return (
     <div
-      className={`fae-pixel-tessellation-bg pointer-events-none fixed inset-0 z-0 overflow-hidden transition-opacity duration-[650ms] ease-out ${
+      className={`fae-pixel-tessellation-bg pointer-events-none fixed inset-0 z-10 max-lg:bottom-auto max-lg:h-dvh max-lg:min-h-dvh overflow-hidden transition-opacity duration-[650ms] ease-out ${
         bgRevealed ? "opacity-100" : "opacity-0"
       } ${className}`}
       aria-hidden

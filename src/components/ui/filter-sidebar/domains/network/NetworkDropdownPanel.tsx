@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { NETWORK_LABELS } from "../../config/constants";
+import { useFloatingPanelStack } from "@/components/ui/floating-panels/FloatingPanelStackContext";
+import { useFilterSelection } from "../../FilterSelectionContext";
 import { filterNetworkLabelsForSearchQuery } from "@/data/network-search-filter";
 import { FilterPill } from "../../primitives/FilterPill";
 import { FilterPillDropdown } from "../../primitives/FilterPillDropdown";
@@ -10,47 +11,81 @@ import { FilterSearchField } from "../../primitives/FilterSearchField";
 type NetworkDropdownPanelProps = {
   variant?: "default" | "subcolumn";
   onClearAll?: () => void;
+  mobilePane?: boolean;
 };
 
 export function NetworkDropdownPanel({
   variant = "default",
   onClearAll: onClearAllFromParent,
+  mobilePane = false,
 }: NetworkDropdownPanelProps) {
-  const [selected, setSelected] = useState<Set<string>>(() => new Set());
+  const {
+    filterNetworkOptionLabels,
+    selectedNetworks,
+    toggleNetwork,
+    clearSelectedNetworks,
+    contentCatalog,
+    contentCatalogStatus,
+    networkOptionToggleMatchCount,
+  } = useFilterSelection();
+  const { minimizeAllFloatingPanels } = useFloatingPanelStack();
   const [searchQuery, setSearchQuery] = useState("");
 
   const searching = searchQuery.trim().length > 0;
 
+  const catalogReady =
+    contentCatalogStatus === "success" && contentCatalog.length > 0;
+
   const searchMatches = useMemo(
-    () => filterNetworkLabelsForSearchQuery(searchQuery),
-    [searchQuery],
+    () =>
+      filterNetworkLabelsForSearchQuery(searchQuery, filterNetworkOptionLabels),
+    [searchQuery, filterNetworkOptionLabels],
   );
 
-  const toggle = useCallback((label: string) => {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (next.has(label)) next.delete(label);
-      else next.add(label);
-      return next;
-    });
-  }, []);
-
   const handleClearAll = useCallback(() => {
+    minimizeAllFloatingPanels();
     onClearAllFromParent?.();
-    setSelected(new Set());
-  }, [onClearAllFromParent]);
+    clearSelectedNetworks();
+  }, [minimizeAllFloatingPanels, onClearAllFromParent, clearSelectedNetworks]);
 
   const pillClassName = searching
     ? "box-border w-full min-w-0 max-w-full"
     : undefined;
 
+  const networkPillProps = (label: string, className?: string) => {
+    const selected = selectedNetworks.has(label);
+    const count = networkOptionToggleMatchCount.get(label) ?? 0;
+    const disableAdd = catalogReady && !selected && count === 0;
+    return {
+      label,
+      tone: "network" as const,
+      selected,
+      onPress: () => {
+        minimizeAllFloatingPanels();
+        toggleNetwork(label);
+      },
+      className,
+      disabled: disableAdd,
+      title: disableAdd
+        ? "Nothing in the catalog matches this with your other filters"
+        : undefined,
+    };
+  };
+
   return (
     <FilterPillDropdown
       tone="network"
       variant={variant}
-      onClearAll={handleClearAll}
-      selectedCount={selected.size}
-      totalCount={NETWORK_LABELS.length}
+      onClearAll={mobilePane ? undefined : handleClearAll}
+      mobileHeader={
+        mobilePane
+          ? {
+              title: "Network",
+              selectedCount: selectedNetworks.size,
+              totalCount: filterNetworkOptionLabels.length,
+            }
+          : undefined
+      }
     >
       <div className="flex w-full min-w-0 shrink-0 basis-full flex-col gap-2">
         <div className="min-w-0 shrink-0">
@@ -78,31 +113,19 @@ export function NetworkDropdownPanel({
                   className="w-full min-w-0 shrink-0"
                   role="listitem"
                 >
-                  <FilterPill
-                    label={label}
-                    tone="network"
-                    selected={selected.has(label)}
-                    onPress={() => toggle(label)}
-                    className={pillClassName}
-                  />
+                  <FilterPill {...networkPillProps(label, pillClassName)} />
                 </div>
               ))
             )}
           </div>
         ) : (
           <div
-            className="flex w-full flex-wrap content-start items-start"
+            className="flex w-full flex-wrap content-start items-start gap-1.5"
             role="group"
             aria-label="Network"
           >
-            {NETWORK_LABELS.map((label) => (
-              <FilterPill
-                key={label}
-                label={label}
-                tone="network"
-                selected={selected.has(label)}
-                onPress={() => toggle(label)}
-              />
+            {filterNetworkOptionLabels.map((label) => (
+              <FilterPill key={label} {...networkPillProps(label)} />
             ))}
           </div>
         )}

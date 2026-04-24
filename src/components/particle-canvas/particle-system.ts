@@ -25,41 +25,39 @@ export function v3Sub(a: Vec3, b: Vec3): Vec3 {
 // ---------------------------------------------------------------------------
 
 export const DEFAULTS = {
-  perspective: 1000,
-  zNear: 400,
-  zFar: -600,
+  perspective: 600,
+  zNear: 75,
+  zFar: -100,
 
-  drag: 2.0,
-  repulsionRadius: 110,
-  repulsionStrength: 8000,
-  turbulenceStrength: 180,
+  drag: 1.4,
+  repulsionRadius: 100,
+  repulsionStrength: 6500,
+  turbulenceStrength: 130,
   turbulenceSpeed: 1.0,
 
-  orbitSpeedMin: 0.25,
-  orbitSpeedMax: 0.6,
-  orbitRadialSpring: 0.8,
-  orbitTangentialForce: 380,
-  orbitZAmplitude: 0.48,
-  orbitZSpeedMin: 0.3,
-  orbitZSpeedMax: 0.7,
-  orbitTiltDeg: -15,
+  orbitSpeedMin: 0.15,
+  orbitSpeedMax: 0.26,
+  orbitRadialSpring: 0.3,
+  orbitTangentialForce: 160,
+  orbitZAmplitude: 0.13,
+  orbitZSpeedMin: 0.35,
+  orbitZSpeedMax: 0.45,
+  orbitTiltDeg: -30,
   /** Larger = wider radial band (inner/outer orbit radii differ more). */
-  orbitRadiusSpread: 0.3,
-  viewportPadding: 60,
-  viewportWallStrength: 3.0,
+  orbitRadiusSpread: 0.1,
+  viewportPadding: 80,
+  viewportWallStrength: 3.5,
 
-  lifeSpeedMin: 0.08,
-  lifeSpeedMax: 0.22,
-  /** Longer normalized window for fade-in (real time ∝ birthPhase / lifeSpeed). */
-  birthPhase: 0.18,
-  /** Set to `1` to disable shrink-before-respawn (tiles stay fully visible until reset). */
-  deathPhaseStart: 1,
+  lifeSpeedMin: 0.03,
+  lifeSpeedMax: 0.2,
+  /** Normalized life window [0, birthPhase) for fade-in; fade-out uses the same length at end of life. */
+  birthPhase: 0.19,
 
-  blurMax: 3.25,
-  blurFarGate: 0.33,
+  blurMax: 6.0,
+  blurFarGate: 0.11,
 
-  baseScaleMin: 0.6,
-  baseScaleMax: 1.4,
+  baseScaleMin: 0.72,
+  baseScaleMax: 1.32,
 };
 
 export type SimConfig = typeof DEFAULTS;
@@ -169,6 +167,31 @@ export function apparentScaleFromParticle(
   return Math.max(0, p.scale * (perspective / denom));
 }
 
+/**
+ * Ideal orbit anchor for `p` (matches radial spring target inside `ParticleSystem.step`).
+ * Used to ease demoted spread tiles back into the swarm without a position snap.
+ */
+export function particleOrbitIdealPos(
+  p: Particle,
+  c: SimConfig,
+  globalTime: number,
+): Vec3 {
+  const zRange = c.zNear - c.zFar;
+  const tiltRad = (c.orbitTiltDeg * Math.PI) / 180;
+  const cosT = Math.cos(tiltRad);
+  const sinT = Math.sin(tiltRad);
+  const rawTX = Math.cos(p.orbitAngle) * p.orbitRadiusX;
+  const rawTY = Math.sin(p.orbitAngle) * p.orbitRadiusY;
+  const targetX = rawTX * cosT - rawTY * sinT;
+  const targetY = rawTX * sinT + rawTY * cosT;
+  const targetZ =
+    Math.sin(p.orbitZPhase + globalTime * p.orbitZSpeed) *
+    zRange *
+    c.orbitZAmplitude;
+  const z = Math.max(c.zFar, Math.min(c.zNear, targetZ));
+  return v3(targetX, targetY, z);
+}
+
 // ---------------------------------------------------------------------------
 // Particle system
 // ---------------------------------------------------------------------------
@@ -275,7 +298,7 @@ export class ParticleSystem {
         c.orbitZSpeedMin + r(3.9) * (c.orbitZSpeedMax - c.orbitZSpeedMin),
       scale: 0,
       baseScale: isText
-        ? 1.0
+        ? 1.2
         : c.baseScaleMin + r(8.1) * (c.baseScaleMax - c.baseScaleMin),
       opacity: 0,
       isText,
@@ -399,15 +422,16 @@ export class ParticleSystem {
       }
 
       let lifeFactor: number;
-      if (p.life < c.birthPhase) {
-        const u = clamp(p.life / c.birthPhase, 0, 1);
-        // Smoothstep: gentler than u² — less “pop” as tiles appear.
-        lifeFactor = u * u * (3 - 2 * u);
-      } else if (c.deathPhaseStart < 1 && p.life > c.deathPhaseStart) {
-        const u =
-          1 -
-          (p.life - c.deathPhaseStart) / (1 - c.deathPhaseStart);
-        lifeFactor = Math.max(0, u * u);
+      const b = c.birthPhase;
+      /** End of “full opacity” plateau; fade-out starts after this (same smoothstep curve as fade-in). */
+      const deathStart = Math.max(b, 1 - b);
+
+      if (p.life < b) {
+        const u = clamp(p.life / b, 0, 1);
+        lifeFactor = smoothstep01(u);
+      } else if (p.life > deathStart) {
+        const u = clamp((p.life - deathStart) / (1 - deathStart), 0, 1);
+        lifeFactor = smoothstep01(1 - u);
       } else {
         lifeFactor = 1;
       }

@@ -1,57 +1,84 @@
 "use client";
 
+import { ArtistsSubpanelColumn } from "../domains/artists/ArtistsSubpanelColumn";
 import { BriefingsSubpanelColumn } from "../domains/briefings/BriefingsSubpanelColumn";
 import { NetworkSubpanelColumn } from "../domains/network/NetworkSubpanelColumn";
 import { RDProjectsSubpanelColumn } from "../domains/rd-projects/RDProjectsSubpanelColumn";
 import {
-  FILTER_SIDEBAR_COLUMN_CLASS,
+  FILTER_SUBPANELS_COLUMN_EXPANDED_CLASS,
+  FILTER_SUBPANEL_COLUMN_TRANSITION_CLASS,
   SUBPANEL_COLUMN_COLLAPSED_CLASS,
 } from "./layout-classes";
 
 type FilterSubpanelsColumnProps = {
+  filtersPanelOpen: boolean;
   anySubpanelOpen: boolean;
   briefingsSubpanelOpen: boolean;
   rdSubpanelOpen: boolean;
+  artistsSubpanelOpen: boolean;
   networkSubpanelOpen: boolean;
   onCloseBriefings: () => void;
   onCloseRd: () => void;
+  onCloseArtists: () => void;
   onCloseNetwork: () => void;
-  className?: string;
 };
 
 export function FilterSubpanelsColumn({
+  filtersPanelOpen,
   anySubpanelOpen,
   briefingsSubpanelOpen,
   rdSubpanelOpen,
+  artistsSubpanelOpen,
   networkSubpanelOpen,
   onCloseBriefings,
   onCloseRd,
+  onCloseArtists,
   onCloseNetwork,
-  className,
 }: FilterSubpanelsColumnProps) {
+  const subpanelChromeVisible = filtersPanelOpen && anySubpanelOpen;
+
   return (
     <div
-      className={`flex h-full min-h-0 flex-col overflow-hidden ${
-        anySubpanelOpen ? FILTER_SIDEBAR_COLUMN_CLASS : SUBPANEL_COLUMN_COLLAPSED_CLASS
-      }${className != null && className.length > 0 ? ` ${className}` : ""}`}
-      aria-hidden={!anySubpanelOpen}
+      data-fae-filter-subpanels-column
+      className={`flex h-full min-h-0 flex-col overflow-hidden ${FILTER_SUBPANEL_COLUMN_TRANSITION_CLASS} ${
+        !filtersPanelOpen
+          ? "w-0 min-w-0 max-w-0 shrink-0 border-0 opacity-0 pointer-events-none"
+          : subpanelChromeVisible
+            ? `${FILTER_SUBPANELS_COLUMN_EXPANDED_CLASS} border-l-hairline border-solid border-ink-primary`
+            : SUBPANEL_COLUMN_COLLAPSED_CLASS
+      }`}
+      aria-hidden={!filtersPanelOpen || !anySubpanelOpen}
     >
-      <div className="scrollbar-hide flex min-h-0 w-full max-h-full flex-1 flex-col max-lg:justify-start lg:justify-end overflow-x-hidden overflow-y-auto">
+      <div className="scrollbar-hide flex min-h-0 w-full max-h-full flex-1 flex-col justify-end overflow-x-hidden overflow-y-auto">
         {briefingsSubpanelOpen ? (
           <BriefingsSubpanelColumn
-            mergeBottomBorder={rdSubpanelOpen || networkSubpanelOpen}
+            mergeBottomBorder={
+              rdSubpanelOpen || artistsSubpanelOpen || networkSubpanelOpen
+            }
             onClose={onCloseBriefings}
           />
         ) : null}
         {rdSubpanelOpen ? (
           <RDProjectsSubpanelColumn
-            mergeTopBorder={briefingsSubpanelOpen || networkSubpanelOpen}
+            mergeTopBorder={
+              briefingsSubpanelOpen ||
+              artistsSubpanelOpen ||
+              networkSubpanelOpen
+            }
             onClose={onCloseRd}
+          />
+        ) : null}
+        {artistsSubpanelOpen ? (
+          <ArtistsSubpanelColumn
+            mergeTopBorder={briefingsSubpanelOpen || rdSubpanelOpen}
+            onClose={onCloseArtists}
           />
         ) : null}
         {networkSubpanelOpen ? (
           <NetworkSubpanelColumn
-            mergeTopBorder={briefingsSubpanelOpen || rdSubpanelOpen}
+            mergeTopBorder={
+              briefingsSubpanelOpen || rdSubpanelOpen || artistsSubpanelOpen
+            }
             onClose={onCloseNetwork}
           />
         ) : null}

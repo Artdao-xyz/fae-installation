@@ -1,8 +1,7 @@
 "use client";
 
-/** White field + dotted ink frame for search / clear chrome icons */
-const SEARCH_ICON_FRAME_CLASS =
-  "inline-flex shrink-0 items-center justify-center border-hairline border-dotted border-ink-primary bg-[#ffffff] p-1";
+const CLEAR_SEARCH_ICON_FRAME_CLASS =
+  "inline-grid shrink-0 size-[1.5rem] place-items-center border-hairline border-dotted border-ink-primary bg-[#ECECEC] p-0 leading-[0]";
 
 export type FilterSearchFieldProps = {
   id: string;
@@ -41,25 +40,17 @@ export function FilterSearchField({
             type="button"
             onClick={() => onChange("")}
             aria-label="Clear search"
-            className={`${SEARCH_ICON_FRAME_CLASS} transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ink-primary`}
+            className={`${CLEAR_SEARCH_ICON_FRAME_CLASS} transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ink-primary`}
           >
             {/* eslint-disable-next-line @next/next/no-img-element -- small static chrome icon */}
             <img
               src="/svg/delete.svg"
               alt=""
-              className="size-3 shrink-0 object-contain"
+              className="block size-4 max-h-4 max-w-4 shrink-0 object-contain object-center m-0"
               aria-hidden
             />
           </button>
         ) : null}
-        <span className={SEARCH_ICON_FRAME_CLASS} aria-hidden>
-          {/* eslint-disable-next-line @next/next/no-img-element -- small static chrome icon */}
-          <img
-            src="/svg/search.svg"
-            alt=""
-            className="size-3 shrink-0 object-contain opacity-70"
-          />
-        </span>
       </div>
     </>
   );

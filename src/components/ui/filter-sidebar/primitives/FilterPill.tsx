@@ -6,10 +6,11 @@ import {
   filterDottedPillClassName,
   filterFramedOuterFocusClass,
   filterFramedRoundedInnerClass,
-  filterFramedRoundedOuterHoverClass,
   filterFramedRoundedOuterSelectedClass,
   filterPillLabelBoxClass,
   filterPillSelection,
+  filterPillSingleLayerBrightnessHoverClass,
+  interactiveChromeMatClass,
 } from "./filterFramedClasses";
 
 export type FilterPillVariant = "rounded" | "square" | "dotted";
@@ -24,6 +25,8 @@ type FilterPillProps = {
   selected?: boolean;
   onPress?: () => void;
   className?: string;
+  disabled?: boolean;
+  title?: string;
 };
 
 /**
@@ -39,10 +42,10 @@ const SQUARE_CORNER_POSITIONS = [
 ] as const;
 
 function SquareCornerMarkers({ selected }: { selected: boolean }) {
+  const fill = selected
+    ? "var(--color-filter-pill-selection)"
+    : "var(--color-ink-primary)";
   const n = SQUARE_MARKER_SIZE;
-  const colorClass = selected
-    ? "text-[color:var(--color-filter-pill-selection)]"
-    : "text-ink-primary group-hover:text-[color:var(--color-filter-pill-selection)]";
   return (
     <>
       {SQUARE_CORNER_POSITIONS.map((positionClass, i) => (
@@ -52,36 +55,36 @@ function SquareCornerMarkers({ selected }: { selected: boolean }) {
           height={n}
           viewBox={`0 0 ${n} ${n}`}
           shapeRendering="crispEdges"
-          className={`pointer-events-none absolute z-0 block shrink-0 ${positionClass} ${colorClass}`}
+          className={`pointer-events-none absolute z-0 block shrink-0 ${positionClass}`}
           aria-hidden
         >
-          <rect width={n} height={n} x={0} y={0} fill="currentColor" />
+          <rect width={n} height={n} x={0} y={0} fill={fill} />
         </svg>
       ))}
     </>
   );
 }
 
-function SquarePillFrame({ label, selected }: { label: string; selected: boolean }) {
-  const cellOutline = selected
-    ? `${filterPillSelection.text} outline-[0.5px] outline-offset-[-0.5px] ${filterPillSelection.outline}`
-    : `text-ink-primary outline-[0.5px] outline-offset-[-0.5px] outline-ink-primary group-hover:text-[color:var(--color-filter-pill-selection)] group-hover:outline-[color:var(--color-filter-pill-selection)]`;
+function SquarePillFrame({
+  label,
+  selected,
+}: {
+  label: string;
+  selected: boolean;
+}) {
+  const cellBorder = selected
+    ? `${interactiveChromeMatClass} ${filterPillSelection.text} border-hairline border-solid ${filterPillSelection.border}`
+    : `${interactiveChromeMatClass} border-hairline border-solid border-ink-primary text-ink-primary`;
 
   return (
     <span className="relative isolate inline-flex items-center justify-center">
       <SquareCornerMarkers selected={selected} />
       <span
-        className={`relative z-10 inline-flex items-center justify-center bg-transparent ${filterPillLabelBoxClass} line-clamp-2 ${cellOutline}`}
+        className={`relative z-10 box-border inline-flex items-center justify-center ${filterPillLabelBoxClass} line-clamp-2 ${cellBorder}`}
       >
         {label}
       </span>
     </span>
-  );
-}
-
-function RoundedPillLabel({ label, selected }: { label: string; selected: boolean }) {
-  return (
-    <span className={filterFramedRoundedInnerClass(selected)}>{label}</span>
   );
 }
 
@@ -94,6 +97,8 @@ export function FilterPill({
   selected = false,
   onPress,
   className,
+  disabled = false,
+  title,
 }: FilterPillProps) {
   const [internalOpen, setInternalOpen] = useState(false);
   const controlled = expandedProp !== undefined;
@@ -108,6 +113,7 @@ export function FilterPill({
     onExpandedChange !== undefined || expandedProp !== undefined;
 
   const toggle = () => {
+    if (disabled) return;
     if (onPress) {
       onPress();
       return;
@@ -119,18 +125,32 @@ export function FilterPill({
   const isSquare = variant === "square";
   const isDotted = variant === "dotted";
 
+  const unavailable = disabled && !selected;
+  /** `!cursor-not-allowed` beats `cursor-pointer` from `filterFramedOuterFocusClass` on dotted/rounded outers. */
+  const cursorAndFadeClass = unavailable
+    ? "!cursor-not-allowed opacity-45"
+    : "cursor-pointer";
+
   if (isDotted) {
     return (
       <button
         type="button"
         onClick={toggle}
+        disabled={unavailable}
+        aria-disabled={unavailable ? true : undefined}
+        title={title}
         aria-expanded={expandable ? isOpen : undefined}
         aria-pressed={onPress ? selected : undefined}
-        className={[filterDottedPillClassName(selected), className].filter(Boolean).join(" ")}
+        className={[
+          filterDottedPillClassName(selected),
+          cursorAndFadeClass,
+          className,
+        ]
+          .filter(Boolean)
+          .join(" ")}
         data-tone={tone}
         data-variant="dotted"
       >
-        {/* Inner span: ellipsis must apply here — not on the button (flex/truncate on buttons clips without …). */}
         <span className="block min-w-0 w-full truncate text-left">{label}</span>
       </button>
     );
@@ -141,10 +161,15 @@ export function FilterPill({
       <button
         type="button"
         onClick={toggle}
+        disabled={unavailable}
+        aria-disabled={unavailable ? true : undefined}
+        title={title}
         aria-expanded={expandable ? isOpen : undefined}
         aria-pressed={onPress ? selected : undefined}
         className={[
-          "group inline-flex cursor-pointer items-center justify-start border-0 bg-transparent p-0 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ink-primary focus-visible:ring-offset-0",
+          "inline-flex items-center justify-start border-0 bg-transparent p-0 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ink-primary focus-visible:ring-offset-0",
+          filterPillSingleLayerBrightnessHoverClass,
+          cursorAndFadeClass,
           className,
         ]
           .filter(Boolean)
@@ -161,14 +186,15 @@ export function FilterPill({
     <button
       type="button"
       onClick={toggle}
+      disabled={unavailable}
+      aria-disabled={unavailable ? true : undefined}
+      title={title}
       aria-expanded={expandable ? isOpen : undefined}
       aria-pressed={onPress ? selected : undefined}
       className={[
-        `group fae-control-filter-outer ${filterFramedOuterFocusClass} ${
-          selected
-            ? filterFramedRoundedOuterSelectedClass
-            : filterFramedRoundedOuterHoverClass
-        }`,
+        `fae-control-filter-outer ${filterFramedOuterFocusClass} ${filterPillSingleLayerBrightnessHoverClass} ${
+          selected ? filterFramedRoundedOuterSelectedClass : ""
+        } inline-flex items-baseline ${cursorAndFadeClass}`,
         className,
       ]
         .filter(Boolean)
@@ -176,7 +202,7 @@ export function FilterPill({
       data-tone={tone}
       data-variant="rounded"
     >
-      <RoundedPillLabel label={label} selected={selected} />
+      <span className={filterFramedRoundedInnerClass(selected)}>{label}</span>
     </button>
   );
 }

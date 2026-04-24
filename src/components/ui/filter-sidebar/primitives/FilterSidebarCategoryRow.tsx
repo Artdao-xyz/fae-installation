@@ -1,65 +1,79 @@
 import { CategoryMarkerIcon } from "./CategoryMarkerIcon";
 import type { FilterSidebarCategoryTone } from "../config/filterSidebarTones";
-import { toneAccentClass } from "../config/filterSidebarTones";
+import {
+  categorySubpanelLabelSelectionBgClass,
+  toneAccentClass,
+} from "../config/filterSidebarTones";
+import {
+  interactiveChromeHoverClass,
+  interactiveChromeMatClass,
+} from "./filterFramedClasses";
+
+const matBaseTransitionClass =
+  "backdrop-blur-fae-sm transition-colors duration-150 motion-reduce:transition-none";
 
 export function FilterSidebarCategoryRow({
   label,
   tone,
   expanded,
   onClick,
-  /** Mobile-only: fixed-share rail grid cell — dense row, no intrinsic min-height overflow. */
-  mobileFillCell,
+  /** A filter in this category’s subpanel is active — highlight the row/label. */
+  hasSubpanelSelection,
 }: {
   label: string;
   tone: FilterSidebarCategoryTone;
   expanded?: boolean;
   onClick?: () => void;
-  mobileFillCell?: boolean;
+  hasSubpanelSelection?: boolean;
 }) {
   const { glow } = toneAccentClass[tone];
   const showAccent = expanded === true;
-  const fill = mobileFillCell === true;
+  const hasSelection = hasSubpanelSelection === true;
+  /** Left stripe: open subpanel, or a filter in this subpanel is active (clear category cue). */
+  const showLeftCategoryStripe = showAccent || hasSelection;
+  const matClass = hasSelection
+    ? `${matBaseTransitionClass} ${categorySubpanelLabelSelectionBgClass[tone]}`
+    : interactiveChromeMatClass;
+  const hoverClass = hasSelection
+    ? "hover:brightness-[0.96] motion-reduce:hover:brightness-100"
+    : interactiveChromeHoverClass;
 
   return (
     <button
       type="button"
       onClick={onClick}
       aria-expanded={expanded}
-      className={`relative flex w-full items-stretch border-t-hairline border-r-hairline border-solid border-ink-primary bg-surface-canvas text-left backdrop-blur-fae-sm hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary lg:border-r-0 ${
-        fill
-          ? "box-border h-full max-h-full min-h-0 flex-col overflow-hidden"
-          : "flex-col"
-      }`}
+      data-fae-subpanel-filter-active={hasSelection ? "true" : undefined}
+      className={`relative flex w-full items-center gap-2 border-t-hairline border-solid border-ink-primary py-[7px] pl-3 pr-[15px] text-left ${matClass} ${hoverClass} focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary`}
       data-name="Filters-Button-Dropdown"
     >
-      {showAccent ? (
+      {showLeftCategoryStripe ? (
         <span
           className={`pointer-events-none absolute inset-y-0 left-0 w-[3px] ${glow}`}
           aria-hidden
           data-name="Glow"
         />
       ) : null}
-      <span
-        className={
-          fill
-            ? "relative flex min-h-0 w-full min-w-0 flex-1 flex-col content-start items-start justify-center gap-1.5 overflow-hidden px-2.5 py-1.5"
-            : "relative flex min-h-0 w-full min-w-0 flex-1 flex-col flex-wrap items-start content-start justify-center gap-[5px] px-2.5 py-3 lg:flex-row lg:flex-nowrap lg:items-center lg:justify-start lg:gap-2"
-        }
-      >
+      {showAccent ? (
         <CategoryMarkerIcon
           tone={tone}
-          className={`shrink-0 object-contain ${fill ? "h-4 w-4" : `h-[14px] w-[14px] lg:h-[18px] lg:w-[18px]`} ${showAccent ? "opacity-100" : "opacity-50"}`}
+          className="size-5 shrink-0 object-contain"
         />
-        <span
-          className={`min-w-0 text-left font-lust-text tracking-[0.5px] text-ink-body ${
-            fill
-              ? "line-clamp-4 w-full text-[12px] leading-[15px]"
-              : "w-full wrap-break-word text-sm leading-[18px] lg:w-auto lg:flex-1"
-          }`}
-        >
-          {label}
-        </span>
+      ) : null}
+      <span className="min-h-px min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-base leading-5 text-ink-body font-lust-text">
+        {label}
       </span>
+      {onClick ? (
+        // eslint-disable-next-line @next/next/no-img-element -- same asset as HomeBar breadcrumb; file uses black fill
+        <img
+          src="/svg/right-arrow.svg"
+          alt=""
+          width={8}
+          height={10}
+          className="block h-2.5 w-2 max-h-2.5 max-w-2 shrink-0 object-contain"
+          aria-hidden
+        />
+      ) : null}
     </button>
   );
 }

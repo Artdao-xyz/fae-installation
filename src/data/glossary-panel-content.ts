@@ -22,10 +22,10 @@ export const GLOSSARY_PANEL_ENTRIES: GlossaryPanelEntry[] = [
       "A focused publication or session that frames a question, gathers evidence, and proposes directions for the field.",
   },
   {
-    id: "fellowship",
-    term: "Fellowship",
+    id: "latest-updates",
+    term: "Latest updates",
     definition:
-      "A structured period of support for practitioners to develop work in dialogue with FAE’s community and research themes.",
+      "The docked strip that surfaces new work, releases, and program highlights so you can scan what’s new without leaving the index.",
   },
   {
     id: "rd-lab",

@@ -1,11 +1,21 @@
 "use client";
 
 import { useCallback, useEffect, useId, useState } from "react";
+import { useFloatingPanelStack } from "@/components/ui/floating-panels/FloatingPanelStackContext";
+import { FLOATING_DOCK_PEEK_CLIP_CLASS } from "@/components/ui/filter-sidebar/shell/layout-classes";
 import { AboutSvgIcon } from "@/components/ui/icons/AboutSvgIcon";
 import { OpenSvgIcon } from "@/components/ui/icons/OpenSvgIcon";
 import { navSidebarVerticalLabelClassName } from "@/components/ui/icons/nav-sidebar-labels";
-
-type View = "minimized" | "peek" | "full";
+import { floatingDockPanelOuterHeightPx } from "@/components/ui/floating-panels/right-rail-stack";
+import {
+  fullScreenContentInnerClass,
+  fullScreenContentScrollClass,
+  fullScreenContentShellClass,
+  fullScreenContentShellEnterTransitionClass,
+  fullScreenShowMoreLessButtonClass,
+  fullScreenShowMoreLessLabelClass,
+} from "@/components/ui/preview/fullScreenContentChrome";
+import { PreviewPanelCollapseBar } from "@/components/ui/preview/PreviewPanelCollapseBar";
 
 const ABOUT_BODY = (
   <>
@@ -17,9 +27,7 @@ const ABOUT_BODY = (
     <p className="mb-0 leading-[1.6]">
       Through briefings, R&amp;D Labs and a growing community of artists,
       technologists, policy-makers, researchers and fellow organisations, FAE
-      develops insights, tools and projects that advance our mission. Embedded
-      in Serpentine&apos;s Arts Technologies team, FAE facilitates the emergence
-      of new systems for art, technology and society.
+      develops insights, tools and projects that advance our mission.
     </p>
   </>
 );
@@ -35,15 +43,9 @@ const ABOUT_FULL_TEAM = [
   "Kay Watson",
 ] as const;
 
-const showMoreLessButtonClassName =
-  "inline-flex items-center gap-2 border-r-hairline border-t-hairline border-solid border-ink-primary bg-surface-canvas/90 px-5 py-4 text-left backdrop-blur-fae-sm transition-colors hover:bg-surface-hover/80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ink-primary";
-
-const showMoreLessLabelClassName =
-  "whitespace-nowrap font-fira-mono text-sm font-normal leading-[14px] text-ink-body";
-
 function AboutFullScreenBody() {
   return (
-    <div className="flex flex-col items-start gap-2.5 text-ink-body">
+    <div className="flex w-full flex-col items-start gap-5 text-ink-body">
 
       <div className="w-full font-suisseintl text-xs font-normal leading-5">
         {ABOUT_BODY}
@@ -97,18 +99,82 @@ function AboutFullScreenBody() {
   );
 }
 
+/**
+ * Isolated so open animation runs on each mount, matching the preview full-screen enter transition.
+ */
+function AboutFullScreenView({
+  zIndex,
+  onBackToPeek,
+}: {
+  zIndex: number;
+  onBackToPeek: () => void;
+}) {
+  const [shellEntered, setShellEntered] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    let raf = 0;
+    queueMicrotask(() => {
+      if (cancelled || typeof window === "undefined") return;
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        setShellEntered(true);
+        return;
+      }
+      setShellEntered(false);
+      raf = requestAnimationFrame(() => {
+        if (!cancelled) setShellEntered(true);
+      });
+    });
+    return () => {
+      cancelled = true;
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, []);
+
+  return (
+    <div
+      className={`${fullScreenContentShellClass} ${fullScreenContentShellEnterTransitionClass} ${
+        shellEntered ? "scale-100 opacity-100" : "scale-95 opacity-0"
+      } motion-reduce:scale-100 motion-reduce:opacity-100`}
+      style={{ zIndex }}
+      role="dialog"
+      aria-modal="true"
+      aria-label="About Future Art Ecosystems"
+    >
+      <PreviewPanelCollapseBar
+        ariaLabel="Back to About panel"
+        onClose={onBackToPeek}
+      />
+      <div className={fullScreenContentScrollClass}>
+        <div className={fullScreenContentInnerClass}>
+          <AboutFullScreenBody />
+        </div>
+      </div>
+      <div className="flex shrink-0 justify-start">
+        <button
+          type="button"
+          onClick={onBackToPeek}
+          className={fullScreenShowMoreLessButtonClass}
+          aria-label="Back to About panel"
+        >
+          <OpenSvgIcon className="shrink-0" />
+          <span className={fullScreenShowMoreLessLabelClass}>Show less</span>
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function AboutTabRail({
   arrowClassName,
   onClick,
   ariaExpanded,
   ariaControls,
-  showRightDivider = false,
 }: {
   arrowClassName?: string;
   onClick: () => void;
   ariaExpanded: boolean;
   ariaControls: string;
-  showRightDivider?: boolean;
 }) {
   return (
     <button
@@ -116,12 +182,16 @@ function AboutTabRail({
       aria-expanded={ariaExpanded}
       aria-controls={ariaControls}
       onClick={onClick}
-      className={`flex min-h-[120px] w-filter-narrow-column shrink-0 flex-col items-center border-solid border-ink-primary bg-surface-canvas/90 py-2.5 backdrop-blur-fae-sm transition-colors hover:bg-surface-hover/80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary ${
-        showRightDivider ? "border-r-hairline" : ""
+      className={`flex h-full min-h-0 w-filter-narrow-column shrink-0 flex-col items-center self-stretch border-b-0 border-solid border-ink-primary bg-surface-canvas/90 py-2.5 backdrop-blur-fae-sm transition-colors hover:bg-surface-hover/80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary ${
+        ariaExpanded ? "border-r-hairline" : ""
       }`}
     >
       <div className="flex min-h-[72px] w-full flex-1 flex-col items-center justify-between px-0.5">
-        <OpenSvgIcon className={arrowClassName ?? ""} />
+        <OpenSvgIcon
+          className={`${arrowClassName ?? ""} transition-transform duration-500 ease-in-out motion-reduce:transition-none ${
+            ariaExpanded ? "rotate-180" : ""
+          }`}
+        />
         <span className={navSidebarVerticalLabelClassName}>About</span>
       </div>
       <AboutSvgIcon className="mt-2" />
@@ -131,60 +201,57 @@ function AboutTabRail({
 
 export function AboutPanel() {
   const panelId = useId();
-  const [view, setView] = useState<View>("minimized");
+  const dockOuterH = floatingDockPanelOuterHeightPx();
+  const { aboutView, setAboutView, getChromeZIndex } = useFloatingPanelStack();
 
-  const openPeek = useCallback(() => setView("peek"), []);
-  const openFull = useCallback(() => setView("full"), []);
-  const closeFull = useCallback(() => setView("peek"), []);
-  const minimize = useCallback(() => setView("minimized"), []);
-
-  useEffect(() => {
-    if (view !== "full") return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") closeFull();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [view, closeFull]);
+  const openFull = useCallback(() => setAboutView("full"), [setAboutView]);
+  const closeFull = useCallback(() => setAboutView("peek"), [setAboutView]);
 
   useEffect(() => {
-    if (view !== "full") return;
+    if (aboutView !== "full") return;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = previousOverflow;
     };
-  }, [view]);
+  }, [aboutView]);
+
+  const toggleDock = useCallback(() => {
+    setAboutView((v) => (v === "peek" ? "minimized" : "peek"));
+  }, [setAboutView]);
+
+  const peekOpen = aboutView === "peek";
+  const peekClipClass = peekOpen
+    ? "max-w-[calc(var(--width-about-panel)-var(--width-filter-narrow-column))] opacity-100"
+    : "max-w-0 opacity-0 pointer-events-none";
 
   return (
-    <div className="max-lg:hidden">
-      {view === "minimized" ? (
-        <div className="fixed top-8.5 right-8.5 z-52 border-hairline border-solid border-ink-primary">
+    <>
+      {aboutView !== "full" ? (
+        <div
+          className={`fixed top-8.5 right-8.5 flex min-h-0 max-h-about-panel flex-row items-stretch overflow-hidden border-solid border-ink-primary bg-surface-canvas/90 shadow-none backdrop-blur-fae-md ${
+            peekOpen ? "border-hairline" : "border-hairline border-b-0"
+          }`}
+          style={{
+            zIndex: getChromeZIndex("about", peekOpen ? "peek" : "minimized"),
+            height: `${dockOuterH}px`,
+            minHeight: `${dockOuterH}px`,
+          }}
+        >
           <AboutTabRail
             arrowClassName="-scale-x-100"
-            onClick={openPeek}
-            ariaExpanded={false}
+            onClick={toggleDock}
+            ariaExpanded={peekOpen}
             ariaControls={panelId}
           />
-        </div>
-      ) : null}
 
-      {view === "peek" ? (
-        <div
-          id={panelId}
-          role="region"
-          aria-label="About"
-          className="fixed top-8.5 right-8.5 z-52 flex max-h-about-panel w-about-panel overflow-hidden border-hairline border-solid border-ink-primary bg-surface-canvas/90 shadow-none backdrop-blur-fae-md motion-reduce:transition-none"
-        >
-          <div className="flex min-h-0 min-w-0 flex-1 flex-row">
-            <AboutTabRail
-              onClick={minimize}
-              ariaExpanded={true}
-              ariaControls={panelId}
-              showRightDivider
-            />
-
-            <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+          <div
+            id={peekOpen ? panelId : undefined}
+            role={peekOpen ? "region" : undefined}
+            aria-label={peekOpen ? "About" : undefined}
+            className={`h-full min-h-0 shrink-0 overflow-hidden ${FLOATING_DOCK_PEEK_CLIP_CLASS} ${peekClipClass}`}
+          >
+            <div className="flex h-full min-h-0 w-[calc(var(--width-about-panel)-var(--width-filter-narrow-column))] shrink-0 flex-col">
               <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pt-5">
                 <div className="font-suisseintl text-xs font-normal leading-[1.6] text-ink-body">
                   {ABOUT_BODY}
@@ -195,10 +262,12 @@ export function AboutPanel() {
                 <button
                   type="button"
                   onClick={openFull}
-                  className={showMoreLessButtonClassName}
+                  className={fullScreenShowMoreLessButtonClass}
                 >
-                  <OpenSvgIcon className="-scale-x-100" />
-                  <span className={showMoreLessLabelClassName}>Show more</span>
+                  <OpenSvgIcon className="shrink-0 rotate-180" />
+                  <span className={fullScreenShowMoreLessLabelClass}>
+                    Show more
+                  </span>
                 </button>
               </div>
             </div>
@@ -206,44 +275,12 @@ export function AboutPanel() {
         </div>
       ) : null}
 
-      {view === "full" ? (
-        <div
-          className="fixed inset-0 z-60 flex flex-col bg-surface-canvas motion-reduce:transition-none"
-          role="dialog"
-          aria-modal="true"
-          aria-label="About Future Art Ecosystems"
-        >
-          <div className="flex shrink-0 border-b-hairline border-solid border-ink-primary bg-surface-canvas/95 backdrop-blur-fae-md">
-            <button
-              type="button"
-              onClick={closeFull}
-              className="flex h-11 w-11 shrink-0 items-center justify-center border-r-hairline border-solid border-ink-primary transition-colors hover:bg-surface-hover/80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary"
-              aria-label="Back to compact about panel"
-            >
-              <OpenSvgIcon />
-            </button>
-          </div>
-
-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-            <div className="mx-auto max-w-2xl px-6 py-8 sm:px-10 sm:py-12">
-              <AboutFullScreenBody />
-            </div>
-          </div>
-
-          <div className="shrink-0 px-6 pt-6 sm:px-10">
-            <div className="mx-auto max-w-2xl">
-              <button
-                type="button"
-                onClick={closeFull}
-                className={showMoreLessButtonClassName}
-              >
-                <OpenSvgIcon className="-scale-x-100" />
-                <span className={showMoreLessLabelClassName}>Show less</span>
-              </button>
-            </div>
-          </div>
-        </div>
+      {aboutView === "full" ? (
+        <AboutFullScreenView
+          zIndex={getChromeZIndex("about", "full")}
+          onBackToPeek={closeFull}
+        />
       ) : null}
-    </div>
+    </>
   );
 }

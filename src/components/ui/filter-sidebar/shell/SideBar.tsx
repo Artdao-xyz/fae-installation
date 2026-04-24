@@ -27,7 +27,11 @@ export function SideBar({
         aria-controls={filtersOpen ? filterPanelId : undefined}
         aria-label={filtersOpen ? "Collapse filters" : "Expand filters"}
       >
-        <OpenSvgIcon />
+        <OpenSvgIcon
+          className={`transition-transform duration-500 ease-in-out motion-reduce:transition-none ${
+            filtersOpen ? "-rotate-180" : ""
+          }`}
+        />
       </button>
       {/* Desktop only (`lg`): column + vertical label — unlike mobile bottom bar (row + horizontal label). */}
       <div className="flex w-full shrink-0 flex-col items-center gap-4 px-2 pb-3 pt-3">

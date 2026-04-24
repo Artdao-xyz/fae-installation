@@ -1,25 +1,25 @@
 "use client";
 
+import { useFilterSelection } from "../FilterSelectionContext";
 import { FilterSidebarCategoryRow } from "../primitives/FilterSidebarCategoryRow";
 
 type FAEBriefingsMenuProps = {
   subpanelOpen: boolean;
   onToggleSubpanel: () => void;
-  mobileFillCell?: boolean;
 };
 
 export function FAEBriefingsMenu({
   subpanelOpen,
   onToggleSubpanel,
-  mobileFillCell,
 }: FAEBriefingsMenuProps) {
+  const { selectedFaeBriefing } = useFilterSelection();
   return (
     <FilterSidebarCategoryRow
       label="FAE Briefings"
       tone="fae-briefings"
       expanded={subpanelOpen}
       onClick={onToggleSubpanel}
-      mobileFillCell={mobileFillCell}
+      hasSubpanelSelection={selectedFaeBriefing != null}
     />
   );
 }

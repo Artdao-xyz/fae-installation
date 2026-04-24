@@ -1,42 +1,74 @@
 "use client";
 
-import { useCallback, useState } from "react";
-import { FORMAT_ITEMS } from "../domains/format/formatItems";
+import { useCallback } from "react";
+import { useFloatingPanelStack } from "@/components/ui/floating-panels/FloatingPanelStackContext";
+import { useFilterSelection } from "../FilterSelectionContext";
+import { FormatButton } from "../domains/format/FormatButton";
 import { FilterSidebarSection } from "../primitives/FilterSidebarSection";
-import { FilterPill } from "../primitives/FilterPill";
 
-export function Format({ collapsed = false }: { collapsed?: boolean }) {
-  const [selected, setSelected] = useState<Set<string>>(() => new Set());
+export function Format({
+  collapsed = false,
+  chromeless = false,
+}: {
+  collapsed?: boolean;
+  chromeless?: boolean;
+}) {
+  const {
+    filterFormatOptionLabels,
+    selectedFormats,
+    toggleFormat,
+    clearSelectedFormats,
+    contentCatalog,
+    contentCatalogStatus,
+    formatOptionToggleMatchCount,
+  } = useFilterSelection();
+  const { minimizeAllFloatingPanels } = useFloatingPanelStack();
 
-  const toggle = useCallback((id: string) => {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  }, []);
+  const catalogReady =
+    contentCatalogStatus === "success" && contentCatalog.length > 0;
 
-  const clearAll = useCallback(() => setSelected(new Set()), []);
+  const clearAll = useCallback(() => {
+    minimizeAllFloatingPanels();
+    clearSelectedFormats();
+  }, [minimizeAllFloatingPanels, clearSelectedFormats]);
 
   return (
     <FilterSidebarSection
       title="Format"
       onClearAll={clearAll}
-      selectedCount={selected.size}
-      totalCount={FORMAT_ITEMS.length}
-      scrollBody
       collapsed={collapsed}
+      chromeless={chromeless}
+      selectionTally={
+        chromeless
+          ? {
+              selected: selectedFormats.size,
+              total: filterFormatOptionLabels.length,
+            }
+          : undefined
+      }
     >
-      {FORMAT_ITEMS.map(({ id, label }) => (
-        <FilterPill
-          key={id}
-          label={label}
-          variant="square"
-          selected={selected.has(id)}
-          onPress={() => toggle(id)}
-        />
-      ))}
+      {filterFormatOptionLabels.map((label) => {
+        const selected = selectedFormats.has(label);
+        const count = formatOptionToggleMatchCount.get(label) ?? 0;
+        const disableAdd = catalogReady && !selected && count === 0;
+        return (
+          <FormatButton
+            key={label}
+            label={label}
+            selected={selected}
+            onPress={() => {
+              minimizeAllFloatingPanels();
+              toggleFormat(label);
+            }}
+            disabled={disableAdd}
+            title={
+              disableAdd
+                ? "Nothing in the catalog matches this with your other filters"
+                : label
+            }
+          />
+        );
+      })}
     </FilterSidebarSection>
   );
 }

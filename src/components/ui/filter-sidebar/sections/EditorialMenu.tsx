@@ -1,11 +1,7 @@
 import { FilterSidebarCategoryRow } from "../primitives/FilterSidebarCategoryRow";
 
-export function EditorialMenu({
-  mobileFillCell,
-}: {
-  mobileFillCell?: boolean;
-} = {}) {
+export function EditorialMenu() {
   return (
-    <FilterSidebarCategoryRow label="Editorial" tone="editorial" mobileFillCell={mobileFillCell} />
+    <FilterSidebarCategoryRow label="Editorial" tone="editorial" />
   );
 }

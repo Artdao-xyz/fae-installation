@@ -1,14 +1,29 @@
 "use client";
 
 import { useCallback } from "react";
-import { ACTIVITY_TYPE_LABELS } from "../config/constants";
 import { useFilterSelection } from "../FilterSelectionContext";
 import { FilterSidebarSection } from "../primitives/FilterSidebarSection";
 import { FilterPill } from "../primitives/FilterPill";
 
-export function ActivityType({ collapsed = false }: { collapsed?: boolean }) {
-  const { selectedActivityTypes, toggleActivityType, clearActivityTypes } =
-    useFilterSelection();
+export function ActivityType({
+  collapsed = false,
+  chromeless = false,
+}: {
+  collapsed?: boolean;
+  chromeless?: boolean;
+}) {
+  const {
+    selectedActivityTypes,
+    toggleActivityType,
+    clearActivityTypes,
+    filterActivityOptionLabels,
+    contentCatalog,
+    contentCatalogStatus,
+    activityOptionToggleMatchCount,
+  } = useFilterSelection();
+
+  const catalogReady =
+    contentCatalogStatus === "success" && contentCatalog.length > 0;
 
   const toggle = useCallback(
     (label: string) => {
@@ -23,20 +38,38 @@ export function ActivityType({ collapsed = false }: { collapsed?: boolean }) {
     <FilterSidebarSection
       title="Activity Type"
       onClearAll={clearAll}
-      selectedCount={selectedActivityTypes.size}
-      totalCount={ACTIVITY_TYPE_LABELS.length}
       scrollBody
       collapsed={collapsed}
+      chromeless={chromeless}
+      selectionTally={
+        chromeless
+          ? {
+              selected: selectedActivityTypes.size,
+              total: filterActivityOptionLabels.length,
+            }
+          : undefined
+      }
     >
-      {ACTIVITY_TYPE_LABELS.map((label) => (
-        <FilterPill
-          key={label}
-          label={label}
-          variant="square"
-          selected={selectedActivityTypes.has(label)}
-          onPress={() => toggle(label)}
-        />
-      ))}
+      {filterActivityOptionLabels.map((label) => {
+        const selected = selectedActivityTypes.has(label);
+        const count = activityOptionToggleMatchCount.get(label) ?? 0;
+        const disableAdd = catalogReady && !selected && count === 0;
+        return (
+          <FilterPill
+            key={label}
+            label={label}
+            variant="rounded"
+            selected={selected}
+            onPress={() => toggle(label)}
+            disabled={disableAdd}
+            title={
+              disableAdd
+                ? "Nothing in the catalog matches this with your other filters"
+                : undefined
+            }
+          />
+        );
+      })}
     </FilterSidebarSection>
   );
 }
