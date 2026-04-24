@@ -146,9 +146,6 @@ export function FilterSidebar() {
                   onToggleNetworkSubpanel={() =>
                     setNetworkSubpanelOpen((o) => !o)
                   }
-                  mobileSubpanelsColumn={
-                    isMaxLg ? undefined : subpanelsColumn
-                  }
                 />
               ) : null}
             </div>

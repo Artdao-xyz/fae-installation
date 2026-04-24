@@ -1,6 +1,5 @@
 "use client";
 
-import type { ReactNode } from "react";
 import { useFilterSelection } from "@/components/ui/filter-sidebar/FilterSelectionContext";
 import { ActivityType } from "../sections/ActivityType";
 import { ArtistsMenu } from "../sections/ArtistsMenu";
@@ -27,8 +26,6 @@ export type FilterOptionsPanelProps = {
   onToggleRdSubpanel: () => void;
   onToggleArtistsSubpanel: () => void;
   onToggleNetworkSubpanel: () => void;
-  /** Desktop `lg+`: domain subpanel stack beside options. */
-  mobileSubpanelsColumn?: ReactNode;
 };
 
 export function FilterOptionsPanel({
@@ -41,7 +38,6 @@ export function FilterOptionsPanel({
   onToggleRdSubpanel,
   onToggleArtistsSubpanel,
   onToggleNetworkSubpanel,
-  mobileSubpanelsColumn,
 }: FilterOptionsPanelProps) {
   const isMaxLg = useIsMaxLg();
   const { filterSearchQuery, setFilterSearchQuery } = useFilterSelection();
@@ -59,12 +55,10 @@ export function FilterOptionsPanel({
 
   return (
     <aside
-      className={`flex h-full min-h-0 w-full min-w-0 overflow-hidden border-solid border-ink-primary ${filterChromeRightEdgeClass(anySubpanelOpen)} ${mobileSubpanelsColumn ? "flex-row" : "flex-col"}`}
+      className={`flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden border-solid border-ink-primary ${filterChromeRightEdgeClass(anySubpanelOpen)}`}
       aria-label="Filters"
     >
-      <div
-        className={`flex min-h-0 min-w-0 flex-col overflow-hidden ${mobileSubpanelsColumn ? "min-w-0 flex-1" : "flex-1"}`}
-      >
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         <div
           id={panelId}
           className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
@@ -114,7 +108,6 @@ export function FilterOptionsPanel({
           </div>
         </div>
       </div>
-      {mobileSubpanelsColumn}
     </aside>
   );
 }
