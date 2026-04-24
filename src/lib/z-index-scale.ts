@@ -27,4 +27,14 @@ export const Z_INDEX = {
   guiPeekBase: 44,
   previewDocked: 47,
   fullscreen: 50,
+  /**
+   * `MobileAboutSheet` — above mobile filter overlay (`z-50`), below site menu.
+   */
+  mobileAboutSheet: 199,
+  /**
+   * Mobile site menu (`MobileSiteHeader`). Above filter sheet and docks.
+   */
+  mobileSiteMenu: 200,
+  /** `MobileGlossarySheet` when opened from the site menu (above the menu layer). */
+  mobileGlossarySheet: 201,
 } as const;

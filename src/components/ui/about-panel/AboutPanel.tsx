@@ -17,6 +17,7 @@ import {
   fullScreenShowMoreLessLabelClass,
 } from "@/components/ui/preview/fullScreenContentChrome";
 import { PreviewPanelCollapseBar } from "@/components/ui/preview/PreviewPanelCollapseBar";
+import { Z_INDEX } from "@/lib/z-index-scale";
 import { AboutPanelRichContent, ABOUT_BODY } from "./AboutShared";
 import { MobileAboutSheet } from "./MobileAboutSheet";
 
@@ -206,7 +207,7 @@ export function AboutPanel() {
 
       {aboutView === "full" && isMaxLg ? (
         <MobileAboutSheet
-          zIndex={getChromeZIndex("about", "full")}
+          zIndex={Z_INDEX.mobileAboutSheet}
           onClose={closeFull}
         />
       ) : null}

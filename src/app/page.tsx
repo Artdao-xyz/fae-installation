@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useMemo, useRef, useSyncExternalStore } from "react";
+import { useMemo, useRef, useState, useSyncExternalStore } from "react";
 import {
   FilterSelectionProvider,
   FilterSidebar,
@@ -103,9 +103,12 @@ function HomeContent() {
   const { aboutView } = useFloatingPanelStack();
   const isMaxLg = useIsMaxLg();
   const searching = filterSearchQuery.trim().length > 0;
-  /** Mobile landing search sits under `MobileSiteHeader`; hide it while filter sheet or About is open. */
+  const [mobileHeaderOverlayOpen, setMobileHeaderOverlayOpen] = useState(false);
+  /** Mobile landing search sits under `MobileSiteHeader`; hide it while filter sheet, About, or menu/glossary is open. */
   const hideMobileLandingSearch =
-    filtersPanelOpen || aboutView === "full";
+    filtersPanelOpen ||
+    aboutView === "full" ||
+    mobileHeaderOverlayOpen;
 
   const latestUpdatesStripRows = useMemo(
     () => selectLatestUpdatesRows(contentCatalog, contentCatalogStatus),
@@ -130,7 +133,9 @@ function HomeContent() {
           <MarginGuideFrame />
         </div>
 
-        <MobileSiteHeader />
+        <MobileSiteHeader
+          onMobileOverlayOpenChange={setMobileHeaderOverlayOpen}
+        />
 
         <div
           className={[
