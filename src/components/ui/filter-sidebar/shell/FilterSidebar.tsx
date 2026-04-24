@@ -8,6 +8,7 @@ import { Footer } from "./Footer";
 import { HomeBar } from "./HomeBar";
 import { MobileFiltersBar } from "./MobileFiltersBar";
 import { MobileFiltersCloseHeader } from "./MobileFiltersCloseHeader";
+import { MobileLatestUpdatesStrip } from "./MobileLatestUpdatesStrip";
 import {
   FILTER_OPTIONS_PANEL_CLIP_TRANSITION_CLASS,
   FILTER_SIDEBAR_COLUMN_CLASS,
@@ -158,11 +159,14 @@ export function FilterSidebar() {
       </div>
       {isMaxLg ? null : subpanelsColumn}
       {isMaxLg ? (
-        <div className="fixed inset-x-0 bottom-0 z-40 flex flex-col border-t-hairline border-solid border-ink-primary bg-surface-canvas pb-[env(safe-area-inset-bottom,0px)] lg:hidden">
-          {filtersOpen ? null : (
-            <MobileFiltersBar onOpen={toggleFiltersOpen} />
-          )}
-          <Footer showYear={false} mergeWithSubpanel={false} />
+        <div className="fixed inset-x-0 bottom-0 z-40 flex flex-col pb-[env(safe-area-inset-bottom,0px)] lg:hidden">
+          {filtersOpen ? null : <MobileLatestUpdatesStrip />}
+          <div className="flex w-full shrink-0 flex-col bg-surface-canvas">
+            {filtersOpen ? null : (
+              <MobileFiltersBar onOpen={toggleFiltersOpen} />
+            )}
+            <Footer showYear={false} mergeWithSubpanel={false} />
+          </div>
         </div>
       ) : null}
     </div>

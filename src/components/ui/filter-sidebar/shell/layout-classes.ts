@@ -74,16 +74,25 @@ export const MOBILE_OVERLAY_X_CLASS = "max-lg:left-0 max-lg:right-0";
  * **Important:** each return value must be a **complete string literal** in this file. Tailwind only emits
  * utilities it can see verbatim; template-built class names never land in CSS.
  *
- * Clears: two `h-11` dock rows + `FilterSidebar`’s `pb-[env(safe-area-inset-bottom)]`; taxonomy grid `+3rem`.
+ * Dock: optional `MobileLatestUpdatesStrip` (`12.875rem` = `floatingDockPanelOuterHeightPx()` @ 16px root),
+ * two `h-11` rows,
+ * `pb-[env(safe-area-inset-bottom)]` on the fixed dock; taxonomy grid `+3rem`.
  */
 export function mobileMainScrollInsetClassName(options: {
   filtersPanelOpen: boolean;
   hasActiveTaxonomyFilters: boolean;
+  showMobileLatestUpdatesStrip: boolean;
 }): string {
   if (options.filtersPanelOpen) {
     return "max-lg:pb-[calc(2.75rem+env(safe-area-inset-bottom,0px))]";
   }
-  if (options.hasActiveTaxonomyFilters) {
+  if (options.showMobileLatestUpdatesStrip && options.hasActiveTaxonomyFilters) {
+    return "max-lg:pb-[calc(12.875rem+2.75rem+2.75rem+env(safe-area-inset-bottom,0px)+3rem)]";
+  }
+  if (options.showMobileLatestUpdatesStrip && !options.hasActiveTaxonomyFilters) {
+    return "max-lg:pb-[calc(12.875rem+2.75rem+2.75rem+env(safe-area-inset-bottom,0px))]";
+  }
+  if (!options.showMobileLatestUpdatesStrip && options.hasActiveTaxonomyFilters) {
     return "max-lg:pb-[calc(2.75rem+2.75rem+env(safe-area-inset-bottom,0px)+3rem)]";
   }
   return "max-lg:pb-[calc(2.75rem+2.75rem+env(safe-area-inset-bottom,0px))]";

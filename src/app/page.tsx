@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useRef, useSyncExternalStore } from "react";
+import { useMemo, useRef, useSyncExternalStore } from "react";
 import {
   FilterSelectionProvider,
   FilterSidebar,
@@ -10,7 +10,11 @@ import {
 } from "@/components/ui/filter-sidebar";
 import { MobileFilteredThumbnailGrid } from "@/components/ui/filter-sidebar/shell/MobileFilteredThumbnailGrid";
 import { MobileSiteHeader } from "@/components/ui/filter-sidebar/shell/MobileSiteHeader";
-import { mobileMainScrollInsetClassName } from "@/components/ui/filter-sidebar/shell/layout-classes";
+import {
+  mobileMainScrollInsetClassName,
+} from "@/components/ui/filter-sidebar/shell/layout-classes";
+import { useIsMaxLg } from "@/components/ui/filter-sidebar/shell/useIsMaxLg";
+import { selectLatestUpdatesRows } from "@/components/ui/latest-updates-panel/latestUpdatesRows";
 import { HeroTitleBlock } from "@/components/ui/hero-title-block";
 import { MarginGuideFrame } from "@/components/ui/margin-guide-frame";
 import { PixelTessellationBackground } from "@/components/ui/pixel-tessellation-background";
@@ -93,16 +97,27 @@ function HomeContent() {
     setFilterSearchQuery,
     filtersPanelOpen,
     hasActiveTaxonomyFilters,
+    contentCatalog,
+    contentCatalogStatus,
   } = useFilterSelection();
   const { aboutView } = useFloatingPanelStack();
+  const isMaxLg = useIsMaxLg();
   const searching = filterSearchQuery.trim().length > 0;
   /** Mobile landing search sits under `MobileSiteHeader`; hide it while filter sheet or About is open. */
   const hideMobileLandingSearch =
     filtersPanelOpen || aboutView === "full";
 
+  const latestUpdatesStripRows = useMemo(
+    () => selectLatestUpdatesRows(contentCatalog, contentCatalogStatus),
+    [contentCatalog, contentCatalogStatus],
+  );
+  const showMobileLatestUpdatesStrip =
+    isMaxLg && !filtersPanelOpen && latestUpdatesStripRows.length > 0;
+
   const mobileScrollInsetClass = mobileMainScrollInsetClassName({
     filtersPanelOpen,
     hasActiveTaxonomyFilters,
+    showMobileLatestUpdatesStrip,
   });
 
   return (
