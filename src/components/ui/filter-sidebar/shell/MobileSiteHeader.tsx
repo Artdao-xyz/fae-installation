@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { useFilterSelection } from "@/components/ui/filter-sidebar/FilterSelectionContext";
 import { AboutSvgIcon } from "@/components/ui/icons/AboutSvgIcon";
@@ -20,6 +20,14 @@ const MENU_NAV_ITEM_CLASS =
 
 const MENU_NAV_ICON_CLASS = "!size-8 shrink-0";
 
+function subscribeToDocumentBody() {
+  return () => {};
+}
+
+function getDocumentBodySnapshot(): HTMLElement | null {
+  return typeof document !== "undefined" ? document.body : null;
+}
+
 type MobileSiteHeaderProps = {
   /** True while the full-screen menu or mobile glossary sheet from the menu is open (landing search, etc.). */
   onMobileOverlayOpenChange?: (open: boolean) => void;
@@ -37,11 +45,11 @@ export function MobileSiteHeader({
   const { aboutView, setAboutView } = useFloatingPanelStack();
   const [menuOpen, setMenuOpen] = useState(false);
   const [glossaryOpen, setGlossaryOpen] = useState(false);
-  const [portalEl, setPortalEl] = useState<HTMLElement | null>(null);
-
-  useEffect(() => {
-    setPortalEl(document.body);
-  }, []);
+  const portalEl = useSyncExternalStore(
+    subscribeToDocumentBody,
+    getDocumentBodySnapshot,
+    () => null,
+  );
 
   const overlayOpen = menuOpen || glossaryOpen;
 
