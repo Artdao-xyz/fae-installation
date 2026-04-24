@@ -30,11 +30,11 @@ export function Search({
     <div
       className={
         searching
-          ? "flex min-h-0 min-w-0 w-full flex-col overflow-hidden max-lg:shrink-0 max-lg:flex-none lg:flex-1"
+          ? "flex min-h-0 min-w-0 w-full flex-col max-lg:shrink-0 max-lg:flex-none max-lg:overflow-visible lg:overflow-hidden lg:flex-1"
           : "w-full shrink-0"
       }
     >
-      {/* Bar row: `max-lg` aligns to parent inset-0; horizontal padding from `lg` */}
+      {/* Bar row: on landing mobile, parent keeps this outside the main scroll region so it stays put. */}
       <div className="min-w-0 shrink-0 bg-surface-canvas p-3">
         <FilterSearchField
           id={fieldId}

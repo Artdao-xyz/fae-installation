@@ -20,6 +20,7 @@ import {
 } from "@/lib/content-catalog-filter-options";
 import {
   countMatchingFilterRows,
+  rowMatchesFilterSelection,
   toggledSet,
   type FilterMatchMode,
   type TaxonomyFilterSelection,
@@ -145,6 +146,12 @@ export type FilterSelectionContextValue = {
    * Used for empty-state messaging and disabling impossible options.
    */
   filterMatchingRowCount: number;
+  /** True when any taxonomy dimension has a selection (same notion as particle “filtered” spread). */
+  hasActiveTaxonomyFilters: boolean;
+  /**
+   * Catalog rows matching current filters. Empty when `!hasActiveTaxonomyFilters` so we do not hold the full catalog.
+   */
+  filterMatchingCatalogRows: ContentRow[];
   /** Catalog rows that would match if this tag were toggled (same as next click). */
   focusOptionToggleMatchCount: ReadonlyMap<string, number>;
   activityOptionToggleMatchCount: ReadonlyMap<string, number>;
@@ -468,6 +475,33 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
       ),
     [contentCatalog, taxonomySelection],
   );
+
+  const hasActiveTaxonomyFilters = useMemo(
+    () =>
+      selectedFocusAreas.size > 0 ||
+      selectedActivityTypes.size > 0 ||
+      selectedArtists.size > 0 ||
+      selectedFormats.size > 0 ||
+      selectedNetworks.size > 0,
+    [
+      selectedFocusAreas,
+      selectedActivityTypes,
+      selectedArtists,
+      selectedFormats,
+      selectedNetworks,
+    ],
+  );
+
+  const filterMatchingCatalogRows = useMemo(() => {
+    if (!hasActiveTaxonomyFilters) return [];
+    return contentCatalog.filter((row) =>
+      rowMatchesFilterSelection(
+        row,
+        taxonomySelection,
+        SIDEBAR_FILTER_MATCH_MODE,
+      ),
+    );
+  }, [contentCatalog, taxonomySelection, hasActiveTaxonomyFilters]);
 
   const focusOptionToggleMatchCount = useMemo(() => {
     const m = new Map<string, number>();
@@ -882,6 +916,8 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
       contentPreviewRow,
       setContentPreviewRow,
       filterMatchingRowCount,
+      hasActiveTaxonomyFilters,
+      filterMatchingCatalogRows,
       focusOptionToggleMatchCount,
       activityOptionToggleMatchCount,
       artistOptionToggleMatchCount,
@@ -937,6 +973,8 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
       applyPreviewPillFilterAndClose,
       contentPreviewRow,
       filterMatchingRowCount,
+      hasActiveTaxonomyFilters,
+      filterMatchingCatalogRows,
       focusOptionToggleMatchCount,
       activityOptionToggleMatchCount,
       artistOptionToggleMatchCount,

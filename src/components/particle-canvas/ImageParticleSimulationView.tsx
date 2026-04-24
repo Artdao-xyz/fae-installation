@@ -173,6 +173,8 @@ export type ImageParticleSimulationViewProps = {
    * Default `intersection` (AND). Use `union` for OR within each group.
    */
   filterMatchMode?: FilterMatchMode;
+  /** Extra classes on the root `<section>` (e.g. hide overlay on mobile while the sim keeps running). */
+  rootClassName?: string;
 };
 
 export function ImageParticleSimulationView({
@@ -185,6 +187,7 @@ export function ImageParticleSimulationView({
   idleTextFullTitle = true,
   placementContainerRef,
   filterMatchMode: filterMatchModeProp,
+  rootClassName,
 }: ImageParticleSimulationViewProps) {
   const filterMatchMode = filterMatchModeProp ?? "intersection";
   const filterMatchModeRef = useRef(filterMatchMode);
@@ -1768,7 +1771,7 @@ export function ImageParticleSimulationView({
 
   return (
     <section
-      className="fixed inset-0 z-30 overflow-hidden"
+      className={`fixed inset-0 z-30 overflow-hidden ${rootClassName ?? ""}`}
       style={{ perspective: `${config.perspective}px` }}
       aria-label="3D image particle simulation"
       onPointerDown={(e) => {

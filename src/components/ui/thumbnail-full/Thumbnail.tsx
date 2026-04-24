@@ -24,6 +24,8 @@ type BaseProps = {
    * The `<p>` is `aria-hidden` so gibberish is not read aloud.
    */
   accessibilityLabel?: string;
+  /** Override label `<p>` font size (px); line-height follows `textPx + 3`. */
+  labelFontSizePx?: number;
 };
 
 export type ThumbnailProps =
@@ -42,6 +44,12 @@ export type ThumbnailProps =
        * Default `fixed` = single outer width for sim/spread; long titles may overflow the chip in layout.
        */
       fullCardLabelWidth?: "fixed" | "hugContent";
+      /**
+       * Fill a sized parent (e.g. square grid cell): `width/height: 100%`, label `shrink-0`, image area grows
+       * and stays square up to available space; image remains `object-contain`.
+       * Intended for `max-lg` only — gate at the call site (e.g. `useIsMaxLg`) so desktop keeps fixed `size` layout.
+       */
+      fillContainer?: boolean;
     })
   | (BaseProps & { variant: "text" })
   | (BaseProps & { variant: "image"; imageSrc: string; imageAlt?: string });
@@ -52,6 +60,7 @@ function LabelChip({
   labelRef,
   accessibilityLabel,
   rowWidth,
+  labelFontSizePx,
 }: {
   label: string;
   dims: (typeof SIZE_DIMS)[ThumbnailSize];
@@ -59,7 +68,9 @@ function LabelChip({
   accessibilityLabel?: string;
   /** `hug` = width follows long labels (e.g. latest-updates strip). Default `full` = match image frame. */
   rowWidth?: "full" | "hug";
+  labelFontSizePx?: number;
 }) {
+  const textPx = labelFontSizePx ?? dims.textPx;
   return (
     <div
       className={`flex shrink-0 justify-center overflow-visible ${
@@ -84,7 +95,7 @@ function LabelChip({
         <p
           ref={labelRef}
           className="whitespace-nowrap font-lust-text font-medium leading-tight"
-          style={{ fontSize: dims.textPx, lineHeight: `${dims.textPx + 3}px` }}
+          style={{ fontSize: textPx, lineHeight: `${textPx + 3}px` }}
           aria-hidden
         >
           {label}
@@ -120,12 +131,15 @@ function ImageFrame({
   label,
   dims,
   imageRef,
+  fluid,
 }: {
   imageSrc: string;
   imageAlt?: string;
   label: string;
   dims: (typeof SIZE_DIMS)[ThumbnailSize];
   imageRef?: Ref<HTMLImageElement | null>;
+  /** Grow with parent; square frame bounded by remaining space (`object-contain` inside). */
+  fluid?: boolean;
 }) {
   const [loaded, setLoaded] = useState(false);
   const { durationMs, delayMs } = useMemo(
@@ -141,6 +155,46 @@ function ImageFrame({
     transitionTimingFunction: "cubic-bezier(0, 0, 0.2, 1)",
   };
 
+  const img = (
+    <Image
+      ref={(node) => assignRef(imageRef, node)}
+      alt={imageAlt || label}
+      src={imageSrc}
+      fill
+      sizes={
+        fluid ? "(max-width: 1023px) 45vw, 320px" : `${dims.frame}px`
+      }
+      unoptimized
+      onLoad={() => setLoaded(true)}
+      onError={() => setLoaded(true)}
+      className={`fae-thumbnail-reveal__img pointer-events-none object-contain object-center ${
+        loaded ? "opacity-100 scale-100" : "opacity-0 scale-[0.98]"
+      }`}
+      style={{
+        transitionProperty: "opacity, transform",
+        transitionDuration: `${durationMs}ms`,
+        transitionDelay: `${revealDelay}ms`,
+        transitionTimingFunction: "cubic-bezier(0, 0, 0.2, 1)",
+      }}
+      draggable={false}
+    />
+  );
+
+  if (fluid) {
+    return (
+      <div className="flex min-h-0 w-full min-w-0 flex-1 items-center justify-center self-stretch">
+        <div
+          className={`fae-thumbnail-reveal relative aspect-square h-full max-h-full w-auto max-w-full overflow-hidden rounded bg-surface-canvas ${
+            loaded ? "shadow-fae-thumbnail" : "shadow-none"
+          }`}
+          style={frameTransitionStyle}
+        >
+          {img}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       className={`fae-thumbnail-reveal relative shrink-0 overflow-hidden rounded bg-surface-canvas ${
@@ -148,26 +202,7 @@ function ImageFrame({
       }`}
       style={{ width: dims.frame, height: dims.frame, ...frameTransitionStyle }}
     >
-      <Image
-        ref={(node) => assignRef(imageRef, node)}
-        alt={imageAlt || label}
-        src={imageSrc}
-        fill
-        sizes={`${dims.frame}px`}
-        unoptimized
-        onLoad={() => setLoaded(true)}
-        onError={() => setLoaded(true)}
-        className={`fae-thumbnail-reveal__img pointer-events-none object-contain object-center ${
-          loaded ? "opacity-100 scale-100" : "opacity-0 scale-[0.98]"
-        }`}
-        style={{
-          transitionProperty: "opacity, transform",
-          transitionDuration: `${durationMs}ms`,
-          transitionDelay: `${revealDelay}ms`,
-          transitionTimingFunction: "cubic-bezier(0, 0, 0.2, 1)",
-        }}
-        draggable={false}
-      />
+      {img}
     </div>
   );
 }
@@ -185,6 +220,7 @@ export function Thumbnail(props: ThumbnailProps) {
     labelRef,
     imageRef,
     accessibilityLabel,
+    labelFontSizePx,
   } = props;
   const variant = props.variant ?? "full";
   const dims = SIZE_DIMS[size];
@@ -197,6 +233,11 @@ export function Thumbnail(props: ThumbnailProps) {
     variant === "full" &&
     "showLabelChip" in props &&
     props.showLabelChip === false;
+
+  const fillContainer =
+    variant === "full" &&
+    "fillContainer" in props &&
+    props.fillContainer === true;
 
   const showLabelText = variant === "text";
   const showImage = variant === "full" || variant === "image";
@@ -211,12 +252,20 @@ export function Thumbnail(props: ThumbnailProps) {
     variant === "text" ? getThumbnailTextVariantOuterSize(size) : null;
   /** Full card: fixed outer box so label length never changes image frame size (spread/sim). */
   const fullOuter =
-    variant === "full" && !suppressLabelChip
+    variant === "full" && !suppressLabelChip && !fillContainer
       ? getThumbnailFullCardOuterSize(size)
       : null;
 
-  const fullCardBoxStyle: CSSProperties | undefined =
-    fullOuter && fullCardLabelWidth === "hugContent"
+  const fullCardBoxStyle: CSSProperties | undefined = fillContainer
+    ? {
+        width: "100%",
+        height: "100%",
+        minWidth: 0,
+        minHeight: 0,
+        boxSizing: "border-box",
+        overflow: "hidden",
+      }
+    : fullOuter && fullCardLabelWidth === "hugContent"
       ? {
           width: "max-content",
           minWidth: fullOuter.width,
@@ -238,7 +287,7 @@ export function Thumbnail(props: ThumbnailProps) {
 
   return (
     <div
-      className={`flex flex-col items-center min-w-0 ${className}`}
+      className={`flex min-h-0 min-w-0 flex-col items-center ${className}`}
       style={{
         ...fullCardBoxStyle,
         ...(textOuter
@@ -260,7 +309,9 @@ export function Thumbnail(props: ThumbnailProps) {
           className={
             suppressLabelChip
               ? "h-0 overflow-hidden opacity-0 pointer-events-none"
-              : undefined
+              : fillContainer
+                ? "w-full shrink-0"
+                : undefined
           }
           aria-hidden={suppressLabelChip}
         >
@@ -269,7 +320,14 @@ export function Thumbnail(props: ThumbnailProps) {
             dims={dims}
             labelRef={labelRef}
             accessibilityLabel={accessibilityLabel}
-            rowWidth={fullCardLabelWidth === "hugContent" ? "hug" : "full"}
+            rowWidth={
+              fillContainer
+                ? "full"
+                : fullCardLabelWidth === "hugContent"
+                  ? "hug"
+                  : "full"
+            }
+            labelFontSizePx={labelFontSizePx}
           />
         </div>
       )}
@@ -279,6 +337,7 @@ export function Thumbnail(props: ThumbnailProps) {
           dims={dims}
           labelRef={labelRef}
           accessibilityLabel={accessibilityLabel}
+          labelFontSizePx={labelFontSizePx}
         />
       )}
       {showImage && imageSrc !== undefined && (
@@ -288,6 +347,7 @@ export function Thumbnail(props: ThumbnailProps) {
           label={label}
           dims={dims}
           imageRef={imageRef}
+          fluid={fillContainer}
         />
       )}
     </div>

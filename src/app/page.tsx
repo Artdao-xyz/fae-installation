@@ -8,6 +8,7 @@ import {
   Search,
   useFilterSelection,
 } from "@/components/ui/filter-sidebar";
+import { MobileFilteredThumbnailGrid } from "@/components/ui/filter-sidebar/shell/MobileFilteredThumbnailGrid";
 import { MobileSiteHeader } from "@/components/ui/filter-sidebar/shell/MobileSiteHeader";
 import { HeroTitleBlock } from "@/components/ui/hero-title-block";
 import { MarginGuideFrame } from "@/components/ui/margin-guide-frame";
@@ -29,8 +30,8 @@ const FETCHED_HEIGHT = 440 * RES_MULTIPLIER;
 const DISPLAYED_WIDTH = 75 * RES_MULTIPLIER;
 const DISPLAYED_HEIGHT = 75 * RES_MULTIPLIER;
 
-/** TEMP: set to `false` to show the WebGL particle canvas again. */
-const HIDE_PARTICLE_CANVAS = true;
+/** Set to `true` to remove the particle layer (mobile still uses a hidden sim + filter grid when needed). */
+const HIDE_PARTICLE_CANVAS = false;
 
 const FloatingDockMount = dynamic(
   () =>
@@ -50,6 +51,7 @@ function readStoredMode(): Mode {
 
 function ParticleCanvasField() {
   const particlePlacementRef = useRef<HTMLDivElement>(null);
+  const { hasActiveTaxonomyFilters } = useFilterSelection();
   const imageLimit = IMAGE_FETCH_LIMIT > 0 ? IMAGE_FETCH_LIMIT : undefined;
   const mode = useSyncExternalStore(
     (onStoreChange) => {
@@ -64,7 +66,9 @@ function ParticleCanvasField() {
   return (
     <div
       ref={particlePlacementRef}
-      className="relative min-h-0 w-full flex-1"
+      className={`relative flex min-h-0 w-full flex-col lg:flex-1 ${
+        hasActiveTaxonomyFilters ? "max-lg:w-full" : "max-lg:flex-none"
+      }`}
     >
       <ImageParticleSimulation
         mode={mode}
@@ -75,7 +79,9 @@ function ParticleCanvasField() {
         displayedHeight={DISPLAYED_HEIGHT}
         speedFactor={SPEED_FACTOR}
         placementContainerRef={particlePlacementRef}
+        rootClassName="max-lg:pointer-events-none max-lg:opacity-0 max-lg:z-[5]"
       />
+      <MobileFilteredThumbnailGrid />
     </div>
   );
 }
@@ -90,11 +96,11 @@ function HomeContent() {
     filtersPanelOpen || aboutView === "full";
 
   return (
-    <div className="flex min-h-screen w-full">
+    <div className="flex min-h-screen w-full max-lg:h-dvh max-lg:min-h-0 max-lg:max-h-dvh max-lg:overflow-hidden">
       <FilterSidebar />
       <PixelTessellationBackground />
       <FloatingDockMount />
-      <main className="relative z-15 flex min-h-0 min-w-0 flex-1 flex-col p-5 text-ink-body max-lg:p-0 max-lg:pb-[calc(1.25rem+env(safe-area-inset-bottom,0px)+6.3125rem)]">
+      <main className="relative z-15 flex min-h-0 min-w-0 flex-1 flex-col p-5 text-ink-body max-lg:min-h-0 max-lg:overflow-hidden max-lg:p-0 max-lg:pb-[calc(1.25rem+env(safe-area-inset-bottom,0px)+6.3125rem)] lg:overflow-visible">
         <div className="pointer-events-none max-lg:hidden" aria-hidden>
           <MarginGuideFrame />
         </div>
@@ -103,11 +109,10 @@ function HomeContent() {
 
         <div
           className={[
-            "min-w-0 w-full border-b-hairline border-solid border-ink-primary bg-surface-canvas lg:hidden",
+            "min-w-0 w-full shrink-0 bg-surface-canvas lg:hidden",
+            "max-lg:sticky max-lg:top-[calc(env(safe-area-inset-top,0px)+2.75rem)] max-lg:z-20 max-lg:border-b-hairline max-lg:border-solid max-lg:border-ink-primary",
             hideMobileLandingSearch ? "hidden" : "",
-            searching
-              ? "flex shrink-0 flex-col overflow-hidden"
-              : "shrink-0",
+            searching ? "flex flex-col" : "",
           ]
             .filter(Boolean)
             .join(" ")}
@@ -119,12 +124,14 @@ function HomeContent() {
           />
         </div>
 
-        <HeroTitleBlock
-          title="Future Art Ecosystems"
-          subtitle="Cultural Infrastructure Research"
-        />
+        <div className="relative z-10 flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-y-auto overscroll-contain max-lg:min-h-0 lg:flex-none lg:overflow-visible">
+          <HeroTitleBlock
+            title="Future Art Ecosystems"
+            subtitle="Cultural Infrastructure Research"
+          />
 
-        {HIDE_PARTICLE_CANVAS ? null : <ParticleCanvasField />}
+          {HIDE_PARTICLE_CANVAS ? null : <ParticleCanvasField />}
+        </div>
       </main>
     </div>
   );
