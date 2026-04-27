@@ -7,14 +7,6 @@ export type ContentRow = {
   /** Short label (`Short_Title`) — particle thumbnails and tile chrome. */
   shortTitle: string;
   imageUrl: string;
-  /** Dev-only witness metadata for checking Strapi/Cloudinary image size vs rendered thumbnail size. */
-  imageDebugMeta?: {
-    source: "Thumbnail" | "Image";
-    formatKey: string | null;
-    strapiWidth: number | null;
-    strapiHeight: number | null;
-    strapiSizeKb: number | null;
-  };
   /**
    * URLs from Strapi `Image` (repeatable media) — filled on detail fetch for preview carousel.
    * Catalog list rows usually have `[]` until preview hydrates.

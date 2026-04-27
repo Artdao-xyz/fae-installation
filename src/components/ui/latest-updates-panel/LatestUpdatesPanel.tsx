@@ -95,7 +95,6 @@ export function LatestUpdatesPanel() {
                   label={row.shortTitle}
                   imageSrc={row.imageUrl}
                   imageAlt={row.title}
-                  imageDebugMeta={row.imageDebugMeta}
                 />
               </button>
             ))}

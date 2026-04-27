@@ -49,7 +49,6 @@ export function MobileFilteredThumbnailGrid() {
                   label={row.shortTitle}
                   imageSrc={row.imageUrl}
                   imageAlt={row.shortTitle}
-                  imageDebugMeta={row.imageDebugMeta}
                   accessibilityLabel={row.title}
                   labelFontSizePx={isMaxLg ? 10 : undefined}
                   className={

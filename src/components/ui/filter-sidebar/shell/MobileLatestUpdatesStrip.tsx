@@ -111,7 +111,6 @@ export function MobileLatestUpdatesStrip() {
                   label={row.shortTitle}
                   imageSrc={row.imageUrl}
                   imageAlt={row.title}
-                  imageDebugMeta={row.imageDebugMeta}
                 />
               </button>
             ))}

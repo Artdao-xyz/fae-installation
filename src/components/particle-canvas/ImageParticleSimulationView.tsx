@@ -1944,7 +1944,6 @@ export function ImageParticleSimulationView({
                     label={row.shortTitle}
                     imageSrc={row.imageUrl}
                     imageAlt={row.shortTitle}
-                    imageDebugMeta={row.imageDebugMeta}
                     labelRef={(el) => {
                       textRefs.current[i] = el;
                     }}
@@ -2030,7 +2029,6 @@ export function ImageParticleSimulationView({
                   label={row.shortTitle}
                   imageSrc={row.imageUrl}
                   imageAlt={row.shortTitle}
-                  imageDebugMeta={row.imageDebugMeta}
                   imageRef={(el) => {
                     imgRefs.current[i] = el;
                   }}

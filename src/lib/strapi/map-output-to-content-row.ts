@@ -9,10 +9,6 @@ type StrapiMedia = {
   formats?: Record<string, StrapiMedia | undefined>;
 };
 
-type StrapiMediaDebugMeta = NonNullable<ContentRow["imageDebugMeta"]>;
-
-let loggedImageWitness = false;
-
 /** Preview images display around 362px max; prefer medium derivatives over raw uploads. */
 const STRAPI_PREVIEW_IMAGE_URL_PRIORITY = [
   "medium",
@@ -71,12 +67,6 @@ function mediaPreferredThumbnailUrl(media: unknown): string | null {
   return typeof m.url === "string" && m.url.length > 0 ? m.url : null;
 }
 
-function liveStrapiImageWitnessEnabled(): boolean {
-  if (process.env.NODE_ENV === "production") return false;
-  const raw = process.env.FAE_USE_STRAPI_FIXTURE?.trim().toLowerCase() ?? "";
-  return raw !== "1" && raw !== "true" && raw !== "yes";
-}
-
 function mediaObject(media: unknown): StrapiMedia | null {
   if (!media || typeof media !== "object") return null;
   const raw = media as Record<string, unknown>;
@@ -85,73 +75,6 @@ function mediaObject(media: unknown): StrapiMedia | null {
       ? (raw.attributes as StrapiMedia)
       : raw
   ) as StrapiMedia;
-}
-
-function finiteNumber(value: unknown): number | null {
-  return typeof value === "number" && Number.isFinite(value) ? value : null;
-}
-
-function mediaDebugMeta(
-  source: StrapiMediaDebugMeta["source"],
-  media: unknown,
-  formatKey: string | null = null,
-): StrapiMediaDebugMeta | null {
-  const base = mediaObject(media);
-  const m =
-    formatKey && base?.formats && typeof base.formats === "object"
-      ? base.formats[formatKey]
-      : base;
-  if (!m) return null;
-  return {
-    source,
-    formatKey,
-    strapiWidth: finiteNumber(m.width),
-    strapiHeight: finiteNumber(m.height),
-    strapiSizeKb: finiteNumber(m.size),
-  };
-}
-
-function selectedThumbnailFormatKey(media: unknown, selectedUrl: string): string | null {
-  const m = mediaObject(media);
-  if (!m?.formats || typeof m.formats !== "object") return null;
-  for (const key of Object.keys(m.formats)) {
-    const f = m.formats[key];
-    if (f && typeof f.url === "string" && f.url === selectedUrl) return key;
-  }
-  return null;
-}
-
-function mediaDebugSnapshot(media: unknown) {
-  const m = mediaObject(media);
-  if (!m) return null;
-  const formats =
-    m.formats && typeof m.formats === "object"
-      ? Object.fromEntries(
-          Object.entries(m.formats).map(([key, value]) => {
-            const f = value as
-              | (StrapiMedia & { ext?: unknown; mime?: unknown })
-              | undefined;
-            return [
-              key,
-              f
-                ? {
-                    url: typeof f.url === "string" ? f.url : null,
-                    width: finiteNumber(f.width),
-                    height: finiteNumber(f.height),
-                    sizeKb: finiteNumber(f.size),
-                  }
-                : null,
-            ];
-          }),
-        )
-      : null;
-  return {
-    url: typeof m.url === "string" ? m.url : null,
-    width: finiteNumber(m.width),
-    height: finiteNumber(m.height),
-    sizeKb: finiteNumber(m.size),
-    formats,
-  };
 }
 
 /**
@@ -560,35 +483,6 @@ export function mapStrapiOutputToContentRow(
   const imageGallery = collectMediaGalleryUrls(doc.Image);
   const thumbUrl = mediaPreferredThumbnailUrl(doc.Thumbnail);
   const imageUrl = thumbUrl ?? imageGallery[0] ?? "";
-  const thumbFormatKey =
-    thumbUrl != null ? selectedThumbnailFormatKey(doc.Thumbnail, thumbUrl) : null;
-  const selectedImageDebugMeta =
-    thumbUrl != null
-      ? mediaDebugMeta("Thumbnail", doc.Thumbnail, thumbFormatKey)
-      : imageGallery[0]
-        ? mediaDebugMeta("Image", doc.Image)
-        : null;
-
-  if (!loggedImageWitness && liveStrapiImageWitnessEnabled() && imageUrl) {
-    loggedImageWitness = true;
-    console.info("[FAE image witness: Strapi media]", {
-      id: documentId,
-      title: title || shortTitle,
-      selected: {
-        source:
-          selectedImageDebugMeta?.source ?? (thumbUrl != null ? "Thumbnail" : "Image"),
-        formatKey: selectedImageDebugMeta?.formatKey ?? null,
-        url: imageUrl,
-        strapiWidth: selectedImageDebugMeta?.strapiWidth ?? null,
-        strapiHeight: selectedImageDebugMeta?.strapiHeight ?? null,
-        strapiSizeKb: selectedImageDebugMeta?.strapiSizeKb ?? null,
-      },
-      thumbnail: mediaDebugSnapshot(doc.Thumbnail),
-      firstImage: Array.isArray(doc.Image)
-        ? mediaDebugSnapshot(doc.Image[0])
-        : mediaDebugSnapshot(doc.Image),
-    });
-  }
 
   /** Same `doc` as `Sources` / `Source` (below) — one Strapi detail response, one map pass. */
   const textRaw = "Text" in doc ? doc.Text : undefined;
@@ -624,7 +518,6 @@ export function mapStrapiOutputToContentRow(
     title,
     shortTitle,
     imageUrl,
-    ...(selectedImageDebugMeta ? { imageDebugMeta: selectedImageDebugMeta } : {}),
     imageGallery,
     content,
     contentBlocks,
