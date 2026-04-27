@@ -34,12 +34,19 @@ export function SideBar({
         />
       </button>
       {/* Desktop only (`lg`): column + vertical label — unlike mobile bottom bar (row + horizontal label). */}
-      <div className="flex w-full shrink-0 flex-col items-center gap-4 px-2 pb-3 pt-3">
+      <button
+        type="button"
+        onClick={onToggleFilters}
+        className="flex w-full shrink-0 flex-col items-center gap-4 px-2 pb-3 pt-3 text-ink-primary transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary"
+        aria-expanded={filtersOpen}
+        aria-controls={filtersOpen ? filterPanelId : undefined}
+        aria-label={filtersOpen ? "Collapse filters" : "Expand filters"}
+      >
         <span className={navSidebarVerticalLabelClassName} aria-hidden>
           Filters
         </span>
         <FiltersSvgIcon />
-      </div>
+      </button>
     </div>
   );
 }
