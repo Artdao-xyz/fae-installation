@@ -25,6 +25,7 @@ import {
   type FilterMatchMode,
   type TaxonomyFilterSelection,
 } from "@/lib/filter-row-match";
+import { fetchPreviewOutputDetail } from "@/lib/preview-output-detail";
 import { useFloatingPanelStack } from "@/components/ui/floating-panels/FloatingPanelStackContext";
 
 /** Sidebar availability hints use the same AND semantics as the default particle spread. */
@@ -178,6 +179,7 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
   const contentPreviewOpenerRef = useRef<((row: ContentRow) => void) | null>(null);
   const contentPreviewCloserRef = useRef<(() => void) | null>(null);
   const previewFilterSnapshotRef = useRef<PreviewFilterSnapshot | null>(null);
+  const fallbackPreviewRequestIdRef = useRef(0);
 
   const [contentPreviewRow, setContentPreviewRow] = useState<ContentRow | null>(
     null,
@@ -674,7 +676,14 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
         openViaCanvas(row);
         return;
       }
+      const requestId = ++fallbackPreviewRequestIdRef.current;
       setContentPreviewRow(row);
+      void fetchPreviewOutputDetail(row.id).then((full) => {
+        if (!full || fallbackPreviewRequestIdRef.current !== requestId) return;
+        setContentPreviewRow((prev) =>
+          prev?.id === row.id ? { ...prev, ...full } : prev,
+        );
+      });
     },
     [minimizeAllFloatingPanels],
   );
@@ -692,6 +701,7 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
       closeViaCanvas();
       return;
     }
+    fallbackPreviewRequestIdRef.current += 1;
     setContentPreviewRow(null);
   }, []);
 
