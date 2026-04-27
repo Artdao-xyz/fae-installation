@@ -71,9 +71,15 @@ function appendOutputsDetailPopulate(
 ): void {
   params.append("populate[Thumbnail][fields][0]", "url");
   params.append("populate[Thumbnail][fields][1]", "formats");
+  params.append("populate[Thumbnail][fields][2]", "width");
+  params.append("populate[Thumbnail][fields][3]", "height");
+  params.append("populate[Thumbnail][fields][4]", "size");
   /** Repeatable `Image` — request url + formats for each entry (carousel in preview). */
   params.append("populate[Image][fields][0]", "url");
   params.append("populate[Image][fields][1]", "formats");
+  params.append("populate[Image][fields][2]", "width");
+  params.append("populate[Image][fields][3]", "height");
+  params.append("populate[Image][fields][4]", "size");
   params.append("populate[Focus]", "true");
   params.append("populate[Activity]", "true");
   params.append("populate[Network]", "true");
@@ -107,8 +113,14 @@ function appendOutputsListSlimQuery(params: URLSearchParams): void {
 
   params.append("populate[Thumbnail][fields][0]", "url");
   params.append("populate[Thumbnail][fields][1]", "formats");
+  params.append("populate[Thumbnail][fields][2]", "width");
+  params.append("populate[Thumbnail][fields][3]", "height");
+  params.append("populate[Thumbnail][fields][4]", "size");
   params.append("populate[Image][fields][0]", "url");
   params.append("populate[Image][fields][1]", "formats");
+  params.append("populate[Image][fields][2]", "width");
+  params.append("populate[Image][fields][3]", "height");
+  params.append("populate[Image][fields][4]", "size");
 
   /** Related types use `Name` (not all define `Title`; Strapi rejects invalid populate keys). */
   for (const key of ["Focus", "Activity", "Network", "Format"] as const) {

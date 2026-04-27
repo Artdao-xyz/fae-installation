@@ -3,10 +3,17 @@ import type { ContentRow } from "@/data/content-types";
 
 type StrapiMedia = {
   url?: unknown;
-  formats?: Record<string, { url?: unknown } | undefined>;
+  width?: unknown;
+  height?: unknown;
+  size?: unknown;
+  formats?: Record<string, StrapiMedia | undefined>;
 };
 
-/** Strapi + Cloudinary `formats` keys — try largest derivatives first when `url` is absent. */
+type StrapiMediaDebugMeta = NonNullable<ContentRow["imageDebugMeta"]>;
+
+let loggedImageWitness = false;
+
+/** Strapi + Cloudinary `formats` keys — try largest derivatives first for preview/gallery fallbacks. */
 const STRAPI_FORMAT_URL_PRIORITY = [
   "xlarge",
   "large",
@@ -18,6 +25,16 @@ const STRAPI_FORMAT_URL_PRIORITY = [
   "small_webp",
   "thumbnail",
   "thumbnail_webp",
+] as const;
+
+/** Catalog thumbnails render at 75-120px; prefer CDN derivatives over the raw upload. */
+const STRAPI_THUMBNAIL_URL_PRIORITY = [
+  "small_webp",
+  "small",
+  "thumbnail_webp",
+  "thumbnail",
+  "medium_webp",
+  "medium",
 ] as const;
 
 /** Strapi may nest file fields under `attributes` (REST plugin). */
@@ -47,6 +64,101 @@ function mediaPreferredUrl(media: unknown): string | null {
     }
   }
   return null;
+}
+
+function mediaPreferredThumbnailUrl(media: unknown): string | null {
+  const m = mediaObject(media);
+  if (!m) return null;
+  if (m.formats && typeof m.formats === "object") {
+    for (const key of STRAPI_THUMBNAIL_URL_PRIORITY) {
+      const f = m.formats[key];
+      if (f && typeof f.url === "string" && f.url.length > 0) return f.url;
+    }
+  }
+  return typeof m.url === "string" && m.url.length > 0 ? m.url : null;
+}
+
+function liveStrapiImageWitnessEnabled(): boolean {
+  if (process.env.NODE_ENV === "production") return false;
+  const raw = process.env.FAE_USE_STRAPI_FIXTURE?.trim().toLowerCase() ?? "";
+  return raw !== "1" && raw !== "true" && raw !== "yes";
+}
+
+function mediaObject(media: unknown): StrapiMedia | null {
+  if (!media || typeof media !== "object") return null;
+  const raw = media as Record<string, unknown>;
+  return (
+    raw.attributes && typeof raw.attributes === "object"
+      ? (raw.attributes as StrapiMedia)
+      : raw
+  ) as StrapiMedia;
+}
+
+function finiteNumber(value: unknown): number | null {
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
+function mediaDebugMeta(
+  source: StrapiMediaDebugMeta["source"],
+  media: unknown,
+  formatKey: string | null = null,
+): StrapiMediaDebugMeta | null {
+  const base = mediaObject(media);
+  const m =
+    formatKey && base?.formats && typeof base.formats === "object"
+      ? base.formats[formatKey]
+      : base;
+  if (!m) return null;
+  return {
+    source,
+    formatKey,
+    strapiWidth: finiteNumber(m.width),
+    strapiHeight: finiteNumber(m.height),
+    strapiSizeKb: finiteNumber(m.size),
+  };
+}
+
+function selectedThumbnailFormatKey(media: unknown, selectedUrl: string): string | null {
+  const m = mediaObject(media);
+  if (!m?.formats || typeof m.formats !== "object") return null;
+  for (const key of Object.keys(m.formats)) {
+    const f = m.formats[key];
+    if (f && typeof f.url === "string" && f.url === selectedUrl) return key;
+  }
+  return null;
+}
+
+function mediaDebugSnapshot(media: unknown) {
+  const m = mediaObject(media);
+  if (!m) return null;
+  const formats =
+    m.formats && typeof m.formats === "object"
+      ? Object.fromEntries(
+          Object.entries(m.formats).map(([key, value]) => {
+            const f = value as
+              | (StrapiMedia & { ext?: unknown; mime?: unknown })
+              | undefined;
+            return [
+              key,
+              f
+                ? {
+                    url: typeof f.url === "string" ? f.url : null,
+                    width: finiteNumber(f.width),
+                    height: finiteNumber(f.height),
+                    sizeKb: finiteNumber(f.size),
+                  }
+                : null,
+            ];
+          }),
+        )
+      : null;
+  return {
+    url: typeof m.url === "string" ? m.url : null,
+    width: finiteNumber(m.width),
+    height: finiteNumber(m.height),
+    sizeKb: finiteNumber(m.size),
+    formats,
+  };
 }
 
 /**
@@ -453,8 +565,37 @@ export function mapStrapiOutputToContentRow(
   const shortTitle = shortTitleRaw || contentTitle;
 
   const imageGallery = collectMediaGalleryUrls(doc.Image);
-  const thumbUrl = mediaPreferredUrl(doc.Thumbnail);
+  const thumbUrl = mediaPreferredThumbnailUrl(doc.Thumbnail);
   const imageUrl = thumbUrl ?? imageGallery[0] ?? "";
+  const thumbFormatKey =
+    thumbUrl != null ? selectedThumbnailFormatKey(doc.Thumbnail, thumbUrl) : null;
+  const selectedImageDebugMeta =
+    thumbUrl != null
+      ? mediaDebugMeta("Thumbnail", doc.Thumbnail, thumbFormatKey)
+      : imageGallery[0]
+        ? mediaDebugMeta("Image", doc.Image)
+        : null;
+
+  if (!loggedImageWitness && liveStrapiImageWitnessEnabled() && imageUrl) {
+    loggedImageWitness = true;
+    console.info("[FAE image witness: Strapi media]", {
+      id: documentId,
+      title: title || shortTitle,
+      selected: {
+        source:
+          selectedImageDebugMeta?.source ?? (thumbUrl != null ? "Thumbnail" : "Image"),
+        formatKey: selectedImageDebugMeta?.formatKey ?? null,
+        url: imageUrl,
+        strapiWidth: selectedImageDebugMeta?.strapiWidth ?? null,
+        strapiHeight: selectedImageDebugMeta?.strapiHeight ?? null,
+        strapiSizeKb: selectedImageDebugMeta?.strapiSizeKb ?? null,
+      },
+      thumbnail: mediaDebugSnapshot(doc.Thumbnail),
+      firstImage: Array.isArray(doc.Image)
+        ? mediaDebugSnapshot(doc.Image[0])
+        : mediaDebugSnapshot(doc.Image),
+    });
+  }
 
   /** Same `doc` as `Sources` / `Source` (below) — one Strapi detail response, one map pass. */
   const textRaw = "Text" in doc ? doc.Text : undefined;
@@ -490,6 +631,7 @@ export function mapStrapiOutputToContentRow(
     title,
     shortTitle,
     imageUrl,
+    ...(selectedImageDebugMeta ? { imageDebugMeta: selectedImageDebugMeta } : {}),
     imageGallery,
     content,
     contentBlocks,

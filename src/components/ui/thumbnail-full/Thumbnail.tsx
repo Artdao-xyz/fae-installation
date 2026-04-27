@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useMemo, useState, type CSSProperties, type MutableRefObject, type Ref } from "react";
+import type { ContentRow } from "@/data/content-types";
 import {
   SIZE_DIMS,
   getThumbnailFullCardOuterSize,
@@ -11,6 +12,8 @@ import {
 
 const LOADED_IMAGE_SHADOW_CLASS =
   "shadow-[0_0_18px_0_rgb(0_0_0_/_0.24)] lg:shadow-fae-thumbnail";
+
+let loggedImageWitness = false;
 
 type BaseProps = {
   label?: string;
@@ -29,6 +32,8 @@ type BaseProps = {
   accessibilityLabel?: string;
   /** Override label `<p>` font size (px); line-height follows `textPx + 3`. */
   labelFontSizePx?: number;
+  /** Dev-only witness metadata from Strapi for comparing source size to rendered `<img>` size. */
+  imageDebugMeta?: ContentRow["imageDebugMeta"];
 };
 
 export type ThumbnailProps =
@@ -135,6 +140,7 @@ function ImageFrame({
   dims,
   imageRef,
   fluid,
+  imageDebugMeta,
 }: {
   imageSrc: string;
   imageAlt?: string;
@@ -143,12 +149,14 @@ function ImageFrame({
   imageRef?: Ref<HTMLImageElement | null>;
   /** Grow with parent; square frame bounded by remaining space (`object-contain` inside). */
   fluid?: boolean;
+  imageDebugMeta?: ContentRow["imageDebugMeta"];
 }) {
   const [loaded, setLoaded] = useState(false);
   const { durationMs, delayMs } = useMemo(
     () => swarmRevealTiming(imageSrc),
     [imageSrc],
   );
+  const isAnimatedGif = /\.gif(?:[?#]|$)/i.test(imageSrc);
 
   const revealDelay = loaded ? delayMs : 0;
   const frameTransitionStyle: CSSProperties = {
@@ -167,8 +175,42 @@ function ImageFrame({
       sizes={
         fluid ? "(max-width: 1023px) 45vw, 320px" : `${dims.frame}px`
       }
-      unoptimized
-      onLoad={() => setLoaded(true)}
+      unoptimized={isAnimatedGif}
+      onLoad={(event) => {
+        setLoaded(true);
+        const imgEl = event.currentTarget;
+        if (
+          !loggedImageWitness &&
+          process.env.NODE_ENV !== "production" &&
+          imageDebugMeta &&
+          !imageSrc.includes("picsum.photos")
+        ) {
+          loggedImageWitness = true;
+          const rect = imgEl.getBoundingClientRect();
+          const parentRect = imgEl.parentElement?.getBoundingClientRect();
+          console.info("[FAE image witness: rendered img]", {
+            label,
+            src: imageSrc,
+            currentSrc: imgEl.currentSrc,
+            imgAttributeSizes: imgEl.sizes,
+            renderedImgCssPx: {
+              width: Math.round(rect.width),
+              height: Math.round(rect.height),
+            },
+            renderedFrameCssPx: parentRect
+              ? {
+                  width: Math.round(parentRect.width),
+                  height: Math.round(parentRect.height),
+                }
+              : null,
+            decodedNaturalPx: {
+              width: imgEl.naturalWidth,
+              height: imgEl.naturalHeight,
+            },
+            strapiMedia: imageDebugMeta,
+          });
+        }
+      }}
       onError={() => setLoaded(true)}
       className={`fae-thumbnail-reveal__img pointer-events-none object-contain object-center ${
         loaded ? "opacity-100 scale-100" : "opacity-0 scale-[0.98]"
@@ -224,6 +266,7 @@ export function Thumbnail(props: ThumbnailProps) {
     imageRef,
     accessibilityLabel,
     labelFontSizePx,
+    imageDebugMeta,
   } = props;
   const variant = props.variant ?? "full";
   const dims = SIZE_DIMS[size];
@@ -351,6 +394,7 @@ export function Thumbnail(props: ThumbnailProps) {
           dims={dims}
           imageRef={imageRef}
           fluid={fillContainer}
+          imageDebugMeta={imageDebugMeta}
         />
       )}
     </div>
