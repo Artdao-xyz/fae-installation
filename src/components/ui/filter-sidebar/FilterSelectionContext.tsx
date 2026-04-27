@@ -826,7 +826,22 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
     setSelectedNetworks(new Set());
   }, [exitContentPreviewToFilterCanvas, minimizeAllFloatingPanels]);
 
+  const hasResettableFilterState =
+    contentPreviewRow != null ||
+    briefingsSubpanelOpen ||
+    rdSubpanelOpen ||
+    networkSubpanelOpen ||
+    artistsSubpanelOpen ||
+    selectedFocusAreas.size > 0 ||
+    selectedActivityTypes.size > 0 ||
+    selectedArtists.size > 0 ||
+    selectedFormats.size > 0 ||
+    selectedNetworks.size > 0 ||
+    selectedFaeBriefing != null ||
+    filterSearchQuery.length > 0;
+
   const clearAllFilters = useCallback(() => {
+    if (!hasResettableFilterState) return;
     exitContentPreviewToFilterCanvas();
     minimizeAllFloatingPanels();
     setBriefingsSubpanelOpen(false);
@@ -841,14 +856,24 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
     setSelectedFaeBriefing(null);
     setFilterSearchQuery("");
     setFilterResetNonce((n) => n + 1);
-  }, [exitContentPreviewToFilterCanvas, minimizeAllFloatingPanels]);
+  }, [
+    hasResettableFilterState,
+    exitContentPreviewToFilterCanvas,
+    minimizeAllFloatingPanels,
+  ]);
 
   const resetToIdle = useCallback(() => {
+    if (!hasResettableFilterState) return;
     clearPendingPreviewFilterSnapshot();
     clearAllFilters();
     setSearchQueryResetNonce((n) => n + 1);
     closeContentPreview();
-  }, [clearAllFilters, clearPendingPreviewFilterSnapshot, closeContentPreview]);
+  }, [
+    hasResettableFilterState,
+    clearAllFilters,
+    clearPendingPreviewFilterSnapshot,
+    closeContentPreview,
+  ]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
