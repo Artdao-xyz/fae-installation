@@ -238,6 +238,10 @@ export class ParticleSystem {
     this.viewH = viewH;
   }
 
+  updateWordsByRow(wordsByRow: ReadonlyArray<ReadonlyArray<string>>) {
+    this.wordsByRow = wordsByRow;
+  }
+
   /**
    * @param rowIndex Slot / content row index (used for per-row title words).
    * @param physicsSeed RNG seed for orbit/life; defaults to `rowIndex`. On respawn pass a new value for variety.

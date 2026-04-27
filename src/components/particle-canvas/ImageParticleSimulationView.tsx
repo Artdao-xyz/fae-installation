@@ -1046,7 +1046,7 @@ export function ImageParticleSimulationView({
     onStatsChange,
   ]);
 
-  // ---- Init system (respawn only when swarm size / text words change) ----
+  // ---- Init system (respawn only when swarm size changes) ----
   useEffect(() => {
     if (swarmRows.length === 0) {
       systemRef.current = null;
@@ -1064,7 +1064,12 @@ export function ImageParticleSimulationView({
     systemRef.current = sys;
     // placementBounds w/h are applied without re-init via the resize effect below.
     // eslint-disable-next-line react-hooks/exhaustive-deps -- avoid respawning when only viewport changes
-  }, [swarmRows.length, textWordsByRow]);
+  }, [swarmRows.length]);
+
+  // Display row patches (filters/preview suggestions) can change text words; do not respawn particles for that.
+  useEffect(() => {
+    systemRef.current?.updateWordsByRow(textWordsByRow);
+  }, [textWordsByRow]);
 
   // ---- Viewport for physics: resize without respawning (sidebar / subpanels / window) ----
   useEffect(() => {
