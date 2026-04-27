@@ -218,6 +218,10 @@
     white-space: nowrap;
     text-align: center;
   }
+
+  .fae-mobile-main-scroll {
+    -webkit-overflow-scrolling: touch;
+  }
 }
 
 button {
@@ -286,12 +290,17 @@ button {
 
 body {
   min-height: 100dvh;
+  overscroll-behavior: none;
   background: linear-gradient(
     to bottom right,
     var(--color-page-gradient-edge) 0%,
     var(--color-page-gradient-center) 50%,
     var(--color-page-gradient-edge) 100%
   );
+}
+
+html {
+  overscroll-behavior: none;
 }
 
 /* Content preview: section cascade (outside @layer so it applies reliably) */

@@ -96,7 +96,7 @@ export function mobileMainScrollInsetClassName(options: {
     return "max-lg:pb-[calc(12.875rem+2.75rem+2.75rem+env(safe-area-inset-bottom,0px))]";
   }
   if (!options.showMobileLatestUpdatesStrip && options.hasActiveTaxonomyFilters) {
-    return "max-lg:pb-[calc(2.75rem+2.75rem+env(safe-area-inset-bottom,0px)+3rem)]";
+    return "max-lg:pb-[calc(2.75rem+2.75rem+env(safe-area-inset-bottom,0px))]";
   }
   return "max-lg:pb-[calc(2.75rem+2.75rem+env(safe-area-inset-bottom,0px))]";
 }

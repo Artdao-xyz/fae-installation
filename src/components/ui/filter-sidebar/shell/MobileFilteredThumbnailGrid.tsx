@@ -23,7 +23,7 @@ export function MobileFilteredThumbnailGrid() {
   return (
     <div className="w-full px-3 pb-3 pt-2 lg:hidden">
       <ul
-        className="grid touch-pan-y grid-cols-2 gap-x-3 gap-y-4"
+        className="grid touch-pan-y grid-cols-2 gap-x-3 gap-y-4 pb-12"
         role="list"
         aria-label="Filtered outputs"
       >

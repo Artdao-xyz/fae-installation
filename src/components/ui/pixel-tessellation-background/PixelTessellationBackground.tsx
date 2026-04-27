@@ -246,7 +246,7 @@ export function PixelTessellationBackground({ className = "" }: Props) {
 
   return (
     <div
-      className={`fae-pixel-tessellation-bg pointer-events-none fixed inset-0 z-10 max-lg:bottom-auto max-lg:h-dvh max-lg:min-h-dvh overflow-hidden transition-opacity duration-[650ms] ease-out ${
+      className={`fae-pixel-tessellation-bg pointer-events-none fixed inset-0 z-10 max-lg:bottom-auto max-lg:h-svh max-lg:min-h-svh overflow-hidden transition-opacity duration-[650ms] ease-out ${
         bgRevealed ? "opacity-100" : "opacity-0"
       } ${className}`}
       aria-hidden

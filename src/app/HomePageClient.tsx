@@ -109,7 +109,6 @@ function ParticleCanvasField({ initialPreviewSlug }: HomePageClientProps) {
           .filter(Boolean)
           .join(" ")}
       />
-      <MobileFilteredThumbnailGrid />
     </div>
   );
 }
@@ -138,7 +137,11 @@ function HomeContent({ initialPreviewSlug }: HomePageClientProps) {
     [contentCatalog, contentCatalogStatus],
   );
   const showMobileLatestUpdatesStrip =
-    isMaxLg && !filtersPanelOpen && latestUpdatesStripRows.length > 0;
+    isMaxLg &&
+    !filtersPanelOpen &&
+    !hasActiveTaxonomyFilters &&
+    latestUpdatesStripRows.length > 0;
+  const showMobileFilteredResults = isMaxLg && hasActiveTaxonomyFilters;
 
   const mobileScrollInsetClass = mobileMainScrollInsetClassName({
     filtersPanelOpen,
@@ -147,7 +150,7 @@ function HomeContent({ initialPreviewSlug }: HomePageClientProps) {
   });
 
   return (
-    <div className="flex min-h-screen w-full max-lg:h-dvh max-lg:min-h-0 max-lg:max-h-dvh max-lg:overflow-hidden">
+    <div className="flex min-h-screen w-full max-lg:h-svh max-lg:min-h-0 max-lg:max-h-svh max-lg:overflow-hidden">
       <FilterSidebar />
       <PixelTessellationBackground />
       <FloatingDockMount suppressInitialAboutPeek={Boolean(initialPreviewSlug)} />
@@ -178,7 +181,11 @@ function HomeContent({ initialPreviewSlug }: HomePageClientProps) {
         </div>
 
         <div
-          className={`relative z-10 flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-y-auto overscroll-contain max-lg:min-h-0 max-lg:touch-pan-y lg:flex-none lg:overflow-visible ${mobileScrollInsetClass}`}
+          className={`fae-mobile-main-scroll relative z-10 flex min-h-0 w-full min-w-0 flex-1 flex-col overscroll-contain max-lg:min-h-0 max-lg:touch-pan-y lg:flex-none lg:overflow-visible ${
+            hasActiveTaxonomyFilters
+              ? "overflow-y-auto max-lg:overflow-y-scroll"
+              : "overflow-visible"
+          } ${mobileScrollInsetClass}`}
         >
           <div className="flex w-full min-h-min flex-col">
             <HeroTitleBlock
@@ -186,9 +193,10 @@ function HomeContent({ initialPreviewSlug }: HomePageClientProps) {
               subtitle="Cultural Infrastructure Research"
             />
 
-            {HIDE_PARTICLE_CANVAS ? null : (
+            {HIDE_PARTICLE_CANVAS || showMobileFilteredResults ? null : (
               <ParticleCanvasField initialPreviewSlug={initialPreviewSlug} />
             )}
+            {showMobileFilteredResults ? <MobileFilteredThumbnailGrid /> : null}
           </div>
         </div>
       </main>
