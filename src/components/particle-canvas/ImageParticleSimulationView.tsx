@@ -229,6 +229,8 @@ export function ImageParticleSimulationView({
   const isMaxLg = useIsMaxLg();
   const isMaxLgRef = useRef(isMaxLg);
   isMaxLgRef.current = isMaxLg;
+  const speedFactorRef = useRef(speedFactor);
+  speedFactorRef.current = speedFactor;
 
   const idleTextFullTitleRef = useRef(idleTextFullTitle);
   idleTextFullTitleRef.current = idleTextFullTitle;
@@ -755,21 +757,29 @@ export function ImageParticleSimulationView({
     }
     return set;
   }, [swarmRows.length]);
+  const textIndexSetRef = useRef(textIndexSet);
+  textIndexSetRef.current = textIndexSet;
 
   const thumbnailSize = useMemo<ThumbnailSize>(() => {
     const d = Math.min(displayedWidth, displayedHeight);
     return d <= 80 ? "sm" : d <= 130 ? "md" : "lg";
   }, [displayedWidth, displayedHeight]);
+  const thumbnailSizeRef = useRef(thumbnailSize);
+  thumbnailSizeRef.current = thumbnailSize;
 
   const thumbnailFramePx = useMemo(
     () => getThumbnailFramePx(thumbnailSize),
     [thumbnailSize]
   );
+  const thumbnailFramePxRef = useRef(thumbnailFramePx);
+  thumbnailFramePxRef.current = thumbnailFramePx;
 
   const filteredLgOuter = useMemo(
     () => getThumbnailFullCardOuterSize("lg"),
     [],
   );
+  const filteredLgOuterRef = useRef(filteredLgOuter);
+  filteredLgOuterRef.current = filteredLgOuter;
 
   /** Idle orbit fits the lg full-card thumbnail inside the smaller `thumbnailFramePx` box via CSS scale. */
   const lgFramePx = useMemo(() => getThumbnailFramePx("lg"), []);
@@ -1181,7 +1191,7 @@ export function ImageParticleSimulationView({
         );
         const pool = pickSpreadIndicesLinkedThenRelated(
           rows,
-          textIndexSet,
+          textIndexSetRef.current,
           linkedIndices,
           relatedIndices,
           viewportSpread,
@@ -1302,8 +1312,8 @@ export function ImageParticleSimulationView({
           const ow = el?.offsetWidth ?? 0;
           const pt = sysInner.particles[ii];
           const fallbackW = pt?.isText
-            ? getThumbnailTextVariantOuterSize(thumbnailSize).width
-            : thumbnailFramePx;
+            ? getThumbnailTextVariantOuterSize(thumbnailSizeRef.current).width
+            : thumbnailFramePxRef.current;
           idleW[ii] = ow > 0 ? ow : fallbackW;
         }
         idleNodeWidthRef.current = idleW;
@@ -1341,7 +1351,7 @@ export function ImageParticleSimulationView({
       const dt = clamp((now - lastTime) / 1000, 0.001, 0.05);
       lastTime = now;
       const globalTime = now / 1000;
-      const speed = clamp(speedFactor || 1, 0.1, 4);
+      const speed = clamp(speedFactorRef.current || 1, 0.1, 4);
 
       sys.cfg = configRef.current;
       const c = sys.cfg;
@@ -1578,6 +1588,9 @@ export function ImageParticleSimulationView({
         }
 
         const styleGlobalTime = styleNow / 1000;
+        const thumbnailFrame = thumbnailFramePxRef.current;
+        const thumbnailSizeNow = thumbnailSizeRef.current;
+        const filteredOuter = filteredLgOuterRef.current;
 
         for (let i = 0; i < sys.particles.length; i++) {
           const p = sys.particles[i];
@@ -1632,7 +1645,7 @@ export function ImageParticleSimulationView({
           let finalScale: number;
           if (cardActive) {
             const idleW =
-              idleWidths?.[i] ?? thumbnailFramePx;
+              idleWidths?.[i] ?? thumbnailFrame;
             let hoverU = 1;
             if (hoverCardActive && passPh === "idle") {
               const hPv = hoverPhaseRef.current;
@@ -1650,15 +1663,15 @@ export function ImageParticleSimulationView({
               node.offsetWidth > 0
                 ? node.offsetWidth
                 : passPh === "hold"
-                  ? filteredLgOuter.width
+                  ? filteredOuter.width
                   : passPh === "enter"
-                    ? thumbnailFramePx +
-                      (filteredLgOuter.width - thumbnailFramePx) * enterScaleT
-                    : filteredLgOuter.width +
-                      (thumbnailFramePx - filteredLgOuter.width) * leaveScaleT;
+                    ? thumbnailFrame +
+                      (filteredOuter.width - thumbnailFrame) * enterScaleT
+                    : filteredOuter.width +
+                      (thumbnailFrame - filteredOuter.width) * leaveScaleT;
             if (passPh === "hold") {
               finalScale = scaleForTargetVisualWidth(
-                filteredLgOuter.width,
+                filteredOuter.width,
                 lw,
               );
             } else if (passPh === "enter" && snapForScale) {
@@ -1666,13 +1679,13 @@ export function ImageParticleSimulationView({
               if (s) {
                 const a0 = apparentScaleFromParticle(s, c.perspective);
                 const idleVisualW = idleW * a0;
-                const endVisualW = filteredLgOuter.width;
+                const endVisualW = filteredOuter.width;
                 const visualW =
                   idleVisualW + (endVisualW - idleVisualW) * enterScaleT;
                 finalScale = scaleForTargetVisualWidth(visualW, lw);
               } else {
                 finalScale = scaleForTargetVisualWidth(
-                  filteredLgOuter.width,
+                  filteredOuter.width,
                   lw,
                 );
               }
@@ -1683,13 +1696,13 @@ export function ImageParticleSimulationView({
               );
             } else if (hoverCardActive && passPh === "idle") {
               const idleVisualW = idleW * apparentIdle;
-              const endVisualW = filteredLgOuter.width;
+              const endVisualW = filteredOuter.width;
               const visualW =
                 idleVisualW + (endVisualW - idleVisualW) * hoverU;
               finalScale = scaleForTargetVisualWidth(visualW, lw);
             } else {
               finalScale = scaleForTargetVisualWidth(
-                filteredLgOuter.width,
+                filteredOuter.width,
                 lw,
               );
             }
@@ -1697,8 +1710,8 @@ export function ImageParticleSimulationView({
             const refPx =
               idleWidths?.[i] ??
               (p.isText
-                ? getThumbnailTextVariantOuterSize(thumbnailSize).width
-                : thumbnailFramePx);
+                ? getThumbnailTextVariantOuterSize(thumbnailSizeNow).width
+                : thumbnailFrame);
             // Idle wrapper width is fixed in CSS (sm frame / text outer). Measuring
             // offsetWidth can differ per tile (subpixel, font, layout timing) after
             // lg→sm swap — only "spread" tiles swap, which matches "only some" pops.
@@ -1715,7 +1728,7 @@ export function ImageParticleSimulationView({
               );
               const demoteE = smoothstep01(uDem);
               const idleVisualW = refPx * apparentIdle;
-              const cardOuterW = filteredLgOuter.width;
+              const cardOuterW = filteredOuter.width;
               const visualW =
                 cardOuterW * (1 - demoteE) + idleVisualW * demoteE;
               const lwBlend = cardOuterW * (1 - demoteE) + lwIdle * demoteE;
@@ -1944,18 +1957,6 @@ export function ImageParticleSimulationView({
     return () => cancelAnimationFrame(rafId);
   }, [
     swarmRows.length,
-    contentCatalog.length,
-    speedFactor,
-    placementBounds.w,
-    placementBounds.h,
-    textIndexSet,
-    thumbnailFramePx,
-    thumbnailSize,
-    filteredLgOuter.width,
-    filterMatchMode,
-    textWordsByRow,
-    selectedFormats,
-    selectedNetworks,
   ]);
 
   return (
