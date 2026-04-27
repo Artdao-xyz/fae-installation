@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useId, useSyncExternalStore, type ReactElement } from "react";
+import { useCallback, useId, type ReactElement } from "react";
 import { useFilterSelection } from "@/components/ui/filter-sidebar/FilterSelectionContext";
 import { FilterOptionsPanel } from "./FilterOptionsPanel";
 import { FilterSubpanelsColumn } from "./FilterSubpanelsColumn";
@@ -18,21 +18,7 @@ import {
   MOBILE_OVERLAY_X_CLASS,
 } from "./layout-classes";
 import { SideBar } from "./SideBar";
-
-function subscribeMaxLg(onChange: () => void) {
-  const mq = window.matchMedia("(max-width: 1023px)");
-  mq.addEventListener("change", onChange);
-  return () => mq.removeEventListener("change", onChange);
-}
-
-function getMaxLgSnapshot() {
-  return window.matchMedia("(max-width: 1023px)").matches;
-}
-
-/** Desktop-first SSR snapshot; client corrects after hydration. */
-function getMaxLgServerSnapshot() {
-  return false;
-}
+import { useIsMaxLg } from "./useIsMaxLg";
 
 export function FilterSidebar() {
   const {
@@ -48,11 +34,7 @@ export function FilterSidebar() {
     setArtistsSubpanelOpen,
   } = useFilterSelection();
   const panelId = useId();
-  const isMaxLg = useSyncExternalStore(
-    subscribeMaxLg,
-    getMaxLgSnapshot,
-    getMaxLgServerSnapshot,
-  );
+  const isMaxLg = useIsMaxLg();
 
   const anySubpanelOpen =
     briefingsSubpanelOpen ||
