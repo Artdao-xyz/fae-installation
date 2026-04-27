@@ -71,6 +71,7 @@ import {
   type SpreadLayoutPhase,
   type TaxonomyFilterSelection,
 } from "./image-particle-spread";
+import { rowMatchesFilterSelection } from "@/lib/filter-row-match";
 import { scaleForTargetVisualWidth } from "./image-particle-scale";
 import { extractWordsFromTitle, scrambleWord } from "./image-particle-scramble";
 import type {
@@ -454,10 +455,10 @@ export function ImageParticleSimulationView({
   const setSpreadDisplayPatchRef = useRef(setSpreadDisplayPatch);
   setSpreadDisplayPatchRef.current = setSpreadDisplayPatch;
 
-  /** Consecutive pool slots: linked rows then related — matches `rows` in spread preview patch. */
-  const previewSourceIndices = useMemo(() => {
+  /** Consecutive pool slots: linked rows, then related + taxonomy matches — matches preview patch rows. */
+  const previewSourceRows = useMemo(() => {
     if (!previewRow || previewFullScreen) {
-      return { linked: [] as number[], related: [] as number[] };
+      return { linked: [] as ContentRow[], related: [] as ContentRow[] };
     }
     const { linked, related } = buildSuggestedSourceRowsSplit(
       previewRow,
@@ -465,15 +466,50 @@ export function ImageParticleSimulationView({
     );
     const n = swarmRows.length;
     if (n === 0) return { linked: [], related: [] };
-    const lCap = Math.min(linked.length, n);
-    const rCap = Math.min(related.length, Math.max(0, n - lCap));
-    const linkedIdx = Array.from({ length: lCap }, (_, i) => i);
-    const relatedIdx = Array.from({ length: rCap }, (_, i) => lCap + i);
-    return { linked: linkedIdx, related: relatedIdx };
-  }, [previewRow, previewFullScreen, contentCatalog, swarmRows.length]);
+    const used = new Set<string>([previewRow.id]);
+    const linkedRows: ContentRow[] = [];
+    for (const row of linked) {
+      if (used.has(row.id)) continue;
+      linkedRows.push(row);
+      used.add(row.id);
+      if (linkedRows.length >= n) break;
+    }
+    const relatedRows: ContentRow[] = [];
+    for (const row of related) {
+      if (used.has(row.id)) continue;
+      relatedRows.push(row);
+      used.add(row.id);
+      if (linkedRows.length + relatedRows.length >= n) break;
+    }
+    if (linkedRows.length + relatedRows.length < n) {
+      const previewTaxonomy = taxonomySelectionFromContentRow(previewRow);
+      for (const row of contentCatalog) {
+        if (used.has(row.id)) continue;
+        if (
+          !rowMatchesFilterSelection(
+            row,
+            previewTaxonomy,
+            filterMatchMode,
+          )
+        ) {
+          continue;
+        }
+        relatedRows.push(row);
+        used.add(row.id);
+        if (linkedRows.length + relatedRows.length >= n) break;
+      }
+    }
+    return { linked: linkedRows, related: relatedRows };
+  }, [
+    previewRow,
+    previewFullScreen,
+    contentCatalog,
+    swarmRows.length,
+    filterMatchMode,
+  ]);
 
-  const previewSourceIndicesRef = useRef(previewSourceIndices);
-  previewSourceIndicesRef.current = previewSourceIndices;
+  const previewSourceRowsRef = useRef(previewSourceRows);
+  previewSourceRowsRef.current = previewSourceRows;
 
   const [contentTotal, setContentTotal] = useState(0);
   const [fetchDurationMs, setFetchDurationMs] = useState<number | null>(null);
@@ -880,10 +916,16 @@ export function ImageParticleSimulationView({
       const h = viewportHForSim;
 
       if (!filtersPanelOpen) {
-        /** Sidebar (filter options) closed: center on the viewport; clip width for docked preview. */
-        const cx = vw / 2;
-        const halfW = Math.min(cx, Math.max(0, rightLimit - cx));
-        const w = Math.max(64, 2 * halfW);
+        /**
+         * Sidebar closed: normal idle uses the full viewport. With a docked preview,
+         * use the full region left of the preview panel; centering on `vw / 2` would
+         * shrink the box symmetrically and prevent the preview spread cap from growing.
+         */
+        const previewDocked = previewRow != null && vw >= 1024 && !previewFullScreen;
+        const cx = previewDocked ? rightLimit / 2 : vw / 2;
+        const w = previewDocked
+          ? Math.max(64, rightLimit)
+          : Math.max(64, 2 * Math.min(cx, Math.max(0, rightLimit - cx)));
         const next: PlacementBounds = { cx, cy, w, h };
         setPlacementBounds((prev) =>
           approxEqualPlacementBounds(prev, next) ? prev : next,
@@ -1111,30 +1153,39 @@ export function ImageParticleSimulationView({
       if (nPool === 0) {
         return { poolIndices: [], patch: { type: "filter", catalogIndices: [] } };
       }
-      const poolRows = swarmRowsRef.current;
       if (
         pr &&
         !pfs &&
-        (previewSourceIndicesRef.current.linked.length > 0 ||
-          previewSourceIndicesRef.current.related.length > 0)
+        (previewSourceRowsRef.current.linked.length > 0 ||
+          previewSourceRowsRef.current.related.length > 0)
       ) {
+        const cap = maxSpreadCountForViewport(
+          viewportSpread.w,
+          viewportSpread.h,
+        );
+        const rows = [
+          ...previewSourceRowsRef.current.linked,
+          ...previewSourceRowsRef.current.related,
+        ].slice(0, Math.min(nPool, cap));
+        const linkedCount = Math.min(
+          previewSourceRowsRef.current.linked.length,
+          rows.length,
+        );
+        const linkedIndices = Array.from(
+          { length: linkedCount },
+          (_, i) => i,
+        );
+        const relatedIndices = Array.from(
+          { length: Math.max(0, rows.length - linkedCount) },
+          (_, i) => linkedCount + i,
+        );
         const pool = pickSpreadIndicesLinkedThenRelated(
-          poolRows,
+          rows,
           textIndexSet,
-          previewSourceIndicesRef.current.linked,
-          previewSourceIndicesRef.current.related,
+          linkedIndices,
+          relatedIndices,
           viewportSpread,
         );
-        const { linked, related } = buildSuggestedSourceRowsSplit(pr, cat);
-        const lCap = Math.min(linked.length, nPool);
-        const rCap = Math.min(
-          related.length,
-          Math.max(0, nPool - lCap),
-        );
-        const rows: ContentRow[] = [
-          ...linked.slice(0, lCap),
-          ...related.slice(0, rCap),
-        ];
         return { poolIndices: pool, patch: { type: "preview", rows } };
       }
       const selectionForSpread: TaxonomyFilterSelection =
@@ -1163,9 +1214,11 @@ export function ImageParticleSimulationView({
       const pr = previewRowRef.current;
       const pfs = previewFullScreenRef.current;
       if (!pr || pfs) return spreadSignatureRef.current;
-      const { linked, related } = previewSourceIndicesRef.current;
+      const { linked, related } = previewSourceRowsRef.current;
       if (linked.length > 0 || related.length > 0) {
-        return `pv:${pr.id}:L${linked.join(",")}/R${related.join(",")}`;
+        return `pv:${pr.id}:L${linked.map((r) => r.id).join(",")}/R${related
+          .map((r) => r.id)
+          .join(",")}`;
       }
       const t = [
         ...pr.focusAreas,
