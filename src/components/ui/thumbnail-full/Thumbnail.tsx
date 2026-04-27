@@ -9,6 +9,9 @@ import {
   type ThumbnailSize,
 } from "./thumbnail-dimensions";
 
+const LOADED_IMAGE_SHADOW_CLASS =
+  "shadow-[0_0_18px_0_rgb(0_0_0_/_0.24)] lg:shadow-fae-thumbnail";
+
 type BaseProps = {
   label?: string;
   className?: string;
@@ -185,7 +188,7 @@ function ImageFrame({
       <div className="flex min-h-0 w-full min-w-0 flex-1 items-center justify-center self-stretch">
         <div
           className={`fae-thumbnail-reveal relative aspect-square h-full max-h-full w-auto max-w-full overflow-hidden rounded bg-surface-canvas ${
-            loaded ? "shadow-fae-thumbnail" : "shadow-none"
+            loaded ? LOADED_IMAGE_SHADOW_CLASS : "shadow-none"
           }`}
           style={frameTransitionStyle}
         >
@@ -198,7 +201,7 @@ function ImageFrame({
   return (
     <div
       className={`fae-thumbnail-reveal relative shrink-0 overflow-hidden rounded bg-surface-canvas ${
-        loaded ? "shadow-fae-thumbnail" : "shadow-none"
+        loaded ? LOADED_IMAGE_SHADOW_CLASS : "shadow-none"
       }`}
       style={{ width: dims.frame, height: dims.frame, ...frameTransitionStyle }}
     >

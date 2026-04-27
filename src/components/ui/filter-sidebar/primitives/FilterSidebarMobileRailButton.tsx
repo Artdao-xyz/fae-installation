@@ -79,7 +79,7 @@ export function FilterSidebarMobileRailButton({
       : interactiveChromeHoverClass;
 
   const heightClass = flexToFill
-    ? "min-h-0 flex-1 basis-0"
+    ? "min-h-[6.5rem] flex-1 basis-[6.5rem]"
     : "h-[5.25rem] shrink-0 flex-none";
 
   const borderClass = selected

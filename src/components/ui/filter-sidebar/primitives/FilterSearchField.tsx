@@ -33,7 +33,7 @@ export function FilterSearchField({
         className={`fae-control-filter-outer inline-flex w-full min-w-0 max-w-full items-stretch ${filterPillSingleLayerBrightnessHoverClass} focus-within:outline-none focus-within:ring-1 focus-within:ring-ink-primary focus-within:ring-offset-0`}
       >
         <div
-          className={`${filterFramedRoundedInnerClass(false)} flex min-w-0 flex-1 items-center gap-2 text-left !text-sm whitespace-normal`}
+          className={`${filterFramedRoundedInnerClass(false)} flex min-w-0 flex-1 items-center gap-2 text-left text-sm! whitespace-normal`}
         >
           <input
             id={id}
@@ -43,7 +43,7 @@ export function FilterSearchField({
             value={value}
             onChange={(e) => onChange(e.target.value)}
             autoComplete="off"
-            className="min-w-0 flex-1 bg-transparent font-fira-mono text-sm leading-5 text-ink-body placeholder:text-sm placeholder:leading-5 placeholder:text-ink-body/50 focus:outline-none"
+            className="min-w-0 flex-1 bg-transparent font-fira-mono text-base leading-5 text-ink-body placeholder:text-base placeholder:leading-5 placeholder:text-ink-body/50 focus:outline-none lg:text-sm lg:placeholder:text-sm"
           />
           {value ? (
             <button

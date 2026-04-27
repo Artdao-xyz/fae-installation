@@ -1,3 +1,5 @@
+import { EmailSubscription } from "@/components/ui/email-subscription";
+
 /**
  * Shared About copy for desktop full-screen, mobile sheet, and dock peek body.
  */
@@ -46,10 +48,12 @@ export function AboutPanelRichContent() {
 
       <p className="mb-0 font-suisseintl text-xs font-normal leading-5">
         You can explore our Twitch archive, or tune in live for special events.
-        To get more involved, join our Telegram community, sign up to our
-        monthly newsletter and take part in our quarterly Community Call. For
-        partnerships and other inquiries, please email us.
+        To get more involved, join our Telegram community and take part in our
+        quarterly Community Call. For partnerships and other inquiries, please
+        email us.
       </p>
+
+      <EmailSubscription className="w-full" />
 
       <nav
         className="flex flex-wrap items-center gap-x-5 gap-y-2 font-fira-mono text-xs font-normal text-ink-body"
@@ -66,12 +70,6 @@ export function AboutPanelRichContent() {
           className="underline decoration-solid underline-offset-2 hover:opacity-80"
         >
           Telegram
-        </a>
-        <a
-          href="#"
-          className="underline decoration-solid underline-offset-2 hover:opacity-80"
-        >
-          Newsletter
         </a>
         <a
           href="#"

@@ -4,6 +4,7 @@ import { useCallback, useId, useSyncExternalStore, type ReactElement } from "rea
 import { useFilterSelection } from "@/components/ui/filter-sidebar/FilterSelectionContext";
 import { FilterOptionsPanel } from "./FilterOptionsPanel";
 import { FilterSubpanelsColumn } from "./FilterSubpanelsColumn";
+import { EmailSubscription } from "@/components/ui/email-subscription";
 import { Footer } from "./Footer";
 import { HomeBar } from "./HomeBar";
 import { MobileFiltersBar } from "./MobileFiltersBar";
@@ -96,7 +97,8 @@ export function FilterSidebar() {
   const showOptionsPanel = !isMaxLg || filtersOpen;
 
   return (
-    <div className="relative z-40 flex h-screen min-h-0 w-auto min-w-0 shrink-0 overflow-hidden">
+    <>
+    <div className="relative z-40 flex h-screen min-h-0 w-auto min-w-0 shrink-0 flex-row items-stretch overflow-hidden">
       <div
         className={`z-50 flex h-full min-h-0 flex-col items-stretch self-stretch overflow-hidden ${FILTER_SIDEBAR_COLUMN_CLASS} ${
           filtersOpen
@@ -124,11 +126,11 @@ export function FilterSidebar() {
           <div
             className={`h-full min-h-0 shrink-0 overflow-hidden ${FILTER_OPTIONS_PANEL_CLIP_TRANSITION_CLASS} max-lg:min-w-0 ${
               filtersOpen
-                ? "w-[var(--width-filter-options)] max-lg:w-full max-lg:flex-1 opacity-100"
+                ? "w-filter-options max-lg:w-full max-lg:flex-1 opacity-100"
                 : "pointer-events-none w-0 max-lg:w-0 opacity-0"
             }`}
           >
-            <div className="h-full min-h-0 w-[var(--width-filter-options)] max-lg:w-full min-w-0 overflow-hidden">
+            <div className="h-full min-h-0 w-filter-options max-lg:w-full min-w-0 overflow-hidden">
               {showOptionsPanel ? (
                 <FilterOptionsPanel
                   panelId={panelId}
@@ -154,8 +156,8 @@ export function FilterSidebar() {
         </div>
         <Footer className="max-lg:hidden" mergeWithSubpanel={anySubpanelOpen} />
       </div>
-      {isMaxLg ? null : subpanelsColumn}
-      {isMaxLg ? (
+      <div className="contents max-lg:hidden">{subpanelsColumn}</div>
+      <div className="contents lg:hidden">
         <div className="fixed inset-x-0 bottom-0 z-40 flex flex-col pb-[env(safe-area-inset-bottom,0px)] lg:hidden">
           {filtersOpen ? null : <MobileLatestUpdatesStrip />}
           <div className="flex w-full shrink-0 flex-col bg-surface-canvas">
@@ -165,7 +167,12 @@ export function FilterSidebar() {
             <Footer showYear={false} mergeWithSubpanel={false} />
           </div>
         </div>
-      ) : null}
+      </div>
     </div>
+    <EmailSubscription
+      className="fixed bottom-0 left-(--width-filter-chrome-column) z-30 hidden min-h-0 max-w-none lg:flex"
+      forceCollapsed={anySubpanelOpen}
+    />
+    </>
   );
 }

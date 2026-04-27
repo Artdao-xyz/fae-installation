@@ -23,7 +23,7 @@ export function MobileFilteredThumbnailGrid() {
   return (
     <div className="w-full px-3 pb-3 pt-2 lg:hidden">
       <ul
-        className="grid grid-cols-2 gap-x-3 gap-y-4"
+        className="grid touch-pan-y grid-cols-2 gap-x-3 gap-y-4"
         role="list"
         aria-label="Filtered outputs"
       >
@@ -40,7 +40,7 @@ export function MobileFilteredThumbnailGrid() {
               <button
                 type="button"
                 onClick={() => openContentPreview(row)}
-                className="flex h-full w-full min-h-0 flex-col overflow-hidden p-1 text-left transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ink-primary focus-visible:ring-offset-0"
+                className="flex h-full w-full min-h-0 touch-pan-y flex-col overflow-hidden p-1 text-left transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ink-primary focus-visible:ring-offset-0"
               >
                 <Thumbnail
                   variant="full"

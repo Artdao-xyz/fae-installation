@@ -175,7 +175,7 @@ function HomeContent() {
         </div>
 
         <div
-          className={`relative z-10 flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-y-auto overscroll-contain max-lg:min-h-0 lg:flex-none lg:overflow-visible ${mobileScrollInsetClass}`}
+          className={`relative z-10 flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-y-auto overscroll-contain max-lg:min-h-0 max-lg:touch-pan-y lg:flex-none lg:overflow-visible ${mobileScrollInsetClass}`}
         >
           <div className="flex w-full min-h-min flex-col">
             <HeroTitleBlock
