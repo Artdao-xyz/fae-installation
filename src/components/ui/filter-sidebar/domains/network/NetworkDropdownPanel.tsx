@@ -60,6 +60,7 @@ export function NetworkDropdownPanel({
       label,
       tone: "network" as const,
       selected,
+      selectedTone: true,
       onPress: () => {
         minimizeAllFloatingPanels();
         toggleNetwork(label);

@@ -24,16 +24,16 @@ const toneSelectedOuterMatClass: Record<FilterSidebarCategoryTone, string> = {
   network: "!border-filter-category-network !bg-filter-category-network",
 };
 
-function selectedToneTextClass(tone: FilterSidebarCategoryTone) {
-  return toneAccentClass[tone].marker;
+function selectedToneTextClass(tone?: FilterSidebarCategoryTone) {
+  return tone ? toneAccentClass[tone].marker : filterPillSelection.text;
 }
 
-function selectedToneBorderClass(tone: FilterSidebarCategoryTone) {
-  return toneSelectedBorderClass[tone];
+function selectedToneBorderClass(tone?: FilterSidebarCategoryTone) {
+  return tone ? toneSelectedBorderClass[tone] : filterPillSelection.border;
 }
 
-function selectedToneOuterMatClass(tone: FilterSidebarCategoryTone) {
-  return toneSelectedOuterMatClass[tone];
+function selectedToneOuterMatClass(tone?: FilterSidebarCategoryTone) {
+  return tone ? toneSelectedOuterMatClass[tone] : filterPillSelection.outerMat;
 }
 
 /** Sidebar filter pill label box — keep in sync with `.fae-control-filter-inner` (layout shell only). */
@@ -61,7 +61,7 @@ export const filterPillSingleLayerBrightnessHoverClass =
 /** Shared ink-frame + rounded inner surface (Activity Type / `FilterPill` `rounded`). */
 export function filterFramedRoundedInnerClass(
   selected: boolean,
-  tone: FilterSidebarCategoryTone = "fae-briefings",
+  tone?: FilterSidebarCategoryTone,
 ) {
   return `fae-control-filter-inner fae-control-shape-rounded ${filterPillLabelBoxClass} ${interactiveChromeMatClass} ${
     selected
@@ -77,7 +77,7 @@ export const filterFramedOuterFocusClass =
 export const filterFramedRoundedOuterSelectedClass = filterPillSelection.outerMat;
 
 export function filterFramedRoundedOuterSelectedToneClass(
-  tone: FilterSidebarCategoryTone = "fae-briefings",
+  tone?: FilterSidebarCategoryTone,
 ) {
   return selectedToneOuterMatClass(tone);
 }
@@ -88,7 +88,7 @@ export function filterFramedRoundedOuterSelectedToneClass(
  */
 export function filterDottedPillClassName(
   selected: boolean,
-  tone: FilterSidebarCategoryTone = "fae-briefings",
+  tone?: FilterSidebarCategoryTone,
 ) {
   /** `min-w-0` (not `shrink-0`) so pills can respect a narrow parent and show ellipsis instead of clipping at the border. */
   const base = `fae-control-shape-square min-w-0 border-hairline ${interactiveChromeMatClass} ${filterPillSingleLayerBrightnessHoverClass} ${filterPillLabelBoxClass}`;

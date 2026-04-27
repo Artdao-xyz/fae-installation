@@ -60,6 +60,7 @@ export function ArtistsDropdownPanel({
       label,
       tone: "artists" as const,
       selected,
+      selectedTone: true,
       onPress: () => {
         minimizeAllFloatingPanels();
         toggleArtist(label);

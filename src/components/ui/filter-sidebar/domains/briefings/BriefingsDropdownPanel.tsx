@@ -64,6 +64,7 @@ export function BriefingsDropdownPanel({
             label={label}
             tone="fae-briefings"
             selected={selectedFaeBriefing === label}
+            selectedTone
             onClick={() => selectBriefing(label)}
           />
         ))}

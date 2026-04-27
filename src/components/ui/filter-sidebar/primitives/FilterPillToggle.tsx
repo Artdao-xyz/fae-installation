@@ -11,6 +11,8 @@ type FilterPillToggleProps = {
   /** Dim and block presses (e.g. placeholder toggles not wired to the catalog). */
   disabled?: boolean;
   title?: string;
+  /** Use the category tone for selected state instead of the global selection blue. */
+  selectedTone?: boolean;
 };
 
 export function FilterPillToggle({
@@ -20,6 +22,7 @@ export function FilterPillToggle({
   onClick,
   disabled = false,
   title,
+  selectedTone = false,
 }: FilterPillToggleProps) {
   const interactive = Boolean(onClick) && !disabled;
   const cursorClass = disabled ? "!cursor-not-allowed opacity-45" : "";
@@ -34,7 +37,10 @@ export function FilterPillToggle({
       aria-checked={interactive ? selected : undefined}
       title={title}
       data-tone={tone}
-      className={[filterDottedPillClassName(selected, tone), cursorClass]
+      className={[
+        filterDottedPillClassName(selected, selectedTone ? tone : undefined),
+        cursorClass,
+      ]
         .filter(Boolean)
         .join(" ")}
       data-name="Filters-Button-Toggle"

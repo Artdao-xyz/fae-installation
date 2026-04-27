@@ -6,7 +6,9 @@ import {
   filterDottedPillClassName,
   filterFramedOuterFocusClass,
   filterFramedRoundedInnerClass,
+  filterFramedRoundedOuterSelectedClass,
   filterFramedRoundedOuterSelectedToneClass,
+  filterPillSelection,
   filterPillLabelBoxClass,
   filterPillSingleLayerBrightnessHoverClass,
   interactiveChromeMatClass,
@@ -30,6 +32,8 @@ type FilterPillProps = {
   className?: string;
   disabled?: boolean;
   title?: string;
+  /** Use the category tone for selected state instead of the global selection blue. */
+  selectedTone?: boolean;
 };
 
 /**
@@ -49,7 +53,7 @@ function SquareCornerMarkers({
   tone,
 }: {
   selected: boolean;
-  tone: FilterSidebarCategoryTone;
+  tone?: FilterSidebarCategoryTone;
 }) {
   const n = SQUARE_MARKER_SIZE;
   return (
@@ -62,7 +66,11 @@ function SquareCornerMarkers({
           viewBox={`0 0 ${n} ${n}`}
           shapeRendering="crispEdges"
           className={`pointer-events-none absolute z-0 block shrink-0 ${positionClass} ${
-            selected ? toneAccentClass[tone].marker : "text-ink-primary"
+            selected
+              ? tone
+                ? toneAccentClass[tone].marker
+                : filterPillSelection.text
+              : "text-ink-primary"
           }`}
           aria-hidden
         >
@@ -80,10 +88,14 @@ function SquarePillFrame({
 }: {
   label: string;
   selected: boolean;
-  tone: FilterSidebarCategoryTone;
+  tone?: FilterSidebarCategoryTone;
 }) {
   const cellBorder = selected
-    ? `${interactiveChromeMatClass} ${toneAccentClass[tone].marker} border-hairline border-solid ${toneSelectedBorderClass[tone]}`
+    ? `${interactiveChromeMatClass} ${
+        tone ? toneAccentClass[tone].marker : filterPillSelection.text
+      } border-hairline border-solid ${
+        tone ? toneSelectedBorderClass[tone] : filterPillSelection.border
+      }`
     : `${interactiveChromeMatClass} border-hairline border-solid border-ink-primary text-ink-primary`;
 
   return (
@@ -105,6 +117,7 @@ export function FilterPill({
   expanded: expandedProp,
   onExpandedChange,
   selected = false,
+  selectedTone = false,
   onPress,
   className,
   disabled = false,
@@ -140,6 +153,7 @@ export function FilterPill({
   const cursorAndFadeClass = unavailable
     ? "!cursor-not-allowed opacity-45"
     : "cursor-pointer";
+  const selectedToneValue = selectedTone ? tone : undefined;
 
   if (isDotted) {
     return (
@@ -152,7 +166,7 @@ export function FilterPill({
         aria-expanded={expandable ? isOpen : undefined}
         aria-pressed={onPress ? selected : undefined}
         className={[
-          filterDottedPillClassName(selected, tone),
+          filterDottedPillClassName(selected, selectedToneValue),
           cursorAndFadeClass,
           className,
         ]
@@ -187,7 +201,11 @@ export function FilterPill({
         data-tone={tone}
         data-variant="square"
       >
-        <SquarePillFrame label={label} selected={selected} tone={tone} />
+        <SquarePillFrame
+          label={label}
+          selected={selected}
+          tone={selectedToneValue}
+        />
       </button>
     );
   }
@@ -203,7 +221,11 @@ export function FilterPill({
       aria-pressed={onPress ? selected : undefined}
       className={[
         `fae-control-filter-outer ${filterFramedOuterFocusClass} ${filterPillSingleLayerBrightnessHoverClass} ${
-          selected ? filterFramedRoundedOuterSelectedToneClass(tone) : ""
+          selected
+            ? selectedTone
+              ? filterFramedRoundedOuterSelectedToneClass(tone)
+              : filterFramedRoundedOuterSelectedClass
+            : ""
         } inline-flex items-baseline ${cursorAndFadeClass}`,
         className,
       ]
@@ -212,7 +234,9 @@ export function FilterPill({
       data-tone={tone}
       data-variant="rounded"
     >
-      <span className={filterFramedRoundedInnerClass(selected, tone)}>{label}</span>
+      <span className={filterFramedRoundedInnerClass(selected, selectedToneValue)}>
+        {label}
+      </span>
     </button>
   );
 }
