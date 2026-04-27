@@ -303,6 +303,14 @@ html {
   overscroll-behavior: none;
 }
 
+@media (max-width: 63.999rem) {
+  html,
+  body {
+    height: 100%;
+    overflow: hidden;
+  }
+}
+
 /* Content preview: section cascade (outside @layer so it applies reliably) */
 .fae-preview-cascade > * {
   opacity: 0;

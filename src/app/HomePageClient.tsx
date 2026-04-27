@@ -154,7 +154,11 @@ function HomeContent({ initialPreviewSlug }: HomePageClientProps) {
       <FilterSidebar />
       <PixelTessellationBackground />
       <FloatingDockMount suppressInitialAboutPeek={Boolean(initialPreviewSlug)} />
-      <main className="relative z-15 flex min-h-0 min-w-0 flex-1 flex-col p-5 text-ink-body max-lg:min-h-0 max-lg:overflow-hidden max-lg:p-0 lg:overflow-visible">
+      <main
+        className={`relative flex min-h-0 min-w-0 flex-1 flex-col p-5 text-ink-body max-lg:min-h-0 max-lg:overflow-hidden max-lg:p-0 lg:overflow-visible ${
+          searching ? "max-lg:z-45" : "z-15"
+        }`}
+      >
         <div className="pointer-events-none max-lg:hidden" aria-hidden>
           <MarginGuideFrame />
         </div>
@@ -166,7 +170,7 @@ function HomeContent({ initialPreviewSlug }: HomePageClientProps) {
         <div
           className={[
             "min-w-0 w-full shrink-0 bg-surface-canvas lg:hidden",
-            "max-lg:sticky max-lg:top-[calc(env(safe-area-inset-top,0px)+2.75rem)] max-lg:z-20 max-lg:border-b-hairline max-lg:border-solid max-lg:border-ink-primary",
+            "max-lg:sticky max-lg:top-[calc(env(safe-area-inset-top,0px)+2.75rem)] max-lg:z-45 max-lg:border-b-hairline max-lg:border-solid max-lg:border-ink-primary",
             hideMobileLandingSearch ? "hidden" : "",
             searching ? "flex flex-col" : "",
           ]
