@@ -150,7 +150,7 @@ function HomeContent({ initialPreviewSlug }: HomePageClientProps) {
     <div className="flex min-h-screen w-full max-lg:h-dvh max-lg:min-h-0 max-lg:max-h-dvh max-lg:overflow-hidden">
       <FilterSidebar />
       <PixelTessellationBackground />
-      <FloatingDockMount />
+      <FloatingDockMount suppressInitialAboutPeek={Boolean(initialPreviewSlug)} />
       <main className="relative z-15 flex min-h-0 min-w-0 flex-1 flex-col p-5 text-ink-body max-lg:min-h-0 max-lg:overflow-hidden max-lg:p-0 lg:overflow-visible">
         <div className="pointer-events-none max-lg:hidden" aria-hidden>
           <MarginGuideFrame />

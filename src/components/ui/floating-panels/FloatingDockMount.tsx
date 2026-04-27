@@ -13,11 +13,17 @@ import { useFloatingPanelStack } from "./FloatingPanelStackContext";
  * load: a later false→true on the sidebar (user closed and reopened) must not
  * re-trigger About peek, which looked like a duplicate "load" animation.
  */
-function AboutPeekWhenFilterSidebarOpens() {
+type FloatingDockMountProps = {
+  suppressInitialAboutPeek?: boolean;
+};
+
+function AboutPeekWhenFilterSidebarOpens({
+  suppressInitialAboutPeek = false,
+}: FloatingDockMountProps) {
   const { filtersPanelOpen } = useFilterSelection();
   const { setAboutView } = useFloatingPanelStack();
   const prevFiltersOpen = useRef(false);
-  const didInitialAboutPeekRef = useRef(false);
+  const didInitialAboutPeekRef = useRef(suppressInitialAboutPeek);
 
   useEffect(() => {
     const justOpened = filtersPanelOpen && !prevFiltersOpen.current;
@@ -36,13 +42,17 @@ function AboutPeekWhenFilterSidebarOpens() {
  * Client-only mount so SSR does not emit HTML for floating docks (avoids hydration
  * mismatches vs client-only layout math). `FloatingPanelStackProvider` must wrap this.
  */
-export function FloatingDockMount() {
+export function FloatingDockMount({
+  suppressInitialAboutPeek = false,
+}: FloatingDockMountProps) {
   return (
     <>
       {/* About is opened from `MobileSiteHeader` on `max-lg`; dock peek rail stays `lg+` only inside `AboutPanel`. */}
       <AboutPanel />
       <div className="hidden lg:contents">
-        <AboutPeekWhenFilterSidebarOpens />
+        <AboutPeekWhenFilterSidebarOpens
+          suppressInitialAboutPeek={suppressInitialAboutPeek}
+        />
         <GlossaryPanel />
         <LatestUpdatesPanel />
       </div>
