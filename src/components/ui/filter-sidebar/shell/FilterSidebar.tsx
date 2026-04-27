@@ -12,8 +12,8 @@ import { MobileFiltersCloseHeader } from "./MobileFiltersCloseHeader";
 import { MobileLatestUpdatesStrip } from "./MobileLatestUpdatesStrip";
 import {
   FILTER_OPTIONS_PANEL_CLIP_TRANSITION_CLASS,
-  FILTER_SIDEBAR_COLUMN_COLLAPSED_CLASS,
   FILTER_SIDEBAR_COLUMN_CLASS,
+  FILTER_SIDEBAR_COLUMN_COLLAPSED_CLASS,
   MOBILE_OVERLAY_BOTTOM_ABOVE_FOOTER_CLASS,
   MOBILE_OVERLAY_TOP_CLASS,
   MOBILE_OVERLAY_X_CLASS,
@@ -88,9 +88,9 @@ export function FilterSidebar() {
 
   return (
     <>
-    <div className="relative z-40 flex h-screen min-h-0 w-auto min-w-0 shrink-0 flex-row items-stretch overflow-hidden">
+    <div className="relative z-40 flex h-screen min-h-0 w-auto min-w-0 shrink-0 flex-row items-stretch overflow-visible">
       <div
-        className={`z-50 flex h-full min-h-0 flex-col items-stretch self-stretch overflow-hidden ${
+        className={`z-50 flex h-full min-h-0 flex-col items-stretch self-stretch overflow-visible ${
           filtersOpen
             ? FILTER_SIDEBAR_COLUMN_CLASS
             : FILTER_SIDEBAR_COLUMN_COLLAPSED_CLASS
@@ -104,7 +104,10 @@ export function FilterSidebar() {
         {isMaxLg && filtersOpen ? (
           <MobileFiltersCloseHeader onClose={toggleFiltersOpen} />
         ) : null}
-        <HomeBar className="max-lg:hidden" mergeWithSubpanel={anySubpanelOpen} />
+        <HomeBar
+          className={`max-lg:hidden ${FILTER_SIDEBAR_COLUMN_CLASS}`}
+          mergeWithSubpanel={anySubpanelOpen}
+        />
         <div
           className={`flex min-h-0 min-w-0 flex-1 flex-row overflow-hidden transition-colors duration-500 ease-in-out motion-reduce:transition-none ${
             filtersOpen ? "bg-surface-canvas" : "bg-transparent"
@@ -148,7 +151,10 @@ export function FilterSidebar() {
           </div>
           <div className="min-h-0 min-w-0 flex-1 max-lg:hidden" aria-hidden />
         </div>
-        <Footer className="max-lg:hidden" mergeWithSubpanel={anySubpanelOpen} />
+        <Footer
+          className={`max-lg:hidden ${FILTER_SIDEBAR_COLUMN_CLASS}`}
+          mergeWithSubpanel={anySubpanelOpen}
+        />
       </div>
       <div className="contents max-lg:hidden">{subpanelsColumn}</div>
       <div className="contents lg:hidden">
