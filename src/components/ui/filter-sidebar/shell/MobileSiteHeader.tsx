@@ -101,13 +101,24 @@ export function MobileSiteHeader({
         className="sticky top-0 z-40 flex w-full shrink-0 flex-col border-b-hairline border-solid border-ink-primary bg-surface-canvas pt-[env(safe-area-inset-top,0px)] lg:hidden"
         role="banner"
       >
-        <div className="flex h-11 w-full flex-row items-stretch justify-center px-3">
+        <div className="flex h-11 w-full flex-row items-center justify-between px-3">
+          <button
+            type="button"
+            onClick={goHome}
+            aria-label="Home"
+            className="flex min-h-0 min-w-0 items-center gap-2 text-ink-primary transition-colors hover:opacity-80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary"
+          >
+            <HomeSvgIcon />
+            <span className={`truncate ${MOBILE_HEADER_LABEL_CLASS}`}>
+              Future Arts Ecosystem
+            </span>
+          </button>
           <button
             type="button"
             onClick={() => setMenuOpen(true)}
             aria-label="Open menu"
             aria-expanded={menuOpen}
-            className="flex min-h-0 min-w-0 items-center justify-center gap-2 text-ink-primary transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary"
+            className="flex size-8 shrink-0 items-center justify-center text-ink-primary transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary"
           >
             <Image
               src="/svg/menu.svg"
@@ -115,10 +126,9 @@ export function MobileSiteHeader({
               width={32}
               height={32}
               unoptimized
-              className="size-8 shrink-0 object-contain"
+              className="size-7 shrink-0 object-contain"
               aria-hidden
             />
-            <span className={MOBILE_HEADER_LABEL_CLASS}>Menu</span>
           </button>
         </div>
       </header>
