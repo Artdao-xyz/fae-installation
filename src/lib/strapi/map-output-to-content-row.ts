@@ -1,5 +1,6 @@
 import type { BlocksContent } from "@strapi/blocks-react-renderer";
 import type { ContentRow } from "@/data/content-types";
+import { createOutputShareSlug } from "@/lib/output-share-slug";
 
 type StrapiMedia = {
   url?: unknown;
@@ -479,6 +480,13 @@ export function mapStrapiOutputToContentRow(
 
   const title = contentTitle || shortTitleRaw;
   const shortTitle = shortTitleRaw || contentTitle;
+  const configuredSlug =
+    typeof doc.Slug === "string" && doc.Slug.trim().length > 0
+      ? doc.Slug.trim()
+      : "";
+  const shareSlug = createOutputShareSlug(
+    configuredSlug || shortTitle || title || documentId,
+  );
 
   const imageGallery = collectMediaGalleryUrls(doc.Image);
   const thumbUrl = mediaPreferredThumbnailUrl(doc.Thumbnail);
@@ -517,6 +525,7 @@ export function mapStrapiOutputToContentRow(
     id: documentId,
     title,
     shortTitle,
+    shareSlug,
     imageUrl,
     imageGallery,
     content,

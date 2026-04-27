@@ -14,6 +14,7 @@ import {
 import type { ContentRow } from "@/data/content-types";
 import { FIXTURE_BODY_TEMPLATES } from "@/data/fixture-body-templates";
 import { FIXTURE_SEED_TITLES } from "@/data/fixture-seed-titles";
+import { createOutputShareSlug } from "@/lib/output-share-slug";
 
 function mix(i: number, s: number): number {
   let h = Math.imul(i + 1, 374761393) + Math.imul(s, 668265263);
@@ -183,6 +184,7 @@ export const CONTENT_FIXTURE_ROWS: ContentRow[] = FIXTURE_SEED_TITLES.map(
       id,
       title,
       shortTitle: title,
+      shareSlug: createOutputShareSlug(title),
       /** Stagger so “latest updates” order is deterministic in fixture mode. */
       updatedAt: new Date(Date.UTC(2024, 0, 1 + (index % 28), 12, 0, 0)).toISOString(),
       imageUrl: `https://picsum.photos/seed/${id}/220/220.webp`,

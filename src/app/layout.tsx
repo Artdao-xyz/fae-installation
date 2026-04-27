@@ -1,10 +1,8 @@
 import type { Metadata } from "next";
+import { buildSiteMetadata } from "@/lib/site-metadata";
 import "./globals.css";
 
-export const metadata: Metadata = {
-  title: "Future Art Ecosystems",
-  description: "Cultural Infrastructure Research",
-};
+export const metadata: Metadata = buildSiteMetadata();
 
 export default function RootLayout({
   children,

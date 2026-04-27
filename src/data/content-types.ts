@@ -6,6 +6,8 @@ export type ContentRow = {
   title: string;
   /** Short label (`Short_Title`) — particle thumbnails and tile chrome. */
   shortTitle: string;
+  /** Share URL slug derived from the CMS title fields. */
+  shareSlug: string;
   imageUrl: string;
   /**
    * URLs from Strapi `Image` (repeatable media) — filled on detail fetch for preview carousel.

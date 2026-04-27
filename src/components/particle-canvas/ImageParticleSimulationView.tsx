@@ -177,6 +177,8 @@ export type ImageParticleSimulationViewProps = {
   filterMatchMode?: FilterMatchMode;
   /** Extra classes on the root `<section>` (e.g. hide overlay on mobile while the sim keeps running). */
   rootClassName?: string;
+  /** Share URL slug to open immediately when the page is loaded through `/[slug]`. */
+  initialPreviewSlug?: string;
 };
 
 export function ImageParticleSimulationView({
@@ -190,6 +192,7 @@ export function ImageParticleSimulationView({
   placementContainerRef,
   filterMatchMode: filterMatchModeProp,
   rootClassName,
+  initialPreviewSlug,
 }: ImageParticleSimulationViewProps) {
   const filterMatchMode = filterMatchModeProp ?? "intersection";
   const filterMatchModeRef = useRef(filterMatchMode);
@@ -295,6 +298,9 @@ export function ImageParticleSimulationView({
     restoreFiltersAfterContentPreview();
     setPreviewRow(null);
     setPreviewFullScreen(false);
+    if (window.location.pathname !== "/") {
+      window.history.pushState(null, "", "/");
+    }
   }, [restoreFiltersAfterContentPreview]);
 
   const handleFilteredThumbnailClick = useCallback(
@@ -304,6 +310,10 @@ export function ImageParticleSimulationView({
       }
       const hit = getCachedPreviewDetailRow(row.id);
       setPreviewRow(hit ? { ...row, ...hit } : row);
+      const sharePath = `/${row.shareSlug}`;
+      if (window.location.pathname !== sharePath) {
+        window.history.pushState(null, "", sharePath);
+      }
       if (hit) {
         console.log("[preview] sources (click)", {
           id: row.id,
@@ -324,6 +334,18 @@ export function ImageParticleSimulationView({
     },
     [snapshotFiltersBeforeContentPreview],
   );
+
+  const didOpenInitialPreviewRef = useRef(false);
+  useEffect(() => {
+    if (!initialPreviewSlug || didOpenInitialPreviewRef.current) return;
+    const row = contentCatalog.find(
+      (item) => item.shareSlug === initialPreviewSlug,
+    );
+    if (!row) return;
+
+    didOpenInitialPreviewRef.current = true;
+    handleFilteredThumbnailClick(row);
+  }, [contentCatalog, handleFilteredThumbnailClick, initialPreviewSlug]);
 
   useEffect(() => {
     registerContentPreviewOpener(handleFilteredThumbnailClick);

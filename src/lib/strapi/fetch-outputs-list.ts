@@ -19,6 +19,7 @@ import {
   strapiDocumentDisplayName,
   strapiOutputEntryToFlatRecord,
 } from "@/lib/strapi/map-output-to-content-row";
+import { createOutputShareSlug } from "@/lib/output-share-slug";
 import {
   offlineFixtureCatalogOrNull,
   offlineFixtureDetailIfEnabled,
@@ -358,4 +359,19 @@ export async function fetchStrapiOutputDetailByDocumentId(
       : row;
 
   return rowOut;
+}
+
+export async function fetchStrapiOutputDetailByShareSlug(
+  slug: string,
+): Promise<ContentRow | null> {
+  const normalized = createOutputShareSlug(slug);
+  const { rows } = await fetchStrapiOutputsCatalogOnly();
+  const catalogRow = rows.find((row) => row.shareSlug === normalized);
+  if (!catalogRow) return null;
+
+  const detail = await fetchStrapiOutputDetailByDocumentId(catalogRow.id, {
+    includeSources: true,
+  });
+
+  return detail ? { ...catalogRow, ...detail } : catalogRow;
 }
