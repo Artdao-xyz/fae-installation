@@ -44,10 +44,6 @@ export function LatestUpdatesPanel() {
     ? "opacity-100"
     : "opacity-0 pointer-events-none";
 
-  if (rows.length === 0) {
-    return null;
-  }
-
   return (
     <div
       className="fixed bottom-8.5 right-8.5 flex min-h-0 flex-row items-stretch overflow-hidden border-hairline border-b-0 border-solid border-ink-primary bg-surface-canvas/90 shadow-none backdrop-blur-fae-md"
