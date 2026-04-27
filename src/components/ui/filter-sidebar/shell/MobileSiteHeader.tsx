@@ -113,7 +113,7 @@ export function MobileSiteHeader({
               src="/svg/menu.svg"
               alt=""
               width={32}
-              height={34}
+              height={32}
               unoptimized
               className="size-8 shrink-0 object-contain"
               aria-hidden

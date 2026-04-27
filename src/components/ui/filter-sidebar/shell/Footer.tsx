@@ -26,9 +26,9 @@ export function Footer({
           src="/svg/serpentine.svg"
           alt="Serpentine"
           width={56}
-          height={56}
+          height={12}
           unoptimized
-          className="pointer-events-none shrink-0 object-contain lg:h-14"
+          className="pointer-events-none h-auto w-14 shrink-0 object-contain"
           aria-hidden
         />
         {showYear ? (
