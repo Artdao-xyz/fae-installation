@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useId, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { useFloatingPanelStack } from "@/components/ui/floating-panels/FloatingPanelStackContext";
+import { useFilterSelection } from "@/components/ui/filter-sidebar/FilterSelectionContext";
 import { FLOATING_DOCK_PEEK_CLIP_CLASS } from "@/components/ui/filter-sidebar/shell/layout-classes";
 import { useIsMaxLg } from "@/components/ui/filter-sidebar/shell/useIsMaxLg";
 import { AboutSvgIcon } from "@/components/ui/icons/AboutSvgIcon";
@@ -126,6 +127,29 @@ export function AboutPanel() {
   const isMaxLg = useIsMaxLg();
   const dockOuterH = floatingDockPanelOuterHeightPx();
   const { aboutView, setAboutView, getChromeZIndex } = useFloatingPanelStack();
+  const {
+    filtersPanelOpen,
+    setFiltersPanelOpen,
+    setBriefingsSubpanelOpen,
+    setRdSubpanelOpen,
+    setNetworkSubpanelOpen,
+    setArtistsSubpanelOpen,
+  } = useFilterSelection();
+  const prevFiltersPanelOpenRef = useRef(filtersPanelOpen);
+
+  const closeSidebarPanels = useCallback(() => {
+    setFiltersPanelOpen(false);
+    setBriefingsSubpanelOpen(false);
+    setRdSubpanelOpen(false);
+    setNetworkSubpanelOpen(false);
+    setArtistsSubpanelOpen(false);
+  }, [
+    setArtistsSubpanelOpen,
+    setBriefingsSubpanelOpen,
+    setFiltersPanelOpen,
+    setNetworkSubpanelOpen,
+    setRdSubpanelOpen,
+  ]);
 
   const openFull = useCallback(() => setAboutView("full"), [setAboutView]);
   const closeFull = useCallback(() => {
@@ -145,6 +169,27 @@ export function AboutPanel() {
       document.body.style.overflow = previousOverflow;
     };
   }, [aboutView]);
+
+  useEffect(() => {
+    const sidebarJustOpened =
+      filtersPanelOpen && !prevFiltersPanelOpenRef.current;
+    prevFiltersPanelOpenRef.current = filtersPanelOpen;
+
+    if (sidebarJustOpened && aboutView === "full") {
+      setAboutView(isMaxLg ? "minimized" : "peek");
+      return;
+    }
+
+    if (aboutView === "full") {
+      closeSidebarPanels();
+    }
+  }, [
+    aboutView,
+    closeSidebarPanels,
+    filtersPanelOpen,
+    isMaxLg,
+    setAboutView,
+  ]);
 
   const toggleDock = useCallback(() => {
     setAboutView((v) => (v === "peek" ? "minimized" : "peek"));

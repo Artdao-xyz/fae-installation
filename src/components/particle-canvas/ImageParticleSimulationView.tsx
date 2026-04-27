@@ -205,7 +205,12 @@ export function ImageParticleSimulationView({
     selectedFormats,
     selectedNetworks,
     filtersPanelOpen,
+    setFiltersPanelOpen,
     filterSubpanelsOpen,
+    setBriefingsSubpanelOpen,
+    setRdSubpanelOpen,
+    setNetworkSubpanelOpen,
+    setArtistsSubpanelOpen,
     openContentPreview,
     registerContentPreviewOpener,
     registerContentPreviewCloser,
@@ -273,6 +278,36 @@ export function ImageParticleSimulationView({
   previewFullScreenRef.current = previewFullScreen;
   const previewRowRef = useRef<ContentRow | null>(null);
   previewRowRef.current = previewRow;
+  const prevFiltersPanelOpenRef = useRef(filtersPanelOpen);
+
+  const closeSidebarPanels = useCallback(() => {
+    setFiltersPanelOpen(false);
+    setBriefingsSubpanelOpen(false);
+    setRdSubpanelOpen(false);
+    setNetworkSubpanelOpen(false);
+    setArtistsSubpanelOpen(false);
+  }, [
+    setArtistsSubpanelOpen,
+    setBriefingsSubpanelOpen,
+    setFiltersPanelOpen,
+    setNetworkSubpanelOpen,
+    setRdSubpanelOpen,
+  ]);
+
+  useEffect(() => {
+    const sidebarJustOpened =
+      filtersPanelOpen && !prevFiltersPanelOpenRef.current;
+    prevFiltersPanelOpenRef.current = filtersPanelOpen;
+
+    if (sidebarJustOpened && previewFullScreen) {
+      setPreviewFullScreen(false);
+      return;
+    }
+
+    if (previewFullScreen) {
+      closeSidebarPanels();
+    }
+  }, [closeSidebarPanels, filtersPanelOpen, previewFullScreen]);
 
   /**
    * Hover: same output detail as click (`Text` + `Source` + media + taxonomies in one request).
