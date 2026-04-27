@@ -34,7 +34,7 @@ export function FilterPillToggle({
       aria-checked={interactive ? selected : undefined}
       title={title}
       data-tone={tone}
-      className={[filterDottedPillClassName(selected), cursorClass]
+      className={[filterDottedPillClassName(selected, tone), cursorClass]
         .filter(Boolean)
         .join(" ")}
       data-name="Filters-Button-Toggle"

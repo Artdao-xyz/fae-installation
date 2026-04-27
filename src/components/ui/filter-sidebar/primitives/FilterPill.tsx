@@ -6,12 +6,15 @@ import {
   filterDottedPillClassName,
   filterFramedOuterFocusClass,
   filterFramedRoundedInnerClass,
-  filterFramedRoundedOuterSelectedClass,
+  filterFramedRoundedOuterSelectedToneClass,
   filterPillLabelBoxClass,
-  filterPillSelection,
   filterPillSingleLayerBrightnessHoverClass,
   interactiveChromeMatClass,
 } from "./filterFramedClasses";
+import {
+  toneAccentClass,
+  toneSelectedBorderClass,
+} from "../config/filterSidebarTones";
 
 export type FilterPillVariant = "rounded" | "square" | "dotted";
 
@@ -41,10 +44,13 @@ const SQUARE_CORNER_POSITIONS = [
   "right-0 bottom-0 translate-x-px translate-y-px",
 ] as const;
 
-function SquareCornerMarkers({ selected }: { selected: boolean }) {
-  const fill = selected
-    ? "var(--color-filter-pill-selection)"
-    : "var(--color-ink-primary)";
+function SquareCornerMarkers({
+  selected,
+  tone,
+}: {
+  selected: boolean;
+  tone: FilterSidebarCategoryTone;
+}) {
   const n = SQUARE_MARKER_SIZE;
   return (
     <>
@@ -55,10 +61,12 @@ function SquareCornerMarkers({ selected }: { selected: boolean }) {
           height={n}
           viewBox={`0 0 ${n} ${n}`}
           shapeRendering="crispEdges"
-          className={`pointer-events-none absolute z-0 block shrink-0 ${positionClass}`}
+          className={`pointer-events-none absolute z-0 block shrink-0 ${positionClass} ${
+            selected ? toneAccentClass[tone].marker : "text-ink-primary"
+          }`}
           aria-hidden
         >
-          <rect width={n} height={n} x={0} y={0} fill={fill} />
+          <rect width={n} height={n} x={0} y={0} fill="currentColor" />
         </svg>
       ))}
     </>
@@ -68,17 +76,19 @@ function SquareCornerMarkers({ selected }: { selected: boolean }) {
 function SquarePillFrame({
   label,
   selected,
+  tone,
 }: {
   label: string;
   selected: boolean;
+  tone: FilterSidebarCategoryTone;
 }) {
   const cellBorder = selected
-    ? `${interactiveChromeMatClass} ${filterPillSelection.text} border-hairline border-solid ${filterPillSelection.border}`
+    ? `${interactiveChromeMatClass} ${toneAccentClass[tone].marker} border-hairline border-solid ${toneSelectedBorderClass[tone]}`
     : `${interactiveChromeMatClass} border-hairline border-solid border-ink-primary text-ink-primary`;
 
   return (
     <span className="relative isolate inline-flex items-center justify-center">
-      <SquareCornerMarkers selected={selected} />
+      <SquareCornerMarkers selected={selected} tone={tone} />
       <span
         className={`relative z-10 box-border inline-flex items-center justify-center ${filterPillLabelBoxClass} line-clamp-2 ${cellBorder}`}
       >
@@ -142,7 +152,7 @@ export function FilterPill({
         aria-expanded={expandable ? isOpen : undefined}
         aria-pressed={onPress ? selected : undefined}
         className={[
-          filterDottedPillClassName(selected),
+          filterDottedPillClassName(selected, tone),
           cursorAndFadeClass,
           className,
         ]
@@ -177,7 +187,7 @@ export function FilterPill({
         data-tone={tone}
         data-variant="square"
       >
-        <SquarePillFrame label={label} selected={selected} />
+        <SquarePillFrame label={label} selected={selected} tone={tone} />
       </button>
     );
   }
@@ -193,7 +203,7 @@ export function FilterPill({
       aria-pressed={onPress ? selected : undefined}
       className={[
         `fae-control-filter-outer ${filterFramedOuterFocusClass} ${filterPillSingleLayerBrightnessHoverClass} ${
-          selected ? filterFramedRoundedOuterSelectedClass : ""
+          selected ? filterFramedRoundedOuterSelectedToneClass(tone) : ""
         } inline-flex items-baseline ${cursorAndFadeClass}`,
         className,
       ]
@@ -202,7 +212,7 @@ export function FilterPill({
       data-tone={tone}
       data-variant="rounded"
     >
-      <span className={filterFramedRoundedInnerClass(selected)}>{label}</span>
+      <span className={filterFramedRoundedInnerClass(selected, tone)}>{label}</span>
     </button>
   );
 }

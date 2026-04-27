@@ -1,3 +1,6 @@
+import type { FilterSidebarCategoryTone } from "../config/filterSidebarTones";
+import { toneAccentClass, toneSelectedBorderClass } from "../config/filterSidebarTones";
+
 /**
  * Selection blue (#0000ff) via `--color-filter-pill-selection`. Arbitrary `var()` classes so the
  * cascade always wins (theme utilities like `text-filter-pill-selection` may not emit reliably).
@@ -9,6 +12,29 @@ export const filterPillSelection = {
   /** Same “mat” frame as `.fae-control-filter-outer`, but selection blue instead of ink. */
   outerMat: "!border-[color:var(--color-filter-pill-selection)] !bg-[color:var(--color-filter-pill-selection)]",
 } as const;
+
+const toneSelectedOuterMatClass: Record<FilterSidebarCategoryTone, string> = {
+  "fae-briefings":
+    "!border-filter-category-fae-briefings !bg-filter-category-fae-briefings",
+  "latest-updates":
+    "!border-filter-category-latest-updates !bg-filter-category-latest-updates",
+  rd: "!border-filter-category-rd !bg-filter-category-rd",
+  editorial: "!border-filter-category-editorial !bg-filter-category-editorial",
+  artists: "!border-filter-category-artists !bg-filter-category-artists",
+  network: "!border-filter-category-network !bg-filter-category-network",
+};
+
+function selectedToneTextClass(tone: FilterSidebarCategoryTone) {
+  return toneAccentClass[tone].marker;
+}
+
+function selectedToneBorderClass(tone: FilterSidebarCategoryTone) {
+  return toneSelectedBorderClass[tone];
+}
+
+function selectedToneOuterMatClass(tone: FilterSidebarCategoryTone) {
+  return toneSelectedOuterMatClass[tone];
+}
 
 /** Sidebar filter pill label box — keep in sync with `.fae-control-filter-inner` (layout shell only). */
 export const filterPillLabelBoxClass =
@@ -30,13 +56,16 @@ export const interactiveChromeGroupHoverClass = "group-hover:bg-surface-hover/60
  * `button` so hover matches across variants. `enabled:` skips hover when the control is `disabled` (e.g. unavailable).
  */
 export const filterPillSingleLayerBrightnessHoverClass =
-  "brightness-100 enabled:hover:brightness-[0.9] !transition-[filter,colors,background-color,border-color] duration-150 ease-out motion-reduce:!transition-none motion-reduce:enabled:hover:brightness-100";
+  "brightness-100 enabled:hover:brightness-[1.2] !transition-[filter,colors,background-color,border-color] duration-150 ease-out motion-reduce:!transition-none motion-reduce:enabled:hover:brightness-100";
 
 /** Shared ink-frame + rounded inner surface (Activity Type / `FilterPill` `rounded`). */
-export function filterFramedRoundedInnerClass(selected: boolean) {
+export function filterFramedRoundedInnerClass(
+  selected: boolean,
+  tone: FilterSidebarCategoryTone = "fae-briefings",
+) {
   return `fae-control-filter-inner fae-control-shape-rounded ${filterPillLabelBoxClass} ${interactiveChromeMatClass} ${
     selected
-      ? filterPillSelection.text
+      ? selectedToneTextClass(tone)
       : "text-ink-primary"
   }`;
 }
@@ -47,16 +76,25 @@ export const filterFramedOuterFocusClass =
 /** Rounded outer: same hairline mat as unselected (border + fill), in selection blue. */
 export const filterFramedRoundedOuterSelectedClass = filterPillSelection.outerMat;
 
+export function filterFramedRoundedOuterSelectedToneClass(
+  tone: FilterSidebarCategoryTone = "fae-briefings",
+) {
+  return selectedToneOuterMatClass(tone);
+}
+
 /**
  * Single-layer dotted control: unselected dotted ink stroke; selected blue text + border.
  * Hover: `filterPillSingleLayerBrightnessHoverClass` (disabled / unavailable: no hover).
  */
-export function filterDottedPillClassName(selected: boolean) {
+export function filterDottedPillClassName(
+  selected: boolean,
+  tone: FilterSidebarCategoryTone = "fae-briefings",
+) {
   /** `min-w-0` (not `shrink-0`) so pills can respect a narrow parent and show ellipsis instead of clipping at the border. */
   const base = `fae-control-shape-square min-w-0 border-hairline ${interactiveChromeMatClass} ${filterPillSingleLayerBrightnessHoverClass} ${filterPillLabelBoxClass}`;
   return `${base} ${filterFramedOuterFocusClass} ${
     selected
-      ? `border-dotted ${filterPillSelection.border} ${filterPillSelection.text}`
+      ? `border-dotted ${selectedToneBorderClass(tone)} ${selectedToneTextClass(tone)}`
       : "border-dotted border-ink-primary text-ink-primary"
   }`;
 }
