@@ -669,7 +669,12 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
   const openContentPreview = useCallback(
     (row: ContentRow) => {
       minimizeAllFloatingPanels();
-      contentPreviewOpenerRef.current?.(row);
+      const openViaCanvas = contentPreviewOpenerRef.current;
+      if (openViaCanvas) {
+        openViaCanvas(row);
+        return;
+      }
+      setContentPreviewRow(row);
     },
     [minimizeAllFloatingPanels],
   );
@@ -682,7 +687,12 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
   );
 
   const closeContentPreview = useCallback(() => {
-    contentPreviewCloserRef.current?.();
+    const closeViaCanvas = contentPreviewCloserRef.current;
+    if (closeViaCanvas) {
+      closeViaCanvas();
+      return;
+    }
+    setContentPreviewRow(null);
   }, []);
 
   const registerContentPreviewCloser = useCallback((fn: (() => void) | null) => {

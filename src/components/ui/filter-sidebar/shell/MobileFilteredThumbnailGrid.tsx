@@ -1,8 +1,11 @@
 "use client";
 
+import { useRef } from "react";
 import { Thumbnail } from "@/components/ui/thumbnail-full";
 import { useFilterSelection } from "../FilterSelectionContext";
 import { useIsMaxLg } from "./useIsMaxLg";
+
+const TAP_MOVE_THRESHOLD_PX = 12;
 
 /**
  * `max-lg` only in the viewport: hidden from `lg` up via `lg:hidden`. Fluid `Thumbnail` + 10px labels
@@ -10,6 +13,12 @@ import { useIsMaxLg } from "./useIsMaxLg";
  */
 export function MobileFilteredThumbnailGrid() {
   const isMaxLg = useIsMaxLg();
+  const touchStartRef = useRef<{
+    x: number;
+    y: number;
+    dragged: boolean;
+  } | null>(null);
+  const suppressNextClickRef = useRef(false);
   const {
     hasActiveTaxonomyFilters,
     filterMatchingCatalogRows,
@@ -39,7 +48,46 @@ export function MobileFilteredThumbnailGrid() {
             >
               <button
                 type="button"
-                onClick={() => openContentPreview(row)}
+                onTouchStart={(event) => {
+                  const touch = event.touches[0];
+                  if (!touch) return;
+                  touchStartRef.current = {
+                    x: touch.clientX,
+                    y: touch.clientY,
+                    dragged: false,
+                  };
+                }}
+                onTouchMove={(event) => {
+                  const start = touchStartRef.current;
+                  const touch = event.touches[0];
+                  if (!start || !touch || start.dragged) return;
+                  const moved =
+                    Math.abs(touch.clientX - start.x) >
+                      TAP_MOVE_THRESHOLD_PX ||
+                    Math.abs(touch.clientY - start.y) > TAP_MOVE_THRESHOLD_PX;
+                  if (moved) start.dragged = true;
+                }}
+                onTouchEnd={() => {
+                  const start = touchStartRef.current;
+                  if (!start) return;
+                  suppressNextClickRef.current = true;
+                  touchStartRef.current = null;
+                  if (!start.dragged) {
+                    openContentPreview(row);
+                  }
+                }}
+                onTouchCancel={() => {
+                  touchStartRef.current = null;
+                  suppressNextClickRef.current = true;
+                }}
+                onClick={(event) => {
+                  if (suppressNextClickRef.current) {
+                    event.preventDefault();
+                    suppressNextClickRef.current = false;
+                    return;
+                  }
+                  openContentPreview(row);
+                }}
                 className="flex h-full w-full min-h-0 touch-pan-y flex-col overflow-hidden p-1 text-left transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ink-primary focus-visible:ring-offset-0"
               >
                 <Thumbnail

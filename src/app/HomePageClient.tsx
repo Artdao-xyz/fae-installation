@@ -17,6 +17,7 @@ import { HeroTitleBlock } from "@/components/ui/hero-title-block";
 import { MarginGuideFrame } from "@/components/ui/margin-guide-frame";
 import { PixelTessellationBackground } from "@/components/ui/pixel-tessellation-background";
 import { ImageParticleSimulation } from "@/components/particle-canvas/ImageParticleSimulation";
+import { PreviewView } from "@/components/ui/preview/PreviewView";
 import {
   IMAGE_FETCH_LIMIT,
   IMAGE_FETCH_LIMIT_MOBILE,
@@ -119,6 +120,7 @@ function HomeContent({ initialPreviewSlug }: HomePageClientProps) {
     setFilterSearchQuery,
     filtersPanelOpen,
     hasActiveTaxonomyFilters,
+    contentPreviewRow,
     contentCatalog,
     contentCatalogStatus,
   } = useFilterSelection();
@@ -126,6 +128,7 @@ function HomeContent({ initialPreviewSlug }: HomePageClientProps) {
   const isMaxLg = useIsMaxLg();
   const searching = filterSearchQuery.trim().length > 0;
   const [mobileHeaderOverlayOpen, setMobileHeaderOverlayOpen] = useState(false);
+  const [mobilePreviewFullScreen, setMobilePreviewFullScreen] = useState(false);
   /** Mobile landing search sits under `MobileSiteHeader`; hide it while filter sheet, About, or menu/glossary is open. */
   const hideMobileLandingSearch =
     filtersPanelOpen ||
@@ -203,6 +206,13 @@ function HomeContent({ initialPreviewSlug }: HomePageClientProps) {
             {showMobileFilteredResults ? <MobileFilteredThumbnailGrid /> : null}
           </div>
         </div>
+        {showMobileFilteredResults && contentPreviewRow ? (
+          <PreviewView
+            row={contentPreviewRow}
+            fullScreen={mobilePreviewFullScreen}
+            onFullScreenChange={setMobilePreviewFullScreen}
+          />
+        ) : null}
       </main>
     </div>
   );
