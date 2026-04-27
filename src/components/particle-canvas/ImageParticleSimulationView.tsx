@@ -123,15 +123,16 @@ function syncImgToContentRow(
   img: HTMLImageElement,
   row: ContentRow,
 ): void {
+  const imageUrl = row.imageUrl.trim();
   if (
     img.dataset.idx !== row.id ||
-    img.getAttribute(ROW_IMAGE_ATTR) !== row.imageUrl
+    img.getAttribute(ROW_IMAGE_ATTR) !== imageUrl
   ) {
-    img.src = row.imageUrl;
+    img.src = imageUrl;
     img.alt = row.shortTitle;
     img.title = row.shortTitle;
     img.dataset.idx = row.id;
-    img.setAttribute(ROW_IMAGE_ATTR, row.imageUrl);
+    img.setAttribute(ROW_IMAGE_ATTR, imageUrl);
   }
 }
 
@@ -933,6 +934,11 @@ export function ImageParticleSimulationView({
     };
 
     for (const row of displayContentRows) {
+      const imageUrl = row.imageUrl.trim();
+      if (!imageUrl) {
+        mark(true);
+        continue;
+      }
       const img = new window.Image();
       let settled = false;
       const settle = (isError: boolean) => {
@@ -944,7 +950,7 @@ export function ImageParticleSimulationView({
       };
       img.onload = () => settle(false);
       img.onerror = () => settle(true);
-      img.src = row.imageUrl;
+      img.src = imageUrl;
       if (img.complete) settle(img.naturalWidth === 0);
     }
 

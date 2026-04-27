@@ -65,6 +65,7 @@ function CarouselImageSlide({ src, alt }: SlideProps) {
   const [measured, setMeasured] = useState<{ w: number; h: number } | null>(
     null,
   );
+  const isAnimatedGif = /\.gif(?:[?#]|$)/i.test(src);
 
   useLayoutEffect(() => {
     const img = new window.Image();
@@ -105,7 +106,7 @@ function CarouselImageSlide({ src, alt }: SlideProps) {
           width={measured.w}
           height={measured.h}
           sizes="(min-width: 0) min(100vw, 362px)"
-          unoptimized
+          unoptimized={isAnimatedGif}
           className={imageClass(shape)}
         />
       )}

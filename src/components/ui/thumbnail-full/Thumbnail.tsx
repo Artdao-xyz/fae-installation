@@ -152,11 +152,12 @@ function ImageFrame({
   imageDebugMeta?: ContentRow["imageDebugMeta"];
 }) {
   const [loaded, setLoaded] = useState(false);
+  const resolvedImageSrc = imageSrc.trim();
   const { durationMs, delayMs } = useMemo(
-    () => swarmRevealTiming(imageSrc),
-    [imageSrc],
+    () => swarmRevealTiming(resolvedImageSrc || label),
+    [resolvedImageSrc, label],
   );
-  const isAnimatedGif = /\.gif(?:[?#]|$)/i.test(imageSrc);
+  const isAnimatedGif = /\.gif(?:[?#]|$)/i.test(resolvedImageSrc);
 
   const revealDelay = loaded ? delayMs : 0;
   const frameTransitionStyle: CSSProperties = {
@@ -166,11 +167,11 @@ function ImageFrame({
     transitionTimingFunction: "cubic-bezier(0, 0, 0.2, 1)",
   };
 
-  const img = (
+  const img = resolvedImageSrc ? (
     <Image
       ref={(node) => assignRef(imageRef, node)}
       alt={imageAlt || label}
-      src={imageSrc}
+      src={resolvedImageSrc}
       fill
       sizes={
         fluid ? "(max-width: 1023px) 45vw, 320px" : `${dims.frame}px`
@@ -190,7 +191,7 @@ function ImageFrame({
           const parentRect = imgEl.parentElement?.getBoundingClientRect();
           console.info("[FAE image witness: rendered img]", {
             label,
-            src: imageSrc,
+            src: resolvedImageSrc,
             currentSrc: imgEl.currentSrc,
             imgAttributeSizes: imgEl.sizes,
             renderedImgCssPx: {
@@ -223,7 +224,7 @@ function ImageFrame({
       }}
       draggable={false}
     />
-  );
+  ) : null;
 
   if (fluid) {
     return (

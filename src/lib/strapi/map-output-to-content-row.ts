@@ -13,16 +13,16 @@ type StrapiMediaDebugMeta = NonNullable<ContentRow["imageDebugMeta"]>;
 
 let loggedImageWitness = false;
 
-/** Strapi + Cloudinary `formats` keys — try largest derivatives first for preview/gallery fallbacks. */
-const STRAPI_FORMAT_URL_PRIORITY = [
-  "xlarge",
-  "large",
-  "xlarge_webp",
-  "large_webp",
+/** Preview images display around 362px max; prefer medium derivatives over raw uploads. */
+const STRAPI_PREVIEW_IMAGE_URL_PRIORITY = [
   "medium",
   "medium_webp",
   "small",
   "small_webp",
+  "large",
+  "large_webp",
+  "xlarge",
+  "xlarge_webp",
   "thumbnail",
   "thumbnail_webp",
 ] as const;
@@ -39,31 +39,24 @@ const STRAPI_THUMBNAIL_URL_PRIORITY = [
 
 /** Strapi may nest file fields under `attributes` (REST plugin). */
 function mediaPreferredUrl(media: unknown): string | null {
-  if (!media || typeof media !== "object") return null;
-  const raw = media as Record<string, unknown>;
-  const m = (
-    raw.attributes && typeof raw.attributes === "object"
-      ? (raw.attributes as StrapiMedia)
-      : raw
-  ) as StrapiMedia;
-  if (typeof m.url === "string" && m.url.length > 0) return m.url;
+  const m = mediaObject(media);
+  if (!m) return null;
   if (m.formats && typeof m.formats === "object") {
-    const fmt = m.formats as Record<string, { url?: unknown } | undefined>;
-    for (const key of STRAPI_FORMAT_URL_PRIORITY) {
-      const f = fmt[key];
+    for (const key of STRAPI_PREVIEW_IMAGE_URL_PRIORITY) {
+      const f = m.formats[key];
       if (f && typeof f.url === "string" && f.url.length > 0) return f.url;
     }
-    for (const key of Object.keys(fmt)) {
+    for (const key of Object.keys(m.formats)) {
       if (
-        (STRAPI_FORMAT_URL_PRIORITY as readonly string[]).includes(key)
+        (STRAPI_PREVIEW_IMAGE_URL_PRIORITY as readonly string[]).includes(key)
       ) {
         continue;
       }
-      const f = fmt[key];
+      const f = m.formats[key];
       if (f && typeof f.url === "string" && f.url.length > 0) return f.url;
     }
   }
-  return null;
+  return typeof m.url === "string" && m.url.length > 0 ? m.url : null;
 }
 
 function mediaPreferredThumbnailUrl(media: unknown): string | null {
