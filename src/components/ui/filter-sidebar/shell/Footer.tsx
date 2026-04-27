@@ -22,15 +22,23 @@ export function Footer({
         aria-hidden
       />
       <div className="flex min-h-0 min-w-0 flex-1 items-center justify-between overflow-hidden px-3 py-0 max-lg:justify-center">
-        <Image
-          src="/svg/serpentine.svg"
-          alt="Serpentine"
-          width={56}
-          height={12}
-          unoptimized
-          className="pointer-events-none h-auto w-14 shrink-0 object-contain"
-          aria-hidden
-        />
+        <a
+          href="https://www.serpentinegalleries.org"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Open Serpentine Galleries website"
+          className="inline-flex shrink-0 items-center focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ink-primary"
+        >
+          <Image
+            src="/svg/serpentine.svg"
+            alt=""
+            width={56}
+            height={12}
+            unoptimized
+            className="pointer-events-none h-auto w-14 shrink-0 object-contain"
+            aria-hidden
+          />
+        </a>
         {showYear ? (
           <p className="font-suisseintl text-[10px] font-medium leading-3 text-ink-caption">
             © {new Date().getFullYear()}
