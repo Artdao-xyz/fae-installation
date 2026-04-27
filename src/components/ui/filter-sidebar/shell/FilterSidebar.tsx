@@ -12,6 +12,7 @@ import { MobileFiltersCloseHeader } from "./MobileFiltersCloseHeader";
 import { MobileLatestUpdatesStrip } from "./MobileLatestUpdatesStrip";
 import {
   FILTER_OPTIONS_PANEL_CLIP_TRANSITION_CLASS,
+  FILTER_SIDEBAR_COLUMN_COLLAPSED_CLASS,
   FILTER_SIDEBAR_COLUMN_CLASS,
   MOBILE_OVERLAY_BOTTOM_ABOVE_FOOTER_CLASS,
   MOBILE_OVERLAY_TOP_CLASS,
@@ -82,7 +83,11 @@ export function FilterSidebar() {
     <>
     <div className="relative z-40 flex h-screen min-h-0 w-auto min-w-0 shrink-0 flex-row items-stretch overflow-hidden">
       <div
-        className={`z-50 flex h-full min-h-0 flex-col items-stretch self-stretch overflow-hidden ${FILTER_SIDEBAR_COLUMN_CLASS} ${
+        className={`z-50 flex h-full min-h-0 flex-col items-stretch self-stretch overflow-hidden ${
+          filtersOpen
+            ? FILTER_SIDEBAR_COLUMN_CLASS
+            : FILTER_SIDEBAR_COLUMN_COLLAPSED_CLASS
+        } ${
           filtersOpen
             ? /** `h-full` + `fixed` + `top`/`bottom` makes browsers ignore `bottom` (full viewport). */
               `max-lg:fixed max-lg:z-50 max-lg:h-auto max-lg:min-h-0 max-lg:w-full max-lg:min-w-0 max-lg:max-w-none max-lg:shrink-0 max-lg:transition-none ${MOBILE_OVERLAY_TOP_CLASS} ${MOBILE_OVERLAY_BOTTOM_ABOVE_FOOTER_CLASS} ${MOBILE_OVERLAY_X_CLASS}`

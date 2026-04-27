@@ -6,6 +6,9 @@
 export const FILTER_SIDEBAR_COLUMN_CLASS =
   "w-[var(--width-filter-chrome-column)] max-w-[var(--width-filter-chrome-column)] shrink-0";
 
+export const FILTER_SIDEBAR_COLUMN_COLLAPSED_CLASS =
+  "w-filter-narrow-column max-w-filter-narrow-column shrink-0";
+
 /**
  * Filter options strip: clip with `max-width` (avoids `fr` track interpolation feeling like
  * overshoot on open — same idea as `PREVIEW_DOCK_WIDTH_TRANSITION_CLASS`).

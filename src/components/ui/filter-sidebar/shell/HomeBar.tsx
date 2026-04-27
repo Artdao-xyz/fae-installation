@@ -132,11 +132,10 @@ export function HomeBar({
           {/* eslint-disable-next-line @next/next/no-img-element -- small static chrome icon */}
           <img
             src="/svg/reset.svg"
-            alt=""
+            alt="Reset"
             width={17}
             height={14}
             className="m-0 block h-3.5 w-auto max-h-3.5 shrink-0 object-contain object-center"
-            aria-hidden
           />
         </button>
       </div>
