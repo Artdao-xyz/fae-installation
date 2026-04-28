@@ -60,7 +60,7 @@ function strapiBaseUrl(): string {
 
 function strapiOutputsListStatus(): "draft" | "published" {
   const raw = process.env.STRAPI_OUTPUTS_STATUS?.trim().toLowerCase();
-  return raw === "published" ? "published" : "draft";
+  return raw === "draft" ? "draft" : "published";
 }
 
 /** Strapi `output` type: relation to `artist` entries (field API id in Content-Type Builder). */

@@ -29,21 +29,6 @@ function Divider() {
   );
 }
 
-function resourceLinkLabel(url: string): string {
-  try {
-    const u = new URL(url);
-    const host = u.hostname.replace(/^www\./, "");
-    const path = u.pathname.replace(/\/$/, "");
-    if (path && path !== "/") {
-      const short = path.length > 24 ? `${path.slice(0, 24)}…` : path;
-      return `${host}${short}`;
-    }
-    return host;
-  } catch {
-    return url;
-  }
-}
-
 function RichParagraph({
   text,
   preserveParagraphBreaks = false,
@@ -575,21 +560,23 @@ export function PreviewMainContent({
     <div className="w-full min-w-0 shrink-0">
       <Divider />
       <div className="flex shrink-0 flex-col gap-2 pt-2.5 pb-2">
-          <p className="font-lust-text text-xs leading-none tracking-[-0.228px] text-ink-caption">
-            Sources
-          </p>
-          <ul className="flex list-none flex-col gap-1 p-0">
-            {row.resources.map((href) => (
-              <li key={href} className="leading-none">
+        <p className="font-lust-text text-xs leading-none tracking-[-0.228px] text-ink-caption">
+          Sources
+        </p>
+        <ul className="flex list-none flex-col gap-1 p-0">
+          {row.resources.map((resource) => {
+            const label = resource.label.trim();
+            const linkText = label || resource.url;
+            return (
+              <li key={resource.url} className="leading-none">
                 <a
-                  href={href}
+                  href={resource.url}
                   target="_blank"
                   rel="noopener noreferrer"
+                  title={label ? resource.url : undefined}
                   className="inline-flex max-w-full items-center gap-1.5 rounded-sm bg-surface-canvas/90 py-0 pl-0 pr-0 font-fira-mono text-[10px] leading-[14px] text-ink-body underline decoration-solid [text-decoration-skip-ink:none] backdrop-blur-fae-md hover:bg-surface-hover/80"
                 >
-                  <span className="min-w-0 truncate">
-                    {resourceLinkLabel(href)}
-                  </span>
+                  <span className="min-w-0 truncate">{linkText}</span>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src="/svg/blue-arrow.svg"
@@ -599,9 +586,10 @@ export function PreviewMainContent({
                   />
                 </a>
               </li>
-            ))}
-          </ul>
-        </div>
+            );
+          })}
+        </ul>
+      </div>
     </div>
   ) : null;
 

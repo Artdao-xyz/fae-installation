@@ -11,7 +11,7 @@ import {
   FORMAT_LABELS,
   NETWORK_LABELS,
 } from "@/data/content-taxonomy";
-import type { ContentRow } from "@/data/content-types";
+import type { ContentResource, ContentRow } from "@/data/content-types";
 import { FIXTURE_BODY_TEMPLATES } from "@/data/fixture-body-templates";
 import { FIXTURE_SEED_TITLES } from "@/data/fixture-seed-titles";
 import { createOutputShareSlug } from "@/lib/output-share-slug";
@@ -79,14 +79,18 @@ const RESOURCE_LINK_POOL = [
   "https://www.unesco.org/",
 ] as const;
 
-function pickResourcesForIndex(index: number): string[] {
+function pickResourcesForIndex(index: number): ContentResource[] {
   const n = 1 + (mix(index, 1601) % 3);
-  const out: string[] = [];
+  const out: ContentResource[] = [];
+  const seen = new Set<string>();
   let attempts = 0;
   while (out.length < n && attempts < RESOURCE_LINK_POOL.length * 2) {
     const u =
       RESOURCE_LINK_POOL[mix(index, 1703 + attempts) % RESOURCE_LINK_POOL.length]!;
-    if (!out.includes(u)) out.push(u);
+    if (!seen.has(u)) {
+      seen.add(u);
+      out.push({ url: u, label: "" });
+    }
     attempts++;
   }
   return out;

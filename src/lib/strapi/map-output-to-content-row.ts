@@ -1,5 +1,5 @@
 import type { BlocksContent } from "@strapi/blocks-react-renderer";
-import type { ContentRow } from "@/data/content-types";
+import type { ContentResource, ContentRow } from "@/data/content-types";
 import { createOutputShareSlug } from "@/lib/output-share-slug";
 
 type StrapiMedia = {
@@ -344,21 +344,24 @@ function strapiEntryFields(o: Record<string, unknown>): Record<string, unknown> 
 }
 
 function resourcesAndLinkedNamesFromDoc(doc: Record<string, unknown>): {
-  resourceUrls: string[];
+  resources: ContentResource[];
   linkedNames: string[];
 } {
-  const resourceUrls: string[] = [];
+  const resources: ContentResource[] = [];
   const linkedNames: string[] = [];
   const seenUrl = new Set<string>();
   const seenLinked = new Set<string>();
 
-  const pushUrl = (v: unknown) => {
+  const pushResource = (v: unknown, label?: unknown) => {
     if (typeof v !== "string") return;
     const t = v.trim();
     if (t.length === 0 || !isExternalResourceUrlString(t)) return;
     if (seenUrl.has(t)) return;
     seenUrl.add(t);
-    resourceUrls.push(t);
+    resources.push({
+      url: t,
+      label: typeof label === "string" ? label.trim() : "",
+    });
   };
 
   const pushLinked = (v: unknown) => {
@@ -370,10 +373,69 @@ function resourcesAndLinkedNamesFromDoc(doc: Record<string, unknown>): {
     linkedNames.push(t);
   };
 
+  const sourceLinkLabel = (o: Record<string, unknown>): string => {
+    for (const key of [
+      "label",
+      "Label",
+      "Name",
+      "Title",
+      "name",
+      "title",
+    ] as const) {
+      const v = o[key];
+      if (typeof v === "string" && v.trim().length > 0) return v.trim();
+    }
+    return "";
+  };
+
+  const visitSource = (node: unknown): void => {
+    if (node == null) return;
+    if (typeof node === "string") {
+      if (isExternalResourceUrlString(node)) pushResource(node);
+      else pushLinked(node);
+      return;
+    }
+    if (Array.isArray(node)) {
+      for (const item of node) visitSource(item);
+      return;
+    }
+    if (typeof node !== "object") return;
+
+    const o = strapiEntryFields(node as Record<string, unknown>);
+    if ("data" in o) {
+      visitSource(o.data);
+      return;
+    }
+
+    const urlCandidate =
+      o.Url ??
+      o.url ??
+      o.URL ??
+      o.link ??
+      o.Link ??
+      o.href ??
+      o.Href ??
+      o.uri;
+    if (
+      typeof urlCandidate === "string" &&
+      isExternalResourceUrlString(urlCandidate)
+    ) {
+      pushResource(urlCandidate, sourceLinkLabel(o));
+      return;
+    }
+
+    if ("links" in o) {
+      visitSource(o.links);
+      return;
+    }
+
+    const label = sourceLinkLabel(o) || nameFromRelationEntry(o);
+    if (label) pushLinked(label);
+  };
+
   /**
-   * Strapi `Source` on output can be:
-   * - A **single** component `{ id, links: [ { id, url, label } ] }` (v5, document API).
-   * - A **repeatable** list of component rows (array), or `Sources` / legacy `Resources`.
+   * Strapi `Source` on output can be a single component
+   * `{ id, links: [{ id, url, label }] }`, repeatable component rows, or legacy `Resources`.
    */
   let fromCms: unknown =
     doc.Sources ??
@@ -383,65 +445,15 @@ function resourcesAndLinkedNamesFromDoc(doc: Record<string, unknown>): {
     doc.Resources ??
     doc.resources ??
     doc.Resource_Links;
-  if (
-    fromCms &&
-    typeof fromCms === "object" &&
-    !Array.isArray(fromCms) &&
-    "data" in (fromCms as object)
-  ) {
-    fromCms = (fromCms as { data: unknown }).data;
-  }
-  if (
-    fromCms &&
-    typeof fromCms === "object" &&
-    !Array.isArray(fromCms) &&
-    "links" in (fromCms as object)
-  ) {
-    const nest = (fromCms as { links?: unknown }).links;
-    if (Array.isArray(nest)) {
-      fromCms = nest;
-    }
-  }
-  const raw: unknown = Array.isArray(fromCms) && fromCms.length > 0
-    ? fromCms
-    : Array.isArray(doc.links)
-      ? doc.links
-      : null;
+  const raw: unknown =
+    Array.isArray(fromCms) && fromCms.length > 0
+      ? fromCms
+      : Array.isArray(doc.links)
+        ? doc.links
+        : null;
 
-  if (raw == null || !Array.isArray(raw)) {
-    return { resourceUrls, linkedNames };
-  }
-
-  for (const item of raw) {
-    if (typeof item === "string") {
-      if (isExternalResourceUrlString(item)) pushUrl(item);
-      else pushLinked(item);
-      continue;
-    }
-    if (item && typeof item === "object") {
-      const o = strapiEntryFields(item as Record<string, unknown>);
-      const urlCandidate =
-        o.Url ??
-        o.url ??
-        o.URL ??
-        o.link ??
-        o.Link ??
-        o.href ??
-        o.Href ??
-        o.uri;
-      if (typeof urlCandidate === "string" && isExternalResourceUrlString(urlCandidate)) {
-        pushUrl(urlCandidate);
-        continue;
-      }
-      const label =
-        (typeof o.label === "string" && o.label.trim()) ||
-        (typeof o.Name === "string" && o.Name.trim()) ||
-        (typeof o.Title === "string" && o.Title.trim()) ||
-        nameFromRelationEntry(o);
-      if (label) pushLinked(label);
-    }
-  }
-  return { resourceUrls, linkedNames };
+  visitSource(raw ?? fromCms);
+  return { resources, linkedNames };
 }
 
 /**
@@ -507,7 +519,7 @@ export function mapStrapiOutputToContentRow(
   const yearLabel =
     dateStr.length > 0 ? dateStr : year > 0 ? String(year) : "";
 
-  const { resourceUrls, linkedNames: linkedFromResourceFields } =
+  const { resources, linkedNames: linkedFromResourceFields } =
     resourcesAndLinkedNamesFromDoc(doc);
   const linkedFromOutputRelation = collectLinkedOutputTitlesFromRelationValue(
     linkedOutputRelationRaw(doc),
@@ -530,7 +542,7 @@ export function mapStrapiOutputToContentRow(
     imageGallery,
     content,
     contentBlocks,
-    resources: resourceUrls,
+    resources,
     linkedOutputNames,
     focusAreas: relationNames(doc.Focus),
     activityTypes: relationNames(doc.Activity),

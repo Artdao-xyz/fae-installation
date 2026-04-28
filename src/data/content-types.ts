@@ -1,5 +1,10 @@
 import type { BlocksContent } from "@strapi/blocks-react-renderer";
 
+export type ContentResource = {
+  url: string;
+  label: string;
+};
+
 export type ContentRow = {
   id: string;
   /** Full title (`Content_Title`) — preview, search, etc. */
@@ -18,8 +23,8 @@ export type ContentRow = {
   content: string;
   /** Strapi `Text` blocks JSON; rendered in preview via `@strapi/blocks-react-renderer`. */
   contentBlocks: BlocksContent | null;
-  /** External URLs for the preview “Sources” block; mapped from Strapi repeatable **Source** component(s) on `output` (field `Sources` / `sources` / …) or legacy `Resources`. */
-  resources: readonly string[];
+  /** External links for the preview “Sources” block; mapped from Strapi repeatable **Source** component(s) on `output` (field `Sources` / `sources` / …) or legacy `Resources`. */
+  resources: readonly ContentResource[];
   /**
    * Labels from Strapi resources/links that refer to other outputs (by title / short title),
    * not external URLs. Resolved against the catalog in the content preview.

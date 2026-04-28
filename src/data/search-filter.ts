@@ -24,7 +24,14 @@ export function filterContentRowsForSearchQuery(
     if (row.formats.some((x) => x.toLowerCase().includes(q))) return true;
     if (row.networks.some((x) => x.toLowerCase().includes(q))) return true;
     if (row.artists.some((x) => x.toLowerCase().includes(q))) return true;
-    if (row.resources.some((x) => x.toLowerCase().includes(q))) return true;
+    if (
+      row.resources.some(
+        (x) =>
+          x.url.toLowerCase().includes(q) ||
+          x.label.toLowerCase().includes(q),
+      )
+    )
+      return true;
     return false;
   });
 }
