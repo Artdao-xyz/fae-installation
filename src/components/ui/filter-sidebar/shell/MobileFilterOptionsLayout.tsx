@@ -1,7 +1,11 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useFilterSelection } from "@/components/ui/filter-sidebar/FilterSelectionContext";
+import { FAE_BRIEFING_OPTIONS } from "@/components/ui/filter-sidebar/domains/briefings/constants";
+import { RD_PROJECT_OPTION_LABELS } from "@/components/ui/filter-sidebar/domains/rd-projects/constants";
+import { FellowshipsDropdownPanel } from "../domains/fellowships/FellowshipsDropdownPanel";
+import { FELLOWSHIP_OPTION_LABELS } from "@/components/ui/filter-sidebar/domains/fellowships/constants";
 import { BriefingsDropdownPanel } from "../domains/briefings/BriefingsDropdownPanel";
 import { ArtistsDropdownPanel } from "../domains/artists/ArtistsDropdownPanel";
 import { NetworkDropdownPanel } from "../domains/network/NetworkDropdownPanel";
@@ -51,6 +55,19 @@ export function MobileFilterOptionsLayout({
     setFiltersPanelOpen,
   } = useFilterSelection();
 
+  const displayCategory = useMemo((): MobileFilterCategoryId => {
+    if (FAE_BRIEFING_OPTIONS.length === 0 && active === "briefings") {
+      return "focus";
+    }
+    if (RD_PROJECT_OPTION_LABELS.length === 0 && active === "rd") {
+      return "focus";
+    }
+    if (FELLOWSHIP_OPTION_LABELS.length === 0 && active === "fellowships") {
+      return "focus";
+    }
+    return active;
+  }, [active]);
+
   const filterActionsIconActive =
     hasActiveTaxonomyFilters || selectedFaeBriefing != null;
 
@@ -62,20 +79,22 @@ export function MobileFilterOptionsLayout({
       hasSelection: boolean,
       showMarker = true,
       flexToFill = false,
+      disabled = false,
     ) => (
       <FilterSidebarMobileRailButton
         key={id}
         label={label}
         tone={tone}
-        selected={active === id}
+        selected={displayCategory === id}
         hasSelection={hasSelection}
         showMarker={showMarker}
         flexToFill={flexToFill}
         selectedTone={!flexToFill}
+        disabled={disabled}
         onClick={() => setActive(id)}
       />
     ),
-    [active],
+    [displayCategory],
   );
 
   return (
@@ -110,45 +129,64 @@ export function MobileFilterOptionsLayout({
             false,
             true,
           )}
-          {rail("fellowships", "Fellowships", "latest-updates", false)}
+          {rail(
+            "fellowships",
+            "Fellowships",
+            "latest-updates",
+            false,
+            true,
+            false,
+            FELLOWSHIP_OPTION_LABELS.length === 0,
+          )}
           {rail(
             "briefings",
             "FAE Briefings",
             "fae-briefings",
             selectedFaeBriefing != null,
+            true,
+            false,
+            FAE_BRIEFING_OPTIONS.length === 0,
           )}
-          {rail("rd", "R&D Projects", "rd", false)}
+          {rail(
+            "rd",
+            "R&D Projects",
+            "rd",
+            false,
+            true,
+            false,
+            RD_PROJECT_OPTION_LABELS.length === 0,
+          )}
           {rail("artists", "Artists", "artists", selectedArtists.size > 0)}
           {rail("network", "Network", "network", selectedNetworks.size > 0)}
         </nav>
         <div className="scrollbar-hide flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overflow-x-hidden bg-surface-canvas">
-          {active === "focus" ? (
+          {displayCategory === "focus" ? (
             <FocusAreas collapsed={false} chromeless />
           ) : null}
-          {active === "activity" ? (
+          {displayCategory === "activity" ? (
             <ActivityType collapsed={false} chromeless />
           ) : null}
-          {active === "briefings" ? (
+          {displayCategory === "briefings" ? (
             <div className="w-full shrink-0 p-2">
               <BriefingsDropdownPanel variant="subcolumn" mobilePane />
             </div>
           ) : null}
-          {active === "fellowships" ? (
-            <p className="px-3 py-3 font-fira-mono text-[10px] leading-snug text-ink-body/70">
-              No content yet.
-            </p>
+          {displayCategory === "fellowships" ? (
+            <div className="w-full shrink-0 p-2">
+              <FellowshipsDropdownPanel variant="subcolumn" mobilePane />
+            </div>
           ) : null}
-          {active === "rd" ? (
+          {displayCategory === "rd" ? (
             <div className="w-full shrink-0 p-2">
               <RDProjectsDropdownPanel variant="subcolumn" mobilePane />
             </div>
           ) : null}
-          {active === "artists" ? (
+          {displayCategory === "artists" ? (
             <div className="w-full shrink-0 p-2">
               <ArtistsDropdownPanel variant="subcolumn" mobilePane />
             </div>
           ) : null}
-          {active === "network" ? (
+          {displayCategory === "network" ? (
             <div className="w-full shrink-0 p-2">
               <NetworkDropdownPanel variant="subcolumn" mobilePane />
             </div>

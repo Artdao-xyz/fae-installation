@@ -25,8 +25,12 @@ import {
   type FilterMatchMode,
   type TaxonomyFilterSelection,
 } from "@/lib/filter-row-match";
-import { fetchPreviewOutputDetail } from "@/lib/preview-output-detail";
+import {
+  fetchPreviewOutputDetail,
+  mergePreviewRowWithDetail,
+} from "@/lib/preview-output-detail";
 import { useFloatingPanelStack } from "@/components/ui/floating-panels/FloatingPanelStackContext";
+import { FAE_BRIEFING_OPTIONS } from "./domains/briefings/constants";
 
 /** Sidebar availability hints use the same AND semantics as the default particle spread. */
 const SIDEBAR_FILTER_MATCH_MODE: FilterMatchMode = "intersection";
@@ -375,6 +379,13 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
   const [selectedFaeBriefing, setSelectedFaeBriefing] = useState<string | null>(
     null,
   );
+
+  useEffect(() => {
+    if (FAE_BRIEFING_OPTIONS.length === 0) {
+      setSelectedFaeBriefing(null);
+    }
+  }, [setSelectedFaeBriefing]);
+
   const [filterResetNonce, setFilterResetNonce] = useState(0);
   const [searchQueryResetNonce, setSearchQueryResetNonce] = useState(0);
   const [filterSearchQuery, setFilterSearchQuery] = useState("");
@@ -682,7 +693,7 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
       void fetchPreviewOutputDetail(row.id).then((full) => {
         if (!full || fallbackPreviewRequestIdRef.current !== requestId) return;
         setContentPreviewRow((prev) =>
-          prev?.id === row.id ? { ...prev, ...full } : prev,
+          prev?.id === row.id ? mergePreviewRowWithDetail(prev, full) : prev,
         );
       });
     },

@@ -7,6 +7,9 @@ import { FilterPillDropdown } from "../../primitives/FilterPillDropdown";
 import { FilterPillToggle } from "../../primitives/FilterPillToggle";
 import { FAE_BRIEFING_OPTIONS } from "./constants";
 
+const DOMAIN_EMPTY_CLASS =
+  "w-full px-0 py-1 font-fira-mono text-[10px] leading-snug text-ink-body/70";
+
 type BriefingsDropdownPanelProps = {
   variant?: "default" | "subcolumn";
   onClearAll?: () => void;
@@ -21,6 +24,9 @@ export function BriefingsDropdownPanel({
 }: BriefingsDropdownPanelProps) {
   const { selectedFaeBriefing, setSelectedFaeBriefing } = useFilterSelection();
   const { minimizeAllFloatingPanels } = useFloatingPanelStack();
+
+  const n = FAE_BRIEFING_OPTIONS.length;
+  const hasOptions = n > 0;
 
   const selectBriefing = useCallback(
     (label: string) => {
@@ -48,27 +54,31 @@ export function BriefingsDropdownPanel({
           ? {
               title: "FAE Briefings",
               selectedCount: selectedFaeBriefing != null ? 1 : 0,
-              totalCount: FAE_BRIEFING_OPTIONS.length,
+              totalCount: n,
             }
           : undefined
       }
     >
-      <div
-        className="contents"
-        role="radiogroup"
-        aria-label="FAE Briefing"
-      >
-        {FAE_BRIEFING_OPTIONS.map((label) => (
-          <FilterPillToggle
-            key={label}
-            label={label}
-            tone="fae-briefings"
-            selected={selectedFaeBriefing === label}
-            selectedTone
-            onClick={() => selectBriefing(label)}
-          />
-        ))}
-      </div>
+      {!hasOptions ? (
+        <p className={DOMAIN_EMPTY_CLASS}>No content yet.</p>
+      ) : (
+        <div
+          className="contents"
+          role="radiogroup"
+          aria-label="FAE Briefing"
+        >
+          {FAE_BRIEFING_OPTIONS.map((label) => (
+            <FilterPillToggle
+              key={label}
+              label={label}
+              tone="fae-briefings"
+              selected={selectedFaeBriefing === label}
+              selectedTone
+              onClick={() => selectBriefing(label)}
+            />
+          ))}
+        </div>
+      )}
     </FilterPillDropdown>
   );
 }

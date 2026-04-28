@@ -41,7 +41,7 @@ export function MobileFilteredThumbnailGrid() {
             No matching outputs
           </li>
         ) : (
-          filterMatchingCatalogRows.map((row) => (
+          filterMatchingCatalogRows.map((row, index) => (
             <li
               key={row.id}
               className="aspect-square min-w-0 w-full even:translate-y-12 motion-reduce:translate-y-0"
@@ -94,6 +94,7 @@ export function MobileFilteredThumbnailGrid() {
                   variant="full"
                   size="sm"
                   fillContainer={isMaxLg}
+                  imagePriority={index < 4}
                   label={row.shortTitle}
                   imageSrc={row.imageUrl}
                   imageAlt={row.shortTitle}

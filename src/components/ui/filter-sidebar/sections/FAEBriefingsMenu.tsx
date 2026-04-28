@@ -1,5 +1,6 @@
 "use client";
 
+import { FAE_BRIEFING_OPTIONS } from "../domains/briefings/constants";
 import { useFilterSelection } from "../FilterSelectionContext";
 import { FilterSidebarCategoryRow } from "../primitives/FilterSidebarCategoryRow";
 
@@ -13,6 +14,7 @@ export function FAEBriefingsMenu({
   onToggleSubpanel,
 }: FAEBriefingsMenuProps) {
   const { selectedFaeBriefing } = useFilterSelection();
+  const hasOptions = FAE_BRIEFING_OPTIONS.length > 0;
   return (
     <FilterSidebarCategoryRow
       label="FAE Briefings"
@@ -20,6 +22,7 @@ export function FAEBriefingsMenu({
       expanded={subpanelOpen}
       onClick={onToggleSubpanel}
       hasSubpanelSelection={selectedFaeBriefing != null}
+      disabled={!hasOptions}
     />
   );
 }

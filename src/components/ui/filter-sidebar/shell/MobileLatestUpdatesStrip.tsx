@@ -96,7 +96,7 @@ export function MobileLatestUpdatesStrip() {
       >
         <div className="scrollbar-hide flex h-full w-full min-h-0 min-w-0 flex-col justify-end overflow-x-auto overflow-y-hidden overscroll-contain">
           <div className="flex w-max shrink-0 flex-row flex-nowrap items-end gap-8 px-6 py-3 max-lg:gap-3 max-lg:px-3 max-lg:py-2">
-            {rows.map((row) => (
+            {rows.map((row, index) => (
               <button
                 key={row.id}
                 type="button"
@@ -108,6 +108,7 @@ export function MobileLatestUpdatesStrip() {
                   variant="full"
                   size="lg"
                   fullCardLabelWidth="hugContent"
+                  imagePriority={peekOpen && index < 2}
                   label={row.shortTitle}
                   imageSrc={row.imageUrl}
                   imageAlt={row.title}

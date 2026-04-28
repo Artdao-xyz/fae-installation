@@ -29,6 +29,11 @@ type BaseProps = {
   accessibilityLabel?: string;
   /** Override label `<p>` font size (px); line-height follows `textPx + 3`. */
   labelFontSizePx?: number;
+  /**
+   * When true, passes `preload` to `next/image` (head preload for early fetch).
+   * Use only for a few above-the-fold tiles (e.g. first image slots in the swarm / mobile grid).
+   */
+  imagePriority?: boolean;
 };
 
 export type ThumbnailProps =
@@ -135,6 +140,7 @@ function ImageFrame({
   dims,
   imageRef,
   fluid,
+  imagePriority,
 }: {
   imageSrc: string;
   imageAlt?: string;
@@ -143,6 +149,7 @@ function ImageFrame({
   imageRef?: Ref<HTMLImageElement | null>;
   /** Grow with parent; square frame bounded by remaining space (`object-contain` inside). */
   fluid?: boolean;
+  imagePriority?: boolean;
 }) {
   const [loaded, setLoaded] = useState(false);
   const resolvedImageSrc = imageSrc.trim();
@@ -166,6 +173,7 @@ function ImageFrame({
       alt={imageAlt || label}
       src={resolvedImageSrc}
       fill
+      preload={!!imagePriority}
       sizes={
         fluid ? "(max-width: 1023px) 45vw, 320px" : `${dims.frame}px`
       }
@@ -228,6 +236,7 @@ export function Thumbnail(props: ThumbnailProps) {
     imageRef,
     accessibilityLabel,
     labelFontSizePx,
+    imagePriority,
   } = props;
   const variant = props.variant ?? "full";
   const dims = SIZE_DIMS[size];
@@ -355,6 +364,7 @@ export function Thumbnail(props: ThumbnailProps) {
           dims={dims}
           imageRef={imageRef}
           fluid={fillContainer}
+          imagePriority={imagePriority}
         />
       )}
     </div>

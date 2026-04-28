@@ -52,9 +52,11 @@ export function FilterPillDropdown({
           <h2 className="min-w-0 flex-1 font-lust-text text-sm font-medium text-ink-body">
             {mobileHeader.title}
           </h2>
-          <span className="shrink-0 font-fira-mono text-[10px] font-medium tabular-nums text-ink-caption">
-            {mobileHeader.selectedCount}/{mobileHeader.totalCount}
-          </span>
+          {mobileHeader.totalCount > 0 ? (
+            <span className="shrink-0 font-fira-mono text-[10px] font-medium tabular-nums text-ink-caption">
+              {mobileHeader.selectedCount}/{mobileHeader.totalCount}
+            </span>
+          ) : null}
         </header>
       ) : (
         <header className="flex w-full shrink-0 items-center justify-between gap-2">

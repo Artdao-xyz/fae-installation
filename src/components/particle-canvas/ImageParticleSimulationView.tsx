@@ -19,9 +19,9 @@ import { useIsMaxLg } from "@/components/ui/filter-sidebar/shell/useIsMaxLg";
 import { getMarginGuideInsetPx } from "@/lib/margin-guide";
 import { buildSuggestedSourceRowsSplit } from "@/lib/preview-suggested-outputs";
 import {
-  fetchPreviewBodyOnHover,
   fetchPreviewOutputDetail,
   getCachedPreviewDetailRow,
+  mergePreviewRowWithDetail,
 } from "@/lib/preview-output-detail";
 import type { ContentRow } from "@/data/content-types";
 import {
@@ -313,21 +313,15 @@ export function ImageParticleSimulationView({
   }, [closeSidebarPanels, filtersPanelOpen, previewFullScreen]);
 
   /**
-   * Hover: same output detail as click (`Text` + `Source` + media + taxonomies in one request).
-   * Merges into the open panel; keeps existing `resources` when the patch has none. Full row is
-   * cached on open via `fetchPreviewOutputDetail` when the user clicks.
+   * Hover: same output detail as click — shares cache / in-flight with
+   * {@link fetchPreviewOutputDetail} so open does not re-fetch.
    */
   const prefetchOutputDetailOnHover = useCallback((documentId: string) => {
-    void fetchPreviewBodyOnHover(documentId).then((patch) => {
+    void fetchPreviewOutputDetail(documentId).then((patch) => {
       if (!patch) return;
       setPreviewRow((prev) => {
         if (prev?.id !== documentId) return prev;
-        return {
-          ...prev,
-          ...patch,
-          resources:
-            patch.resources.length > 0 ? patch.resources : prev.resources,
-        };
+        return mergePreviewRowWithDetail(prev, patch);
       });
     });
   }, []);
@@ -347,26 +341,18 @@ export function ImageParticleSimulationView({
         snapshotFiltersBeforeContentPreview();
       }
       const hit = getCachedPreviewDetailRow(row.id);
-      setPreviewRow(hit ? { ...row, ...hit } : row);
+      setPreviewRow(hit ? mergePreviewRowWithDetail(row, hit) : row);
       const sharePath = `/${row.shareSlug}`;
       if (window.location.pathname !== sharePath) {
         window.history.pushState(null, "", sharePath);
       }
       if (hit) {
-        console.log("[preview] sources (click)", {
-          id: row.id,
-          resources: hit.resources,
-        });
         return;
       }
       void fetchPreviewOutputDetail(row.id).then((full) => {
         if (!full) return;
-        console.log("[preview] sources (click)", {
-          id: row.id,
-          resources: full.resources,
-        });
         setPreviewRow((prev) =>
-          prev?.id === row.id ? { ...prev, ...full } : prev,
+          prev?.id === row.id ? mergePreviewRowWithDetail(prev, full) : prev,
         );
       });
     },
@@ -443,6 +429,26 @@ export function ImageParticleSimulationView({
     }
     return out;
   }, [swarmRows, contentCatalog, spreadDisplayPatch]);
+
+  const imageTilePriorityIndexSet = useMemo(() => {
+    const raw =
+      typeof process.env.NEXT_PUBLIC_IMAGE_FETCH_LIMIT === "string"
+        ? Number.parseInt(process.env.NEXT_PUBLIC_IMAGE_FETCH_LIMIT, 10)
+        : Number.NaN;
+    const fetchCap =
+      Number.isFinite(raw) && raw > 0 ? raw : 8;
+    const priorityCap = Math.min(4, fetchCap);
+    const set = new Set<number>();
+    let count = 0;
+    for (let i = 0; i < displayContentRows.length && count < priorityCap; i++) {
+      if (catalogTextIndexSet.has(i)) continue;
+      const row = displayContentRows[i];
+      if (!row?.imageUrl) continue;
+      set.add(i);
+      count++;
+    }
+    return set;
+  }, [displayContentRows, catalogTextIndexSet]);
 
   const contentCatalogRef = useRef(contentCatalog);
   contentCatalogRef.current = contentCatalog;
@@ -2060,6 +2066,7 @@ export function ImageParticleSimulationView({
                   <Thumbnail
                     variant="full"
                     size="lg"
+                    imagePriority={imageTilePriorityIndexSet.has(i)}
                     label={row.shortTitle}
                     imageSrc={row.imageUrl}
                     imageAlt={row.shortTitle}
@@ -2144,6 +2151,7 @@ export function ImageParticleSimulationView({
                 <Thumbnail
                   variant="full"
                   size="lg"
+                  imagePriority={imageTilePriorityIndexSet.has(i)}
                   showLabelChip={showChromeCard}
                   label={row.shortTitle}
                   imageSrc={row.imageUrl}

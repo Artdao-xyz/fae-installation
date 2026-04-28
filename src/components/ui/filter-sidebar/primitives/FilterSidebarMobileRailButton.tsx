@@ -51,6 +51,8 @@ type FilterSidebarMobileRailButtonProps = {
   flexToFill?: boolean;
   /** Use this category's tone instead of selection blue for the active rail state. */
   selectedTone?: boolean;
+  /** No CMS-backed options yet — cannot open this category pane. */
+  disabled?: boolean;
   onClick: () => void;
 };
 
@@ -65,6 +67,7 @@ export function FilterSidebarMobileRailButton({
   showMarker = true,
   flexToFill = false,
   selectedTone = false,
+  disabled = false,
   onClick,
 }: FilterSidebarMobileRailButtonProps) {
   const { glow, marker } = toneAccentClass[tone];
@@ -87,11 +90,13 @@ export function FilterSidebarMobileRailButton({
     return interactiveChromeMatClass;
   })();
 
-  const hoverClass = selected
-    ? "hover:brightness-[1.02] motion-reduce:hover:brightness-100"
-    : hasSelection
-      ? "hover:brightness-[0.96] motion-reduce:hover:brightness-100"
-      : interactiveChromeHoverClass;
+  const hoverClass = disabled
+    ? "cursor-not-allowed opacity-45 motion-reduce:opacity-50"
+    : selected
+      ? "hover:brightness-[1.02] motion-reduce:hover:brightness-100"
+      : hasSelection
+        ? "hover:brightness-[0.96] motion-reduce:hover:brightness-100"
+        : interactiveChromeHoverClass;
 
   const heightClass = flexToFill
     ? "min-h-[6.5rem] flex-1 basis-[6.5rem]"
@@ -107,8 +112,10 @@ export function FilterSidebarMobileRailButton({
   return (
     <button
       type="button"
+      disabled={disabled}
       onClick={onClick}
       aria-current={selected ? "true" : undefined}
+      aria-disabled={disabled ? true : undefined}
       className={`relative flex w-full flex-col items-start justify-center px-3 py-2 text-left ${heightClass} ${showMarker ? "gap-1" : "gap-0"} ${borderClass} ${selected ? selectedTextClass : RAIL_LABEL_IDLE_TEXT} ${matClass} ${hoverClass} focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary`}
       data-name="Filters-Mobile-Rail-Category"
     >

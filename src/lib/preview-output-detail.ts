@@ -7,11 +7,26 @@ export function getCachedPreviewDetailRow(id: string): ContentRow | undefined {
   return cache.get(id);
 }
 
-const hoverInFlight = new Map<string, Promise<ContentRow | null>>();
+/**
+ * Merges Strapi detail into the row already shown (catalog slice or prior merge).
+ * Preserves existing `resources` when the API returns an empty list (partial responses / edge cases).
+ */
+export function mergePreviewRowWithDetail(
+  prev: ContentRow,
+  detail: ContentRow,
+): ContentRow {
+  return {
+    ...prev,
+    ...detail,
+    resources:
+      detail.resources.length > 0 ? detail.resources : prev.resources,
+  };
+}
 
 /**
  * Full Strapi `output` for an opened preview (Text, `Source` → `resources`, media, …). Cached.
- * Hover uses {@link fetchPreviewBodyOnHover} (same `Source` + body in one request; not in this cache).
+ * Hover prefetch uses {@link fetchPreviewBodyOnHover}, which shares this cache and in-flight
+ * deduplication so a click right after hover does not duplicate the network request.
  */
 export async function fetchPreviewOutputDetail(
   id: string,
@@ -48,36 +63,11 @@ export async function fetchPreviewOutputDetail(
 }
 
 /**
- * **Hover:** prefetches the same output detail (Text + `Source` + media + taxonomies) in one
- * request; **not** written to the full-detail cache — opening the preview still runs
- * {@link fetchPreviewOutputDetail} (so the full row is cached on click if needed).
+ * Prefetches the same document as {@link fetchPreviewOutputDetail} (e.g. tile hover before share sheet).
+ * Results are cached; overlapping click uses the same in-flight request.
  */
-export async function fetchPreviewBodyOnHover(
+export function fetchPreviewBodyOnHover(
   id: string,
 ): Promise<ContentRow | null> {
-  const trimmed = id.trim();
-  if (!trimmed) return null;
-  const pending = hoverInFlight.get(trimmed);
-  if (pending) return pending;
-
-  const p = (async () => {
-    try {
-      const res = await fetch(
-        `/api/strapi/outputs/${encodeURIComponent(trimmed)}`,
-        { credentials: "same-origin" },
-      );
-      if (!res.ok) return null;
-      const body: unknown = await res.json();
-      if (!body || typeof body !== "object" || !("row" in body)) {
-        return null;
-      }
-      return (body as { row: ContentRow }).row;
-    } catch {
-      return null;
-    } finally {
-      hoverInFlight.delete(trimmed);
-    }
-  })();
-  hoverInFlight.set(trimmed, p);
-  return p;
+  return fetchPreviewOutputDetail(id);
 }

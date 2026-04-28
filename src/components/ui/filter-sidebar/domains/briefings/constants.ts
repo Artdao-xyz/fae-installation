@@ -1,7 +1,5 @@
-export const FAE_BRIEFING_OPTIONS = [
-  "FAE 1",
-  "FAE 2",
-  "FAE 3",
-  "FAE 4",
-  "FAE 5",
-] as const;
+/**
+ * FAE Briefing option labels from Strapi when wired into the filter pipeline.
+ * Empty until then — sidebar row stays closed and non-interactive.
+ */
+export const FAE_BRIEFING_OPTIONS: readonly string[] = [];

@@ -1,7 +1,9 @@
 "use client";
 
-import { useCallback, useId, type ReactElement } from "react";
+import { useCallback, useEffect, useId, type ReactElement } from "react";
 import { useFilterSelection } from "@/components/ui/filter-sidebar/FilterSelectionContext";
+import { FAE_BRIEFING_OPTIONS } from "@/components/ui/filter-sidebar/domains/briefings/constants";
+import { RD_PROJECT_OPTION_LABELS } from "@/components/ui/filter-sidebar/domains/rd-projects/constants";
 import { FilterOptionsPanel } from "./FilterOptionsPanel";
 import { FilterSubpanelsColumn } from "./FilterSubpanelsColumn";
 import { EmailSubscription } from "@/components/ui/email-subscription";
@@ -44,6 +46,18 @@ export function FilterSidebar() {
     rdSubpanelOpen ||
     artistsSubpanelOpen ||
     networkSubpanelOpen;
+
+  useEffect(() => {
+    if (FAE_BRIEFING_OPTIONS.length === 0 && briefingsSubpanelOpen) {
+      setBriefingsSubpanelOpen(false);
+    }
+  }, [briefingsSubpanelOpen, setBriefingsSubpanelOpen]);
+
+  useEffect(() => {
+    if (RD_PROJECT_OPTION_LABELS.length === 0 && rdSubpanelOpen) {
+      setRdSubpanelOpen(false);
+    }
+  }, [rdSubpanelOpen, setRdSubpanelOpen]);
 
   const toggleFiltersOpen = useCallback(() => {
     setFiltersOpen((open) => {
