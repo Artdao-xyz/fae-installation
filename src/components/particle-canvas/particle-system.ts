@@ -21,7 +21,7 @@ export function v3Sub(a: Vec3, b: Vec3): Vec3 {
 }
 
 // ---------------------------------------------------------------------------
-// Defaults (also used as leva initial values in dev)
+// Defaults for `ImageParticleSimulationView` config
 // ---------------------------------------------------------------------------
 
 export const DEFAULTS = {
