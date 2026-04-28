@@ -553,11 +553,9 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
   const artistOptionToggleMatchCount = useMemo(() => {
     const m = new Map<string, number>();
     for (const label of filterArtistOptionLabels) {
-      const nextArtists = toggledSet(
-        selectedArtists,
-        label,
-        selectedArtists.has(label),
-      );
+      const nextArtists = selectedArtists.has(label)
+        ? new Set<string>()
+        : new Set<string>([label]);
       m.set(
         label,
         countMatchingFilterRows(
@@ -593,11 +591,9 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
   const networkOptionToggleMatchCount = useMemo(() => {
     const m = new Map<string, number>();
     for (const label of filterNetworkOptionLabels) {
-      const nextNetworks = toggledSet(
-        selectedNetworks,
-        label,
-        selectedNetworks.has(label),
-      );
+      const nextNetworks = selectedNetworks.has(label)
+        ? new Set<string>()
+        : new Set<string>([label]);
       m.set(
         label,
         countMatchingFilterRows(
@@ -626,9 +622,9 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
       minimizeAllFloatingPanels();
       setSelectedFocusAreas(new Set(row.focusAreas));
       setSelectedActivityTypes(new Set(row.activityTypes));
-      setSelectedArtists(new Set(row.artists ?? []));
+      setSelectedArtists(new Set((row.artists ?? []).slice(0, 1)));
       setSelectedFormats(new Set(row.formats ?? []));
-      setSelectedNetworks(new Set(row.networks ?? []));
+      setSelectedNetworks(new Set((row.networks ?? []).slice(0, 1)));
     },
     [minimizeAllFloatingPanels],
   );
@@ -759,10 +755,7 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
       minimizeAllFloatingPanels();
       endContentPreviewOnSidebarFilterChange();
       setSelectedArtists((prev) => {
-        const next = new Set(prev);
-        if (next.has(label)) next.delete(label);
-        else next.add(label);
-        return next;
+        return prev.has(label) ? new Set<string>() : new Set<string>([label]);
       });
     },
     [endContentPreviewOnSidebarFilterChange, minimizeAllFloatingPanels],
@@ -787,10 +780,7 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
       minimizeAllFloatingPanels();
       endContentPreviewOnSidebarFilterChange();
       setSelectedNetworks((prev) => {
-        const next = new Set(prev);
-        if (next.has(label)) next.delete(label);
-        else next.add(label);
-        return next;
+        return prev.has(label) ? new Set<string>() : new Set<string>([label]);
       });
     },
     [endContentPreviewOnSidebarFilterChange, minimizeAllFloatingPanels],

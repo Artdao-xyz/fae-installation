@@ -574,6 +574,7 @@ export function PreviewMainContent({
                   target="_blank"
                   rel="noopener noreferrer"
                   title={label ? resource.url : undefined}
+                  aria-label={label ? `${label} (${resource.url})` : undefined}
                   className="inline-flex max-w-full items-center gap-1.5 rounded-sm bg-surface-canvas/90 py-0 pl-0 pr-0 font-fira-mono text-[10px] leading-[14px] text-ink-body underline decoration-solid [text-decoration-skip-ink:none] backdrop-blur-fae-md hover:bg-surface-hover/80"
                 >
                   <span className="min-w-0 truncate">{linkText}</span>

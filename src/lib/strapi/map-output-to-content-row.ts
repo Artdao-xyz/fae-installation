@@ -437,7 +437,7 @@ function resourcesAndLinkedNamesFromDoc(doc: Record<string, unknown>): {
    * Strapi `Source` on output can be a single component
    * `{ id, links: [{ id, url, label }] }`, repeatable component rows, or legacy `Resources`.
    */
-  let fromCms: unknown =
+  const fromCms: unknown =
     doc.Sources ??
     doc.sources ??
     doc.Source ??
