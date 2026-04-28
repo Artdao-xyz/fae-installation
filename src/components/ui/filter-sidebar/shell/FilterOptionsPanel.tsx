@@ -65,7 +65,13 @@ export function FilterOptionsPanel({
           role="region"
           aria-label="Filter options"
         >
-          <div className="hidden min-w-0 shrink-0 flex-col lg:flex">
+          <div
+            className={
+              searching
+                ? "hidden min-h-0 min-w-0 flex-1 flex-col lg:flex"
+                : "hidden min-w-0 shrink-0 flex-col lg:flex"
+            }
+          >
             <Search
               value={filterSearchQuery}
               onChange={setFilterSearchQuery}
