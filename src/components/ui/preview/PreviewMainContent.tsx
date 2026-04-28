@@ -335,9 +335,11 @@ function CategoryBlock({ label, children }: { label: string; children: ReactNode
 export function PreviewMainContent({
   row,
   fullScreen,
+  clampPills = false,
 }: {
   row: ContentRow;
   fullScreen: boolean;
+  clampPills?: boolean;
 }) {
   const {
     selectedFocusAreas,
@@ -373,6 +375,7 @@ export function PreviewMainContent({
     (l: string) => selectedArtists.has(l),
     [selectedArtists],
   );
+  const shouldClampPills = !fullScreen || clampPills;
 
   const onFocusPillPress = useCallback(
     (label: string) => {
@@ -479,7 +482,7 @@ export function PreviewMainContent({
             <CategoryBlock label="Focus">
               <ClampedPreviewPills
                 items={row.focusAreas}
-                docked={!fullScreen}
+                docked={shouldClampPills}
                 variant="square"
                 tone="fae-briefings"
                 isSelected={isFocusPillSelected}
@@ -491,7 +494,7 @@ export function PreviewMainContent({
             <CategoryBlock label="Activity">
               <ClampedPreviewPills
                 items={row.activityTypes}
-                docked={!fullScreen}
+                docked={shouldClampPills}
                 variant="rounded"
                 tone="fae-briefings"
                 isSelected={isActivityPillSelected}
@@ -503,7 +506,7 @@ export function PreviewMainContent({
             <CategoryBlock label="Format">
               <ClampedPreviewPills
                 items={row.formats}
-                docked={!fullScreen}
+                docked={shouldClampPills}
                 variant="rounded"
                 tone="fae-briefings"
                 isSelected={isFormatPillSelected}
@@ -515,7 +518,7 @@ export function PreviewMainContent({
             <CategoryBlock label="Network">
               <ClampedPreviewPills
                 items={row.networks}
-                docked={!fullScreen}
+                docked={shouldClampPills}
                 variant="dotted"
                 tone="network"
                 isSelected={isNetworkPillSelected}

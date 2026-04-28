@@ -45,7 +45,7 @@ export function MobilePreviewSheet({
         </button>
       </div>
       <div className="scrollbar-hide min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-3">
-        <PreviewMainContent row={row} fullScreen />
+        <PreviewMainContent row={row} fullScreen clampPills />
       </div>
     </div>
   );
