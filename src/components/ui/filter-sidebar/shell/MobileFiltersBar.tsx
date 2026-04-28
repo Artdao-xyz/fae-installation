@@ -2,6 +2,8 @@
 
 import { FiltersSvgIcon } from "@/components/ui/icons/FiltersSvgIcon";
 import { navSidebarLinkLabelClassName } from "@/components/ui/icons/nav-sidebar-labels";
+import { useFilterSelection } from "@/components/ui/filter-sidebar/FilterSelectionContext";
+import { MobileSelectedFiltersStrip } from "./MobileSelectedFiltersStrip";
 
 type MobileFiltersBarProps = {
   onOpen: () => void;
@@ -9,17 +11,29 @@ type MobileFiltersBarProps = {
 
 /** Bottom entry when the narrow filter rail is hidden (`max-lg`). Same height as `Footer` (`h-11`); safe area lives on the fixed parent. */
 export function MobileFiltersBar({ onOpen }: MobileFiltersBarProps) {
+  const { hasActiveTaxonomyFilters, selectedFaeBriefing } = useFilterSelection();
+  const hasSelectedFilters =
+    hasActiveTaxonomyFilters || selectedFaeBriefing != null;
+
   return (
-    <div className="flex h-11 w-full shrink-0 items-center justify-center border-t-hairline border-solid border-ink-primary bg-surface-canvas px-3 backdrop-blur-fae-sm">
-      <button
-        type="button"
-        onClick={onOpen}
-        className="flex w-full max-w-sm items-center justify-center gap-2 rounded-sm text-ink-primary transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary"
-        aria-label="Open filters"
-      >
+    <button
+      type="button"
+      onClick={onOpen}
+      className={`flex h-11 w-full shrink-0 items-center gap-2 border-t-hairline border-solid border-ink-primary bg-surface-canvas backdrop-blur-fae-sm transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary ${
+        hasSelectedFilters
+          ? "justify-start px-2 text-left"
+          : "justify-center px-3 text-center"
+      }`}
+      aria-label="Open filters"
+    >
+      <span className="flex size-8 shrink-0 items-center justify-center text-ink-primary">
         <FiltersSvgIcon className="size-6!" />
+      </span>
+      {hasSelectedFilters ? (
+        <MobileSelectedFiltersStrip />
+      ) : (
         <span className={navSidebarLinkLabelClassName}>Filters</span>
-      </button>
-    </div>
+      )}
+    </button>
   );
 }

@@ -34,6 +34,7 @@ export function FilterSidebar() {
     artistsSubpanelOpen,
     setArtistsSubpanelOpen,
     hasActiveTaxonomyFilters,
+    selectedFaeBriefing,
   } = useFilterSelection();
   const panelId = useId();
   const isMaxLg = useIsMaxLg();
@@ -153,7 +154,9 @@ export function FilterSidebar() {
       <div className="contents max-lg:hidden">{subpanelsColumn}</div>
       <div className="contents lg:hidden">
         <div className="fixed inset-x-0 bottom-0 z-40 flex flex-col pb-[env(safe-area-inset-bottom,0px)] lg:hidden">
-          {filtersOpen || hasActiveTaxonomyFilters ? null : (
+          {filtersOpen ||
+          hasActiveTaxonomyFilters ||
+          selectedFaeBriefing != null ? null : (
             <MobileLatestUpdatesStrip />
           )}
           <div className="flex w-full shrink-0 flex-col bg-surface-canvas">
