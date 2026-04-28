@@ -28,7 +28,6 @@ export type MobileFilterCategoryId =
   | "briefings"
   | "fellowships"
   | "rd"
-  | "editorial"
   | "artists"
   | "network";
 
@@ -119,7 +118,6 @@ export function MobileFilterOptionsLayout({
             selectedFaeBriefing != null,
           )}
           {rail("rd", "R&D Projects", "rd", false)}
-          {rail("editorial", "Editorial", "editorial", false)}
           {rail("artists", "Artists", "artists", selectedArtists.size > 0)}
           {rail("network", "Network", "network", selectedNetworks.size > 0)}
         </nav>
@@ -144,11 +142,6 @@ export function MobileFilterOptionsLayout({
             <div className="w-full shrink-0 p-2">
               <RDProjectsDropdownPanel variant="subcolumn" mobilePane />
             </div>
-          ) : null}
-          {active === "editorial" ? (
-            <p className="px-3 py-3 font-fira-mono text-[10px] leading-snug text-ink-body/70">
-              Editorial category — filters are not listed here yet.
-            </p>
           ) : null}
           {active === "artists" ? (
             <div className="w-full shrink-0 p-2">

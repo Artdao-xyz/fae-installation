@@ -3,7 +3,6 @@
 import { useFilterSelection } from "@/components/ui/filter-sidebar/FilterSelectionContext";
 import { ActivityType } from "../sections/ActivityType";
 import { ArtistsMenu } from "../sections/ArtistsMenu";
-import { EditorialMenu } from "../sections/EditorialMenu";
 import { FAEBriefingsMenu } from "../sections/FAEBriefingsMenu";
 import { LatestUpdatesMenu } from "../sections/LatestUpdatesMenu";
 import { FocusAreas } from "../sections/FocusAreas";
@@ -102,7 +101,6 @@ export function FilterOptionsPanel({
               subpanelOpen={rdSubpanelOpen}
               onToggleSubpanel={onToggleRdSubpanel}
             />
-            <EditorialMenu />
             <ArtistsMenu
               subpanelOpen={artistsSubpanelOpen}
               onToggleSubpanel={onToggleArtistsSubpanel}
