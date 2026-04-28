@@ -94,13 +94,13 @@ function MobileMenuNewsletterForm() {
         }}
         placeholder={placeholder}
         disabled={status === "loading"}
-        className="min-w-0 flex-1 border-0 border-r-hairline border-solid border-ink-primary bg-surface-canvas px-4 font-fira-mono text-base font-normal leading-6 text-ink-body placeholder:text-ink-body/60 focus:outline-none focus-visible:outline-none focus-visible:ring-0"
+        className="min-w-0 basis-2/3 border-0 border-r-hairline border-solid border-ink-primary bg-surface-canvas px-4 font-fira-mono text-base font-normal leading-6 text-ink-body placeholder:text-ink-body/60 focus:outline-none focus-visible:outline-none focus-visible:ring-0"
         aria-invalid={status === "error"}
       />
       <button
         type="submit"
         disabled={status === "loading"}
-        className="flex h-full shrink-0 items-center justify-center gap-2 bg-surface-canvas px-3 font-fira-mono text-sm font-normal leading-6 text-ink-primary transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary disabled:pointer-events-none disabled:opacity-50"
+        className="flex h-full min-w-0 basis-1/3 items-center justify-center gap-2 bg-surface-canvas px-3 font-fira-mono text-sm font-normal leading-6 text-ink-primary transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary disabled:pointer-events-none disabled:opacity-50"
       >
         <span>{status === "loading" ? "Sending" : "Send"}</span>
         <Image
