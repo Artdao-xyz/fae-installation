@@ -97,7 +97,7 @@ export function MobileFilterOptionsLayout({
         >
           {rail(
             "focus",
-            "Focus Areas",
+            "Focus",
             "fae-briefings",
             selectedFocusAreas.size > 0,
             false,
@@ -105,19 +105,19 @@ export function MobileFilterOptionsLayout({
           )}
           {rail(
             "activity",
-            "Activity Type",
+            "Activity",
             "editorial",
             selectedActivityTypes.size > 0,
             false,
             true,
           )}
+          {rail("fellowships", "Fellowships", "latest-updates", false)}
           {rail(
             "briefings",
             "FAE Briefings",
             "fae-briefings",
             selectedFaeBriefing != null,
           )}
-          {rail("fellowships", "Fellowships", "latest-updates", false)}
           {rail("rd", "R&D Projects", "rd", false)}
           {rail("editorial", "Editorial", "editorial", false)}
           {rail("artists", "Artists", "artists", selectedArtists.size > 0)}

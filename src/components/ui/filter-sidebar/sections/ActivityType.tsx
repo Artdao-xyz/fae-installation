@@ -36,7 +36,7 @@ export function ActivityType({
 
   return (
     <FilterSidebarSection
-      title="Activity Type"
+      title="Activity"
       onClearAll={clearAll}
       scrollBody
       collapsed={collapsed}

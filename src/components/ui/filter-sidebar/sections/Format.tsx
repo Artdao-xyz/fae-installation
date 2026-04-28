@@ -34,7 +34,7 @@ export function Format({
 
   return (
     <FilterSidebarSection
-      title="Format"
+      title="Mode"
       onClearAll={clearAll}
       collapsed={collapsed}
       chromeless={chromeless}

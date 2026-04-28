@@ -27,7 +27,7 @@ export function MobileFormatScrollRow() {
     <div
       className="scrollbar-hide flex w-full shrink-0 flex-nowrap items-center gap-2 overflow-x-auto overflow-y-hidden border-t-hairline border-solid border-ink-primary bg-surface-canvas px-2 py-2"
       role="toolbar"
-      aria-label="Format filters"
+      aria-label="Mode filters"
     >
       {filterFormatOptionLabels.map((label) => {
         const selected = selectedFormats.has(label);

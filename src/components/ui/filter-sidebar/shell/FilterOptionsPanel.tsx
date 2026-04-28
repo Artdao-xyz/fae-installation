@@ -93,11 +93,11 @@ export function FilterOptionsPanel({
             <Format collapsed={searching} />
           </div>
           <div className="shrink-0">
+            <LatestUpdatesMenu />
             <FAEBriefingsMenu
               subpanelOpen={briefingsSubpanelOpen}
               onToggleSubpanel={onToggleBriefingsSubpanel}
             />
-            <LatestUpdatesMenu />
             <RDProjectsMenu
               subpanelOpen={rdSubpanelOpen}
               onToggleSubpanel={onToggleRdSubpanel}

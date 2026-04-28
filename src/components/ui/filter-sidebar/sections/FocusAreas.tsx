@@ -36,7 +36,7 @@ export function FocusAreas({
 
   return (
     <FilterSidebarSection
-      title="Focus Areas"
+      title="Focus"
       onClearAll={clearAll}
       scrollBody
       collapsed={collapsed}
