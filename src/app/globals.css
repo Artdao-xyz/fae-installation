@@ -1,28 +1,324 @@
 @import "tailwindcss";
+@source "../**/*.{js,ts,jsx,tsx}";
 
-@theme inline {
-  /* Exponer variables de Next.js directamente para usarlas sin utilidades Tailwind */
-  --font-geist-sans: var(--font-geist-sans);
-  --font-geist-mono: var(--font-geist-mono);
+@font-face {
+  font-family: SuisseIntl;
+  src: url("/fonts/SuisseIntl-Medium.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
 }
 
-@layer utilities {
-  .rounded-100px {
-    border-radius: 100px;
+@font-face {
+  font-family: SuisseIntl;
+  src: url("/fonts/SuisseIntl-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: FiraMono;
+  src: url("/fonts/FiraMono-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: FiraMono;
+  src: url("/fonts/FiraMono-Medium.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: LustText;
+  src: url("/fonts/LustTextBook.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: LustText;
+  src: url("/fonts/LustTextMedium.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+}
+
+@theme inline {
+  --font-lust-text: LustText, ui-serif, serif;
+  --font-fira-mono: FiraMono, ui-sans-serif, system-ui, sans-serif;
+  --font-suisseintl: SuisseIntl, ui-sans-serif, system-ui, sans-serif;
+
+  --color-surface-canvas: #e8e8e8;
+  --color-black-fae: #212121;
+  --color-ink-primary: #414141;
+  --color-ink-body: #303030;
+  --color-ink-caption: #363636;
+  --color-surface-muted: #ececec;
+  --color-surface-hover: #e0e0e0;
+
+  --color-filter-category-fae-briefings: var(--color-ink-primary);
+  --color-filter-category-latest-updates: #0000ff;
+  /** Shared selected state for filter pills (dotted / rounded / square). */
+  --color-filter-pill-selection: #0000ff;
+  --color-filter-category-rd: #9005cc;
+  --color-filter-category-editorial: #b22fb6;
+  --color-filter-category-artists: #5e1937;
+  --color-filter-category-network: #0cdc2a;
+  --shadow-fae-thumbnail: 0 0 40px 0 rgb(0 0 0 / 0.3);
+
+  --color-page-gradient-edge: #e1e1e1;
+  --color-page-gradient-center: #ffffff;
+
+  --blur-fae-sm: 10px;
+  --blur-fae-md: 25px;
+
+  --border-width-hairline: 0.5px;
+  --border-width-fine: 0.3px;
+
+  /**
+   * `2k` / `min-[2000px]` — wide & “2K-class” viewports; available as the `2k:` Tailwind variant.
+   * (Tailwind default screens stop at `2xl` / 96rem; this is additive.)
+   */
+  --breakpoint-2k: 2000px;
+
+  --width-filter-narrow-column: 35px;
+  /**
+   * Main filter column width (px only). Below `lg` uses a default; `lg` / `xl` / `2xl` / `2k` are set in media
+   * queries below (align with Tailwind: 64rem, 80rem, 96rem, plus 2000px for 2K).
+   */
+  --width-filter-chrome-column: 260px;
+  /** Options strip = chrome column minus the narrow rail. */
+  --width-filter-options: calc(
+    var(--width-filter-chrome-column) - var(--width-filter-narrow-column)
+  );
+  --inset-margin-guide: calc(var(--width-filter-narrow-column) - 1px);
+  --height-filter-chrome-bar: var(--width-filter-narrow-column);
+  --height-filter-narrow-toggle: 35px;
+  --height-filter-close-bar: 22px;
+  --width-format-icon: 38px;
+  --height-format-icon: 25px;
+
+  --width-about-panel: 580px;
+  /**
+   * Latest updates peek clip `max-width` only (same distance as About body); not `--width-*`
+   * so Tailwind does not emit a conflicting `w-*` utility.
+   */
+  --fae-dock-peek-body-max: calc(
+    var(--width-about-panel) - var(--width-filter-narrow-column)
+  );
+  /** Glossary peek column (Figma: glossary drawer; narrower than About for reading measure). */
+  --width-glossary-panel: min(
+    420px,
+    calc(100vw - 2.5rem - var(--width-filter-narrow-column))
+  );
+  /** Content preview dock (wider than filter sidebar column). */
+  --width-preview-panel: 30vw;
+
+  --max-height-about-panel: min(70dvh, calc(100dvh - 2.5rem));
+  --max-height-latest-updates-panel: min(85dvh, calc(100dvh - 2.5rem));
+  --max-width-floating-panel: calc(100vw - 2.5rem);
+}
+
+/* Tailwind `lg` (64rem / 1024px). */
+@media (min-width: 64rem) {
+  :root {
+    --width-filter-chrome-column: 380px;
+  }
+}
+/* Tailwind `xl` (80rem / 1280px). */
+@media (min-width: 80rem) {
+  :root {
+    --width-filter-chrome-column: 440px;
+  }
+}
+/* Tailwind `2xl` (96rem / 1536px). */
+@media (min-width: 96rem) {
+  :root {
+    --width-filter-chrome-column: 430px;
+  }
+}
+/* 2K+ viewports (2000px) — e.g. large / QHD-class widths; `2k` screen in @theme. */
+@media (min-width: 2000px) {
+  :root {
+    --width-filter-chrome-column: 380px;
   }
 }
 
 * {
-  overscroll-behavior: none;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-ink-primary) transparent;
+  /* outline: none; */
+  /* overscroll-behavior: */
+}
+
+*::-webkit-scrollbar {
+  width: 2px;
+  height: 2px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: var(--color-ink-primary);
+  border-radius: 0;
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+.scrollbar-hide {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  scrollbar-color: transparent transparent;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+@layer utilities {
+  /**
+   * Preview drawer width: theme token `--width-preview-panel` (30vw); utility for explicit width.
+   */
+  .w-preview-panel {
+    width: var(--width-preview-panel);
+  }
+
+  .w-glossary-panel {
+    width: var(--width-glossary-panel);
+  }
+
+  .fae-control-shape-rounded {
+    border-radius: 0.25rem;
+  }
+
+  .fae-control-shape-square {
+    border-radius: 0;
+  }
+
+  .fae-control-filter-outer {
+    display: flex;
+    align-items: center;
+    padding: 0;
+    border-width: var(--border-width-hairline);
+    border-style: solid;
+    border-color: var(--color-ink-primary);
+    background-color: var(--color-ink-primary);
+  }
+
+  /* Padding / type: `filterPillLabelBoxClass` in filterFramedClasses.ts */
+  .fae-control-filter-inner {
+    position: relative;
+    z-index: 1;
+    white-space: nowrap;
+    text-align: center;
+  }
+
+  .fae-mobile-main-scroll {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+button {
+  cursor: pointer;
+}
+
+@keyframes fae-hero-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/**
+ * Direct children of `.fae-preview-cascade`: shared opacity fade (no stagger, no vertical motion)
+ * so streaming detail doesn’t re-trigger a stepped cascade.
+ */
+@keyframes fae-preview-section-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/**
+ * `fae-preview-body-stack` — vertical stack of preview body blocks (gap between children).
+ * No animation on those children.
+ *
+ * `fae-preview-cascade` — opacity fade on each top-level preview section (unlayered so
+ * Tailwind utilities don’t win). See block after `@layer utilities` below.
+ */
+@layer utilities {
+  /** Home hero: title then subtitle on load (`HeroTitleBlock`). */
+  .fae-hero-title-line {
+    opacity: 0;
+    animation: fae-hero-fade-in 0.55s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+
+  .fae-hero-subtitle-line {
+    opacity: 0;
+    animation: fae-hero-fade-in 0.55s cubic-bezier(0.4, 0, 0.2, 1) 0.1s forwards;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fae-thumbnail-reveal,
+  .fae-thumbnail-reveal__img,
+  .fae-pixel-tessellation-bg {
+    transition: none !important;
+  }
+
+  .fae-preview-cascade > * {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .fae-hero-title-line,
+  .fae-hero-subtitle-line {
+    animation: none !important;
+    opacity: 1 !important;
+  }
 }
 
 body {
-  background-color: #99c7ff;
-  background-image:
-    radial-gradient(at 17% 98%, hsla(139,80%,55%,0.72) 0px, transparent 50%),
-    radial-gradient(at 100% 98%, hsla(266,43%,58%,1) 0px, transparent 50%),
-    radial-gradient(at 98% 4%, hsla(0,0%,100%,0.69) 0px, transparent 50%),
-    radial-gradient(at 52% 66%, hsla(145,72%,61%,1) 0px, transparent 50%),
-    radial-gradient(at 10% 23%, hsla(235,65%,64%,1) 0px, transparent 50%);
-  color: #171717;
+  min-height: 100dvh;
+  overscroll-behavior: none;
+  background: linear-gradient(
+    to bottom right,
+    var(--color-page-gradient-edge) 0%,
+    var(--color-page-gradient-center) 50%,
+    var(--color-page-gradient-edge) 100%
+  );
+}
+
+html {
+  overscroll-behavior: none;
+  background: #e8e8e8;
+}
+
+@media (max-width: 63.999rem) {
+  html,
+  body {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+}
+
+/* Content preview: top-level sections (outside @layer so it applies reliably) */
+.fae-preview-cascade > * {
+  opacity: 0;
+  animation: fae-preview-section-fade-in 0.42s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
