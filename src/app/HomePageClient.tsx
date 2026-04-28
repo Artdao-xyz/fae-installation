@@ -197,7 +197,7 @@ function HomeContent({ initialPreviewSlug }: HomePageClientProps) {
           <div className="flex w-full min-h-min flex-col">
             <HeroTitleBlock
               title="Future Art Ecosystems"
-              subtitle="Cultural Infrastructure Research"
+              subtitle="Art and Advanced Technologies Research"
             />
 
             {HIDE_PARTICLE_CANVAS || showMobileFilteredResults ? null : (

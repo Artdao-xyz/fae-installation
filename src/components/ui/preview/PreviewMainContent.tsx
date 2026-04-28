@@ -328,14 +328,10 @@ export function PreviewMainContent({
 }) {
   const {
     selectedFocusAreas,
-    selectedActivityTypes,
     selectedArtists,
-    selectedFormats,
     selectedNetworks,
     toggleFocusArea,
-    toggleActivityType,
     toggleArtist,
-    toggleFormat,
     toggleNetwork,
     applyPreviewPillFilterAndClose,
   } = useFilterSelection();
@@ -343,14 +339,6 @@ export function PreviewMainContent({
   const isFocusPillSelected = useCallback(
     (l: string) => selectedFocusAreas.has(l),
     [selectedFocusAreas],
-  );
-  const isActivityPillSelected = useCallback(
-    (l: string) => selectedActivityTypes.has(l),
-    [selectedActivityTypes],
-  );
-  const isFormatPillSelected = useCallback(
-    (l: string) => selectedFormats.has(l),
-    [selectedFormats],
   );
   const isNetworkPillSelected = useCallback(
     (l: string) => selectedNetworks.has(l),
@@ -368,20 +356,6 @@ export function PreviewMainContent({
       applyPreviewPillFilterAndClose();
     },
     [toggleFocusArea, applyPreviewPillFilterAndClose],
-  );
-  const onActivityPillPress = useCallback(
-    (label: string) => {
-      toggleActivityType(label);
-      applyPreviewPillFilterAndClose();
-    },
-    [toggleActivityType, applyPreviewPillFilterAndClose],
-  );
-  const onFormatPillPress = useCallback(
-    (label: string) => {
-      toggleFormat(label);
-      applyPreviewPillFilterAndClose();
-    },
-    [toggleFormat, applyPreviewPillFilterAndClose],
   );
   const onNetworkPillPress = useCallback(
     (label: string) => {
@@ -414,12 +388,10 @@ export function PreviewMainContent({
   );
 
   const hasFocus = row.focusAreas.length > 0;
-  const hasActivity = row.activityTypes.length > 0;
-  const hasFormats = row.formats.length > 0;
   const hasNetworks = row.networks.length > 0;
   const hasArtists = row.artists.length > 0;
   const hasCategories =
-    hasFocus || hasActivity || hasFormats || hasNetworks || hasArtists;
+    hasFocus || hasNetworks || hasArtists;
   const hasBlocks =
     row.contentBlocks !== null && row.contentBlocks.length > 0;
   const hasBody = hasBlocks || paragraphs.length > 0;
@@ -472,30 +444,6 @@ export function PreviewMainContent({
                 tone="fae-briefings"
                 isSelected={isFocusPillSelected}
                 onPillPress={onFocusPillPress}
-              />
-            </CategoryBlock>
-          ) : null}
-          {hasActivity ? (
-            <CategoryBlock label="Activity">
-              <ClampedPreviewPills
-                items={row.activityTypes}
-                docked={shouldClampPills}
-                variant="rounded"
-                tone="fae-briefings"
-                isSelected={isActivityPillSelected}
-                onPillPress={onActivityPillPress}
-              />
-            </CategoryBlock>
-          ) : null}
-          {hasFormats ? (
-            <CategoryBlock label="Format">
-              <ClampedPreviewPills
-                items={row.formats}
-                docked={shouldClampPills}
-                variant="rounded"
-                tone="fae-briefings"
-                isSelected={isFormatPillSelected}
-                onPillPress={onFormatPillPress}
               />
             </CategoryBlock>
           ) : null}
