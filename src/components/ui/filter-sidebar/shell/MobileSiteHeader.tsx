@@ -22,7 +22,7 @@ const MOBILE_HEADER_LABEL_CLASS =
   "font-suisseintl text-sm font-normal leading-5 transition-[color,filter] duration-150 motion-reduce:transition-none";
 
 const MENU_NAV_ITEM_CLASS =
-  "flex w-full max-w-sm items-center justify-center gap-4 py-4 font-suisseintl text-sm font-normal leading-6 text-ink-primary transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary";
+  "flex w-full items-center justify-center gap-4 border-x-hairline border-t-hairline border-solid border-ink-primary py-4 font-suisseintl text-sm font-normal leading-6 text-ink-primary transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary";
 
 const MENU_NAV_ICON_CLASS = "size-6! shrink-0";
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -233,7 +233,7 @@ export function MobileSiteHeader({
             >
               <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pt-[env(safe-area-inset-top,0px)]">
                 <nav
-                  className="flex min-h-full flex-col items-center justify-center gap-0 px-4 py-8"
+                  className="flex min-h-full flex-col items-stretch justify-center gap-0 px-0 py-8 [&>button:last-child]:border-b-hairline"
                   aria-label="Site"
                 >
                   <button
