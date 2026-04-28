@@ -73,6 +73,3 @@ export function filterMergedOptionLabelsToCatalogUsed(
   }
   return out;
 }
-
-/** @deprecated Use {@link mergeCmsAndCatalogOptionLabels}. */
-export const mergeFormatFilterLabels = mergeCmsAndCatalogOptionLabels;
