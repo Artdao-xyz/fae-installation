@@ -1,6 +1,6 @@
 import type { ContentRow } from "@/data/content-types";
 
-/** Max outputs considered for source spread (linked first, then activity+focus). Viewport + filter cap apply. */
+/** Max related outputs considered for source spread when there are no CMS links. */
 export const PREVIEW_SUGGESTED_OUTPUTS_MAX = 20;
 
 function normalizeOutputLabel(s: string): string {
@@ -46,8 +46,9 @@ function taxonomyOverlapScore(
 }
 
 /**
- * CMS-linked outputs (full list, CMS order), then activity+focus matches excluding those
- * linked rows. Spread caps are applied later; `maxRelatedCandidates` bounds the related pool size.
+ * CMS-linked outputs (full list, CMS order) and activity+focus matches as separate pools.
+ * Preview rendering decides whether linked rows are exclusive; `maxRelatedCandidates` bounds
+ * the related pool size.
  */
 export function buildSuggestedSourceRowsSplit(
   row: ContentRow,

@@ -457,7 +457,7 @@ export function ImageParticleSimulationView({
   const setSpreadDisplayPatchRef = useRef(setSpreadDisplayPatch);
   setSpreadDisplayPatchRef.current = setSpreadDisplayPatch;
 
-  /** Consecutive pool slots: linked rows, then related + taxonomy matches — matches preview patch rows. */
+  /** Preview source rows: CMS-linked outputs are exclusive; related/taxonomy fills only when none exist. */
   const previewSourceRows = useMemo(() => {
     if (!previewRow || previewFullScreen) {
       return { linked: [] as ContentRow[], related: [] as ContentRow[] };
@@ -475,6 +475,9 @@ export function ImageParticleSimulationView({
       linkedRows.push(row);
       used.add(row.id);
       if (linkedRows.length >= n) break;
+    }
+    if (linkedRows.length > 0) {
+      return { linked: linkedRows, related: [] };
     }
     const relatedRows: ContentRow[] = [];
     for (const row of related) {
@@ -1148,8 +1151,8 @@ export function ImageParticleSimulationView({
 
     /**
      * Filter picks use the full catalog, then map to the first k swarm slots (0..k-1) with
-     * `SpreadDisplayPatch` so tiles outside the idle prefix can still appear. Preview linked+related
-     * still uses per-slot pool indices from `pickSpreadIndicesLinkedThenRelated`.
+     * `SpreadDisplayPatch` so tiles outside the idle prefix can still appear. Preview sources
+     * still use per-slot pool indices from `pickSpreadIndicesLinkedThenRelated`.
      */
     const getSpreadPickResult = (): {
       poolIndices: number[];
