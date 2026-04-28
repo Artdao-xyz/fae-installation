@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useId, useState, type ReactElement } from "react";
+import { useCallback, useId, type ReactElement } from "react";
 import { useFilterSelection } from "@/components/ui/filter-sidebar/FilterSelectionContext";
 import { FilterOptionsPanel } from "./FilterOptionsPanel";
 import { FilterSubpanelsColumn } from "./FilterSubpanelsColumn";
@@ -37,7 +37,6 @@ export function FilterSidebar() {
   } = useFilterSelection();
   const panelId = useId();
   const isMaxLg = useIsMaxLg();
-  const [newsletterVisible, setNewsletterVisible] = useState(false);
 
   const anySubpanelOpen =
     briefingsSubpanelOpen ||
@@ -80,12 +79,6 @@ export function FilterSidebar() {
   );
 
   const showOptionsPanel = !isMaxLg || filtersOpen;
-
-  useEffect(() => {
-    if (isMaxLg || !filtersOpen || newsletterVisible) return;
-    const timer = window.setTimeout(() => setNewsletterVisible(true), 500);
-    return () => window.clearTimeout(timer);
-  }, [filtersOpen, isMaxLg, newsletterVisible]);
 
   return (
     <>
@@ -173,15 +166,7 @@ export function FilterSidebar() {
       </div>
     </div>
     <EmailSubscription
-      className={`fixed bottom-0 z-30 hidden min-h-0 max-w-none transition-[left,opacity,transform] duration-500 ease-in-out motion-reduce:transition-none lg:flex ${
-        filtersOpen
-          ? "left-(--width-filter-chrome-column)"
-          : "left-(--width-filter-narrow-column)"
-      } ${
-        newsletterVisible
-          ? "translate-y-0 opacity-100"
-          : "pointer-events-none translate-y-2 opacity-0"
-      }`}
+      className="fixed bottom-0 left-(--width-filter-chrome-column) z-51 hidden min-h-0 max-w-none lg:flex"
       forceCollapsed={anySubpanelOpen}
     />
     </>

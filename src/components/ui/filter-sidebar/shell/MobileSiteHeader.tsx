@@ -1,7 +1,13 @@
 "use client";
 
 import Image from "next/image";
-import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
+import {
+  useCallback,
+  useEffect,
+  useState,
+  useSyncExternalStore,
+  type FormEvent,
+} from "react";
 import { createPortal } from "react-dom";
 import { useFilterSelection } from "@/components/ui/filter-sidebar/FilterSelectionContext";
 import { AboutSvgIcon } from "@/components/ui/icons/AboutSvgIcon";
@@ -19,6 +25,7 @@ const MENU_NAV_ITEM_CLASS =
   "flex w-full max-w-sm items-center justify-center gap-4 py-4 font-suisseintl text-base font-normal leading-6 text-ink-primary transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary";
 
 const MENU_NAV_ICON_CLASS = "!size-8 shrink-0";
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function subscribeToDocumentBody() {
   return () => {};
@@ -26,6 +33,88 @@ function subscribeToDocumentBody() {
 
 function getDocumentBodySnapshot(): HTMLElement | null {
   return typeof document !== "undefined" ? document.body : null;
+}
+
+function MobileMenuNewsletterForm() {
+  const [email, setEmail] = useState("");
+  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">(
+    "idle",
+  );
+
+  const submit = useCallback(
+    async (event: FormEvent) => {
+      event.preventDefault();
+      const value = email.trim();
+      if (!EMAIL_RE.test(value)) {
+        setStatus("error");
+        return;
+      }
+
+      setStatus("loading");
+      try {
+        const res = await fetch("/api/newsletter/subscribe", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: value }),
+        });
+        if (!res.ok) throw new Error("Newsletter signup failed.");
+        setEmail("");
+        setStatus("success");
+      } catch {
+        setStatus("error");
+      }
+    },
+    [email],
+  );
+
+  const placeholder =
+    status === "success"
+      ? "Thanks, you're subscribed"
+      : status === "error"
+        ? "Enter a valid email"
+        : "Type your email here";
+
+  return (
+    <form
+      className="flex h-14 w-full shrink-0 border-b-hairline border-solid border-ink-primary bg-surface-canvas"
+      onSubmit={submit}
+      noValidate
+      aria-label="Subscribe to newsletter"
+      aria-busy={status === "loading"}
+    >
+      <input
+        type="email"
+        name="email"
+        autoComplete="email"
+        inputMode="email"
+        value={email}
+        onChange={(event) => {
+          setEmail(event.target.value);
+          if (status !== "idle") setStatus("idle");
+        }}
+        placeholder={placeholder}
+        disabled={status === "loading"}
+        className="min-w-0 flex-1 border-0 border-r-hairline border-solid border-ink-primary bg-surface-canvas px-4 font-fira-mono text-base font-normal leading-6 text-ink-body placeholder:text-ink-body/60 focus:outline-none focus-visible:outline-none focus-visible:ring-0"
+        aria-invalid={status === "error"}
+      />
+      <button
+        type="submit"
+        disabled={status === "loading"}
+        className="flex h-full shrink-0 items-center justify-center gap-2 bg-surface-canvas px-3 font-fira-mono text-base font-normal leading-6 text-ink-primary transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary disabled:pointer-events-none disabled:opacity-50"
+      >
+        <span>{status === "loading" ? "Sending" : "Send"}</span>
+        <Image
+          src="/svg/blue-arrow.svg"
+          alt=""
+          width={10}
+          height={14}
+          unoptimized
+          className="m-0 block h-auto w-2.5 shrink-0"
+          aria-hidden
+        />
+      </button>
+    </form>
+  );
 }
 
 type MobileSiteHeaderProps = {
@@ -174,6 +263,7 @@ export function MobileSiteHeader({
                 </nav>
               </div>
               <div className="shrink-0 border-t-hairline border-solid border-ink-primary bg-surface-canvas pb-[env(safe-area-inset-bottom,0px)]">
+                <MobileMenuNewsletterForm />
                 <button
                   type="button"
                   onClick={() => setMenuOpen(false)}

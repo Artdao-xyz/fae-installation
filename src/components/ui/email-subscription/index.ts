@@ -1,1 +1,5 @@
-export { EmailSubscription, type EmailSubscriptionProps } from "./EmailSubscription";
+export {
+  EmailSubscription,
+  expandNewsletterSubscription,
+  type EmailSubscriptionProps,
+} from "./EmailSubscription";

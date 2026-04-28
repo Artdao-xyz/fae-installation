@@ -15,6 +15,12 @@ const SUBSCRIBE_CELL_CLASS =
 const HEADER_BUTTON_FOCUS =
   "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary";
 
+const EXPAND_NEWSLETTER_EVENT = "fae:expand-newsletter";
+
+export function expandNewsletterSubscription() {
+  window.dispatchEvent(new CustomEvent(EXPAND_NEWSLETTER_EVENT));
+}
+
 export type EmailSubscriptionProps = {
   className?: string;
   /** Visually matches Figma header line; also used for the accessible section title. */
@@ -62,6 +68,12 @@ export function EmailSubscription({
     if (!forceCollapsed) return;
     setExpanded(false);
   }, [forceCollapsed]);
+
+  useEffect(() => {
+    const expand = () => setExpanded(true);
+    window.addEventListener(EXPAND_NEWSLETTER_EVENT, expand);
+    return () => window.removeEventListener(EXPAND_NEWSLETTER_EVENT, expand);
+  }, []);
 
   const submit = useCallback(
     async (e: FormEvent) => {
@@ -113,7 +125,7 @@ export function EmailSubscription({
     <section
       className={`shrink-0 text-ink-body ${
         expanded
-          ? "flex h-[calc(var(--height-filter-chrome-bar)*2)] w-[460px] flex-col"
+          ? "flex h-[calc(var(--height-filter-chrome-bar)*2)] w-[460px] flex-col before:pointer-events-none before:absolute before:left-0 before:top-0 before:z-10 before:h-filter-chrome-bar before:w-px before:bg-[#454545] before:content-['']"
           : "flex h-filter-chrome-bar w-[230px] items-stretch"
       } ${className}`}
       aria-labelledby={`${id}-heading`}
@@ -248,7 +260,7 @@ export function EmailSubscription({
           aria-modal="true"
           aria-labelledby={feedbackTitleId}
           aria-describedby={feedbackMessageId}
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/10 px-4"
+          className="fixed inset-0 z-100 flex items-center justify-center bg-black/10 px-4"
         >
           <div className="w-full max-w-[230px] border-hairline border-solid border-ink-primary bg-surface-canvas p-3 shadow-none">
             <h3

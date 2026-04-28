@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { expandNewsletterSubscription } from "@/components/ui/email-subscription";
 import {
   filterPillLabelBoxClass,
   interactiveChromeMatClass,
@@ -278,7 +279,15 @@ export function AboutPanelRichContent() {
           >
             Telegram community
           </a>
-          , sign up to our monthly newsletter and take part in our quarterly{" "}
+          , sign up to our{" "}
+          <button
+            type="button"
+            onClick={expandNewsletterSubscription}
+            className="inline cursor-pointer border-0 bg-transparent p-0 text-inherit underline decoration-solid underline-offset-2 hover:opacity-80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ink-primary"
+          >
+            monthly newsletter
+          </button>{" "}
+          and take part in our quarterly{" "}
           <a
             href="https://serpentinegalleries.ticketing.veevartapp.com/tickets/view/list/future-art-ecosystems-community-call-05032026"
             target="_blank"
