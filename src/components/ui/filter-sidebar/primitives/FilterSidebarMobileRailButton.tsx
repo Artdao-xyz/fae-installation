@@ -21,6 +21,14 @@ const EMPHASIZED_RAIL_MAT_CLASS = `${matBaseTransitionClass} bg-[color:color-mix
 const SELECTED_BORDER_LEFT =
   "border-t-hairline border-t-solid border-t-ink-primary border-l-[3px] border-l-solid border-l-[#0000ff] border-r-0";
 const SELECTED_TEXT = "text-[#0000ff]";
+const selectedToneBorderLeftClass: Record<FilterSidebarCategoryTone, string> = {
+  "fae-briefings": "border-l-filter-category-fae-briefings",
+  "latest-updates": "border-l-filter-category-latest-updates",
+  rd: "border-l-filter-category-rd",
+  editorial: "border-l-filter-category-editorial",
+  artists: "border-l-filter-category-artists",
+  network: "border-l-filter-category-network",
+};
 /** Non-selected rail label: same ink as body, slightly softened. */
 const RAIL_LABEL_IDLE_TEXT = "text-ink-body/80";
 
@@ -41,6 +49,8 @@ type FilterSidebarMobileRailButtonProps = {
   showMarker?: boolean;
   /** Split remaining rail height with other `flexToFill` rows (Focus + Activity only). */
   flexToFill?: boolean;
+  /** Use this category's tone instead of selection blue for the active rail state. */
+  selectedTone?: boolean;
   onClick: () => void;
 };
 
@@ -54,10 +64,15 @@ export function FilterSidebarMobileRailButton({
   hasSelection = false,
   showMarker = true,
   flexToFill = false,
+  selectedTone = false,
   onClick,
 }: FilterSidebarMobileRailButtonProps) {
-  const { glow } = toneAccentClass[tone];
+  const { glow, marker } = toneAccentClass[tone];
   const showToneStripe = hasSelection && !selected;
+  const selectedTextClass = selectedTone ? marker : SELECTED_TEXT;
+  const selectedBorderClass = selectedTone
+    ? `${SELECTED_BORDER_LEFT} ${selectedToneBorderLeftClass[tone]}`
+    : SELECTED_BORDER_LEFT;
 
   const matClass = (() => {
     if (flexToFill) {
@@ -83,7 +98,7 @@ export function FilterSidebarMobileRailButton({
     : "h-[5.25rem] shrink-0 flex-none";
 
   const borderClass = selected
-    ? SELECTED_BORDER_LEFT
+    ? selectedBorderClass
     : [
         ROW_BORDER_TOP_SOLID,
         flexToFill ? ROW_RIGHT_DOTTED : ROW_RIGHT_SOLID,
@@ -94,7 +109,7 @@ export function FilterSidebarMobileRailButton({
       type="button"
       onClick={onClick}
       aria-current={selected ? "true" : undefined}
-      className={`relative flex w-full flex-col items-start justify-center px-3 py-2 text-left ${heightClass} ${showMarker ? "gap-1" : "gap-0"} ${borderClass} ${selected ? SELECTED_TEXT : RAIL_LABEL_IDLE_TEXT} ${matClass} ${hoverClass} focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary`}
+      className={`relative flex w-full flex-col items-start justify-center px-3 py-2 text-left ${heightClass} ${showMarker ? "gap-1" : "gap-0"} ${borderClass} ${selected ? selectedTextClass : RAIL_LABEL_IDLE_TEXT} ${matClass} ${hoverClass} focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary`}
       data-name="Filters-Mobile-Rail-Category"
     >
       {showToneStripe ? (

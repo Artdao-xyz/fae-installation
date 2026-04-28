@@ -72,6 +72,7 @@ export function MobileFilterOptionsLayout({
         hasSelection={hasSelection}
         showMarker={showMarker}
         flexToFill={flexToFill}
+        selectedTone={!flexToFill}
         onClick={() => setActive(id)}
       />
     ),
