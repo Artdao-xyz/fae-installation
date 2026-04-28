@@ -17,14 +17,6 @@ export const ABOUT_BODY = (
       Future Art Ecosystems is an initiative for building twenty-first century
       cultural infrastructure in support of practices that emerge from the
       superimposition of art and advanced technologies.
-      {"\n\n"}
-      Through creative research and development, including fellowships,
-      prototypes, briefings, labs, gatherings and a community of artists,
-      technologists, researchers and peer organisations, Future Art Ecosystems
-      develops insights, tools and artistic commissions that advance this vision.
-      Embedded within Serpentine’s Arts Technologies team, Future Art Ecosystems
-      excavates new spaces for art, technology and society to flourish,
-      delivering on plural forms of public value.
     </p>
   </>
 );
@@ -153,14 +145,6 @@ export function AboutPanelRichContent() {
           advance this vision. Embedded within Serpentine’s Arts Technologies
           team, Future Art Ecosystems excavates new spaces for art, technology
           and society to flourish, delivering on plural forms of public value.
-        </p>
-      </AboutContentPiece>
-
-      <AboutContentPiece title="About">
-        <p className="m-0">
-          Future Art Ecosystems is an initiative for building twenty-first
-          century cultural infrastructure in support of practices that emerge
-          from the superimposition of art and advanced technologies.
         </p>
       </AboutContentPiece>
 
