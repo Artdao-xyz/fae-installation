@@ -1,17 +1,14 @@
 import { NextResponse } from "next/server";
-import { fetchStrapiOutputsCatalogOnly } from "@/lib/strapi/fetch-outputs-list";
-
-/** Always merge fresh pages from Strapi — avoid caching a truncated first page. */
-export const dynamic = "force-dynamic";
+import { getCachedStrapiOutputsCatalog } from "@/lib/strapi/fetch-outputs-list";
 
 /**
  * Returns mapped `ContentRow[]` for the whole Strapi catalog (all pages merged server-side).
- * Taxonomy option lists are served from `GET /api/strapi/taxonomy-options` so the client can
- * paint particles first, then hydrate filters without one oversized payload.
+ * Merged catalog is cached briefly (see `getCachedStrapiOutputsCatalog`) to cut Strapi load.
+ * Taxonomy option lists: `GET /api/strapi/taxonomy-options`.
  */
 export async function GET() {
   try {
-    const { rows, total, durationMs } = await fetchStrapiOutputsCatalogOnly();
+    const { rows, total, durationMs } = await getCachedStrapiOutputsCatalog();
 
     return NextResponse.json({ rows, total, durationMs });
   } catch (err) {

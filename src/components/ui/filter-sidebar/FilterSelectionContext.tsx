@@ -234,10 +234,18 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
       };
 
       try {
-        const res = await fetch("/api/strapi/outputs", {
+        const outputsInit = fetch("/api/strapi/outputs", {
           credentials: "same-origin",
         });
-        const body: unknown = await res.json();
+        const taxonomyInit = fetch("/api/strapi/taxonomy-options", {
+          credentials: "same-origin",
+        });
+
+        const [res, taxRes] = await Promise.all([outputsInit, taxonomyInit]);
+        const [body, taxBodyRaw]: [unknown, unknown] = await Promise.all([
+          res.json(),
+          taxRes.json(),
+        ]);
 
         if (!res.ok) {
           const msg =
@@ -280,12 +288,9 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
         setContentCatalogStatus("success");
 
         try {
-          const taxRes = await fetch("/api/strapi/taxonomy-options", {
-            credentials: "same-origin",
-          });
-          const taxBody: unknown = taxRes.ok ? await taxRes.json() : null;
-
           if (cancelled) return;
+
+          const taxBody: unknown = taxRes.ok ? taxBodyRaw : null;
 
           if (taxRes.ok && taxBody && typeof taxBody === "object") {
             setTaxonomyLabelsFromApi({

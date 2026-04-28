@@ -1,11 +1,9 @@
 import { NextResponse } from "next/server";
-import {
-  fetchStrapiTaxonomyOptionLabelsStaged,
-} from "@/lib/strapi/fetch-outputs-list";
+import { getCachedStrapiTaxonomyOptionLabels } from "@/lib/strapi/fetch-outputs-list";
 
 /**
- * CMS taxonomy lists for filter sidebars (staged Strapi fetches server-side).
- * Call after `/api/strapi/outputs` when the catalog is already on-screen.
+ * CMS taxonomy lists for filter sidebars (parallel Strapi fetches server-side, short-lived cache).
+ * Safe to call in parallel with `/api/strapi/outputs` from the client.
  */
 export async function GET() {
   try {
@@ -16,7 +14,7 @@ export async function GET() {
       formatOptionLabels,
       networkOptionLabels,
       artistOptionLabels,
-    } = await fetchStrapiTaxonomyOptionLabelsStaged();
+    } = await getCachedStrapiTaxonomyOptionLabels();
 
     const durationMs = Math.round(performance.now() - started);
 

@@ -12,6 +12,8 @@
  * (see `src/lib/strapi/offline-fixture/index.ts`).
  */
 
+import { unstable_cache } from "next/cache";
+
 import type { ContentRow } from "@/data/content-types";
 import {
   mapStrapiOutputToContentRow,
@@ -37,6 +39,8 @@ const CATALOG_PAGE_SIZE = 100;
  */
 const OUTPUT_LIST_MAX_PAGES = 1000;
 const STRAPI_REVALIDATE_SECONDS = 300;
+/** Next.js Data Cache TTL for merged catalog + taxonomy in route handlers (reduces Strapi round trips). */
+const CATALOG_AND_TAXONOMY_ROUTE_CACHE_SECONDS = 60;
 
 export type StrapiOutputsListUnknown = {
   data?: unknown;
@@ -135,7 +139,7 @@ function appendOutputsListSlimQuery(params: URLSearchParams): void {
   params.append("populate[Links][fields][0]", "Short_Title");
   params.append("populate[Links][fields][1]", "Content_Title");
 
-  params.append(`populate[${OUTPUT_ARTIST_RELATION}]`, "true");
+  params.append(`populate[${OUTPUT_ARTIST_RELATION}][fields][0]`, "Name");
 }
 
 function outputsListPageParams(page: number, pageSize: number): string {
@@ -227,14 +231,16 @@ export async function fetchStrapiTaxonomyOptionLabelsStaged(): Promise<StrapiTax
   const offline = offlineFixtureTaxonomyOrNull();
   if (offline) return offline;
 
-  const [focusOptionLabels, activityOptionLabels, formatOptionLabels] =
-    await Promise.all([
-      fetchStrapiSortedOptionLabels("focus-options"),
-      fetchStrapiSortedOptionLabels("activity-options"),
-      fetchStrapiSortedOptionLabels("format-options"),
-    ]);
-
-  const [networkOptionLabels, artistOptionLabels] = await Promise.all([
+  const [
+    focusOptionLabels,
+    activityOptionLabels,
+    formatOptionLabels,
+    networkOptionLabels,
+    artistOptionLabels,
+  ] = await Promise.all([
+    fetchStrapiSortedOptionLabels("focus-options"),
+    fetchStrapiSortedOptionLabels("activity-options"),
+    fetchStrapiSortedOptionLabels("format-options"),
     fetchStrapiSortedOptionLabels("networks"),
     fetchStrapiSortedOptionLabels("artists"),
   ]);
@@ -246,6 +252,16 @@ export async function fetchStrapiTaxonomyOptionLabelsStaged(): Promise<StrapiTax
     networkOptionLabels,
     artistOptionLabels,
   };
+}
+
+function readPaginationPageCount(meta: unknown): number | null {
+  if (!meta || typeof meta !== "object") return null;
+  const pagination = (meta as { pagination?: unknown }).pagination;
+  if (!pagination || typeof pagination !== "object") return null;
+  const pageCount = (pagination as { pageCount?: unknown }).pageCount;
+  if (typeof pageCount !== "number" || !Number.isFinite(pageCount)) return null;
+  const n = Math.floor(pageCount);
+  return n >= 1 ? n : null;
 }
 
 export async function fetchStrapiOutputsCatalogOnly(options?: {
@@ -266,18 +282,69 @@ export async function fetchStrapiOutputsCatalogOnly(options?: {
 
   const mergedData: unknown[] = [];
 
-  for (let page = 1; page <= OUTPUT_LIST_MAX_PAGES; page++) {
+  const firstPayload = await fetchStrapiOutputsPageJson(1, pageSize, true);
+  const firstChunk = Array.isArray(firstPayload.data) ? firstPayload.data : [];
+  if (firstChunk.length === 0) {
+    return {
+      rows: [],
+      total: 0,
+      durationMs: Math.round(performance.now() - started),
+    };
+  }
+  mergedData.push(...firstChunk);
+
+  if (firstChunk.length < pageSize) {
+    const rows = mapStrapiOutputsPayloadToContentRows(mergedData);
+    return {
+      rows,
+      total: rows.length,
+      durationMs: Math.round(performance.now() - started),
+    };
+  }
+
+  const declaredPageCount = readPaginationPageCount(firstPayload.meta);
+  let nextSequentialPage = 2;
+
+  if (
+    declaredPageCount != null &&
+    declaredPageCount > 1 &&
+    declaredPageCount <= OUTPUT_LIST_MAX_PAGES
+  ) {
+    const parallelPageNums: number[] = [];
+    for (let p = 2; p <= declaredPageCount; p++) {
+      parallelPageNums.push(p);
+    }
+    const parallelPayloads = await Promise.all(
+      parallelPageNums.map((p) => fetchStrapiOutputsPageJson(p, pageSize, true)),
+    );
+    for (const payload of parallelPayloads) {
+      const chunk = Array.isArray(payload.data) ? payload.data : [];
+      if (chunk.length === 0) {
+        const rows = mapStrapiOutputsPayloadToContentRows(mergedData);
+        return {
+          rows,
+          total: rows.length,
+          durationMs: Math.round(performance.now() - started),
+        };
+      }
+      mergedData.push(...chunk);
+      if (chunk.length < pageSize) {
+        const rows = mapStrapiOutputsPayloadToContentRows(mergedData);
+        return {
+          rows,
+          total: rows.length,
+          durationMs: Math.round(performance.now() - started),
+        };
+      }
+    }
+    nextSequentialPage = declaredPageCount + 1;
+  }
+
+  for (let page = nextSequentialPage; page <= OUTPUT_LIST_MAX_PAGES; page++) {
     const payload = await fetchStrapiOutputsPageJson(page, pageSize, true);
     const chunk = Array.isArray(payload.data) ? payload.data : [];
     if (chunk.length === 0) break;
-
     mergedData.push(...chunk);
-
-    /**
-     * Do not rely on `meta.pagination.total` to stop: it can under-report, and stopping at
-     * `merged.length >= total` hides additional entries. Stop only when Strapi has no more rows
-     * (empty page) or returns a partial page.
-     */
     if (chunk.length < pageSize) break;
   }
 
@@ -289,6 +356,39 @@ export async function fetchStrapiOutputsCatalogOnly(options?: {
     total: rows.length,
     durationMs: Math.round(performance.now() - started),
   };
+}
+
+/**
+ * Cached catalog merge for API routes — lowers Strapi load (Essential plan API quotas).
+ * Use uncached {@link fetchStrapiOutputsCatalogOnly} only when freshness must bypass TTL.
+ */
+export async function getCachedStrapiOutputsCatalog(): Promise<{
+  rows: ContentRow[];
+  total: number;
+  durationMs: number;
+}> {
+  return unstable_cache(
+    () => fetchStrapiOutputsCatalogOnly(),
+    ["strapi-output-catalog-v1"],
+    {
+      revalidate: CATALOG_AND_TAXONOMY_ROUTE_CACHE_SECONDS,
+      tags: ["strapi-catalog"],
+    },
+  )();
+}
+
+/**
+ * Cached taxonomy labels for API routes (same TTL as catalog for simplicity).
+ */
+export async function getCachedStrapiTaxonomyOptionLabels(): Promise<StrapiTaxonomyOptionLabels> {
+  return unstable_cache(
+    () => fetchStrapiTaxonomyOptionLabelsStaged(),
+    ["strapi-taxonomy-labels-v1"],
+    {
+      revalidate: CATALOG_AND_TAXONOMY_ROUTE_CACHE_SECONDS,
+      tags: ["strapi-taxonomy"],
+    },
+  )();
 }
 
 /**
@@ -365,7 +465,7 @@ export async function fetchStrapiOutputDetailByShareSlug(
   slug: string,
 ): Promise<ContentRow | null> {
   const normalized = createOutputShareSlug(slug);
-  const { rows } = await fetchStrapiOutputsCatalogOnly();
+  const { rows } = await getCachedStrapiOutputsCatalog();
   const catalogRow = rows.find((row) => row.shareSlug === normalized);
   if (!catalogRow) return null;
 
