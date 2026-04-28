@@ -47,7 +47,9 @@ export function LatestUpdatesTabRail({
       />
       <div className="flex shrink-0 flex-col items-center gap-2 max-lg:gap-1">
         <span className={navSidebarVerticalLabelClassName}>Latest Updates</span>
-        <LatestUpdatesSvgIcon />
+        <LatestUpdatesSvgIcon
+          className={railLayout === "mobileStrip" ? "size-6!" : ""}
+        />
       </div>
     </button>
   );

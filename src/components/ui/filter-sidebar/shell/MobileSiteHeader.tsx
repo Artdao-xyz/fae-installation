@@ -24,7 +24,7 @@ const MOBILE_HEADER_LABEL_CLASS =
 const MENU_NAV_ITEM_CLASS =
   "flex w-full max-w-sm items-center justify-center gap-4 py-4 font-suisseintl text-sm font-normal leading-6 text-ink-primary transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary";
 
-const MENU_NAV_ICON_CLASS = "!size-8 shrink-0";
+const MENU_NAV_ICON_CLASS = "size-6! shrink-0";
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function subscribeToDocumentBody() {
@@ -197,7 +197,7 @@ export function MobileSiteHeader({
             aria-label="Home"
             className="flex min-h-0 min-w-0 items-center gap-2 text-ink-primary transition-colors hover:opacity-80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary"
           >
-            <HomeSvgIcon />
+            <HomeSvgIcon className="size-6!" />
             <span className={`truncate ${MOBILE_HEADER_LABEL_CLASS}`}>
               Future Arts Ecosystem
             </span>
@@ -215,7 +215,7 @@ export function MobileSiteHeader({
               width={32}
               height={32}
               unoptimized
-              className="size-7 shrink-0 object-contain"
+              className="size-6 shrink-0 object-contain"
               aria-hidden
             />
           </button>
