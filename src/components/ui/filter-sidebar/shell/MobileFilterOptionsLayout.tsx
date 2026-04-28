@@ -20,7 +20,7 @@ const FILTER_ACTION_ICON_MASK_BASE =
   "block shrink-0 [mask-size:contain] [mask-position:center] [mask-repeat:no-repeat] [-webkit-mask-size:contain] [-webkit-mask-position:center] [-webkit-mask-repeat:no-repeat]";
 
 const MOBILE_FILTER_ACTIONS_LABEL_CLASS =
-  "text-[#303030] text-xs font-normal font-lust-text leading-4 tracking-wide";
+  "text-[#303030] text-sm font-normal font-lust-text leading-4 tracking-wide";
 
 export type MobileFilterCategoryId =
   | "focus"
@@ -170,7 +170,7 @@ export function MobileFilterOptionsLayout({
         <button
           type="button"
           onClick={clearAllFilters}
-          className="flex h-11 min-w-0 flex-1 basis-0 items-center justify-center gap-2 pr-3 text-xs transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary"
+          className="flex h-11 min-w-0 flex-1 basis-0 items-center justify-center gap-2 pr-3 text-sm transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary"
         >
           <span
             className={`m-0 size-4 max-h-4 max-w-4 ${FILTER_ACTION_ICON_MASK_BASE} ${
@@ -187,7 +187,7 @@ export function MobileFilterOptionsLayout({
         <button
           type="button"
           onClick={() => setFiltersPanelOpen(false)}
-          className="flex h-11 min-w-0 flex-1 basis-0 items-center justify-center gap-2 border-l-hairline border-solid border-ink-primary pl-3 text-xs transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary"
+          className="flex h-11 min-w-0 flex-1 basis-0 items-center justify-center gap-2 border-l-hairline border-solid border-ink-primary pl-3 text-sm transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary"
         >
           <span className="flex min-w-0 flex-wrap items-baseline justify-center gap-x-1">
             {hasActiveTaxonomyFilters ? (

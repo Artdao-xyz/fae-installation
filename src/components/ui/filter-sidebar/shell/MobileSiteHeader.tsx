@@ -22,7 +22,7 @@ const MOBILE_HEADER_LABEL_CLASS =
   "font-suisseintl text-sm font-normal leading-5 transition-[color,filter] duration-150 motion-reduce:transition-none";
 
 const MENU_NAV_ITEM_CLASS =
-  "flex w-full max-w-sm items-center justify-center gap-4 py-4 font-suisseintl text-base font-normal leading-6 text-ink-primary transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary";
+  "flex w-full max-w-sm items-center justify-center gap-4 py-4 font-suisseintl text-sm font-normal leading-6 text-ink-primary transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary";
 
 const MENU_NAV_ICON_CLASS = "!size-8 shrink-0";
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -100,7 +100,7 @@ function MobileMenuNewsletterForm() {
       <button
         type="submit"
         disabled={status === "loading"}
-        className="flex h-full shrink-0 items-center justify-center gap-2 bg-surface-canvas px-3 font-fira-mono text-base font-normal leading-6 text-ink-primary transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary disabled:pointer-events-none disabled:opacity-50"
+        className="flex h-full shrink-0 items-center justify-center gap-2 bg-surface-canvas px-3 font-fira-mono text-sm font-normal leading-6 text-ink-primary transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary disabled:pointer-events-none disabled:opacity-50"
       >
         <span>{status === "loading" ? "Sending" : "Send"}</span>
         <Image
@@ -267,7 +267,7 @@ export function MobileSiteHeader({
                 <button
                   type="button"
                   onClick={() => setMenuOpen(false)}
-                  className="flex h-14 w-full items-center justify-center gap-2 px-3 font-fira-mono text-xs font-normal leading-5 text-ink-primary transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary"
+                  className="flex h-14 w-full items-center justify-center gap-2 px-3 font-fira-mono text-sm font-normal leading-5 text-ink-primary transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary"
                   aria-label="Close menu"
                 >
                   <OpenSvgIcon className="shrink-0 -rotate-90" />
