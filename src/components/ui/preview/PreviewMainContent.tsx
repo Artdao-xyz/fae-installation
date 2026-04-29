@@ -387,6 +387,17 @@ export function PreviewMainContent({
     [row.imageGallery, row.imageUrl],
   );
 
+  const firstSource =
+    row.resources.length > 0
+      ? row.resources[0]
+      : undefined;
+  const firstSourceUrlTrimmed = firstSource?.url?.trim() ?? "";
+  const firstSourceUrl =
+    firstSourceUrlTrimmed !== "" ? firstSourceUrlTrimmed : undefined;
+  const firstSourceLabelTrimmed = firstSource?.label?.trim() ?? "";
+  const firstSourceLabel =
+    firstSourceLabelTrimmed !== "" ? firstSourceLabelTrimmed : undefined;
+
   const captionText =
     typeof row.caption === "string" ? row.caption.trim() : "";
 
@@ -428,6 +439,8 @@ export function PreviewMainContent({
             key={previewSlides.join("\0")}
             slides={previewSlides}
             alt={row.title}
+            sourceHref={firstSourceUrl}
+            sourceLabel={firstSourceLabel}
           />
         ) : (
           <div

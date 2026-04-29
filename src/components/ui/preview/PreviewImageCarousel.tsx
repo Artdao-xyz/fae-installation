@@ -7,6 +7,9 @@ type Props = {
   slides: readonly string[];
   alt: string;
   className?: string;
+  /** First entry from preview Sources — hero image links here when set. */
+  sourceHref?: string;
+  sourceLabel?: string;
 };
 
 const SHELL =
@@ -16,6 +19,8 @@ type SlideProps = {
   src: string;
   alt: string;
   variant?: "default" | "heroSplit";
+  sourceHref?: string;
+  sourceLabel?: string;
 };
 
 /**
@@ -26,6 +31,8 @@ function CarouselImageSlide({
   src,
   alt,
   variant = "default",
+  sourceHref,
+  sourceLabel,
 }: SlideProps) {
   const isAnimatedGif = /\.gif(?:[?#]|$)/i.test(src);
 
@@ -39,18 +46,35 @@ function CarouselImageSlide({
       ? "(min-width: 1024px) 480px, 60vw"
       : "(min-width: 0) min(100vw, 362px)";
 
-  return (
-    <div className={wrapperClass}>
-      <Image
-        src={src}
-        alt={alt}
-        fill
-        sizes={sizes}
-        unoptimized={isAnimatedGif}
-        className="pointer-events-none object-contain object-center lg:object-left"
-      />
-    </div>
+  const image = (
+    <Image
+      src={src}
+      alt={alt}
+      fill
+      sizes={sizes}
+      unoptimized={isAnimatedGif}
+      className="pointer-events-none object-contain object-center lg:object-left"
+    />
   );
+
+  if (sourceHref) {
+    const ariaLabel = sourceLabel
+      ? `Open source: ${sourceLabel}`
+      : "Open source link";
+    return (
+      <a
+        href={sourceHref}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label={ariaLabel}
+        className={`${wrapperClass} block cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ink-primary focus-visible:ring-offset-2`}
+      >
+        {image}
+      </a>
+    );
+  }
+
+  return <div className={wrapperClass}>{image}</div>;
 }
 
 const thumbNavButtonClass =
@@ -127,7 +151,13 @@ function CarouselThumbnail({
  * thumbnails row stacks below the hero. Remount with `key` from the parent
  * when `slides` change so the index resets.
  */
-export function PreviewImageCarousel({ slides, alt, className = "" }: Props) {
+export function PreviewImageCarousel({
+  slides,
+  alt,
+  className = "",
+  sourceHref,
+  sourceLabel,
+}: Props) {
   const n = slides.length;
   const [index, setIndex] = useState(0);
 
@@ -152,7 +182,13 @@ export function PreviewImageCarousel({ slides, alt, className = "" }: Props) {
         aria-roledescription="carousel"
         aria-label={alt}
       >
-        <CarouselImageSlide key={src} src={src} alt={altText} />
+        <CarouselImageSlide
+          key={src}
+          src={src}
+          alt={altText}
+          sourceHref={sourceHref}
+          sourceLabel={sourceLabel}
+        />
       </div>
     );
   }
@@ -170,6 +206,8 @@ export function PreviewImageCarousel({ slides, alt, className = "" }: Props) {
           src={src}
           alt={altText}
           variant="heroSplit"
+          sourceHref={sourceHref}
+          sourceLabel={sourceLabel}
         />
       </div>
       <div className="flex min-h-0 w-full min-w-0 flex-col items-center lg:flex-1">
