@@ -23,7 +23,7 @@ export function ArtistsSubpanelColumn({
       role="complementary"
       aria-label="Artists filters"
     >
-      <SubpanelCloseBar onClose={onClose} />
+      <SubpanelCloseBar onClose={onClose} showTopBorder={false} />
       <div className={ARTISTS_NETWORK_SUBPANEL_SCROLL_BODY_CLASS}>
         <ArtistsDropdownPanel variant="subcolumn" onClearAll={onClearAll} />
       </div>

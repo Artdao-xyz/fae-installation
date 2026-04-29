@@ -15,7 +15,6 @@ import { MobileFormatScrollRow } from "./MobileFormatScrollRow";
 import type { FilterSidebarCategoryTone } from "../config/filterSidebarTones";
 import { filterPillSelection } from "@/components/ui/filter-sidebar/primitives/filterFramedClasses";
 import { filterChromeRightEdgeClass } from "./layout-classes";
-import { EmailSubscription } from "@/components/ui/email-subscription";
 
 /** Recolor static SVG assets via `background-color` + mask (fills are fixed in the files). */
 const FILTER_ACTION_ICON_MASK_BASE =
@@ -31,8 +30,7 @@ export type MobileFilterCategoryId =
   | "focus"
   | "activity"
   | "artists"
-  | "network"
-  | "subscribe";
+  | "network";
 
 export type MobileFilterOptionsLayoutProps = {
   panelId: string;
@@ -146,7 +144,6 @@ export function MobileFilterOptionsLayout({
           )}
           {rail("artists", "Artists", "artists", selectedArtists.size > 0)}
           {rail("network", "Network", "network", selectedNetworks.size > 0)}
-          {rail("subscribe", "Subscribe", "editorial", false, false, false)}
         </nav>
         <div className="scrollbar-hide flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overflow-x-hidden bg-surface-canvas">
           {displayCategory === "fellowships" ? (
@@ -178,15 +175,6 @@ export function MobileFilterOptionsLayout({
           {displayCategory === "network" ? (
             <div className="w-full shrink-0 p-2">
               <NetworkDropdownPanel variant="subcolumn" mobilePane />
-            </div>
-          ) : null}
-          {displayCategory === "subscribe" ? (
-            <div className="w-full min-w-0 shrink-0 p-2">
-              <EmailSubscription
-                fluidLayout
-                className="w-full max-w-full min-w-0"
-                defaultExpanded
-              />
             </div>
           ) : null}
         </div>

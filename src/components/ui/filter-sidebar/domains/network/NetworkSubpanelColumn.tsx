@@ -23,7 +23,7 @@ export function NetworkSubpanelColumn({
       role="complementary"
       aria-label="Network filters"
     >
-      <SubpanelCloseBar onClose={onClose} />
+      <SubpanelCloseBar onClose={onClose} showTopBorder={false} />
       <div className={ARTISTS_NETWORK_SUBPANEL_SCROLL_BODY_CLASS}>
         <NetworkDropdownPanel variant="subcolumn" onClearAll={onClearAll} />
       </div>

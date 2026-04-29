@@ -96,7 +96,10 @@ export function FilterSidebar() {
 
   return (
     <>
-    <div className="relative z-40 flex h-screen min-h-0 w-auto min-w-0 shrink-0 flex-row items-stretch overflow-visible">
+    <div
+      className="relative z-40 flex h-screen min-h-0 w-auto min-w-0 shrink-0 flex-row items-stretch overflow-visible"
+      data-fae-filter-sidebar-root
+    >
       <div
         className={`z-50 flex h-full min-h-0 flex-col items-stretch self-stretch overflow-visible ${
           filtersOpen
@@ -146,13 +149,28 @@ export function FilterSidebar() {
                   networkSubpanelOpen={networkSubpanelOpen}
                   subscribeSubpanelOpen={subscribeSubpanelOpen}
                   onToggleArtistsSubpanel={() =>
-                    setArtistsSubpanelOpen((o) => !o)
+                    setArtistsSubpanelOpen((open) => {
+                      const next = !open;
+                      if (next) setSubscribeSubpanelOpen(false);
+                      return next;
+                    })
                   }
                   onToggleNetworkSubpanel={() =>
-                    setNetworkSubpanelOpen((o) => !o)
+                    setNetworkSubpanelOpen((open) => {
+                      const next = !open;
+                      if (next) setSubscribeSubpanelOpen(false);
+                      return next;
+                    })
                   }
                   onToggleSubscribeSubpanel={() =>
-                    setSubscribeSubpanelOpen((o) => !o)
+                    setSubscribeSubpanelOpen((open) => {
+                      const next = !open;
+                      if (next) {
+                        setArtistsSubpanelOpen(false);
+                        setNetworkSubpanelOpen(false);
+                      }
+                      return next;
+                    })
                   }
                 />
               ) : null}

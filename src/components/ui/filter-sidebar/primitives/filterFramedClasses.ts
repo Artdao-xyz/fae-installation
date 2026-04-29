@@ -22,6 +22,8 @@ const toneSelectedOuterMatClass: Record<FilterSidebarCategoryTone, string> = {
   editorial: "!border-filter-category-editorial !bg-filter-category-editorial",
   artists: "!border-filter-category-artists !bg-filter-category-artists",
   network: "!border-filter-category-network !bg-filter-category-network",
+  subscribe:
+    "!border-[color:var(--color-filter-pill-selection)] !bg-[color:var(--color-filter-pill-selection)]",
 };
 
 function selectedToneTextClass(tone?: FilterSidebarCategoryTone) {

@@ -12,7 +12,7 @@ export function SubscribeMenu({ subpanelOpen, onToggleSubpanel }: SubscribeMenuP
     <FilterSidebarCategoryRow
       label="Subscribe"
       labelClassName="font-suisseintl text-xs"
-      tone="editorial"
+      tone="subscribe"
       expanded={subpanelOpen}
       onClick={onToggleSubpanel}
       showCategoryMarker={false}

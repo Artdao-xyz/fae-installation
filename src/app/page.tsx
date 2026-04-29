@@ -1,5 +1,11 @@
 import { HomePageClient } from "./HomePageClient";
+import { HomeTopPopUpStrip } from "./HomeTopPopUpStrip";
 
 export default function Home() {
-  return <HomePageClient />;
+  return (
+    <>
+      <HomeTopPopUpStrip />
+      <HomePageClient />
+    </>
+  );
 }

@@ -28,6 +28,7 @@ const selectedToneBorderLeftClass: Record<FilterSidebarCategoryTone, string> = {
   editorial: "border-l-filter-category-editorial",
   artists: "border-l-filter-category-artists",
   network: "border-l-filter-category-network",
+  subscribe: "border-l-[color:var(--color-filter-pill-selection)]",
 };
 /** Non-selected rail label: same ink as body, slightly softened. */
 const RAIL_LABEL_IDLE_TEXT = "text-ink-body/80";
