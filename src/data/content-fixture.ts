@@ -196,6 +196,7 @@ export const CONTENT_FIXTURE_ROWS: ContentRow[] = FIXTURE_SEED_TITLES.map(
         `https://picsum.photos/seed/${id}-g0/440/440.webp`,
         `https://picsum.photos/seed/${id}-g1/440/440.webp`,
       ],
+      caption: "Sample *credit or rights* line for preview styling.",
       content: plainContent,
       contentBlocks: index === 0 ? FIXTURE_STRAPI_LIKE_BLOCKS_ROW0 : null,
       resources: pickResourcesForIndex(index),

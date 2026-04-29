@@ -504,6 +504,10 @@ export function mapStrapiOutputToContentRow(
   const thumbUrl = mediaPreferredThumbnailUrl(doc.Thumbnail);
   const imageUrl = thumbUrl ?? imageGallery[0] ?? "";
 
+  const captionRaw = doc.Caption ?? doc.caption;
+  const caption =
+    typeof captionRaw === "string" ? captionRaw.trim() : "";
+
   /** Same `doc` as `Sources` / `Source` (below) — one Strapi detail response, one map pass. */
   const textRaw = "Text" in doc ? doc.Text : undefined;
   const contentBlocks: BlocksContent | null = Array.isArray(textRaw)
@@ -540,6 +544,7 @@ export function mapStrapiOutputToContentRow(
     shareSlug,
     imageUrl,
     imageGallery,
+    caption,
     content,
     contentBlocks,
     resources,

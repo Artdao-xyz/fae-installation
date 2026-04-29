@@ -32,14 +32,19 @@ function Divider() {
 function RichParagraph({
   text,
   preserveParagraphBreaks = false,
+  paragraphClassName,
 }: {
   text: string;
   preserveParagraphBreaks?: boolean;
+  /** When set, replaces default body typography (e.g. caption under images). */
+  paragraphClassName?: string;
 }) {
   const segments = text.split(/(\*[^*]+\*)/g);
+  const defaultParagraphClass =
+    "mb-0 font-suisseintl text-xs font-normal leading-[1.6] tracking-[0.36px] text-ink-caption";
   return (
     <p
-      className={`mb-0 font-suisseintl text-xs font-normal leading-[1.6] tracking-[0.36px] text-ink-caption${
+      className={`${paragraphClassName ?? defaultParagraphClass}${
         preserveParagraphBreaks ? " whitespace-pre-line" : ""
       }`}
     >
@@ -382,6 +387,9 @@ export function PreviewMainContent({
     [row.imageGallery, row.imageUrl],
   );
 
+  const captionText =
+    typeof row.caption === "string" ? row.caption.trim() : "";
+
   const paragraphs = useMemo(
     () => row.content.split(/\n\n+/).map((p) => p.trim()).filter(Boolean),
     [row.content],
@@ -404,7 +412,7 @@ export function PreviewMainContent({
         : "";
 
   const heroBlock = (
-    <div className="flex w-full shrink-0 flex-col gap-2.5">
+    <div className="flex w-full shrink-0 flex-col gap-2.5 max-lg:items-center max-lg:text-center lg:items-stretch lg:text-left">
       <p className="min-w-0 max-w-full wrap-anywhere font-lust-text text-xl leading-snug tracking-[-0.38px] text-black-fae">
         {row.title}
       </p>
@@ -414,7 +422,7 @@ export function PreviewMainContent({
         </p>
       ) : null}
       <Divider />
-      <div className="flex shrink-0 flex-col">
+      <div className="flex w-full max-w-full shrink-0 flex-col gap-2 max-lg:items-center lg:items-stretch">
         {previewSlides.length > 0 ? (
           <PreviewImageCarousel
             key={previewSlides.join("\0")}
@@ -427,6 +435,12 @@ export function PreviewMainContent({
             aria-hidden
           />
         )}
+        {captionText.length > 0 ? (
+          <RichParagraph
+            text={captionText}
+            paragraphClassName="mb-0 font-fira-mono text-[10px] font-normal leading-[14px] text-ink-caption"
+          />
+        ) : null}
       </div>
     </div>
   );

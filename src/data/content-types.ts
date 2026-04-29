@@ -19,6 +19,8 @@ export type ContentRow = {
    * Catalog list rows usually have `[]` until preview hydrates.
    */
   imageGallery: readonly string[];
+  /** Strapi `Caption` — line below the preview image(s). */
+  caption: string;
   /** Plain text from blocks — search and fallbacks. */
   content: string;
   /** Strapi `Text` blocks JSON; rendered in preview via `@strapi/blocks-react-renderer`. */
