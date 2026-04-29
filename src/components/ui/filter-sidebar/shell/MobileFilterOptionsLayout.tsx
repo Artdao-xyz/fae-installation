@@ -2,11 +2,8 @@
 
 import { useCallback, useState } from "react";
 import { useFilterSelection } from "@/components/ui/filter-sidebar/FilterSelectionContext";
-import { FellowshipsDropdownPanel } from "../domains/fellowships/FellowshipsDropdownPanel";
-import { BriefingsDropdownPanel } from "../domains/briefings/BriefingsDropdownPanel";
 import { ArtistsDropdownPanel } from "../domains/artists/ArtistsDropdownPanel";
 import { NetworkDropdownPanel } from "../domains/network/NetworkDropdownPanel";
-import { RDProjectsDropdownPanel } from "../domains/rd-projects/RDProjectsDropdownPanel";
 import { FilterSidebarMobileRailButton } from "../primitives/FilterSidebarMobileRailButton";
 import { ActivityType } from "../sections/ActivityType";
 import { FocusAreas } from "../sections/FocusAreas";
@@ -24,9 +21,6 @@ const MOBILE_FILTER_ACTIONS_LABEL_CLASS =
   "text-[#303030] text-sm font-normal font-lust-text leading-4 tracking-wide";
 
 export type MobileFilterCategoryId =
-  | "fellowships"
-  | "rd"
-  | "briefings"
   | "focus"
   | "activity"
   | "artists"
@@ -100,33 +94,6 @@ export function MobileFilterOptionsLayout({
           aria-label="Filter categories"
         >
           {rail(
-            "fellowships",
-            "Fellowships",
-            "latest-updates",
-            false,
-            true,
-            false,
-            false,
-          )}
-          {rail(
-            "rd",
-            "R&D Projects",
-            "rd",
-            false,
-            true,
-            false,
-            false,
-          )}
-          {rail(
-            "briefings",
-            "FAE Briefings",
-            "fae-briefings",
-            selectedFaeBriefing != null,
-            true,
-            false,
-            false,
-          )}
-          {rail(
             "focus",
             "Focus",
             "fae-briefings",
@@ -140,27 +107,12 @@ export function MobileFilterOptionsLayout({
             "editorial",
             selectedActivityTypes.size > 0,
             false,
-            true,
+            false,
           )}
           {rail("artists", "Artists", "artists", selectedArtists.size > 0)}
           {rail("network", "Network", "network", selectedNetworks.size > 0)}
         </nav>
         <div className="scrollbar-hide flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overflow-x-hidden bg-surface-canvas">
-          {displayCategory === "fellowships" ? (
-            <div className="w-full shrink-0 p-2">
-              <FellowshipsDropdownPanel variant="subcolumn" mobilePane />
-            </div>
-          ) : null}
-          {displayCategory === "rd" ? (
-            <div className="w-full shrink-0 p-2">
-              <RDProjectsDropdownPanel variant="subcolumn" mobilePane />
-            </div>
-          ) : null}
-          {displayCategory === "briefings" ? (
-            <div className="w-full shrink-0 p-2">
-              <BriefingsDropdownPanel variant="subcolumn" mobilePane />
-            </div>
-          ) : null}
           {displayCategory === "focus" ? (
             <FocusAreas collapsed={false} chromeless />
           ) : null}

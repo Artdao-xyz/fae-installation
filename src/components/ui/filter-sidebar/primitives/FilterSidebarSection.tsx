@@ -49,7 +49,10 @@ export function FilterSidebarSection({
           </h2>
           {selectionTally ? (
             <span className="shrink-0 font-fira-mono text-[10px] font-medium tabular-nums text-ink-caption">
-              {selectionTally.selected}/{selectionTally.total}
+              <span className="text-(--color-filter-pill-selection)">
+                {selectionTally.selected}
+              </span>
+              /{selectionTally.total}
             </span>
           ) : null}
         </header>

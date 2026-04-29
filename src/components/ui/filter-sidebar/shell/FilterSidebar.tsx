@@ -38,6 +38,7 @@ export function FilterSidebar() {
     setSubscribeSubpanelOpen,
     hasActiveTaxonomyFilters,
     selectedFaeBriefing,
+    clearAllFilters,
   } = useFilterSelection();
   const panelId = useId();
   const isMaxLg = useIsMaxLg();
@@ -93,6 +94,8 @@ export function FilterSidebar() {
   );
 
   const showOptionsPanel = !isMaxLg || filtersOpen;
+  const hasSelectedFilters =
+    hasActiveTaxonomyFilters || selectedFaeBriefing != null;
 
   return (
     <>
@@ -187,14 +190,31 @@ export function FilterSidebar() {
       <div className="contents lg:hidden">
         <div className="fixed inset-x-0 bottom-0 z-40 flex flex-col pb-[env(safe-area-inset-bottom,0px)] lg:hidden">
           {filtersOpen ||
-          hasActiveTaxonomyFilters ||
-          selectedFaeBriefing != null ? null : (
+          hasSelectedFilters ? null : (
             <MobileLatestUpdatesStrip />
           )}
           <div className="flex w-full shrink-0 flex-col bg-surface-canvas">
             {filtersOpen ? null : (
               <MobileFiltersBar onOpen={toggleFiltersOpen} />
             )}
+            {!filtersOpen && hasSelectedFilters ? (
+              <button
+                type="button"
+                onClick={clearAllFilters}
+                className="flex h-13 w-full items-center justify-center gap-2 border-t-hairline border-solid border-ink-primary bg-surface-canvas px-3 font-lust-text text-sm leading-4 tracking-wide text-ink-body transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element -- local static icon asset */}
+                <img
+                  src="/svg/delete.svg"
+                  alt=""
+                  width={16}
+                  height={16}
+                  className="size-4 shrink-0"
+                  aria-hidden
+                />
+                Clear Filters
+              </button>
+            ) : null}
             <Footer showYear={false} mergeWithSubpanel={false} />
           </div>
         </div>

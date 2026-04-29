@@ -14,6 +14,7 @@ import { GlossarySvgIcon } from "@/components/ui/icons/GlossarySvgIcon";
 import { HomeSvgIcon } from "@/components/ui/icons/HomeSvgIcon";
 import { OpenSvgIcon } from "@/components/ui/icons/OpenSvgIcon";
 import { useFloatingPanelStack } from "@/components/ui/floating-panels/FloatingPanelStackContext";
+import { SubscribePanelContent } from "@/components/ui/filter-sidebar/domains/subscribe/SubscribeSubpanelColumn";
 import { MobileGlossarySheet } from "@/components/ui/glossary-panel/MobileGlossarySheet";
 import { Z_INDEX } from "@/lib/z-index-scale";
 
@@ -50,6 +51,7 @@ export function MobileSiteHeader({
   const { aboutView, setAboutView } = useFloatingPanelStack();
   const [menuOpen, setMenuOpen] = useState(false);
   const [glossaryOpen, setGlossaryOpen] = useState(false);
+  const [subscribeOpen, setSubscribeOpen] = useState(false);
   const portalEl = useSyncExternalStore(
     subscribeToDocumentBody,
     getDocumentBodySnapshot,
@@ -73,6 +75,7 @@ export function MobileSiteHeader({
 
   const goHome = useCallback(() => {
     setMenuOpen(false);
+    setSubscribeOpen(false);
     const closingAbout = aboutView === "full";
     if (closingAbout) setAboutView("minimized");
     if (contentPreviewRow) {
@@ -90,15 +93,21 @@ export function MobileSiteHeader({
 
   const openAbout = useCallback(() => {
     setMenuOpen(false);
+    setSubscribeOpen(false);
     setAboutView("full");
   }, [setAboutView]);
 
   const openGlossary = useCallback(() => {
     setMenuOpen(false);
+    setSubscribeOpen(false);
     setGlossaryOpen(true);
   }, []);
 
   const closeGlossary = useCallback(() => setGlossaryOpen(false), []);
+  const toggleSubscribe = useCallback(
+    () => setSubscribeOpen((open) => !open),
+    [],
+  );
 
   return (
     <>
@@ -120,7 +129,10 @@ export function MobileSiteHeader({
           </button>
           <button
             type="button"
-            onClick={() => setMenuOpen(true)}
+            onClick={() => {
+              setSubscribeOpen(false);
+              setMenuOpen(true);
+            }}
             aria-label="Open menu"
             aria-expanded={menuOpen}
             className="flex size-8 shrink-0 items-center justify-center text-ink-primary transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary"
@@ -147,41 +159,70 @@ export function MobileSiteHeader({
               aria-modal="true"
               aria-label="Site menu"
             >
-              <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pt-[env(safe-area-inset-top,0px)]">
-                <nav
-                  className="flex min-h-full flex-col items-stretch justify-center gap-0 px-0 py-8 [&>button:last-child]:border-b-hairline"
-                  aria-label="Site"
+              <div className="shrink-0 border-b-hairline border-solid border-ink-primary bg-surface-canvas pt-[env(safe-area-inset-top,0px)]">
+                <button
+                  type="button"
+                  onClick={toggleSubscribe}
+                  className={`flex h-14 w-full items-center justify-center gap-2 px-3 font-fira-mono text-sm font-normal leading-5 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary ${
+                    subscribeOpen
+                      ? "text-(--color-filter-pill-selection)"
+                      : "text-ink-primary hover:bg-surface-hover/60"
+                  }`}
+                  aria-label={subscribeOpen ? "Close subscribe" : "Open subscribe"}
                 >
-                  <button
-                    type="button"
-                    className={MENU_NAV_ITEM_CLASS}
-                    onClick={goHome}
+                  <OpenSvgIcon
+                    className={`shrink-0 transition-transform duration-150 motion-reduce:transition-none ${
+                      subscribeOpen ? "-rotate-90" : "rotate-90"
+                    }`}
+                  />
+                  <span>Subscribe</span>
+                </button>
+              </div>
+              <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+                {subscribeOpen ? (
+                  <SubscribePanelContent
+                    tabbed
+                    className="flex min-h-0 h-full flex-1 flex-col bg-surface-canvas"
+                  />
+                ) : (
+                  <nav
+                    className="flex min-h-full flex-col items-stretch justify-center gap-0 px-0 py-8 [&>button:last-child]:border-b-hairline"
+                    aria-label="Site"
                   >
-                    <HomeSvgIcon className={MENU_NAV_ICON_CLASS} />
-                    <span>Home</span>
-                  </button>
-                  <button
-                    type="button"
-                    className={MENU_NAV_ITEM_CLASS}
-                    onClick={openAbout}
-                  >
-                    <AboutSvgIcon className={MENU_NAV_ICON_CLASS} />
-                    <span>About</span>
-                  </button>
-                  <button
-                    type="button"
-                    className={MENU_NAV_ITEM_CLASS}
-                    onClick={openGlossary}
-                  >
-                    <GlossarySvgIcon className={MENU_NAV_ICON_CLASS} />
-                    <span>Glossary</span>
-                  </button>
-                </nav>
+                    <button
+                      type="button"
+                      className={MENU_NAV_ITEM_CLASS}
+                      onClick={goHome}
+                    >
+                      <HomeSvgIcon className={MENU_NAV_ICON_CLASS} />
+                      <span>Home</span>
+                    </button>
+                    <button
+                      type="button"
+                      className={MENU_NAV_ITEM_CLASS}
+                      onClick={openAbout}
+                    >
+                      <AboutSvgIcon className={MENU_NAV_ICON_CLASS} />
+                      <span>About</span>
+                    </button>
+                    <button
+                      type="button"
+                      className={MENU_NAV_ITEM_CLASS}
+                      onClick={openGlossary}
+                    >
+                      <GlossarySvgIcon className={MENU_NAV_ICON_CLASS} />
+                      <span>Glossary</span>
+                    </button>
+                  </nav>
+                )}
               </div>
               <div className="shrink-0 border-t-hairline border-solid border-ink-primary bg-surface-canvas pb-[env(safe-area-inset-bottom,0px)]">
                 <button
                   type="button"
-                  onClick={() => setMenuOpen(false)}
+                  onClick={() => {
+                    setSubscribeOpen(false);
+                    setMenuOpen(false);
+                  }}
                   className="flex h-14 w-full items-center justify-center gap-2 px-3 font-fira-mono text-sm font-normal leading-5 text-ink-primary transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary"
                   aria-label="Close menu"
                 >

@@ -57,7 +57,10 @@ export function FilterPillDropdown({
           </h2>
           {mobileHeader.totalCount > 0 ? (
             <span className="shrink-0 font-fira-mono text-[10px] font-medium tabular-nums text-ink-caption">
-              {mobileHeader.selectedCount}/{mobileHeader.totalCount}
+              <span className="text-(--color-filter-pill-selection)">
+                {mobileHeader.selectedCount}
+              </span>
+              /{mobileHeader.totalCount}
             </span>
           ) : null}
         </header>
