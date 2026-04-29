@@ -36,7 +36,7 @@ export const ACTIVITY_TYPE_LABELS = [
 export const FORMAT_LABELS = [
   "Read",
   "Join",
-  "Viwe",
+  "View",
   "Build",
   "Interact",
 ] as const;

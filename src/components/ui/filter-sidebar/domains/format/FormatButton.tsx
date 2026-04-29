@@ -43,7 +43,22 @@ export function FormatButton({
         selected ? filterFramedRoundedOuterSelectedClass : ""
       } ${cursorClass}`}
     >
-      <span className={filterFramedRoundedInnerClass(selected)}>{label}</span>
+      <span
+        className={`${filterFramedRoundedInnerClass(selected)} inline-flex h-[28px] items-center overflow-hidden transition-[width] duration-150 motion-reduce:transition-none ${
+          selected ? "w-[100px] justify-center gap-1.5 px-0" : "w-[50px] justify-center px-0"
+        }`}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element -- filter button icons are local static SVG assets */}
+        <img
+          src="/svg/briefing.svg"
+          alt=""
+          width={14}
+          height={14}
+          className="h-3.5 w-3.5 shrink-0 object-contain"
+          aria-hidden
+        />
+        {selected ? <span className="truncate">{label}</span> : null}
+      </span>
     </button>
   );
 }
