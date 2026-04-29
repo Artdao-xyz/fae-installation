@@ -1,1 +1,0 @@
-export { PixelTessellationBackground } from "./PixelTessellationBackground";

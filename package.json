@@ -4,28 +4,27 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "npm run lint && next build --turbopack",
-    "analyze": "ANALYZE=true next build --webpack",
-    "start": "next start",
-    "lint": "eslint ."
+    "build": "next build --turbopack",
+    "start": "next start"
   },
   "dependencies": {
-    "@strapi/blocks-react-renderer": "^1.0.2",
-    "next": "^16.2.1",
+    "embla-carousel-react": "^8.6.0",
+    "leva": "^0.10.0",
+    "lucide-react": "^0.545.0",
+    "next": "^15.5.8",
+    "prop-types": "^15.8.1",
     "react": "19.1.0",
-    "react-dom": "19.1.0"
+    "react-dom": "19.1.0",
+    "react-responsive-masonry": "^2.7.1"
   },
   "devDependencies": {
     "@netlify/plugin-nextjs": "^5.15.9",
-    "@next/bundle-analyzer": "^16.2.4",
-    "@tailwindcss/postcss": "^4.2.2",
+    "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "eslint": "^9.39.4",
-    "eslint-config-next": "^16.2.3",
-    "postcss": "^8.5.6",
-    "tailwindcss": "^4.2.2",
+    "@types/react-responsive-masonry": "^2.6.0",
+    "tailwindcss": "^4",
     "typescript": "^5"
   }
 }

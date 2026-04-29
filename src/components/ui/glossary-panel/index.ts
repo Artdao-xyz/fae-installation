@@ -1,1 +1,0 @@
-export { GlossaryPanel } from "./GlossaryPanel";
