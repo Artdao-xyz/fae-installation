@@ -6,6 +6,19 @@ function isValidEmail(value: string): boolean {
   return EMAIL_RE.test(value.trim());
 }
 
+function stringField(body: Record<string, unknown>, key: string): string {
+  const value = body[key];
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function booleanField(
+  body: Record<string, unknown>,
+  key: string,
+  expectedValue: string,
+): boolean {
+  return body[key] === true || body[key] === "true" || body[key] === expectedValue;
+}
+
 /**
  * Hidden inputs from your FormAssembly embed (Publish → Embed HTML / view page source).
  * Typical keys: `tfa_dbFormId`, `tfa_dbControl`. JSON object, e.g.
@@ -45,34 +58,75 @@ function isFormAssemblySuccess(status: number): boolean {
 }
 
 /**
- * 1) FormAssembly: `FORMASSEMBLY_FORM_ACTION` + `FORMASSEMBLY_EMAIL_FIELD` (+ optional `FORMASSEMBLY_FORM_META_JSON`)
- * 2) Fallback webhook: `NEWSLETTER_SUBSCRIBE_WEBHOOK_URL` (JSON body `{ email }`)
+ * 1) FormAssembly: `FORMASSEMBLY_FORM_ACTION` (+ optional field-name overrides)
+ * 2) Fallback webhook: `NEWSLETTER_SUBSCRIBE_WEBHOOK_URL`
  */
 export async function POST(req: Request) {
   let body: unknown;
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
+    return NextResponse.json({ error: "Try again." }, { status: 400 });
   }
 
-  if (!body || typeof body !== "object" || !("email" in body)) {
-    return NextResponse.json({ error: "Missing email." }, { status: 400 });
+  if (!body || typeof body !== "object") {
+    return NextResponse.json({ error: "Try again." }, { status: 400 });
   }
 
-  const raw = (body as { email: unknown }).email;
-  if (typeof raw !== "string" || !isValidEmail(raw)) {
-    return NextResponse.json({ error: "Invalid email." }, { status: 400 });
-  }
+  const payload = body as Record<string, unknown>;
+  const firstName = stringField(payload, "firstName") || stringField(payload, "tfa_2");
+  const lastName = stringField(payload, "lastName") || stringField(payload, "tfa_4");
+  const email = (
+    stringField(payload, "email") || stringField(payload, "tfa_6")
+  ).toLowerCase();
+  const newsletterOptIn =
+    booleanField(payload, "newsletterOptIn", "tfa_11") ||
+    booleanField(payload, "tfa_11", "tfa_11");
+  const marketingOptIn =
+    booleanField(payload, "marketingOptIn", "tfa_31") ||
+    booleanField(payload, "tfa_31", "tfa_31");
 
-  const email = raw.trim().toLowerCase();
+  if (!firstName) {
+    return NextResponse.json({ error: "Add first name." }, { status: 400 });
+  }
+  if (!lastName) {
+    return NextResponse.json({ error: "Add last name." }, { status: 400 });
+  }
+  if (!email || !isValidEmail(email)) {
+    return NextResponse.json({ error: "Enter a valid email." }, { status: 400 });
+  }
+  if (!newsletterOptIn) {
+    return NextResponse.json(
+      { error: "Tick both consent boxes." },
+      { status: 400 },
+    );
+  }
+  if (!marketingOptIn) {
+    return NextResponse.json(
+      { error: "Tick both consent boxes." },
+      { status: 400 },
+    );
+  }
 
   const faAction = process.env.FORMASSEMBLY_FORM_ACTION?.trim();
-  const faEmailField = process.env.FORMASSEMBLY_EMAIL_FIELD?.trim();
+  const faFirstNameField = process.env.FORMASSEMBLY_FIRST_NAME_FIELD?.trim() || "tfa_2";
+  const faLastNameField = process.env.FORMASSEMBLY_LAST_NAME_FIELD?.trim() || "tfa_4";
+  const faEmailField = process.env.FORMASSEMBLY_EMAIL_FIELD?.trim() || "tfa_6";
+  const faNewsletterOptInField =
+    process.env.FORMASSEMBLY_NEWSLETTER_OPT_IN_FIELD?.trim() || "tfa_11";
+  const faMarketingOptInField =
+    process.env.FORMASSEMBLY_MARKETING_OPT_IN_FIELD?.trim() || "tfa_31";
 
-  if (faAction && faEmailField) {
+  if (faAction) {
     const meta = formAssemblyMetaFromEnv();
-    const params = new URLSearchParams({ ...meta, [faEmailField]: email });
+    const params = new URLSearchParams({
+      ...meta,
+      [faFirstNameField]: firstName,
+      [faLastNameField]: lastName,
+      [faEmailField]: email,
+      [faNewsletterOptInField]: faNewsletterOptInField,
+      [faMarketingOptInField]: faMarketingOptInField,
+    });
 
     try {
       const upstream = await fetch(faAction, {
@@ -86,7 +140,7 @@ export async function POST(req: Request) {
 
       if (!isFormAssemblySuccess(upstream.status)) {
         return NextResponse.json(
-          { error: "Could not complete signup. Try again later." },
+          { error: "Couldn’t subscribe. Try again." },
           { status: 502 },
         );
       }
@@ -94,7 +148,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: true });
     } catch {
       return NextResponse.json(
-        { error: "Could not complete signup. Try again later." },
+        { error: "Couldn’t subscribe. Try again." },
         { status: 502 },
       );
     }
@@ -105,8 +159,7 @@ export async function POST(req: Request) {
   if (!webhook) {
     return NextResponse.json(
       {
-        error:
-          "Newsletter signup is not configured. Set FORMASSEMBLY_FORM_ACTION and FORMASSEMBLY_EMAIL_FIELD (see .env.example), or NEWSLETTER_SUBSCRIBE_WEBHOOK_URL.",
+        error: "Signup unavailable.",
       },
       { status: 503 },
     );
@@ -122,12 +175,18 @@ export async function POST(req: Request) {
     const upstream = await fetch(webhook, {
       method: "POST",
       headers,
-      body: JSON.stringify({ email }),
+      body: JSON.stringify({
+        firstName,
+        lastName,
+        email,
+        newsletterOptIn,
+        marketingOptIn,
+      }),
     });
 
     if (!upstream.ok) {
       return NextResponse.json(
-        { error: "Could not complete signup. Try again later." },
+        { error: "Couldn’t subscribe. Try again." },
         { status: 502 },
       );
     }
@@ -135,7 +194,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true });
   } catch {
     return NextResponse.json(
-      { error: "Could not complete signup. Try again later." },
+      { error: "Couldn’t subscribe. Try again." },
       { status: 502 },
     );
   }

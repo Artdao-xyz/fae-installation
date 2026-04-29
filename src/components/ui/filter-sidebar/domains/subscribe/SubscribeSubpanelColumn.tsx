@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { FormEvent, useState } from "react";
 import { FilterSidebarDomainTrailing } from "../../primitives/FilterSidebarDomainTrailing";
 import { SubpanelCloseBar } from "../../shell/SubpanelCloseBar";
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 type SubscribeSubpanelColumnProps = {
   onClose: () => void;
@@ -13,8 +15,81 @@ export function SubscribeSubpanelColumn({
   onClose,
   mergeTopBorder,
 }: SubscribeSubpanelColumnProps) {
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
   const [newsletterConsent, setNewsletterConsent] = useState(false);
   const [updatesConsent, setUpdatesConsent] = useState(false);
+  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">(
+    "idle",
+  );
+  const [message, setMessage] = useState<string | null>(null);
+
+  async function submitSubscribeForm(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setStatus("loading");
+    setMessage(null);
+
+    const trimmedFirstName = firstName.trim();
+    const trimmedLastName = lastName.trim();
+    const trimmedEmail = email.trim();
+
+    if (!trimmedFirstName) {
+      setStatus("error");
+      setMessage("Add first name.");
+      return;
+    }
+    if (!trimmedLastName) {
+      setStatus("error");
+      setMessage("Add last name.");
+      return;
+    }
+    if (!EMAIL_RE.test(trimmedEmail)) {
+      setStatus("error");
+      setMessage("Enter a valid email.");
+      return;
+    }
+    if (!newsletterConsent || !updatesConsent) {
+      setStatus("error");
+      setMessage("Tick both consent boxes.");
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/newsletter/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          firstName: trimmedFirstName,
+          lastName: trimmedLastName,
+          email: trimmedEmail,
+          newsletterOptIn: newsletterConsent,
+          marketingOptIn: updatesConsent,
+        }),
+      });
+      const data: unknown = await res.json().catch(() => null);
+      const error =
+        data &&
+        typeof data === "object" &&
+        "error" in data &&
+        typeof (data as { error: unknown }).error === "string"
+          ? (data as { error: string }).error
+          : "Couldn’t subscribe. Try again.";
+
+      if (!res.ok) throw new Error(error);
+
+      setStatus("success");
+      setMessage("Subscribed. Thank you.");
+      setFirstName("");
+      setLastName("");
+      setEmail("");
+      setNewsletterConsent(false);
+      setUpdatesConsent(false);
+    } catch (err) {
+      setStatus("error");
+      setMessage(err instanceof Error ? err.message : "Couldn’t subscribe. Try again.");
+    }
+  }
 
   return (
     <div
@@ -26,27 +101,40 @@ export function SubscribeSubpanelColumn({
     >
       <SubpanelCloseBar onClose={onClose} showTopBorder={false} />
       <div className="scrollbar-hide flex min-h-0 min-w-0 flex-1 flex-col justify-end overflow-y-auto bg-surface-canvas">
-        <section className="w-full bg-surface-canvas px-[15px] py-5">
+        <form
+          className="w-full bg-surface-canvas px-[15px] py-5"
+          onSubmit={submitSubscribeForm}
+          noValidate
+        >
           <div className="mx-auto flex w-full flex-col items-center">
             <div className="w-full border-t-hairline border-dotted border-ink-primary" />
             <input
               type="text"
-              name="firstName"
+              name="tfa_2"
               placeholder="First Name"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              required
               className="w-full border-0 bg-transparent py-2 text-center font-fira-mono text-xs leading-[17px] text-ink-body placeholder:text-ink-body/60 focus:outline-none"
             />
             <div className="w-full border-t-hairline border-dotted border-ink-primary" />
             <input
               type="text"
-              name="lastName"
+              name="tfa_4"
               placeholder="Last Name"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              required
               className="w-full border-0 bg-transparent py-2 text-center font-fira-mono text-xs leading-[17px] text-ink-body placeholder:text-ink-body/60 focus:outline-none"
             />
             <div className="w-full border-t-hairline border-dotted border-ink-primary" />
             <input
               type="email"
-              name="email"
+              name="tfa_6"
               placeholder="Email Address"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
               className="w-full border-0 bg-transparent py-2 text-center font-fira-mono text-xs leading-[17px] text-ink-body placeholder:text-ink-body/60 focus:outline-none"
             />
             <div className="w-full border-t-hairline border-dotted border-ink-primary" />
@@ -74,11 +162,24 @@ export function SubscribeSubpanelColumn({
                 I&apos;d like to receive email updates from Serpentine
               </span>
             </button>
+            {message ? (
+              <p
+                role={status === "error" ? "alert" : "status"}
+                className={`mt-4 text-center font-fira-mono text-[10px] leading-[12px] ${
+                  status === "error"
+                    ? "text-(--color-filter-pill-selection)"
+                    : "text-ink-body/60"
+                }`}
+              >
+                {message}
+              </p>
+            ) : null}
             <button
-              type="button"
+              type="submit"
+              disabled={status === "loading"}
               className="mt-5 inline-flex w-[200px] items-center justify-center gap-2 border-hairline border-solid border-[#424242] bg-surface-canvas px-[50px] py-2 font-fira-mono text-xs leading-[17px] text-ink-body transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary"
             >
-              <span>Submit</span>
+              <span>{status === "loading" ? "Sending..." : "Submit"}</span>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/svg/blue-arrow.svg"
@@ -90,7 +191,7 @@ export function SubscribeSubpanelColumn({
               />
             </button>
           </div>
-        </section>
+        </form>
 
         <div className="w-full border-t-hairline border-solid border-[#424242] bg-surface-muted px-[50px] py-2 text-center font-lust-text text-xs leading-[17px] tracking-[0.05px] text-ink-body">
           Telegram
