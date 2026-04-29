@@ -296,13 +296,21 @@ function strapiSystemTimestampIso(
   return "";
 }
 
+/**
+ * Numeric year for `ContentRow.year`: first 4-digit year in the CMS `Date` value.
+ * `Date` may be a single year (`2024`) or an interval (`2022-2024`, `2022–2024`, spaced variants).
+ */
 function parseYear(dateField: unknown): number {
   if (typeof dateField === "number" && Number.isFinite(dateField))
-    return dateField;
+    return Math.trunc(dateField);
   if (typeof dateField === "string") {
     const trimmed = dateField.trim();
-    const y = parseInt(trimmed.slice(0, 4), 10);
-    if (Number.isFinite(y)) return y;
+    if (trimmed.length === 0) return 0;
+    const m = trimmed.match(/\d{4}/);
+    if (m) {
+      const y = parseInt(m[0]!, 10);
+      if (y >= 1000 && y <= 9999) return y;
+    }
   }
   return 0;
 }
@@ -520,6 +528,7 @@ export function mapStrapiOutputToContentRow(
   const dateStr =
     typeof doc.Date === "string" ? doc.Date.trim() : "";
   const year = parseYear(doc.Date);
+  /** Full `Date` string for UI: one year or YYYY–YYYY interval (max length per CMS schema). */
   const yearLabel =
     dateStr.length > 0 ? dateStr : year > 0 ? String(year) : "";
 

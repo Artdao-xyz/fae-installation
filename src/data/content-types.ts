@@ -34,8 +34,11 @@ export type ContentRow = {
   linkedOutputNames: readonly string[];
   focusAreas: readonly string[];
   activityTypes: readonly string[];
+  /** Approximate sort/search year: first year in `Date` (works for a single `2024` or an interval `2022-2024` / `2022–2024`). */
   year: number;
-  /** Display date/year from CMS (`Date` field); may be richer than numeric `year`. */
+  /**
+   * Strapi `Date` as entered: **one year** (`2024`) or **two-year interval** (`2022-2024`, hyphen or en dash). Shown in preview; prefer over formatting `year`.
+   */
   yearLabel: string;
   formats: readonly string[];
   networks: readonly string[];
