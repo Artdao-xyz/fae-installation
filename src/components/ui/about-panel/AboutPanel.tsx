@@ -19,7 +19,10 @@ import {
 } from "@/components/ui/preview/fullScreenContentChrome";
 import { PreviewPanelCollapseBar } from "@/components/ui/preview/PreviewPanelCollapseBar";
 import { Z_INDEX } from "@/lib/z-index-scale";
-import { AboutPanelRichContent, ABOUT_BODY } from "./AboutShared";
+import {
+  AboutFullScreenRichContent,
+  ABOUT_BODY,
+} from "./AboutShared";
 import { MobileAboutSheet } from "./MobileAboutSheet";
 
 /**
@@ -69,8 +72,8 @@ function AboutFullScreenView({
         onClose={onBackToPeek}
       />
       <div className={fullScreenContentScrollClass}>
-        <div className={fullScreenContentInnerClass}>
-          <AboutPanelRichContent />
+        <div className={`${fullScreenContentInnerClass} max-w-[645px]`}>
+          <AboutFullScreenRichContent />
         </div>
       </div>
       <div className="flex shrink-0 justify-start">
