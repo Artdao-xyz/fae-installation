@@ -64,7 +64,7 @@ export function MobileSelectedFiltersStrip() {
   }
 
   return (
-    <div className="scrollbar-hide flex min-w-0 flex-1 flex-nowrap items-center gap-2 overflow-x-auto overflow-y-hidden py-1">
+    <div className="scrollbar-hide flex min-w-0 flex-1 flex-nowrap items-center gap-2 overflow-x-auto py-4">
       {labels.map((item) => (
         <SelectedFilterPillLabel key={item.key} label={item.label} />
       ))}

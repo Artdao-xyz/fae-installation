@@ -35,7 +35,7 @@ export function Search({
       }
     >
       {/* Bar row: on landing mobile, parent keeps this outside the main scroll region so it stays put. */}
-      <div className="min-w-0 shrink-0 bg-surface-canvas p-3">
+      <div className="min-w-0 shrink-0 bg-surface-canvas px-3 py-4">
         <FilterSearchField
           id={fieldId}
           label="Search"

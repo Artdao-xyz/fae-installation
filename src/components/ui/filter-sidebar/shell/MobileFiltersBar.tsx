@@ -9,7 +9,7 @@ type MobileFiltersBarProps = {
   onOpen: () => void;
 };
 
-/** Bottom entry when the narrow filter rail is hidden (`max-lg`). Same height as `Footer` (`h-11`); safe area lives on the fixed parent. */
+/** Bottom entry when the narrow filter rail is hidden (`max-lg`). Same height as `Footer` (`h-13`); safe area lives on the fixed parent. */
 export function MobileFiltersBar({ onOpen }: MobileFiltersBarProps) {
   const { hasActiveTaxonomyFilters, selectedFaeBriefing } = useFilterSelection();
   const hasSelectedFilters =
@@ -19,10 +19,10 @@ export function MobileFiltersBar({ onOpen }: MobileFiltersBarProps) {
     <button
       type="button"
       onClick={onOpen}
-      className={`flex h-11 w-full shrink-0 items-center gap-2 border-t-hairline border-solid border-ink-primary bg-surface-canvas backdrop-blur-fae-sm transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary ${
+      className={`flex w-full shrink-0 items-center gap-2 border-t-hairline border-solid border-ink-primary bg-surface-canvas backdrop-blur-fae-sm transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary ${
         hasSelectedFilters
-          ? "justify-start px-2 text-left"
-          : "justify-center px-3 text-center"
+          ? "min-h-13 h-auto justify-start px-2 text-left"
+          : "h-13 justify-center px-3 text-center"
       }`}
       aria-label="Open filters"
     >
