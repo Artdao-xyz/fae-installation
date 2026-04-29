@@ -6,7 +6,7 @@ import {
   MOBILE_OVERLAY_TOP_CLASS,
   MOBILE_OVERLAY_X_CLASS,
 } from "@/components/ui/filter-sidebar/shell/layout-classes";
-import { AboutPanelRichContent } from "./AboutShared";
+import { AboutFullScreenRichContent } from "./AboutShared";
 
 type MobileAboutSheetProps = {
   zIndex: number;
@@ -37,7 +37,7 @@ export function MobileAboutSheet({ zIndex, onClose }: MobileAboutSheetProps) {
         </button>
       </div>
       <div className="scrollbar-hide min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-3">
-        <AboutPanelRichContent />
+        <AboutFullScreenRichContent />
       </div>
     </div>
   );

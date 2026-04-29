@@ -566,7 +566,7 @@ export function AboutFullScreenRichContent() {
           <AboutSectionHeading title="Team" />
           <AboutSectionDivider />
         </div>
-        <div className="grid w-full grid-cols-1 gap-2.5 md:grid-cols-2">
+        <div className="grid w-full grid-cols-2 gap-2.5">
           <div className="flex flex-col gap-2.5">
             <p className="m-0 font-fira-mono text-xs leading-[14px] text-ink-primary">Current</p>
             <AboutTeamList members={CURRENT_TEAM} />
@@ -644,7 +644,14 @@ export function AboutFullScreenRichContent() {
 
       <section className="flex w-full flex-col gap-2.5">
         <AboutSectionDivider />
-        <p className="m-0 font-suisseintl text-xs leading-[1.6] text-ink-primary">Privacy Policy</p>
+        <a
+          href="https://www.serpentinegalleries.org/legal/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-suisseintl text-xs leading-[1.6] text-ink-primary underline decoration-solid underline-offset-2 hover:opacity-80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ink-primary"
+        >
+          Privacy Policy
+        </a>
       </section>
     </div>
   );
