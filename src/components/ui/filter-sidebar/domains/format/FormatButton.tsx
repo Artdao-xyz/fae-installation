@@ -36,8 +36,8 @@ export function FormatButton({
       }}
       disabled={unavailable}
       aria-disabled={unavailable ? true : undefined}
-      aria-label={label}
-      aria-pressed={selected}
+      role="radio"
+      aria-checked={selected}
       title={title ?? label}
       className={`fae-control-filter-outer inline-flex max-w-full shrink-0 items-baseline ${filterFramedOuterFocusClass} ${filterPillSingleLayerBrightnessHoverClass} ${
         selected ? filterFramedRoundedOuterSelectedClass : ""

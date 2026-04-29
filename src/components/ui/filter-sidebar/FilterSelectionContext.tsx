@@ -587,11 +587,9 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
   const formatOptionToggleMatchCount = useMemo(() => {
     const m = new Map<string, number>();
     for (const label of filterFormatOptionLabels) {
-      const nextFormats = toggledSet(
-        selectedFormats,
-        label,
-        selectedFormats.has(label),
-      );
+      const nextFormats = selectedFormats.has(label)
+        ? new Set<string>()
+        : new Set<string>([label]);
       m.set(
         label,
         countMatchingFilterRows(
@@ -639,7 +637,7 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
       setSelectedFocusAreas(new Set(row.focusAreas));
       setSelectedActivityTypes(new Set(row.activityTypes));
       setSelectedArtists(new Set((row.artists ?? []).slice(0, 1)));
-      setSelectedFormats(new Set(row.formats ?? []));
+      setSelectedFormats(new Set((row.formats ?? []).slice(0, 1)));
       setSelectedNetworks(new Set((row.networks ?? []).slice(0, 1)));
     },
     [minimizeAllFloatingPanels],
@@ -675,7 +673,7 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
     setSelectedFocusAreas(new Set(snap.focusAreas));
     setSelectedActivityTypes(new Set(snap.activityTypes));
     setSelectedArtists(new Set(snap.artists));
-    setSelectedFormats(new Set(snap.formats));
+    setSelectedFormats(new Set(snap.formats.slice(0, 1)));
     setSelectedNetworks(new Set(snap.networks));
     setSelectedFaeBriefing(snap.faeBriefing);
   }, [minimizeAllFloatingPanels]);
@@ -782,10 +780,7 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
       minimizeAllFloatingPanels();
       endContentPreviewOnSidebarFilterChange();
       setSelectedFormats((prev) => {
-        const next = new Set(prev);
-        if (next.has(label)) next.delete(label);
-        else next.add(label);
-        return next;
+        return prev.has(label) ? new Set<string>() : new Set<string>([label]);
       });
     },
     [endContentPreviewOnSidebarFilterChange, minimizeAllFloatingPanels],

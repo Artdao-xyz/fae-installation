@@ -47,6 +47,7 @@ export function Format({
           : undefined
       }
     >
+      <div role="radiogroup" aria-label="Mode" className="contents">
       {filterFormatOptionLabels.map((label) => {
         const selected = selectedFormats.has(label);
         const count = formatOptionToggleMatchCount.get(label) ?? 0;
@@ -69,6 +70,7 @@ export function Format({
           />
         );
       })}
+      </div>
     </FilterSidebarSection>
   );
 }
