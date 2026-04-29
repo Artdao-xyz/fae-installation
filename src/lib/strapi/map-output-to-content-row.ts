@@ -512,7 +512,7 @@ export function mapStrapiOutputToContentRow(
   const thumbUrl = mediaPreferredThumbnailUrl(doc.Thumbnail);
   const imageUrl = thumbUrl ?? imageGallery[0] ?? "";
 
-  const captionRaw = doc.Caption ?? doc.caption;
+  const captionRaw = doc.Image_Caption ?? doc.Caption ?? doc.caption;
   const caption =
     typeof captionRaw === "string" ? captionRaw.trim() : "";
 
