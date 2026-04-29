@@ -91,7 +91,7 @@ export function HomeBar({
           >
             <HomeSvgIcon />
             <span className={`truncate ${homeBarBreadcrumbTypeClassName} text-ink-body`}>
-              Future Arts Ecosystem
+              Future Arts Ecosystems
             </span>
           </Link>
           {contentPreviewRow ? (

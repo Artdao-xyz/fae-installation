@@ -199,7 +199,7 @@ export function MobileSiteHeader({
           >
             <HomeSvgIcon className="size-6!" />
             <span className={`truncate ${MOBILE_HEADER_LABEL_CLASS}`}>
-              Future Arts Ecosystem
+              Future Arts Ecosystems
             </span>
           </button>
           <button
