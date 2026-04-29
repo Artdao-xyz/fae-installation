@@ -78,6 +78,7 @@ export function ArtistsDropdownPanel({
       tone="artists"
       variant={variant}
       onClearAll={mobilePane ? undefined : handleClearAll}
+      subcolumnTitle={variant === "subcolumn" && !mobilePane ? "Artists" : undefined}
       mobileHeader={
         mobilePane
           ? {

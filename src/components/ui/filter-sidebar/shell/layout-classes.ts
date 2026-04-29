@@ -33,6 +33,13 @@ export const PREVIEW_DOCK_WIDTH_TRANSITION_CLASS =
 export const FILTER_SUBPANELS_COLUMN_EXPANDED_CLASS =
   "w-[20vw] max-w-[20vw] shrink-0";
 
+/**
+ * Artists / Network subpanel: pill list height follows content, scrolls after ~¾ viewport minus
+ * `SubpanelCloseBar` (see `--height-filter-close-bar`).
+ */
+export const ARTISTS_NETWORK_SUBPANEL_SCROLL_BODY_CLASS =
+  "scrollbar-hide h-auto min-h-0 max-h-[calc(75dvh-var(--height-filter-close-bar))] overflow-x-hidden overflow-y-auto";
+
 /** Pixel width matching `FILTER_SUBPANELS_COLUMN_EXPANDED_CLASS` (20vw). */
 export function getFilterSubpanelColumnWidthPx(viewportWidth: number): number {
   return viewportWidth * 0.2;

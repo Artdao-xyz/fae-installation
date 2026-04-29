@@ -2,8 +2,10 @@
 
 import { ArtistsSubpanelColumn } from "../domains/artists/ArtistsSubpanelColumn";
 import { BriefingsSubpanelColumn } from "../domains/briefings/BriefingsSubpanelColumn";
+import { FellowshipsSubpanelColumn } from "../domains/fellowships/FellowshipsSubpanelColumn";
 import { NetworkSubpanelColumn } from "../domains/network/NetworkSubpanelColumn";
 import { RDProjectsSubpanelColumn } from "../domains/rd-projects/RDProjectsSubpanelColumn";
+import { SubscribeSubpanelColumn } from "../domains/subscribe/SubscribeSubpanelColumn";
 import {
   FILTER_SUBPANELS_COLUMN_EXPANDED_CLASS,
   FILTER_SUBPANEL_COLUMN_TRANSITION_CLASS,
@@ -15,12 +17,16 @@ type FilterSubpanelsColumnProps = {
   anySubpanelOpen: boolean;
   briefingsSubpanelOpen: boolean;
   rdSubpanelOpen: boolean;
+  fellowshipsSubpanelOpen: boolean;
   artistsSubpanelOpen: boolean;
   networkSubpanelOpen: boolean;
+  subscribeSubpanelOpen: boolean;
   onCloseBriefings: () => void;
   onCloseRd: () => void;
+  onCloseFellowships: () => void;
   onCloseArtists: () => void;
   onCloseNetwork: () => void;
+  onCloseSubscribe: () => void;
 };
 
 export function FilterSubpanelsColumn({
@@ -28,14 +34,25 @@ export function FilterSubpanelsColumn({
   anySubpanelOpen,
   briefingsSubpanelOpen,
   rdSubpanelOpen,
+  fellowshipsSubpanelOpen,
   artistsSubpanelOpen,
   networkSubpanelOpen,
+  subscribeSubpanelOpen,
   onCloseBriefings,
   onCloseRd,
+  onCloseFellowships,
   onCloseArtists,
   onCloseNetwork,
+  onCloseSubscribe,
 }: FilterSubpanelsColumnProps) {
   const subpanelChromeVisible = filtersPanelOpen && anySubpanelOpen;
+
+  const belowBriefings =
+    rdSubpanelOpen ||
+    fellowshipsSubpanelOpen ||
+    artistsSubpanelOpen ||
+    networkSubpanelOpen ||
+    subscribeSubpanelOpen;
 
   return (
     <div
@@ -52,34 +69,51 @@ export function FilterSubpanelsColumn({
       <div className="scrollbar-hide flex min-h-0 w-full max-h-full flex-1 flex-col justify-end overflow-x-hidden overflow-y-auto">
         {briefingsSubpanelOpen ? (
           <BriefingsSubpanelColumn
-            mergeBottomBorder={
-              rdSubpanelOpen || artistsSubpanelOpen || networkSubpanelOpen
-            }
+            mergeBottomBorder={belowBriefings}
             onClose={onCloseBriefings}
           />
         ) : null}
         {rdSubpanelOpen ? (
           <RDProjectsSubpanelColumn
-            mergeTopBorder={
-              briefingsSubpanelOpen ||
-              artistsSubpanelOpen ||
-              networkSubpanelOpen
-            }
+            mergeTopBorder={briefingsSubpanelOpen}
             onClose={onCloseRd}
+          />
+        ) : null}
+        {fellowshipsSubpanelOpen ? (
+          <FellowshipsSubpanelColumn
+            mergeTopBorder={briefingsSubpanelOpen || rdSubpanelOpen}
+            onClose={onCloseFellowships}
           />
         ) : null}
         {artistsSubpanelOpen ? (
           <ArtistsSubpanelColumn
-            mergeTopBorder={briefingsSubpanelOpen || rdSubpanelOpen}
+            mergeTopBorder={
+              briefingsSubpanelOpen || rdSubpanelOpen || fellowshipsSubpanelOpen
+            }
             onClose={onCloseArtists}
           />
         ) : null}
         {networkSubpanelOpen ? (
           <NetworkSubpanelColumn
             mergeTopBorder={
-              briefingsSubpanelOpen || rdSubpanelOpen || artistsSubpanelOpen
+              briefingsSubpanelOpen ||
+              rdSubpanelOpen ||
+              fellowshipsSubpanelOpen ||
+              artistsSubpanelOpen
             }
             onClose={onCloseNetwork}
+          />
+        ) : null}
+        {subscribeSubpanelOpen ? (
+          <SubscribeSubpanelColumn
+            mergeTopBorder={
+              briefingsSubpanelOpen ||
+              rdSubpanelOpen ||
+              fellowshipsSubpanelOpen ||
+              artistsSubpanelOpen ||
+              networkSubpanelOpen
+            }
+            onClose={onCloseSubscribe}
           />
         ) : null}
       </div>

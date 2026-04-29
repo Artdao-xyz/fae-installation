@@ -16,6 +16,8 @@ type FilterPillDropdownProps = {
   variant?: "default" | "subcolumn";
   /** Mobile filter pane: category title + `n/total`, no marker / reset / left stripe. */
   mobileHeader?: FilterPillDropdownMobileHeader;
+  /** Subcolumn-only title text (e.g. Artists / Network) to show instead of marker SVG. */
+  subcolumnTitle?: string;
 };
 
 export function FilterPillDropdown({
@@ -24,6 +26,7 @@ export function FilterPillDropdown({
   children,
   variant = "default",
   mobileHeader,
+  subcolumnTitle,
 }: FilterPillDropdownProps) {
   const { glow } = toneAccentClass[tone];
   const isSubcolumn = variant === "subcolumn";
@@ -60,10 +63,18 @@ export function FilterPillDropdown({
         </header>
       ) : (
         <header className="flex w-full shrink-0 items-center justify-between gap-2">
-          <CategoryMarkerIcon
-            tone={tone}
-            className="size-5 shrink-0 object-contain"
-          />
+          {isSubcolumn && subcolumnTitle ? (
+            <h2
+              className={`min-w-0 flex-1 font-lust-text text-sm font-medium ${toneAccentClass[tone].marker}`}
+            >
+              {subcolumnTitle}
+            </h2>
+          ) : (
+            <CategoryMarkerIcon
+              tone={tone}
+              className="size-5 shrink-0 object-contain"
+            />
+          )}
           {showClearAll ? (
             <button
               type="button"

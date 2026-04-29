@@ -1,12 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useId, type ReactElement } from "react";
+import { useCallback, useId, type ReactElement } from "react";
 import { useFilterSelection } from "@/components/ui/filter-sidebar/FilterSelectionContext";
-import { FAE_BRIEFING_OPTIONS } from "@/components/ui/filter-sidebar/domains/briefings/constants";
-import { RD_PROJECT_OPTION_LABELS } from "@/components/ui/filter-sidebar/domains/rd-projects/constants";
 import { FilterOptionsPanel } from "./FilterOptionsPanel";
 import { FilterSubpanelsColumn } from "./FilterSubpanelsColumn";
-import { EmailSubscription } from "@/components/ui/email-subscription";
 import { Footer } from "./Footer";
 import { HomeBar } from "./HomeBar";
 import { MobileFiltersBar } from "./MobileFiltersBar";
@@ -31,10 +28,14 @@ export function FilterSidebar() {
     setBriefingsSubpanelOpen,
     rdSubpanelOpen,
     setRdSubpanelOpen,
+    fellowshipsSubpanelOpen,
+    setFellowshipsSubpanelOpen,
     networkSubpanelOpen,
     setNetworkSubpanelOpen,
     artistsSubpanelOpen,
     setArtistsSubpanelOpen,
+    subscribeSubpanelOpen,
+    setSubscribeSubpanelOpen,
     hasActiveTaxonomyFilters,
     selectedFaeBriefing,
   } = useFilterSelection();
@@ -44,20 +45,10 @@ export function FilterSidebar() {
   const anySubpanelOpen =
     briefingsSubpanelOpen ||
     rdSubpanelOpen ||
+    fellowshipsSubpanelOpen ||
     artistsSubpanelOpen ||
-    networkSubpanelOpen;
-
-  useEffect(() => {
-    if (FAE_BRIEFING_OPTIONS.length === 0 && briefingsSubpanelOpen) {
-      setBriefingsSubpanelOpen(false);
-    }
-  }, [briefingsSubpanelOpen, setBriefingsSubpanelOpen]);
-
-  useEffect(() => {
-    if (RD_PROJECT_OPTION_LABELS.length === 0 && rdSubpanelOpen) {
-      setRdSubpanelOpen(false);
-    }
-  }, [rdSubpanelOpen, setRdSubpanelOpen]);
+    networkSubpanelOpen ||
+    subscribeSubpanelOpen;
 
   const toggleFiltersOpen = useCallback(() => {
     setFiltersOpen((open) => {
@@ -65,8 +56,10 @@ export function FilterSidebar() {
       if (!next) {
         setBriefingsSubpanelOpen(false);
         setRdSubpanelOpen(false);
+        setFellowshipsSubpanelOpen(false);
         setArtistsSubpanelOpen(false);
         setNetworkSubpanelOpen(false);
+        setSubscribeSubpanelOpen(false);
       }
       return next;
     });
@@ -74,8 +67,10 @@ export function FilterSidebar() {
     setFiltersOpen,
     setBriefingsSubpanelOpen,
     setRdSubpanelOpen,
+    setFellowshipsSubpanelOpen,
     setArtistsSubpanelOpen,
     setNetworkSubpanelOpen,
+    setSubscribeSubpanelOpen,
   ]);
 
   const subpanelsColumn: ReactElement = (
@@ -84,12 +79,16 @@ export function FilterSidebar() {
       anySubpanelOpen={anySubpanelOpen}
       briefingsSubpanelOpen={briefingsSubpanelOpen}
       rdSubpanelOpen={rdSubpanelOpen}
+      fellowshipsSubpanelOpen={fellowshipsSubpanelOpen}
       artistsSubpanelOpen={artistsSubpanelOpen}
       networkSubpanelOpen={networkSubpanelOpen}
+      subscribeSubpanelOpen={subscribeSubpanelOpen}
       onCloseBriefings={() => setBriefingsSubpanelOpen(false)}
       onCloseRd={() => setRdSubpanelOpen(false)}
+      onCloseFellowships={() => setFellowshipsSubpanelOpen(false)}
       onCloseArtists={() => setArtistsSubpanelOpen(false)}
       onCloseNetwork={() => setNetworkSubpanelOpen(false)}
+      onCloseSubscribe={() => setSubscribeSubpanelOpen(false)}
     />
   );
 
@@ -142,17 +141,18 @@ export function FilterSidebar() {
                   panelId={panelId}
                   briefingsSubpanelOpen={briefingsSubpanelOpen}
                   rdSubpanelOpen={rdSubpanelOpen}
+                  fellowshipsSubpanelOpen={fellowshipsSubpanelOpen}
                   artistsSubpanelOpen={artistsSubpanelOpen}
                   networkSubpanelOpen={networkSubpanelOpen}
-                  onToggleBriefingsSubpanel={() =>
-                    setBriefingsSubpanelOpen((o) => !o)
-                  }
-                  onToggleRdSubpanel={() => setRdSubpanelOpen((o) => !o)}
+                  subscribeSubpanelOpen={subscribeSubpanelOpen}
                   onToggleArtistsSubpanel={() =>
                     setArtistsSubpanelOpen((o) => !o)
                   }
                   onToggleNetworkSubpanel={() =>
                     setNetworkSubpanelOpen((o) => !o)
+                  }
+                  onToggleSubscribeSubpanel={() =>
+                    setSubscribeSubpanelOpen((o) => !o)
                   }
                 />
               ) : null}
@@ -182,10 +182,6 @@ export function FilterSidebar() {
         </div>
       </div>
     </div>
-    <EmailSubscription
-      className="fixed bottom-0 left-(--width-filter-chrome-column) z-51 hidden min-h-0 max-w-none lg:flex"
-      forceCollapsed={anySubpanelOpen}
-    />
     </>
   );
 }

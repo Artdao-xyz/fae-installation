@@ -17,6 +17,7 @@ export function NetworkMenu({ subpanelOpen, onToggleSubpanel }: NetworkMenuProps
       expanded={subpanelOpen}
       onClick={onToggleSubpanel}
       hasSubpanelSelection={selectedNetworks.size > 0}
+      showCategoryMarker={false}
     />
   );
 }

@@ -20,6 +20,7 @@ export function ArtistsMenu({
       expanded={subpanelOpen}
       onClick={onToggleSubpanel}
       hasSubpanelSelection={selectedArtists.size > 0}
+      showCategoryMarker={false}
     />
   );
 }

@@ -1,11 +1,8 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useState } from "react";
 import { useFilterSelection } from "@/components/ui/filter-sidebar/FilterSelectionContext";
-import { FAE_BRIEFING_OPTIONS } from "@/components/ui/filter-sidebar/domains/briefings/constants";
-import { RD_PROJECT_OPTION_LABELS } from "@/components/ui/filter-sidebar/domains/rd-projects/constants";
 import { FellowshipsDropdownPanel } from "../domains/fellowships/FellowshipsDropdownPanel";
-import { FELLOWSHIP_OPTION_LABELS } from "@/components/ui/filter-sidebar/domains/fellowships/constants";
 import { BriefingsDropdownPanel } from "../domains/briefings/BriefingsDropdownPanel";
 import { ArtistsDropdownPanel } from "../domains/artists/ArtistsDropdownPanel";
 import { NetworkDropdownPanel } from "../domains/network/NetworkDropdownPanel";
@@ -18,6 +15,7 @@ import { MobileFormatScrollRow } from "./MobileFormatScrollRow";
 import type { FilterSidebarCategoryTone } from "../config/filterSidebarTones";
 import { filterPillSelection } from "@/components/ui/filter-sidebar/primitives/filterFramedClasses";
 import { filterChromeRightEdgeClass } from "./layout-classes";
+import { EmailSubscription } from "@/components/ui/email-subscription";
 
 /** Recolor static SVG assets via `background-color` + mask (fills are fixed in the files). */
 const FILTER_ACTION_ICON_MASK_BASE =
@@ -27,13 +25,14 @@ const MOBILE_FILTER_ACTIONS_LABEL_CLASS =
   "text-[#303030] text-sm font-normal font-lust-text leading-4 tracking-wide";
 
 export type MobileFilterCategoryId =
-  | "focus"
-  | "activity"
-  | "briefings"
   | "fellowships"
   | "rd"
+  | "briefings"
+  | "focus"
+  | "activity"
   | "artists"
-  | "network";
+  | "network"
+  | "subscribe";
 
 export type MobileFilterOptionsLayoutProps = {
   panelId: string;
@@ -55,18 +54,7 @@ export function MobileFilterOptionsLayout({
     setFiltersPanelOpen,
   } = useFilterSelection();
 
-  const displayCategory = useMemo((): MobileFilterCategoryId => {
-    if (FAE_BRIEFING_OPTIONS.length === 0 && active === "briefings") {
-      return "focus";
-    }
-    if (RD_PROJECT_OPTION_LABELS.length === 0 && active === "rd") {
-      return "focus";
-    }
-    if (FELLOWSHIP_OPTION_LABELS.length === 0 && active === "fellowships") {
-      return "focus";
-    }
-    return active;
-  }, [active]);
+  const displayCategory = active;
 
   const filterActionsIconActive =
     hasActiveTaxonomyFilters || selectedFaeBriefing != null;
@@ -114,6 +102,33 @@ export function MobileFilterOptionsLayout({
           aria-label="Filter categories"
         >
           {rail(
+            "fellowships",
+            "Fellowships",
+            "latest-updates",
+            false,
+            true,
+            false,
+            false,
+          )}
+          {rail(
+            "rd",
+            "R&D Projects",
+            "rd",
+            false,
+            true,
+            false,
+            false,
+          )}
+          {rail(
+            "briefings",
+            "FAE Briefings",
+            "fae-briefings",
+            selectedFaeBriefing != null,
+            true,
+            false,
+            false,
+          )}
+          {rail(
             "focus",
             "Focus",
             "fae-briefings",
@@ -129,48 +144,11 @@ export function MobileFilterOptionsLayout({
             false,
             true,
           )}
-          {rail(
-            "fellowships",
-            "Fellowships",
-            "latest-updates",
-            false,
-            true,
-            false,
-            FELLOWSHIP_OPTION_LABELS.length === 0,
-          )}
-          {rail(
-            "briefings",
-            "FAE Briefings",
-            "fae-briefings",
-            selectedFaeBriefing != null,
-            true,
-            false,
-            FAE_BRIEFING_OPTIONS.length === 0,
-          )}
-          {rail(
-            "rd",
-            "R&D Projects",
-            "rd",
-            false,
-            true,
-            false,
-            RD_PROJECT_OPTION_LABELS.length === 0,
-          )}
           {rail("artists", "Artists", "artists", selectedArtists.size > 0)}
           {rail("network", "Network", "network", selectedNetworks.size > 0)}
+          {rail("subscribe", "Subscribe", "editorial", false, false, false)}
         </nav>
         <div className="scrollbar-hide flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overflow-x-hidden bg-surface-canvas">
-          {displayCategory === "focus" ? (
-            <FocusAreas collapsed={false} chromeless />
-          ) : null}
-          {displayCategory === "activity" ? (
-            <ActivityType collapsed={false} chromeless />
-          ) : null}
-          {displayCategory === "briefings" ? (
-            <div className="w-full shrink-0 p-2">
-              <BriefingsDropdownPanel variant="subcolumn" mobilePane />
-            </div>
-          ) : null}
           {displayCategory === "fellowships" ? (
             <div className="w-full shrink-0 p-2">
               <FellowshipsDropdownPanel variant="subcolumn" mobilePane />
@@ -181,6 +159,17 @@ export function MobileFilterOptionsLayout({
               <RDProjectsDropdownPanel variant="subcolumn" mobilePane />
             </div>
           ) : null}
+          {displayCategory === "briefings" ? (
+            <div className="w-full shrink-0 p-2">
+              <BriefingsDropdownPanel variant="subcolumn" mobilePane />
+            </div>
+          ) : null}
+          {displayCategory === "focus" ? (
+            <FocusAreas collapsed={false} chromeless />
+          ) : null}
+          {displayCategory === "activity" ? (
+            <ActivityType collapsed={false} chromeless />
+          ) : null}
           {displayCategory === "artists" ? (
             <div className="w-full shrink-0 p-2">
               <ArtistsDropdownPanel variant="subcolumn" mobilePane />
@@ -189,6 +178,15 @@ export function MobileFilterOptionsLayout({
           {displayCategory === "network" ? (
             <div className="w-full shrink-0 p-2">
               <NetworkDropdownPanel variant="subcolumn" mobilePane />
+            </div>
+          ) : null}
+          {displayCategory === "subscribe" ? (
+            <div className="w-full min-w-0 shrink-0 p-2">
+              <EmailSubscription
+                fluidLayout
+                className="w-full max-w-full min-w-0"
+                defaultExpanded
+              />
             </div>
           ) : null}
         </div>

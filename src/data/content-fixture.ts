@@ -176,7 +176,7 @@ export const CONTENT_FIXTURE_ROWS: ContentRow[] = FIXTURE_SEED_TITLES.map(
     const artists = pickDistinctFromPool(
       index,
       ARTIST_LABELS,
-      formatCount1to2(index, 1529),
+      Math.min(ARTIST_LABELS.length, formatCount1to2(index, 1529) * 3),
       undefined,
       1631,
     );

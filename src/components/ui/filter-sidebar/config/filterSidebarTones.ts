@@ -60,6 +60,26 @@ export const toneSelectedBorderClass: Record<FilterSidebarCategoryTone, string> 
 };
 
 /**
+ * Selected domain sidebar row (`appearance="domain"`): background tint aligns with `--color-filter-category-*`.
+ */
+export const domainRowHighlightedBgClass: Record<
+  FilterSidebarCategoryTone,
+  string
+> = {
+  "fae-briefings":
+    "bg-[color-mix(in_srgb,var(--color-filter-category-fae-briefings)_20%,#ececec)]",
+  "latest-updates":
+    "bg-[color-mix(in_srgb,var(--color-filter-category-latest-updates)_20%,#ececec)]",
+  rd: "bg-[color-mix(in_srgb,var(--color-filter-category-rd)_20%,#ececec)]",
+  editorial:
+    "bg-[color-mix(in_srgb,var(--color-filter-category-editorial)_20%,#ececec)]",
+  artists:
+    "bg-[color-mix(in_srgb,var(--color-filter-category-artists)_20%,#ececec)]",
+  network:
+    "bg-[color-mix(in_srgb,var(--color-filter-category-network)_20%,#ececec)]",
+};
+
+/**
  * Subpanel parent row when a filter in that group is on: category color at 5% into the canvas.
  * `!` so it wins over default mat.
  */

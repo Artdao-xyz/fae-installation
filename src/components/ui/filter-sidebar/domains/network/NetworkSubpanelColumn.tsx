@@ -1,6 +1,7 @@
 "use client";
 
 import { SubpanelCloseBar } from "../../shell/SubpanelCloseBar";
+import { ARTISTS_NETWORK_SUBPANEL_SCROLL_BODY_CLASS } from "../../shell/layout-classes";
 import { NetworkDropdownPanel } from "./NetworkDropdownPanel";
 
 type NetworkSubpanelColumnProps = {
@@ -23,7 +24,7 @@ export function NetworkSubpanelColumn({
       aria-label="Network filters"
     >
       <SubpanelCloseBar onClose={onClose} />
-      <div className="scrollbar-hide min-h-0 max-h-[calc(min(30rem,60dvh)-var(--height-filter-close-bar))] overflow-y-auto">
+      <div className={ARTISTS_NETWORK_SUBPANEL_SCROLL_BODY_CLASS}>
         <NetworkDropdownPanel variant="subcolumn" onClearAll={onClearAll} />
       </div>
     </div>

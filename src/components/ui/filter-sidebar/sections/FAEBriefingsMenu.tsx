@@ -1,28 +1,24 @@
 "use client";
 
-import { FAE_BRIEFING_OPTIONS } from "../domains/briefings/constants";
 import { useFilterSelection } from "../FilterSelectionContext";
 import { FilterSidebarCategoryRow } from "../primitives/FilterSidebarCategoryRow";
 
-type FAEBriefingsMenuProps = {
-  subpanelOpen: boolean;
-  onToggleSubpanel: () => void;
-};
-
-export function FAEBriefingsMenu({
-  subpanelOpen,
-  onToggleSubpanel,
-}: FAEBriefingsMenuProps) {
-  const { selectedFaeBriefing } = useFilterSelection();
-  const hasOptions = FAE_BRIEFING_OPTIONS.length > 0;
+/** Desktop domain row: clickable toggle; opens no subpanel (behavior wired separately). */
+export function FAEBriefingsMenu({ collapsed = false }: { collapsed?: boolean }) {
+  const {
+    selectedFaeBriefing,
+    selectedDesktopDomainMenuId,
+    toggleDesktopDomainMenuSelection,
+  } = useFilterSelection();
   return (
     <FilterSidebarCategoryRow
       label="FAE Briefings"
       tone="fae-briefings"
-      expanded={subpanelOpen}
-      onClick={onToggleSubpanel}
+      appearance="domain"
+      collapsed={collapsed}
+      domainRowSelected={selectedDesktopDomainMenuId === "briefings"}
+      onClick={() => toggleDesktopDomainMenuSelection("briefings")}
       hasSubpanelSelection={selectedFaeBriefing != null}
-      disabled={!hasOptions}
     />
   );
 }

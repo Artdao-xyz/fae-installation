@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import { useState, type ReactNode } from "react";
-import { expandNewsletterSubscription } from "@/components/ui/email-subscription";
 import {
   filterPillLabelBoxClass,
   interactiveChromeMatClass,
@@ -293,15 +292,7 @@ export function AboutPanelRichContent() {
             className="underline decoration-solid underline-offset-2 hover:opacity-80"
           >
             Telegram community
-          </a>
-          , sign up to our{" "}
-          <button
-            type="button"
-            onClick={expandNewsletterSubscription}
-            className="inline cursor-pointer border-0 bg-transparent p-0 text-inherit underline decoration-solid underline-offset-2 hover:opacity-80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ink-primary"
-          >
-            monthly newsletter
-          </button>{" "}
+          </a>{" "}
           and take part in our quarterly{" "}
           <a
             href="https://serpentinegalleries.ticketing.veevartapp.com/tickets/view/list/future-art-ecosystems-community-call-05032026"
@@ -616,22 +607,6 @@ export function AboutFullScreenRichContent() {
             <AboutActionLink href="https://t.me/+RpackhOIPmQyODY0">
               Join our Telegram community
             </AboutActionLink>
-            <button
-              type="button"
-              onClick={expandNewsletterSubscription}
-              className="inline-flex items-center gap-2 rounded-[2px] border-0 bg-transparent p-0 font-fira-mono text-xs leading-[14px] text-ink-body underline decoration-solid underline-offset-2 hover:opacity-80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ink-primary"
-            >
-              <span>Sign up to our monthly newsletter</span>
-              <Image
-                src="/svg/blue-arrow.svg"
-                alt=""
-                width={5}
-                height={6}
-                unoptimized
-                className="pointer-events-none h-[6px] w-[5px] shrink-0"
-                aria-hidden
-              />
-            </button>
             <AboutActionLink href="https://serpentinegalleries.ticketing.veevartapp.com/tickets/view/list/future-art-ecosystems-community-call-05032026">
               Take part in our quarterly Community Call
             </AboutActionLink>

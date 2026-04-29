@@ -12,6 +12,9 @@ function isValidEmail(value: string): boolean {
 const SUBSCRIBE_CELL_CLASS =
   "box-border h-filter-chrome-bar w-[230px] border-t-hairline border-r-hairline border-solid border-[#454545] bg-surface-canvas";
 
+const SUBSCRIBE_CELL_FLUID_CLASS =
+  "box-border h-filter-chrome-bar w-full min-w-0 border-t-hairline border-r-hairline border-solid border-[#454545] bg-surface-canvas max-lg:border-r-0";
+
 const HEADER_BUTTON_FOCUS =
   "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary";
 
@@ -35,6 +38,8 @@ export type EmailSubscriptionProps = {
   defaultExpanded?: boolean;
   /** Forces the expandable form closed when true. */
   forceCollapsed?: boolean;
+  /** Fill parent width (e.g. filter Subscribe subpanel) instead of fixed 230 / 460 px chrome. */
+  fluidLayout?: boolean;
 };
 
 export function EmailSubscription({
@@ -46,7 +51,9 @@ export function EmailSubscription({
   onSubscribe,
   defaultExpanded = false,
   forceCollapsed = false,
+  fluidLayout = false,
 }: EmailSubscriptionProps) {
+  const cellClass = fluidLayout ? SUBSCRIBE_CELL_FLUID_CLASS : SUBSCRIBE_CELL_CLASS;
   const id = useId();
   const fieldId = `${id}-email`;
   const feedbackTitleId = `${id}-feedback-title`;
@@ -123,10 +130,14 @@ export function EmailSubscription({
 
   return (
     <section
-      className={`shrink-0 text-ink-body ${
-        expanded
-          ? "flex h-[calc(var(--height-filter-chrome-bar)*2)] w-[460px] flex-col before:pointer-events-none before:absolute before:left-0 before:top-0 before:z-10 before:h-filter-chrome-bar before:w-px before:bg-[#454545] before:content-['']"
-          : "flex h-filter-chrome-bar w-[230px] items-stretch"
+      className={`relative shrink-0 text-ink-body ${
+        fluidLayout
+          ? expanded
+            ? "flex w-full max-w-full flex-col"
+            : "flex h-filter-chrome-bar w-full max-w-full items-stretch"
+          : expanded
+            ? "flex h-[calc(var(--height-filter-chrome-bar)*2)] w-[460px] flex-col before:pointer-events-none before:absolute before:left-0 before:top-0 before:z-10 before:h-filter-chrome-bar before:w-px before:bg-[#454545] before:content-['']"
+            : "flex h-filter-chrome-bar w-[230px] items-stretch"
       } ${className}`}
       aria-labelledby={`${id}-heading`}
     >
@@ -141,7 +152,7 @@ export function EmailSubscription({
       {!expanded ? (
         <button
           type="button"
-          className={`${SUBSCRIBE_CELL_CLASS} flex cursor-pointer items-center justify-center gap-2.5 px-[15px] py-2 ${HEADER_BUTTON_FOCUS}`}
+          className={`${cellClass} flex cursor-pointer items-center justify-center gap-2.5 px-[15px] py-2 ${HEADER_BUTTON_FOCUS}`}
           aria-expanded={false}
           onClick={() => setExpanded(true)}
         >
@@ -171,15 +182,15 @@ export function EmailSubscription({
         </button>
       ) : (
         <form
-          className="flex h-full flex-col items-start"
+          className="flex h-full w-full min-w-0 flex-col items-stretch"
           onSubmit={submit}
           noValidate
           aria-busy={status === "loading"}
         >
-          <div className="flex h-filter-chrome-bar items-stretch">
+          <div className="flex h-filter-chrome-bar w-full min-w-0 items-stretch">
             <button
               type="button"
-              className={`${SUBSCRIBE_CELL_CLASS} flex cursor-pointer items-center justify-center gap-2.5 px-[15px] py-2 ${HEADER_BUTTON_FOCUS}`}
+              className={`${cellClass} flex cursor-pointer items-center justify-center gap-2.5 px-[15px] py-2 ${HEADER_BUTTON_FOCUS}`}
               aria-expanded={true}
               onClick={() => setExpanded(false)}
             >
@@ -207,10 +218,16 @@ export function EmailSubscription({
                 draggable={false}
               />
             </button>
-            <div className="h-filter-chrome-bar w-[230px]" aria-hidden />
+            {!fluidLayout ? (
+              <div className="h-filter-chrome-bar w-[230px]" aria-hidden />
+            ) : null}
           </div>
 
-          <div className="flex h-filter-chrome-bar items-stretch">
+          <div
+            className={`flex w-full min-w-0 items-stretch ${
+              fluidLayout ? "flex-col" : "h-filter-chrome-bar"
+            }`}
+          >
             <label className="sr-only" htmlFor={fieldId}>
               Email address
             </label>
@@ -230,12 +247,14 @@ export function EmailSubscription({
                 }
               }}
               disabled={status === "loading"}
-              className={`${SUBSCRIBE_CELL_CLASS} min-w-0 px-[15px] py-2 text-center font-fira-mono text-[10px] leading-[15px] text-ink-body placeholder:text-[10px] placeholder:leading-[15px] placeholder:text-ink-body/60 focus:outline-none`}
+              className={`${cellClass} min-w-0 px-[15px] py-2 text-center font-fira-mono text-[10px] leading-[15px] text-ink-body placeholder:text-[10px] placeholder:leading-[15px] placeholder:text-ink-body/60 focus:outline-none`}
             />
 
             <button
               type="submit"
-              className={`${SUBSCRIBE_CELL_CLASS} border-t-0 flex cursor-pointer items-center justify-center gap-2 border-[#424242] px-[50px] py-2 font-fira-mono text-[10px] leading-[15px] text-ink-body ${HEADER_BUTTON_FOCUS} disabled:pointer-events-none disabled:opacity-50`}
+              className={`${cellClass} flex cursor-pointer items-center justify-center gap-2 border-[#424242] px-[50px] py-2 font-fira-mono text-[10px] leading-[15px] text-ink-body ${HEADER_BUTTON_FOCUS} disabled:pointer-events-none disabled:opacity-50 ${
+                fluidLayout ? "border-t-hairline" : "border-t-0"
+              }`}
               disabled={status === "loading"}
             >
               <span>{status === "loading" ? "Sending…" : submitLabel}</span>
@@ -281,7 +300,7 @@ export function EmailSubscription({
               ref={feedbackCloseRef}
               type="button"
               onClick={() => setMessage(null)}
-              className={`${SUBSCRIBE_CELL_CLASS} flex h-[30px] w-full cursor-pointer items-center justify-center px-[15px] py-2 font-fira-mono text-[10px] leading-[15px] text-ink-body ${HEADER_BUTTON_FOCUS}`}
+              className={`${cellClass} flex h-[30px] w-full cursor-pointer items-center justify-center px-[15px] py-2 font-fira-mono text-[10px] leading-[15px] text-ink-body ${HEADER_BUTTON_FOCUS}`}
             >
               OK
             </button>

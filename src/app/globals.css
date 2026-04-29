@@ -56,14 +56,18 @@
   --color-surface-muted: #ececec;
   --color-surface-hover: #e0e0e0;
 
-  --color-filter-category-fae-briefings: var(--color-ink-primary);
+  /** Fellowships (sidebar / filter tone `latest-updates`). */
   --color-filter-category-latest-updates: #0000ff;
+  /** FAE Briefings (sidebar / filter tone `fae-briefings`). */
+  --color-filter-category-fae-briefings: #0cdc2a;
   /** Shared selected state for filter pills (dotted / rounded / square). */
   --color-filter-pill-selection: #0000ff;
-  --color-filter-category-rd: #9005cc;
+  /** R&D Projects (tone `rd`). */
+  --color-filter-category-rd: #9004cb;
+  /** Activity rail (tone `editorial`) — unchanged from prior token. */
   --color-filter-category-editorial: #b22fb6;
   --color-filter-category-artists: #5e1937;
-  --color-filter-category-network: #0cdc2a;
+  --color-filter-category-network: #b22fb6;
   --shadow-fae-thumbnail: 0 0 40px 0 rgb(0 0 0 / 0.3);
 
   --color-page-gradient-edge: #e1e1e1;

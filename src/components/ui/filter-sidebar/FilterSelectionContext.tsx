@@ -35,6 +35,12 @@ import { FAE_BRIEFING_OPTIONS } from "./domains/briefings/constants";
 /** Sidebar availability hints use the same AND semantics as the default particle spread. */
 const SIDEBAR_FILTER_MATCH_MODE: FilterMatchMode = "intersection";
 
+/** Fellowships / R&D / Briefings toolbar rows (`lg` filter chrome); click handles future actions and does not open domain subpanels. */
+export type DesktopDomainMenuSelectionId =
+  | "fellowships"
+  | "rd"
+  | "briefings";
+
 /** Matches Tailwind `lg` (64rem). Auto-opening the filter column is desktop-only; mobile sheet stays closed until the user taps Filters. */
 function shouldAutoOpenFiltersPanel(): boolean {
   return (
@@ -122,10 +128,20 @@ export type FilterSelectionContextValue = {
   setBriefingsSubpanelOpen: Dispatch<SetStateAction<boolean>>;
   rdSubpanelOpen: boolean;
   setRdSubpanelOpen: Dispatch<SetStateAction<boolean>>;
+  fellowshipsSubpanelOpen: boolean;
+  setFellowshipsSubpanelOpen: Dispatch<SetStateAction<boolean>>;
   networkSubpanelOpen: boolean;
   setNetworkSubpanelOpen: Dispatch<SetStateAction<boolean>>;
   artistsSubpanelOpen: boolean;
   setArtistsSubpanelOpen: Dispatch<SetStateAction<boolean>>;
+  subscribeSubpanelOpen: boolean;
+  setSubscribeSubpanelOpen: Dispatch<SetStateAction<boolean>>;
+  /**
+   * Which desktop domain toolbar row (`Fellowships` / `R&D` / `Briefings`) is toggled on.
+   * Single selection among the three (`null` = none).
+   */
+  selectedDesktopDomainMenuId: DesktopDomainMenuSelectionId | null;
+  toggleDesktopDomainMenuSelection: (id: DesktopDomainMenuSelectionId) => void;
   /** Derived: any domain subpanel column open. */
   filterSubpanelsOpen: boolean;
   /** Opens the right-hand content preview for this row (wired from the particle canvas). */
@@ -353,13 +369,18 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
   const [filtersPanelOpen, setFiltersPanelOpen] = useState(false);
   const [briefingsSubpanelOpen, setBriefingsSubpanelOpen] = useState(false);
   const [rdSubpanelOpen, setRdSubpanelOpen] = useState(false);
+  const [fellowshipsSubpanelOpen, setFellowshipsSubpanelOpen] =
+    useState(false);
   const [networkSubpanelOpen, setNetworkSubpanelOpen] = useState(false);
   const [artistsSubpanelOpen, setArtistsSubpanelOpen] = useState(false);
+  const [subscribeSubpanelOpen, setSubscribeSubpanelOpen] = useState(false);
   const filterSubpanelsOpen =
     briefingsSubpanelOpen ||
     rdSubpanelOpen ||
+    fellowshipsSubpanelOpen ||
     artistsSubpanelOpen ||
-    networkSubpanelOpen;
+    networkSubpanelOpen ||
+    subscribeSubpanelOpen;
 
   const [selectedFocusAreas, setSelectedFocusAreas] = useState<Set<string>>(
     () => new Set(),
@@ -378,6 +399,15 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
   );
   const [selectedFaeBriefing, setSelectedFaeBriefing] = useState<string | null>(
     null,
+  );
+  const [selectedDesktopDomainMenuId, setSelectedDesktopDomainMenuId] =
+    useState<DesktopDomainMenuSelectionId | null>(null);
+
+  const toggleDesktopDomainMenuSelection = useCallback(
+    (id: DesktopDomainMenuSelectionId) => {
+      setSelectedDesktopDomainMenuId((prev) => (prev === id ? null : id));
+    },
+    [],
   );
 
   useEffect(() => {
@@ -851,14 +881,17 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
     contentPreviewRow != null ||
     briefingsSubpanelOpen ||
     rdSubpanelOpen ||
+    fellowshipsSubpanelOpen ||
     networkSubpanelOpen ||
     artistsSubpanelOpen ||
+    subscribeSubpanelOpen ||
     selectedFocusAreas.size > 0 ||
     selectedActivityTypes.size > 0 ||
     selectedArtists.size > 0 ||
     selectedFormats.size > 0 ||
     selectedNetworks.size > 0 ||
     selectedFaeBriefing != null ||
+    selectedDesktopDomainMenuId != null ||
     filterSearchQuery.length > 0;
 
   const clearAllFilters = useCallback(() => {
@@ -867,14 +900,17 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
     minimizeAllFloatingPanels();
     setBriefingsSubpanelOpen(false);
     setRdSubpanelOpen(false);
+    setFellowshipsSubpanelOpen(false);
     setNetworkSubpanelOpen(false);
     setArtistsSubpanelOpen(false);
+    setSubscribeSubpanelOpen(false);
     setSelectedFocusAreas(new Set());
     setSelectedActivityTypes(new Set());
     setSelectedArtists(new Set());
     setSelectedFormats(new Set());
     setSelectedNetworks(new Set());
     setSelectedFaeBriefing(null);
+    setSelectedDesktopDomainMenuId(null);
     setFilterSearchQuery("");
     setFilterResetNonce((n) => n + 1);
   }, [
@@ -949,10 +985,16 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
       setBriefingsSubpanelOpen,
       rdSubpanelOpen,
       setRdSubpanelOpen,
+      fellowshipsSubpanelOpen,
+      setFellowshipsSubpanelOpen,
       networkSubpanelOpen,
       setNetworkSubpanelOpen,
       artistsSubpanelOpen,
       setArtistsSubpanelOpen,
+      subscribeSubpanelOpen,
+      setSubscribeSubpanelOpen,
+      selectedDesktopDomainMenuId,
+      toggleDesktopDomainMenuSelection,
       filterSubpanelsOpen,
       openContentPreview,
       registerContentPreviewOpener,
@@ -1009,8 +1051,12 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
       filtersPanelOpen,
       briefingsSubpanelOpen,
       rdSubpanelOpen,
+      fellowshipsSubpanelOpen,
       networkSubpanelOpen,
       artistsSubpanelOpen,
+      subscribeSubpanelOpen,
+      selectedDesktopDomainMenuId,
+      toggleDesktopDomainMenuSelection,
       filterSubpanelsOpen,
       openContentPreview,
       registerContentPreviewOpener,

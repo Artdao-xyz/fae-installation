@@ -4,17 +4,17 @@ import { useFilterSelection } from "../FilterSelectionContext";
 import { FilterSidebarCategoryRow } from "../primitives/FilterSidebarCategoryRow";
 
 /** Desktop domain row: clickable toggle; opens no subpanel (behavior wired separately). */
-export function RDProjectsMenu({ collapsed = false }: { collapsed?: boolean }) {
+export function FellowshipsMenu({ collapsed = false }: { collapsed?: boolean }) {
   const { selectedDesktopDomainMenuId, toggleDesktopDomainMenuSelection } =
     useFilterSelection();
   return (
     <FilterSidebarCategoryRow
-      label="R&D Projects"
-      tone="rd"
+      label="Fellowships"
+      tone="latest-updates"
       appearance="domain"
       collapsed={collapsed}
-      domainRowSelected={selectedDesktopDomainMenuId === "rd"}
-      onClick={() => toggleDesktopDomainMenuSelection("rd")}
+      domainRowSelected={selectedDesktopDomainMenuId === "fellowships"}
+      onClick={() => toggleDesktopDomainMenuSelection("fellowships")}
     />
   );
 }

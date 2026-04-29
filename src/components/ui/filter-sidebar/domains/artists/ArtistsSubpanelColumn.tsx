@@ -1,6 +1,7 @@
 "use client";
 
 import { SubpanelCloseBar } from "../../shell/SubpanelCloseBar";
+import { ARTISTS_NETWORK_SUBPANEL_SCROLL_BODY_CLASS } from "../../shell/layout-classes";
 import { ArtistsDropdownPanel } from "./ArtistsDropdownPanel";
 
 type ArtistsSubpanelColumnProps = {
@@ -23,7 +24,7 @@ export function ArtistsSubpanelColumn({
       aria-label="Artists filters"
     >
       <SubpanelCloseBar onClose={onClose} />
-      <div className="scrollbar-hide min-h-0 max-h-[calc(min(40rem,78dvh)-var(--height-filter-close-bar))] overflow-y-auto">
+      <div className={ARTISTS_NETWORK_SUBPANEL_SCROLL_BODY_CLASS}>
         <ArtistsDropdownPanel variant="subcolumn" onClearAll={onClearAll} />
       </div>
     </div>

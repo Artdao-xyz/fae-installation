@@ -78,6 +78,7 @@ export function NetworkDropdownPanel({
       tone="network"
       variant={variant}
       onClearAll={mobilePane ? undefined : handleClearAll}
+      subcolumnTitle={variant === "subcolumn" && !mobilePane ? "Network" : undefined}
       mobileHeader={
         mobilePane
           ? {
