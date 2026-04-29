@@ -22,7 +22,7 @@ const MOBILE_HEADER_LABEL_CLASS =
   "font-suisseintl text-sm font-normal leading-5 transition-[color,filter] duration-150 motion-reduce:transition-none";
 
 const MENU_NAV_ITEM_CLASS =
-  "flex w-full items-center justify-center gap-4 border-x-hairline border-t-hairline border-solid border-ink-primary py-4 font-suisseintl text-sm font-normal leading-6 text-ink-primary transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary";
+  "flex w-full items-center justify-center gap-4 border-x-hairline border-t-hairline border-b-hairline border-solid border-ink-primary py-4 font-suisseintl text-sm font-normal leading-6 text-ink-primary transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary";
 
 const MENU_NAV_ICON_CLASS = "size-6! shrink-0";
 
@@ -130,8 +130,11 @@ export function MobileSiteHeader({
           <button
             type="button"
             onClick={() => {
-              setSubscribeOpen(false);
-              setMenuOpen(true);
+              setMenuOpen((open) => {
+                const next = !open;
+                if (!next) setSubscribeOpen(false);
+                return next;
+              });
             }}
             aria-label="Open menu"
             aria-expanded={menuOpen}
@@ -153,17 +156,17 @@ export function MobileSiteHeader({
       {portalEl && menuOpen
         ? createPortal(
             <div
-              className="fixed inset-0 flex min-h-0 flex-col bg-surface-canvas lg:hidden"
+              className="fixed inset-x-0 bottom-0 top-[calc(env(safe-area-inset-top,0px)+2.75rem)] flex min-h-0 flex-col bg-surface-canvas lg:hidden"
               style={{ zIndex: Z_INDEX.mobileSiteMenu }}
               role="dialog"
               aria-modal="true"
               aria-label="Site menu"
             >
-              <div className="shrink-0 border-b-hairline border-solid border-ink-primary bg-surface-canvas pt-[env(safe-area-inset-top,0px)]">
+              <div className="shrink-0 border-t-hairline border-b-hairline border-solid border-ink-primary bg-surface-canvas">
                 <button
                   type="button"
                   onClick={toggleSubscribe}
-                  className={`flex h-14 w-full items-center justify-center gap-2 px-3 font-fira-mono text-sm font-normal leading-5 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary ${
+                  className={`flex h-13 w-full items-center justify-center gap-2 px-3 font-fira-mono text-sm font-normal leading-5 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary ${
                     subscribeOpen
                       ? "text-(--color-filter-pill-selection)"
                       : "text-ink-primary hover:bg-surface-hover/60"
@@ -186,17 +189,9 @@ export function MobileSiteHeader({
                   />
                 ) : (
                   <nav
-                    className="flex min-h-full flex-col items-stretch justify-center gap-0 px-0 py-8 [&>button:last-child]:border-b-hairline"
+                    className="flex min-h-full flex-col items-stretch justify-center gap-0 px-0 py-8"
                     aria-label="Site"
                   >
-                    <button
-                      type="button"
-                      className={MENU_NAV_ITEM_CLASS}
-                      onClick={goHome}
-                    >
-                      <HomeSvgIcon className={MENU_NAV_ICON_CLASS} />
-                      <span>Home</span>
-                    </button>
                     <button
                       type="button"
                       className={MENU_NAV_ITEM_CLASS}
@@ -216,14 +211,14 @@ export function MobileSiteHeader({
                   </nav>
                 )}
               </div>
-              <div className="shrink-0 border-t-hairline border-solid border-ink-primary bg-surface-canvas pb-[env(safe-area-inset-bottom,0px)]">
+              <div className="shrink-0 border-t-hairline border-b-hairline border-solid border-ink-primary bg-surface-canvas pb-[env(safe-area-inset-bottom,0px)]">
                 <button
                   type="button"
                   onClick={() => {
                     setSubscribeOpen(false);
                     setMenuOpen(false);
                   }}
-                  className="flex h-14 w-full items-center justify-center gap-2 px-3 font-fira-mono text-sm font-normal leading-5 text-ink-primary transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary"
+                  className="flex h-13 w-full items-center justify-center gap-2 px-3 font-fira-mono text-sm font-normal leading-5 text-ink-primary transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary"
                   aria-label="Close menu"
                 >
                   <OpenSvgIcon className="shrink-0 -rotate-90" />
