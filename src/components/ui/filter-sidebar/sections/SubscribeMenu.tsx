@@ -11,6 +11,7 @@ export function SubscribeMenu({ subpanelOpen, onToggleSubpanel }: SubscribeMenuP
   return (
     <FilterSidebarCategoryRow
       label="Subscribe"
+      labelClassName="font-suisseintl text-xs"
       tone="editorial"
       expanded={subpanelOpen}
       onClick={onToggleSubpanel}

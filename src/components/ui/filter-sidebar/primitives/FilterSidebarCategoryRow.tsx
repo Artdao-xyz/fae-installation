@@ -5,6 +5,7 @@ import {
   categorySubpanelLabelSelectionBgClass,
   domainRowHighlightedBgClass,
   toneAccentClass,
+  toneSelectedBorderClass,
 } from "../config/filterSidebarTones";
 import {
   interactiveChromeHoverClass,
@@ -18,6 +19,8 @@ export type FilterSidebarCategoryAppearance = "chrome" | "domain";
 
 export function FilterSidebarCategoryRow({
   label,
+  secondaryLabel,
+  labelClassName,
   tone,
   expanded,
   onClick,
@@ -33,8 +36,11 @@ export function FilterSidebarCategoryRow({
   collapsed = false,
   /** `domain`: Fellowships / R&D / FAEBriefings desktop layout (Figma). */
   appearance = "chrome",
+  large = false,
 }: {
   label: string;
+  secondaryLabel?: string;
+  labelClassName?: string;
   tone: FilterSidebarCategoryTone;
   expanded?: boolean;
   onClick?: () => void;
@@ -44,6 +50,7 @@ export function FilterSidebarCategoryRow({
   domainRowSelected?: boolean;
   collapsed?: boolean;
   appearance?: FilterSidebarCategoryAppearance;
+  large?: boolean;
 }) {
   const { glow } = toneAccentClass[tone];
   const showAccent = expanded === true;
@@ -102,7 +109,7 @@ export function FilterSidebarCategoryRow({
                 />
               )}
               <span
-                className={`min-w-0 shrink truncate font-lust-text text-[14px] leading-5 ${domainLabelClass}`}
+                className={`min-w-0 shrink truncate ${labelClassName ?? "font-lust-text"} text-[14px] leading-5 ${domainLabelClass}`}
               >
                 {label}
               </span>
@@ -130,6 +137,7 @@ export function FilterSidebarCategoryRow({
   const hoverClass = hasSelection
     ? "hover:brightness-[0.96] motion-reduce:hover:brightness-100"
     : interactiveChromeHoverClass;
+  const hasSecondaryLabel = Boolean(secondaryLabel && secondaryLabel.trim().length > 0);
 
   return (
     <button
@@ -139,7 +147,7 @@ export function FilterSidebarCategoryRow({
       aria-expanded={disabled ? undefined : expanded}
       aria-disabled={disabled ? true : undefined}
       data-fae-subpanel-filter-active={hasSelection ? "true" : undefined}
-      className={`relative flex w-full items-center gap-2 border-t-hairline border-solid border-ink-primary py-[7px] pl-3 pr-[15px] text-left ${matClass} ${
+      className={`relative flex w-full gap-2 border-t-hairline border-solid border-ink-primary pl-3 pr-[15px] text-left ${hasSecondaryLabel ? "items-start" : "items-center"} ${large ? "py-3" : "py-[7px]"} ${matClass} ${
         disabled
           ? "cursor-not-allowed opacity-45 motion-reduce:opacity-50"
           : hoverClass
@@ -159,8 +167,19 @@ export function FilterSidebarCategoryRow({
           className="size-5 shrink-0 object-contain"
         />
       ) : null}
-      <span className="min-h-px min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-base leading-5 text-ink-body font-lust-text">
-        {label}
+      <span className="min-h-px min-w-0 flex-1">
+        <span
+          className={`block min-w-0 overflow-hidden text-ellipsis whitespace-nowrap text-base leading-5 text-ink-body ${labelClassName ?? "font-lust-text"}`}
+        >
+          {label}
+        </span>
+        {hasSecondaryLabel ? (
+          <span
+            className={`mt-1 flex w-full min-w-0 items-center justify-center border-hairline border-dotted bg-surface-canvas px-2.5 py-[5px] font-fira-mono text-[12px] font-normal leading-4 ${toneSelectedBorderClass[tone]} ${toneAccentClass[tone].marker}`}
+          >
+            <span className="block min-w-0 truncate text-center">{secondaryLabel}</span>
+          </span>
+        ) : null}
       </span>
       {onClick && !disabled ? (
         // eslint-disable-next-line @next/next/no-img-element -- same asset as HomeBar breadcrumb; file uses black fill
@@ -170,6 +189,7 @@ export function FilterSidebarCategoryRow({
           width={8}
           height={10}
           className="block h-2.5 w-2 max-h-2.5 max-w-2 shrink-0 object-contain"
+          style={hasSecondaryLabel ? { marginTop: "0.35rem" } : undefined}
           aria-hidden
         />
       ) : null}
