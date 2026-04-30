@@ -64,14 +64,21 @@ function rowSearchBlob(row: ContentRow): string {
   return normalizeForSearch(parts.join(" "));
 }
 
+/** Title fields should support typeahead-style partial matches. */
+function rowTitleSearchBlob(row: ContentRow): string {
+  return normalizeForSearch([row.title, row.shortTitle].join(" "));
+}
+
 /**
  * Case-insensitive search over the row blob (titles, slug, caption, body, taxonomy, years, …).
+ * - **Title / short title:** substring match first, so incomplete typed queries
+ *   like `"fu"` or `"futu"` match `"Future Art Ecosystem"`.
  * - **Multi-word:** matches if **any phrase variant** is a substring — full normalized query,
  *   plus without a leading **a / an / the** when the remainder is still multi-word
  *   (e.g. `"a new era"` also tries `"new era"`).
  *   Otherwise, if no **single-letter** token: every token as a **whole word** (reordered queries
  *   like `"era new"` vs `"a new era"` when variants don’t apply).
- * - **Single word:** whole-word only (so `"new"` doesn’t match inside `newfoundland`).
+ * - **Non-title single word:** whole-word only (so `"new"` doesn’t match inside `newfoundland`).
  * Spacing / NBSP is normalized first.
  *
  * Catalog rows may omit `content` until detail load — body-only phrases won’t match until then.
@@ -87,6 +94,9 @@ export function filterContentRowsForSearchQuery(
   const phraseVariants = phraseMatchVariants(normQuery);
 
   return rows.filter((row) => {
+    const titleHaystack = rowTitleSearchBlob(row);
+    if (phraseVariants.some((p) => titleHaystack.includes(p))) return true;
+
     const haystack = rowSearchBlob(row);
     if (tokens.length === 1) {
       return wholeWordMatch(haystack, tokens[0]!);

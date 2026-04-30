@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, type ReactNode } from "react";
+import { useEffect, useMemo, type ReactNode } from "react";
 import { filterContentRowsForSearchQuery } from "@/data/search-filter";
 import { useFilterSelection } from "../FilterSelectionContext";
 import { FilterPill } from "../primitives/FilterPill";
@@ -36,6 +36,40 @@ export function Search({
   );
   const searching = value.trim().length > 0;
   const hasMobileLandingActions = mobileLandingActions != null;
+
+  useEffect(() => {
+    const mobileLandingSearchOpen =
+      hasMobileLandingActions &&
+      searching &&
+      typeof window !== "undefined" &&
+      window.matchMedia("(max-width: 1023.98px)").matches;
+    if (!mobileLandingSearchOpen) return;
+
+    const rootStyle = document.documentElement.style;
+    const previousViewportHeight = rootStyle.getPropertyValue(
+      "--fae-mobile-search-vvh",
+    );
+    const setViewportHeight = () => {
+      const height = window.visualViewport?.height ?? window.innerHeight;
+      rootStyle.setProperty("--fae-mobile-search-vvh", `${height}px`);
+    };
+
+    setViewportHeight();
+    window.visualViewport?.addEventListener("resize", setViewportHeight);
+    window.visualViewport?.addEventListener("scroll", setViewportHeight);
+    window.addEventListener("resize", setViewportHeight);
+
+    return () => {
+      window.visualViewport?.removeEventListener("resize", setViewportHeight);
+      window.visualViewport?.removeEventListener("scroll", setViewportHeight);
+      window.removeEventListener("resize", setViewportHeight);
+      if (previousViewportHeight) {
+        rootStyle.setProperty("--fae-mobile-search-vvh", previousViewportHeight);
+      } else {
+        rootStyle.removeProperty("--fae-mobile-search-vvh");
+      }
+    };
+  }, [hasMobileLandingActions, searching]);
 
   return (
     <div
@@ -103,7 +137,7 @@ export function Search({
 
       {searching ? (
         <div
-          className="scrollbar-hide flex min-h-0 min-w-0 w-full flex-col gap-[5px] overflow-y-auto px-5.5 pb-3 pt-0 max-lg:max-h-[min(70dvh,32rem)] max-lg:flex-none lg:flex-1 lg:px-3"
+          className="scrollbar-hide flex min-h-0 min-w-0 w-full touch-pan-y flex-col gap-[5px] overflow-y-auto overscroll-contain border-b-hairline border-solid border-border bg-surface-canvas px-5.5 pb-3 pt-3 max-lg:h-[calc(var(--fae-mobile-search-vvh,100dvh)-env(safe-area-inset-top,0px)-9.75rem)] max-lg:max-h-none max-lg:flex-none lg:flex-1 lg:border-b-0 lg:px-3 lg:pt-0"
           role="list"
           aria-label="Search results"
         >
