@@ -73,13 +73,13 @@ export function MobileLatestUpdatesStrip() {
           onClick={toggleDock}
           ariaExpanded={peekOpen}
           ariaControls={panelId}
-          className="border-l-hairline border-l-solid border-l-ink-primary"
+          className="border-l-hairline border-l-solid border-l-border"
         />
         <div
           id={peekOpen ? panelId : undefined}
           role={peekOpen ? "region" : undefined}
           aria-label={peekOpen ? "Latest updates" : undefined}
-          className={`flex h-full min-h-0 min-w-0 flex-1 overflow-hidden border-t-hairline border-solid border-ink-primary transition-opacity duration-300 ease-in-out motion-reduce:transition-none ${peekClipClass}`}
+          className={`flex h-full min-h-0 min-w-0 flex-1 overflow-hidden border-t-hairline border-solid border-border transition-opacity duration-300 ease-in-out motion-reduce:transition-none ${peekClipClass}`}
         >
           <div className="scrollbar-hide flex h-full w-full min-h-0 min-w-0 flex-col justify-end overflow-x-auto overflow-y-hidden overscroll-x-contain">
             <div className="flex w-max shrink-0 flex-row flex-nowrap items-end gap-8 px-6 py-3 max-lg:gap-3 max-lg:px-3 max-lg:py-2">

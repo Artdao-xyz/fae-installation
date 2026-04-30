@@ -51,6 +51,7 @@
   --color-surface-canvas: #e8e8e8;
   --color-black-fae: #212121;
   --color-ink-primary: #414141;
+  --color-border: #b9b9b9;
   --color-ink-body: #303030;
   --color-ink-caption: #363636;
   --color-surface-muted: #ececec;
@@ -76,8 +77,8 @@
   --blur-fae-sm: 10px;
   --blur-fae-md: 25px;
 
-  --border-width-hairline: 0.5px;
-  --border-width-fine: 0.3px;
+  --border-width-hairline: 1px;
+  --border-width-thin: 0.5px;
 
   /**
    * `2k` / `min-[2000px]` — wide & “2K-class” viewports; available as the `2k:` Tailwind variant.
@@ -209,7 +210,7 @@
     display: flex;
     align-items: center;
     padding: 0;
-    border-width: var(--border-width-hairline);
+    border-width: var(--border-width-thin);
     border-style: solid;
     border-color: var(--color-ink-primary);
     background-color: var(--color-ink-primary);

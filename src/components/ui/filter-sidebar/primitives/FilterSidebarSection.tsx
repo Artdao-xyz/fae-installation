@@ -82,7 +82,7 @@ export function FilterSidebarSection({
       }`}
       aria-label={title}
     >
-      <header className="flex shrink-0 items-center justify-between gap-2 border-t-hairline border-solid border-ink-primary px-3 pb-2 pt-1.5">
+      <header className="flex shrink-0 items-center justify-between gap-2 border-t-hairline border-solid border-border px-3 pb-2 pt-1.5">
         <h2
           className={
             titleClassName ??

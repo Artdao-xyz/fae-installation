@@ -35,7 +35,7 @@ const previewDockedOuterClass = `fixed top-[var(--inset-margin-guide)] right-[va
 
 /** Collapse bar + scrollable main column. */
 const previewDockedAsideBaseClass =
-  "flex h-full min-h-0 w-preview-panel min-w-0 shrink-0 flex-col overflow-hidden border-hairline border-solid border-ink-primary bg-surface-canvas";
+  "flex h-full min-h-0 w-preview-panel min-w-0 shrink-0 flex-col overflow-hidden border-hairline border-solid border-border bg-surface-canvas";
 
 /**
  * Full-screen content preview. Open opacity matches `AboutFullScreenView` (mount → fade in).

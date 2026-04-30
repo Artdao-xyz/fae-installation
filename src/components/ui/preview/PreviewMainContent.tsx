@@ -23,7 +23,7 @@ import { PreviewImageCarousel } from "./PreviewImageCarousel";
 function Divider() {
   return (
     <div
-      className="h-0 w-full shrink-0 border-t-hairline border-dotted border-ink-primary"
+      className="h-0 w-full shrink-0 border-t-hairline border-dotted border-border"
       role="presentation"
     />
   );

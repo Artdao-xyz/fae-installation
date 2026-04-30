@@ -10,7 +10,7 @@ type MobileFiltersCloseHeaderProps = {
 export function MobileFiltersCloseHeader({ onClose }: MobileFiltersCloseHeaderProps) {
   return (
     <div
-      className="flex w-full shrink-0 items-stretch border-t-hairline border-b-hairline border-solid border-ink-primary bg-surface-canvas lg:hidden"
+      className="flex w-full shrink-0 items-stretch border-t-hairline border-b-hairline border-solid border-border bg-surface-canvas lg:hidden"
       role="presentation"
     >
       <button

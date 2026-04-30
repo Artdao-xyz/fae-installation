@@ -22,7 +22,7 @@ const MOBILE_HEADER_LABEL_CLASS =
   "font-suisseintl text-sm font-normal leading-5 transition-[color,filter] duration-150 motion-reduce:transition-none";
 
 const MENU_NAV_ITEM_CLASS =
-  "flex w-full items-center justify-center gap-4 border-x-hairline border-t-hairline border-b-hairline border-solid border-ink-primary py-4 font-suisseintl text-sm font-normal leading-6 text-ink-primary transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary";
+  "flex w-full items-center justify-center gap-4 border-x-hairline border-t-hairline border-b-hairline border-solid border-border py-4 font-suisseintl text-sm font-normal leading-6 text-ink-primary transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary";
 
 const MENU_NAV_ICON_CLASS = "size-6! shrink-0";
 
@@ -112,7 +112,7 @@ export function MobileSiteHeader({
   return (
     <>
       <header
-        className="sticky top-0 z-40 flex w-full shrink-0 flex-col border-b-hairline border-solid border-ink-primary bg-surface-canvas pt-[env(safe-area-inset-top,0px)] lg:hidden"
+        className="sticky top-0 z-40 flex w-full shrink-0 flex-col border-b-hairline border-solid border-border bg-surface-canvas pt-[env(safe-area-inset-top,0px)] lg:hidden"
         role="banner"
       >
         <div className="flex h-11 w-full flex-row items-center justify-between px-3">
@@ -162,7 +162,7 @@ export function MobileSiteHeader({
               aria-modal="true"
               aria-label="Site menu"
             >
-              <div className="shrink-0 border-t-hairline border-b-hairline border-solid border-ink-primary bg-surface-canvas">
+              <div className="shrink-0 border-t-hairline border-b-hairline border-solid border-border bg-surface-canvas">
                 <button
                   type="button"
                   onClick={toggleSubscribe}
@@ -211,7 +211,7 @@ export function MobileSiteHeader({
                   </nav>
                 )}
               </div>
-              <div className="shrink-0 border-t-hairline border-b-hairline border-solid border-ink-primary bg-surface-canvas pb-[env(safe-area-inset-bottom,0px)]">
+              <div className="shrink-0 border-t-hairline border-b-hairline border-solid border-border bg-surface-canvas pb-[env(safe-area-inset-bottom,0px)]">
                 <button
                   type="button"
                   onClick={() => {

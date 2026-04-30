@@ -22,7 +22,7 @@ export function NetworkSubpanelColumn({
 }: NetworkSubpanelColumnProps) {
   return (
     <div
-      className={`flex w-full shrink-0 flex-col overflow-hidden border-l-0 border-r-hairline border-solid border-ink-primary bg-surface-canvas ${filterSubpanelGuideViewportHeightClass(splitHeight)} ${
+      className={`flex w-full shrink-0 flex-col overflow-hidden border-l-0 border-r-hairline border-solid border-border bg-surface-canvas ${filterSubpanelGuideViewportHeightClass(splitHeight)} ${
         mergeTopBorder ? "border-t-0" : "border-t-hairline"
       }`}
       role="complementary"

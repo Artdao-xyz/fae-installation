@@ -46,7 +46,7 @@ export function LatestUpdatesPanel() {
 
   return (
     <div
-      className="fixed bottom-8.5 right-8.5 flex min-h-0 flex-row items-stretch overflow-hidden border-hairline border-b-0 border-solid border-ink-primary bg-surface-canvas/90 shadow-none backdrop-blur-fae-md"
+      className="fixed bottom-8.5 right-8.5 flex min-h-0 flex-row items-stretch overflow-hidden border-hairline border-b-0 border-solid border-border bg-surface-canvas/90 shadow-none backdrop-blur-fae-md"
       style={{
         zIndex: getChromeZIndex(
           "latestUpdates",
@@ -69,7 +69,7 @@ export function LatestUpdatesPanel() {
         aria-label={peekOpen ? "Latest updates" : undefined}
         className={`flex h-full min-h-0 min-w-0 shrink-0 overflow-hidden ${FLOATING_DOCK_PEEK_CLIP_CLASS} ${peekClipClass} ${
           peekOpen
-            ? "border-b-hairline border-solid border-ink-primary"
+            ? "border-b-hairline border-solid border-border"
             : "border-0"
         }`}
         style={peekClipStyle}

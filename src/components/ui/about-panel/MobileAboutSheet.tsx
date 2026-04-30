@@ -25,7 +25,7 @@ export function MobileAboutSheet({ zIndex, onClose }: MobileAboutSheetProps) {
       aria-modal="true"
       aria-label="About Future Art Ecosystems"
     >
-      <div className="flex w-full shrink-0 items-stretch border-b-hairline border-solid border-ink-primary bg-surface-canvas">
+      <div className="flex w-full shrink-0 items-stretch border-b-hairline border-solid border-border bg-surface-canvas">
         <button
           type="button"
           onClick={onClose}

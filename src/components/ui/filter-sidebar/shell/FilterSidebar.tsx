@@ -201,7 +201,7 @@ export function FilterSidebar() {
               <button
                 type="button"
                 onClick={clearAllFilters}
-                className="flex h-13 w-full items-center justify-center gap-2 border-t-hairline border-solid border-ink-primary bg-surface-canvas px-3 font-lust-text text-sm leading-4 tracking-wide text-ink-body transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary"
+                className="flex h-13 w-full items-center justify-center gap-2 border-t-hairline border-solid border-border bg-surface-canvas px-3 font-lust-text text-sm leading-4 tracking-wide text-ink-body transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element -- local static icon asset */}
                 <img

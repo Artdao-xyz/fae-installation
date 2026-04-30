@@ -19,7 +19,7 @@ const EMPHASIZED_RAIL_MAT_CLASS = `${matBaseTransitionClass} bg-[color:color-mix
 
 /** Selected: thick blue left stripe + blue label; background matches row type (no selected-only fill). */
 const SELECTED_BORDER_LEFT =
-  "border-t-hairline border-t-solid border-t-ink-primary border-l-[3px] border-l-solid border-l-[#0000ff] border-r-0";
+  "border-t-hairline border-t-solid border-t-border border-l-[3px] border-l-solid border-l-[#0000ff] border-r-0";
 const SELECTED_TEXT = "text-[#0000ff]";
 const selectedToneBorderLeftClass: Record<FilterSidebarCategoryTone, string> = {
   "fae-briefings": "border-l-filter-category-fae-briefings",
@@ -33,11 +33,11 @@ const selectedToneBorderLeftClass: Record<FilterSidebarCategoryTone, string> = {
 /** Non-selected rail label: same ink as body, slightly softened. */
 const RAIL_LABEL_IDLE_TEXT = "text-ink-body/80";
 
-const ROW_BORDER_TOP_SOLID = "border-t-hairline border-t-solid border-t-ink-primary";
-const ROW_RIGHT_SOLID = "border-r-hairline border-r-solid border-r-ink-primary";
+const ROW_BORDER_TOP_SOLID = "border-t-hairline border-t-solid border-t-border";
+const ROW_RIGHT_SOLID = "border-r-hairline border-r-solid border-r-border";
 /** Focus / Activity only (`flexToFill`): hairline dotted rule (explicit per-side so it is not overridden). */
 const ROW_RIGHT_DOTTED =
-  "[border-right-width:var(--border-width-hairline)] [border-right-style:dotted] [border-right-color:var(--color-ink-primary)]";
+  "[border-right-width:var(--border-width-hairline)] [border-right-style:dotted] [border-right-color:var(--color-border)]";
 
 type FilterSidebarMobileRailButtonProps = {
   label: string;

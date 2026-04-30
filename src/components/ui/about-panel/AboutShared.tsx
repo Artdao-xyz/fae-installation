@@ -130,7 +130,7 @@ function AboutSubtitle({
           </svg>
         ))}
         <span
-          className={`relative z-10 box-border inline-flex items-center justify-center ${filterPillLabelBoxClass} line-clamp-2 ${interactiveChromeMatClass} border-hairline border-solid border-ink-primary text-ink-primary`}
+          className={`relative z-10 box-border inline-flex items-center justify-center ${filterPillLabelBoxClass} line-clamp-2 ${interactiveChromeMatClass} border-hairline border-solid border-border text-ink-primary`}
         >
           {children}
         </span>
@@ -311,7 +311,7 @@ export function AboutPanelRichContent() {
 }
 
 function AboutSectionDivider() {
-  return <div className="h-0 w-full border-t-hairline border-dotted border-ink-primary" aria-hidden />;
+  return <div className="h-0 w-full border-t-hairline border-dotted border-border" aria-hidden />;
 }
 
 function AboutSectionHeading({
@@ -389,7 +389,7 @@ function AboutKeyAreaCard({
 }) {
   return (
     <article className="flex h-full min-h-[130px] flex-col">
-      <header className="flex items-center gap-2 border-hairline border-solid border-ink-primary bg-surface-canvas px-2.5 py-1.5">
+      <header className="flex items-center gap-2 border-hairline border-solid border-border bg-surface-canvas px-2.5 py-1.5">
         <Image
           src={iconSrc}
           alt=""
@@ -401,7 +401,7 @@ function AboutKeyAreaCard({
         />
         <h3 className="m-0 font-suisseintl text-xs leading-5 text-ink-body">{title}</h3>
       </header>
-      <div className="flex flex-1 border-r-hairline border-b-hairline border-l-hairline border-solid border-ink-primary px-2.5 py-2.5">
+      <div className="flex flex-1 border-r-hairline border-b-hairline border-l-hairline border-solid border-border px-2.5 py-2.5">
         <p className="m-0 font-suisseintl text-xs leading-[1.6] text-ink-primary">{body}</p>
       </div>
     </article>

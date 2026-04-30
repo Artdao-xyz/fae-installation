@@ -89,7 +89,7 @@ export function FilterSidebarCategoryRow({
         data-name="Filters-Domain-Row"
       >
         <div
-          className={`flex min-w-0 flex-col border-t border-dotted border-ink-primary backdrop-blur-fae-sm transition-colors duration-150 motion-reduce:transition-none ${
+          className={`flex min-w-0 flex-col border-t border-dotted border-border backdrop-blur-fae-sm transition-colors duration-150 motion-reduce:transition-none ${
             domainCollapsed ? "pt-1.5 pb-2" : "pt-4 pb-5"
           } ${domainBg}`}
         >
@@ -147,7 +147,7 @@ export function FilterSidebarCategoryRow({
       aria-expanded={disabled ? undefined : expanded}
       aria-disabled={disabled ? true : undefined}
       data-fae-subpanel-filter-active={hasSelection ? "true" : undefined}
-      className={`relative flex w-full gap-2 border-t-hairline border-solid border-ink-primary pl-3 pr-[15px] text-left ${hasSecondaryLabel ? "items-start" : "items-center"} ${large ? "py-3" : "py-[7px]"} ${matClass} ${
+      className={`relative flex w-full gap-2 border-t-hairline border-solid border-border pl-3 pr-[15px] text-left ${hasSecondaryLabel ? "items-start" : "items-center"} ${large ? "py-3" : "py-[7px]"} ${matClass} ${
         disabled
           ? "cursor-not-allowed opacity-45 motion-reduce:opacity-50"
           : hoverClass

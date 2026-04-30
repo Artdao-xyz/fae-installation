@@ -8,7 +8,7 @@ import {
  * Used by the preview and About full-screen views.
  */
 export const fullScreenContentShellClass =
-  "fixed top-[var(--inset-margin-guide)] right-[var(--inset-margin-guide)] bottom-[var(--inset-margin-guide)] left-[var(--inset-margin-guide)] z-50 flex min-h-0 min-w-0 flex-col overflow-hidden border-hairline border-solid border-ink-primary bg-surface-canvas";
+  "fixed top-[var(--inset-margin-guide)] right-[var(--inset-margin-guide)] bottom-[var(--inset-margin-guide)] left-[var(--inset-margin-guide)] z-50 flex min-h-0 min-w-0 flex-col overflow-hidden border-hairline border-solid border-border bg-surface-canvas";
 
 /**
  * Full-screen shell enter (About + content preview): fade + scale-up.
@@ -25,7 +25,7 @@ export const fullScreenContentInnerClass =
 
 /** Same mat + hover as subpanel category rows and filter pills. */
 export const fullScreenShowMoreLessButtonClass = [
-  "inline-flex w-fit items-center gap-2 self-start border-t-hairline border-r-hairline border-solid border-ink-primary px-5 py-3 font-fira-mono text-sm text-black-fae",
+  "inline-flex w-fit items-center gap-2 self-start border-t-hairline border-r-hairline border-solid border-border px-5 py-3 font-fira-mono text-sm text-black-fae",
   interactiveChromeMatClass,
   interactiveChromeHoverClass,
   "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary",

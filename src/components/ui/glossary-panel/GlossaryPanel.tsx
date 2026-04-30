@@ -38,7 +38,7 @@ function GlossaryTabRail({
       aria-expanded={ariaExpanded}
       aria-controls={ariaControls}
       onClick={onClick}
-      className={`flex flex-col items-center border-b-0 border-solid border-ink-primary bg-surface-canvas/90 py-2.5 backdrop-blur-fae-sm transition-colors hover:bg-surface-hover/80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary ${sizeClassName} ${
+      className={`flex flex-col items-center border-b-0 border-solid border-border bg-surface-canvas/90 py-2.5 backdrop-blur-fae-sm transition-colors hover:bg-surface-hover/80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary ${sizeClassName} ${
         ariaExpanded ? "border-r-hairline" : ""
       }`}
     >
@@ -82,7 +82,7 @@ export function GlossaryPanel() {
 
   return (
     <div
-      className={`fixed right-8.5 flex min-h-0 flex-row items-stretch overflow-hidden border-solid border-ink-primary bg-surface-canvas/90 ${
+      className={`fixed right-8.5 flex min-h-0 flex-row items-stretch overflow-hidden border-solid border-border bg-surface-canvas/90 ${
         peekOpen
           ? "border-hairline"
           : "border-b-0 border-l-hairline border-r-hairline border-t-hairline"
@@ -127,10 +127,10 @@ export function GlossaryPanel() {
                     } ${
                       isLast
                         ? ""
-                        : "border-b-hairline border-dotted border-ink-primary"
+                        : "border-b-hairline border-dotted border-border"
                     }`}
                   >
-                    <h3 className="m-0 w-fit max-w-full self-start border-b-hairline border-r-hairline border-dotted border-ink-primary bg-white px-2 py-1 font-fira-mono text-xs font-normal leading-5 text-ink-body">
+                    <h3 className="m-0 w-fit max-w-full self-start border-b-hairline border-r-hairline border-dotted border-border bg-white px-2 py-1 font-fira-mono text-xs font-normal leading-5 text-ink-body">
                       {entry.term}
                     </h3>
                     <p className="m-0 font-suisseintl text-xs font-normal leading-[1.6] tracking-[0.36px] text-ink-body">

@@ -25,7 +25,7 @@ export function MobileGlossarySheet({ zIndex, onClose }: MobileGlossarySheetProp
       aria-modal="true"
       aria-label="Glossary"
     >
-      <div className="flex w-full shrink-0 items-stretch border-b-hairline border-solid border-ink-primary bg-surface-canvas">
+      <div className="flex w-full shrink-0 items-stretch border-b-hairline border-solid border-border bg-surface-canvas">
         <button
           type="button"
           onClick={onClose}
@@ -48,10 +48,10 @@ export function MobileGlossarySheet({ zIndex, onClose }: MobileGlossarySheetProp
                 } ${
                   isLast
                     ? ""
-                    : "border-b-hairline border-dotted border-ink-primary"
+                    : "border-b-hairline border-dotted border-border"
                 }`}
               >
-                <h3 className="m-0 w-fit max-w-full self-start border-b-hairline border-r-hairline border-dotted border-ink-primary bg-white px-2 py-1 font-fira-mono text-xs font-normal leading-5 text-ink-body">
+                <h3 className="m-0 w-fit max-w-full self-start border-b-hairline border-r-hairline border-dotted border-border bg-white px-2 py-1 font-fira-mono text-xs font-normal leading-5 text-ink-body">
                   {entry.term}
                 </h3>
                 <p className="m-0 font-suisseintl text-xs font-normal leading-[1.6] tracking-[0.36px] text-ink-body">

@@ -15,7 +15,7 @@ export function Footer({
 }: FooterProps) {
   return (
     <footer
-      className={`flex h-11 shrink-0 border-t-hairline border-solid border-ink-primary bg-surface-canvas max-lg:border-r-0 lg:h-filter-chrome-bar ${filterChromeRightEdgeClass(mergeWithSubpanel)} ${className}`}
+      className={`flex h-11 shrink-0 border-t-hairline border-solid border-border bg-surface-canvas max-lg:border-r-0 lg:h-filter-chrome-bar ${filterChromeRightEdgeClass(mergeWithSubpanel)} ${className}`}
     >
       <div className="flex min-h-0 min-w-0 flex-1 items-center justify-between overflow-hidden px-3 py-0 max-lg:justify-center">
         <a

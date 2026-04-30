@@ -25,7 +25,7 @@ export function MobileFormatScrollRow() {
 
   return (
     <div
-      className="flex w-full shrink-0 flex-nowrap items-center gap-0 overflow-x-auto border-t-hairline border-solid border-ink-primary bg-surface-canvas px-2 py-4 scrollbar-hide"
+      className="flex w-full shrink-0 flex-nowrap items-center gap-0 overflow-x-auto border-t-hairline border-solid border-border bg-surface-canvas px-2 py-4 scrollbar-hide"
       role="radiogroup"
       aria-label="Mode filters"
     >

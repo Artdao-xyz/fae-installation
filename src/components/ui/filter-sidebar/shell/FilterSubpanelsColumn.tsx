@@ -67,7 +67,7 @@ export function FilterSubpanelsColumn({
         !filtersPanelOpen
           ? "w-0 min-w-0 max-w-0 shrink-0 border-0 opacity-0 pointer-events-none"
           : subpanelChromeVisible
-            ? `${FILTER_SUBPANELS_COLUMN_EXPANDED_CLASS} border-l-hairline border-solid border-ink-primary`
+            ? `${FILTER_SUBPANELS_COLUMN_EXPANDED_CLASS} border-l-hairline border-solid border-border`
             : SUBPANEL_COLUMN_COLLAPSED_CLASS
       }`}
       aria-hidden={!filtersPanelOpen || !anySubpanelOpen}

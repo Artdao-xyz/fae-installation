@@ -18,7 +18,7 @@ export function PreviewBlocksBody({ content }: { content: BlocksContent }) {
           ),
           quote: ({ children }) => (
             <blockquote
-              className={`my-0 border-l-2 border-ink-primary/40 pl-3 ${bodyText}`}
+              className={`my-0 border-l-2 border-border pl-3 ${bodyText}`}
             >
               {children}
             </blockquote>

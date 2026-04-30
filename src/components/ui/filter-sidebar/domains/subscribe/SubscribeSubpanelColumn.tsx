@@ -119,7 +119,7 @@ export function SubscribePanelContent({
 
   const newsletterInputs = (
     <div className="mx-auto flex w-full flex-col items-center">
-      <div className="w-full border-t-hairline border-dotted border-ink-primary" />
+      <div className="w-full border-t-hairline border-dotted border-border" />
       <input
         type="text"
         name="tfa_2"
@@ -129,7 +129,7 @@ export function SubscribePanelContent({
         required
         className={`w-full border-0 bg-transparent ${inputPaddingClass} text-center font-fira-mono ${bodyTextClass} text-ink-body placeholder:text-ink-body/60 focus:outline-none`}
       />
-      <div className="w-full border-t-hairline border-dotted border-ink-primary" />
+      <div className="w-full border-t-hairline border-dotted border-border" />
       <input
         type="text"
         name="tfa_4"
@@ -139,7 +139,7 @@ export function SubscribePanelContent({
         required
         className={`w-full border-0 bg-transparent ${inputPaddingClass} text-center font-fira-mono ${bodyTextClass} text-ink-body placeholder:text-ink-body/60 focus:outline-none`}
       />
-      <div className="w-full border-t-hairline border-dotted border-ink-primary" />
+      <div className="w-full border-t-hairline border-dotted border-border" />
       <input
         type="email"
         name="tfa_6"
@@ -149,7 +149,7 @@ export function SubscribePanelContent({
         required
         className={`w-full border-0 bg-transparent ${inputPaddingClass} text-center font-fira-mono ${bodyTextClass} text-ink-body placeholder:text-ink-body/60 focus:outline-none`}
       />
-      <div className="w-full border-t-hairline border-dotted border-ink-primary" />
+      <div className="w-full border-t-hairline border-dotted border-border" />
     </div>
   );
 
@@ -198,7 +198,7 @@ export function SubscribePanelContent({
     <button
       type="submit"
       disabled={status === "loading"}
-      className={`inline-flex ${ctaButtonClass} items-center justify-center gap-2 border-hairline border-solid border-[#424242] bg-surface-canvas px-[50px] ${ctaButtonPaddingClass} font-fira-mono ${bodyTextClass} text-ink-body transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary`}
+      className={`inline-flex ${ctaButtonClass} items-center justify-center gap-2 border-hairline border-solid border-border bg-surface-canvas px-[50px] ${ctaButtonPaddingClass} font-fira-mono ${bodyTextClass} text-ink-body transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary`}
     >
       <span>{status === "loading" ? "Sending..." : "Submit"}</span>
       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -246,7 +246,7 @@ export function SubscribePanelContent({
           href="https://t.me/+RpackhOIPmQyODY0"
           target="_blank"
           rel="noreferrer"
-          className={`inline-flex ${ctaButtonClass} items-center justify-center gap-2 border-hairline border-solid border-[#424242] bg-surface-canvas px-[50px] py-2 font-fira-mono ${bodyTextClass} text-ink-body transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary`}
+          className={`inline-flex ${ctaButtonClass} items-center justify-center gap-2 border-hairline border-solid border-border bg-surface-canvas px-[50px] py-2 font-fira-mono ${bodyTextClass} text-ink-body transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary`}
         >
           <span>Join</span>
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -275,7 +275,7 @@ export function SubscribePanelContent({
           href="https://serpentinegalleries.ticketing.veevartapp.com/tickets/view/list/future-art-ecosystems-community-call-05032026"
           target="_blank"
           rel="noreferrer"
-          className={`inline-flex ${ctaButtonClass} items-center justify-center gap-2 border-hairline border-solid border-[#424242] bg-surface-canvas px-[50px] py-2 font-fira-mono ${bodyTextClass} text-ink-body transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary`}
+          className={`inline-flex ${ctaButtonClass} items-center justify-center gap-2 border-hairline border-solid border-border bg-surface-canvas px-[50px] py-2 font-fira-mono ${bodyTextClass} text-ink-body transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary`}
         >
           <span>Join</span>
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -296,7 +296,7 @@ export function SubscribePanelContent({
     return (
       <div className={className}>
         <div
-          className="grid w-full shrink-0 grid-cols-3 border-b-hairline border-solid border-ink-primary"
+          className="grid w-full shrink-0 grid-cols-3 border-b-hairline border-solid border-border"
           role="tablist"
           aria-label="Subscribe sections"
         >
@@ -305,10 +305,10 @@ export function SubscribePanelContent({
             role="tab"
             aria-selected={activeTab === "newsletter"}
             onClick={() => setActiveTab("newsletter")}
-            className={`h-11 border-r-hairline border-r-solid border-r-ink-primary px-2 font-lust-text text-sm font-normal leading-4 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary ${
+            className={`h-11 border-r-hairline border-r-solid border-r-border px-2 font-lust-text text-sm font-normal leading-4 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary ${
               activeTab === "newsletter"
                 ? "border-t-[3px] border-t-solid border-t-(--color-filter-pill-selection) text-(--color-filter-pill-selection)"
-                : "border-t-hairline border-t-solid border-t-ink-primary text-ink-body/70 hover:bg-surface-hover/60"
+                : "border-t-hairline border-t-solid border-t-border text-ink-body/70 hover:bg-surface-hover/60"
             }`}
           >
             Newsletter
@@ -318,10 +318,10 @@ export function SubscribePanelContent({
             role="tab"
             aria-selected={activeTab === "telegram"}
             onClick={() => setActiveTab("telegram")}
-            className={`h-11 border-r-hairline border-r-solid border-r-ink-primary px-2 font-lust-text text-sm font-normal leading-4 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary ${
+            className={`h-11 border-r-hairline border-r-solid border-r-border px-2 font-lust-text text-sm font-normal leading-4 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary ${
               activeTab === "telegram"
                 ? "border-t-[3px] border-t-solid border-t-(--color-filter-pill-selection) text-(--color-filter-pill-selection)"
-                : "border-t-hairline border-t-solid border-t-ink-primary text-ink-body/70 hover:bg-surface-hover/60"
+                : "border-t-hairline border-t-solid border-t-border text-ink-body/70 hover:bg-surface-hover/60"
             }`}
           >
             Telegram
@@ -334,7 +334,7 @@ export function SubscribePanelContent({
             className={`h-11 px-2 font-lust-text text-sm font-normal leading-4 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary ${
               activeTab === "community"
                 ? "border-t-[3px] border-t-solid border-t-(--color-filter-pill-selection) text-(--color-filter-pill-selection)"
-                : "border-t-hairline border-t-solid border-t-ink-primary text-ink-body/70 hover:bg-surface-hover/60"
+                : "border-t-hairline border-t-solid border-t-border text-ink-body/70 hover:bg-surface-hover/60"
             }`}
           >
             Community Call
@@ -352,10 +352,10 @@ export function SubscribePanelContent({
   return (
     <div className={className}>
       {newsletterForm}
-      <div className="w-full border-t-hairline border-solid border-[#424242] bg-surface-muted px-[50px] py-2 text-center font-lust-text text-xs leading-[17px] tracking-[0.05px] text-ink-body">
+      <div className="w-full border-t-hairline border-solid border-border bg-surface-muted px-[50px] py-2 text-center font-lust-text text-xs leading-[17px] tracking-[0.05px] text-ink-body">
         Telegram
       </div>
-      <section className="w-full border-t-hairline border-dotted border-[#454545] bg-surface-canvas px-[15px] py-7">
+      <section className="w-full border-t-hairline border-dotted border-border bg-surface-canvas px-[15px] py-7">
         <div className="mx-auto flex w-full flex-col items-center gap-6">
           <p className="text-center font-fira-mono text-xs leading-[17px] text-ink-body/60">
             Get Involved in our community
@@ -364,7 +364,7 @@ export function SubscribePanelContent({
             href="https://t.me/+RpackhOIPmQyODY0"
             target="_blank"
             rel="noreferrer"
-            className="inline-flex w-full items-center justify-center gap-2 border-hairline border-solid border-[#424242] bg-surface-canvas px-[50px] py-3 font-fira-mono text-xs leading-[17px] text-ink-body transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary"
+            className="inline-flex w-full items-center justify-center gap-2 border-hairline border-solid border-border bg-surface-canvas px-[50px] py-3 font-fira-mono text-xs leading-[17px] text-ink-body transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary"
           >
             <span>Join</span>
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -379,10 +379,10 @@ export function SubscribePanelContent({
           </a>
         </div>
       </section>
-      <div className="w-full border-t-hairline border-solid border-[#424242] bg-surface-muted px-[50px] py-2 text-center font-lust-text text-xs leading-[17px] tracking-[0.05px] text-ink-body">
+      <div className="w-full border-t-hairline border-solid border-border bg-surface-muted px-[50px] py-2 text-center font-lust-text text-xs leading-[17px] tracking-[0.05px] text-ink-body">
         Community Call
       </div>
-      <section className="w-full border-t-hairline border-dotted border-[#454545] bg-surface-canvas px-[15px] py-7">
+      <section className="w-full border-t-hairline border-dotted border-border bg-surface-canvas px-[15px] py-7">
         <div className="mx-auto flex w-full flex-col items-center gap-6">
           <p className="text-center font-fira-mono text-xs leading-[17px] text-ink-body/60">
             Netx Call: 5 March, 2pm (UTC)
@@ -391,7 +391,7 @@ export function SubscribePanelContent({
             href="https://serpentinegalleries.ticketing.veevartapp.com/tickets/view/list/future-art-ecosystems-community-call-05032026"
             target="_blank"
             rel="noreferrer"
-            className="inline-flex w-full items-center justify-center gap-2 border-hairline border-solid border-[#424242] bg-surface-canvas px-[50px] py-3 font-fira-mono text-xs leading-[17px] text-ink-body transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary"
+            className="inline-flex w-full items-center justify-center gap-2 border-hairline border-solid border-border bg-surface-canvas px-[50px] py-3 font-fira-mono text-xs leading-[17px] text-ink-body transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary"
           >
             <span>Join</span>
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -417,7 +417,7 @@ export function SubscribeSubpanelColumn({
 }: SubscribeSubpanelColumnProps) {
   return (
     <div
-      className={`flex min-h-0 w-full shrink-0 flex-col overflow-hidden border-l-0 border-r-hairline border-solid border-ink-primary bg-surface-canvas ${filterSubpanelGuideViewportHeightClass(splitHeight)} ${
+      className={`flex min-h-0 w-full shrink-0 flex-col overflow-hidden border-l-0 border-r-hairline border-solid border-border bg-surface-canvas ${filterSubpanelGuideViewportHeightClass(splitHeight)} ${
         mergeTopBorder ? "border-t-0" : "border-t-hairline"
       }`}
       role="complementary"

@@ -173,7 +173,7 @@ function HomeContent({ initialPreviewSlug }: HomePageClientProps) {
         <div
           className={[
             "min-w-0 w-full shrink-0 bg-surface-canvas lg:hidden",
-            "max-lg:sticky max-lg:top-[calc(env(safe-area-inset-top,0px)+2.75rem)] max-lg:z-45 max-lg:border-b-hairline max-lg:border-solid max-lg:border-ink-primary",
+            "max-lg:sticky max-lg:top-[calc(env(safe-area-inset-top,0px)+2.75rem)] max-lg:z-45 max-lg:border-b-hairline max-lg:border-solid max-lg:border-border",
             hideMobileLandingSearch ? "hidden" : "",
             searching ? "flex flex-col" : "",
           ]
