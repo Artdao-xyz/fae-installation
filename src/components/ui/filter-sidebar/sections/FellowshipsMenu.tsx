@@ -21,6 +21,8 @@ export function FellowshipsMenu({
         label="Fellowships"
         tone="latest-updates"
         compact={collapsed}
+        selected={selectedDesktopDomainMenuId === "fellowships"}
+        onPress={() => toggleDesktopDomainMenuSelection("fellowships")}
       />
     );
   }

@@ -76,7 +76,8 @@ export function FilterSidebarCategoryRow({
         type="button"
         disabled={disabled}
         onClick={disabled ? undefined : onClick}
-        aria-pressed={disabled ? undefined : domainRowSelected}
+        role="radio"
+        aria-checked={disabled ? undefined : domainRowSelected}
         data-fae-subpanel-filter-active={hasSelection ? "true" : undefined}
         data-domain-active={domainActive ? "true" : undefined}
         className={`group flex w-full flex-col bg-transparent pt-0 text-left focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary ${

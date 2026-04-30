@@ -85,6 +85,8 @@ export function FilterOptionsPanel({
           <FilterTaxonomyEmptyHint />
           <div
             className={`flex shrink-0 flex-col ${searching ? "" : "pb-4"}`}
+            role="radiogroup"
+            aria-label="Programme filters"
           >
             <FellowshipsMenu collapsed={searching} />
             <RDProjectsMenu collapsed={searching} />

@@ -5,6 +5,8 @@ export type ContentResource = {
   label: string;
 };
 
+export type ContentProgramme = "Briefings" | "Fellowships" | "R&D Projects";
+
 export type ContentRow = {
   id: string;
   /** Full title (`Content_Title`) — preview, search, etc. */
@@ -34,6 +36,8 @@ export type ContentRow = {
   linkedOutputNames: readonly string[];
   focusAreas: readonly string[];
   activityTypes: readonly string[];
+  /** Strapi `Programme` enumeration. */
+  programme: ContentProgramme | null;
   /** Approximate sort/search year: first year in `Date` (works for a single `2024` or an interval `2022-2024` / `2022–2024`). */
   year: number;
   /**

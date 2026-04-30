@@ -24,6 +24,8 @@ export function FAEBriefingsMenu({
         label="FAE Briefings"
         tone="fae-briefings"
         compact={collapsed}
+        selected={selectedDesktopDomainMenuId === "briefings"}
+        onPress={() => toggleDesktopDomainMenuSelection("briefings")}
       />
     );
   }

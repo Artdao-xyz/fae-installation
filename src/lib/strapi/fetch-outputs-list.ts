@@ -112,6 +112,7 @@ function appendOutputsListSlimQuery(params: URLSearchParams): void {
     "Short_Title",
     "Image_Caption",
     "Date",
+    "Programme",
     "updatedAt",
     "createdAt",
   ];

@@ -25,6 +25,7 @@ export function HeroTitleBlock({ title, subtitle, className = "" }: Props) {
     selectedFormats,
     selectedNetworks,
     selectedFaeBriefing,
+    selectedProgramme,
     contentPreviewRow,
     filtersPanelOpen,
   } = useFilterSelection();
@@ -40,6 +41,7 @@ export function HeroTitleBlock({ title, subtitle, className = "" }: Props) {
     selectedFormats.size === 0 &&
     selectedNetworks.size === 0 &&
     selectedFaeBriefing == null &&
+    selectedProgramme == null &&
     contentPreviewRow == null;
 
   const hideHero = !isHeroIdle;

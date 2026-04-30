@@ -1,4 +1,4 @@
-import type { ContentRow } from "@/data/content-types";
+import type { ContentProgramme, ContentRow } from "@/data/content-types";
 
 /**
  * Same semantics as particle spread filtering — keep in sync with product default (intersection / AND).
@@ -7,6 +7,7 @@ export type FilterMatchMode = "intersection" | "union";
 
 /** All catalog-backed taxonomy dimensions used for spread + sidebar availability. */
 export type TaxonomyFilterSelection = {
+  programme: ContentProgramme | null;
   focus: ReadonlySet<string>;
   activity: ReadonlySet<string>;
   artists: ReadonlySet<string>;
@@ -19,7 +20,7 @@ export function rowMatchesFilterSelection(
   sel: TaxonomyFilterSelection,
   mode: FilterMatchMode,
 ): boolean {
-  const { focus, activity, artists, formats, networks } = sel;
+  const { programme, focus, activity, artists, formats, networks } = sel;
   /**
    * All dimensions empty = no taxonomy constraints — every row is eligible (unfiltered),
    * including when the user hits “clear all” on the last active category.
@@ -27,6 +28,7 @@ export function rowMatchesFilterSelection(
    * or “matched nothing” depending on the UI.)
    */
   if (
+    programme == null &&
     focus.size === 0 &&
     activity.size === 0 &&
     artists.size === 0 &&
@@ -34,6 +36,10 @@ export function rowMatchesFilterSelection(
     networks.size === 0
   ) {
     return true;
+  }
+
+  if (programme != null && row.programme !== programme) {
+    return false;
   }
 
   if (mode === "union") {

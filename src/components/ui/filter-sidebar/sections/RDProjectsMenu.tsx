@@ -21,6 +21,8 @@ export function RDProjectsMenu({
         label="R&D Projects"
         tone="rd"
         compact={collapsed}
+        selected={selectedDesktopDomainMenuId === "rd"}
+        onPress={() => toggleDesktopDomainMenuSelection("rd")}
       />
     );
   }

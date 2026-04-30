@@ -223,7 +223,11 @@ function HomeContent({ initialPreviewSlug }: HomePageClientProps) {
             mobileLandingExpanded={mobileLandingSearchExpanded}
             onMobileLandingExpand={() => setMobileLandingSearchOpen(true)}
             mobileLandingActions={
-              <>
+              <div
+                className="contents"
+                role="radiogroup"
+                aria-label="Programme filters"
+              >
                 <FellowshipsMenu
                   mobileLanding
                   collapsed={mobileLandingSearchExpanded}
@@ -236,7 +240,7 @@ function HomeContent({ initialPreviewSlug }: HomePageClientProps) {
                   mobileLanding
                   collapsed={mobileLandingSearchExpanded}
                 />
-              </>
+              </div>
             }
           />
         </div>

@@ -26,9 +26,18 @@ export function MobileSelectedFiltersStrip() {
     selectedArtists,
     selectedNetworks,
     selectedFaeBriefing,
+    selectedProgramme,
   } = useFilterSelection();
 
   const labels: { key: string; label: string }[] = [
+    ...(selectedProgramme
+      ? [
+          {
+            key: `programme:${selectedProgramme}`,
+            label: selectedProgramme,
+          },
+        ]
+      : []),
     ...[...selectedFocusAreas].map((label) => ({
       key: `focus:${label}`,
       label,

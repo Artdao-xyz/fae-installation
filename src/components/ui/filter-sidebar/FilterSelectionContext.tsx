@@ -12,7 +12,7 @@ import {
   type ReactNode,
   type SetStateAction,
 } from "react";
-import type { ContentRow } from "@/data/content-types";
+import type { ContentProgramme, ContentRow } from "@/data/content-types";
 import {
   mergeCmsAndCatalogOptionLabels,
   uniqueSortedLabelsFromCatalog,
@@ -39,6 +39,15 @@ export type DesktopDomainMenuSelectionId =
   | "fellowships"
   | "rd"
   | "briefings";
+
+const PROGRAMME_BY_DOMAIN_ID: Record<
+  DesktopDomainMenuSelectionId,
+  ContentProgramme
+> = {
+  fellowships: "Fellowships",
+  rd: "R&D Projects",
+  briefings: "Briefings",
+};
 
 /** Matches Tailwind `lg` (64rem). Auto-opening the filter column is desktop-only; mobile sheet stays closed until the user taps Filters. */
 function shouldAutoOpenFiltersPanel(): boolean {
@@ -140,6 +149,7 @@ export type FilterSelectionContextValue = {
    * Single selection among the three (`null` = none).
    */
   selectedDesktopDomainMenuId: DesktopDomainMenuSelectionId | null;
+  selectedProgramme: ContentProgramme | null;
   toggleDesktopDomainMenuSelection: (id: DesktopDomainMenuSelectionId) => void;
   /** Derived: any domain subpanel column open. */
   filterSubpanelsOpen: boolean;
@@ -191,6 +201,7 @@ type PreviewFilterSnapshot = {
   formats: string[];
   networks: string[];
   faeBriefing: string | null;
+  desktopDomainMenuId: DesktopDomainMenuSelectionId | null;
 };
 
 export function FilterSelectionProvider({ children }: { children: ReactNode }) {
@@ -401,13 +412,9 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
   );
   const [selectedDesktopDomainMenuId, setSelectedDesktopDomainMenuId] =
     useState<DesktopDomainMenuSelectionId | null>(null);
-
-  const toggleDesktopDomainMenuSelection = useCallback(
-    (id: DesktopDomainMenuSelectionId) => {
-      setSelectedDesktopDomainMenuId((prev) => (prev === id ? null : id));
-    },
-    [],
-  );
+  const selectedProgramme = selectedDesktopDomainMenuId
+    ? PROGRAMME_BY_DOMAIN_ID[selectedDesktopDomainMenuId]
+    : null;
 
   useEffect(() => {
     if (FAE_BRIEFING_OPTIONS.length === 0) {
@@ -421,6 +428,7 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
 
   const taxonomySelection = useMemo(
     (): TaxonomyFilterSelection => ({
+      programme: selectedProgramme,
       focus: selectedFocusAreas,
       activity: selectedActivityTypes,
       artists: selectedArtists,
@@ -428,6 +436,7 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
       networks: selectedNetworks,
     }),
     [
+      selectedProgramme,
       selectedFocusAreas,
       selectedActivityTypes,
       selectedArtists,
@@ -510,12 +519,14 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
 
   const hasActiveTaxonomyFilters = useMemo(
     () =>
+      selectedProgramme != null ||
       selectedFocusAreas.size > 0 ||
       selectedActivityTypes.size > 0 ||
       selectedArtists.size > 0 ||
       selectedFormats.size > 0 ||
       selectedNetworks.size > 0,
     [
+      selectedProgramme,
       selectedFocusAreas,
       selectedActivityTypes,
       selectedArtists,
@@ -669,11 +680,13 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
       formats: [...selectedFormats],
       networks: [...selectedNetworks],
       faeBriefing: selectedFaeBriefing,
+      desktopDomainMenuId: selectedDesktopDomainMenuId,
     };
   }, [
     selectedActivityTypes,
     selectedArtists,
     selectedFaeBriefing,
+    selectedDesktopDomainMenuId,
     selectedFocusAreas,
     selectedFormats,
     selectedNetworks,
@@ -690,6 +703,7 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
     setSelectedFormats(new Set(snap.formats.slice(0, 1)));
     setSelectedNetworks(new Set(snap.networks));
     setSelectedFaeBriefing(snap.faeBriefing);
+    setSelectedDesktopDomainMenuId(snap.desktopDomainMenuId);
   }, [minimizeAllFloatingPanels]);
 
   const openContentPreview = useCallback(
@@ -749,6 +763,15 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
     clearPendingPreviewFilterSnapshot();
     closeContentPreview();
   }, [clearPendingPreviewFilterSnapshot, closeContentPreview]);
+
+  const toggleDesktopDomainMenuSelection = useCallback(
+    (id: DesktopDomainMenuSelectionId) => {
+      minimizeAllFloatingPanels();
+      endContentPreviewOnSidebarFilterChange();
+      setSelectedDesktopDomainMenuId((prev) => (prev === id ? null : id));
+    },
+    [endContentPreviewOnSidebarFilterChange, minimizeAllFloatingPanels],
+  );
 
   const toggleFocusArea = useCallback(
     (label: string) => {
@@ -978,6 +1001,7 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
       subscribeSubpanelOpen,
       setSubscribeSubpanelOpen,
       selectedDesktopDomainMenuId,
+      selectedProgramme,
       toggleDesktopDomainMenuSelection,
       filterSubpanelsOpen,
       openContentPreview,
@@ -1040,6 +1064,7 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
       artistsSubpanelOpen,
       subscribeSubpanelOpen,
       selectedDesktopDomainMenuId,
+      selectedProgramme,
       toggleDesktopDomainMenuSelection,
       filterSubpanelsOpen,
       openContentPreview,

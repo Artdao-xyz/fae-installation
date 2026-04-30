@@ -1,5 +1,9 @@
 import type { BlocksContent } from "@strapi/blocks-react-renderer";
-import type { ContentResource, ContentRow } from "@/data/content-types";
+import type {
+  ContentProgramme,
+  ContentResource,
+  ContentRow,
+} from "@/data/content-types";
 import { createOutputShareSlug } from "@/lib/output-share-slug";
 
 type StrapiMedia = {
@@ -296,6 +300,20 @@ function strapiSystemTimestampIso(
   return "";
 }
 
+function programmeFromOutputDoc(
+  doc: Record<string, unknown>,
+): ContentProgramme | null {
+  const raw = doc.Programme ?? doc.programme;
+  if (
+    raw === "Briefings" ||
+    raw === "Fellowships" ||
+    raw === "R&D Projects"
+  ) {
+    return raw;
+  }
+  return null;
+}
+
 /**
  * Numeric year for `ContentRow.year`: first 4-digit year in the CMS `Date` value.
  * `Date` may be a single year (`2024`) or an interval (`2022-2024`, `2022–2024`, spaced variants).
@@ -560,6 +578,7 @@ export function mapStrapiOutputToContentRow(
     linkedOutputNames,
     focusAreas: relationNames(doc.Focus),
     activityTypes: relationNames(doc.Activity),
+    programme: programmeFromOutputDoc(doc),
     year,
     yearLabel,
     formats: formatsFromOutputDoc(doc),
