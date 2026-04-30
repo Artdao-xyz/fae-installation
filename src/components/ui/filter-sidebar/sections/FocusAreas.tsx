@@ -39,7 +39,7 @@ export function FocusAreas({
       title="Focus"
       titleClassName="min-w-0 flex-1 font-lust-text text-base font-medium leading-6 text-ink-body"
       onClearAll={clearAll}
-      scrollBody
+      scrollBody={chromeless}
       collapsed={collapsed}
       chromeless={chromeless}
       selectionTally={

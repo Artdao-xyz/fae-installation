@@ -80,7 +80,7 @@ export function FilterSidebarCategoryRow({
         aria-checked={disabled ? undefined : domainRowSelected}
         data-fae-subpanel-filter-active={hasSelection ? "true" : undefined}
         data-domain-active={domainActive ? "true" : undefined}
-        className={`group flex w-full flex-col bg-transparent pt-0 text-left focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary ${
+        className={`group flex h-full min-h-0 w-full flex-col bg-transparent pt-0 text-left focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary ${
           domainCollapsed ? "px-0" : "px-4"
         } ${
           disabled
@@ -90,7 +90,7 @@ export function FilterSidebarCategoryRow({
         data-name="Filters-Domain-Row"
       >
         <div
-          className={`flex min-w-0 flex-col border-t border-dotted border-border backdrop-blur-fae-sm transition-colors duration-150 motion-reduce:transition-none ${
+          className={`flex h-full w-full min-h-0 min-w-0 flex-col items-center justify-center border-t border-dotted border-border backdrop-blur-fae-sm transition-colors duration-150 motion-reduce:transition-none ${
             domainCollapsed ? "pt-1.5 pb-2" : "pt-4 pb-5"
           } ${domainBg}`}
         >
@@ -148,7 +148,7 @@ export function FilterSidebarCategoryRow({
       aria-expanded={disabled ? undefined : expanded}
       aria-disabled={disabled ? true : undefined}
       data-fae-subpanel-filter-active={hasSelection ? "true" : undefined}
-      className={`relative flex w-full gap-2 border-t-hairline border-solid border-border pl-3 pr-[15px] text-left ${hasSecondaryLabel ? "items-start" : "items-center"} ${large ? "py-3" : "py-[7px]"} ${matClass} ${
+      className={`relative flex w-full gap-2 border-t-hairline border-solid border-border pl-3 pr-[15px] text-left ${hasSecondaryLabel ? "items-start" : "items-center"} ${large ? "min-h-16 py-3" : "py-[7px]"} ${matClass} ${
         disabled
           ? "cursor-not-allowed opacity-45 motion-reduce:opacity-50"
           : hoverClass

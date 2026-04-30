@@ -10,7 +10,6 @@ import { Format } from "../sections/Format";
 import { NetworkMenu } from "../sections/NetworkMenu";
 import { RDProjectsMenu } from "../sections/RDProjectsMenu";
 import { Search } from "../sections/Search";
-import { SubscribeMenu } from "../sections/SubscribeMenu";
 import { FilterTaxonomyEmptyHint } from "./FilterTaxonomyEmptyHint";
 import { MobileFilterOptionsLayout } from "./MobileFilterOptionsLayout";
 import { filterChromeRightEdgeClass } from "./layout-classes";
@@ -84,19 +83,25 @@ export function FilterOptionsPanel({
           </div>
           <FilterTaxonomyEmptyHint />
           <div
-            className={`flex shrink-0 flex-col ${searching ? "" : "pb-4"}`}
+            className={`flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden ${searching ? "" : "pb-4"}`}
             role="radiogroup"
             aria-label="Programme filters"
           >
-            <FellowshipsMenu collapsed={searching} />
-            <RDProjectsMenu collapsed={searching} />
-            <FAEBriefingsMenu collapsed={searching} />
+            <div className="min-h-0 min-w-0 flex-1">
+              <FellowshipsMenu collapsed={searching} />
+            </div>
+            <div className="min-h-0 min-w-0 flex-1">
+              <RDProjectsMenu collapsed={searching} />
+            </div>
+            <div className="min-h-0 min-w-0 flex-1">
+              <FAEBriefingsMenu collapsed={searching} />
+            </div>
           </div>
           <div
             className={
               searching
                 ? "flex shrink-0 flex-col"
-                : "flex min-h-0 flex-1 flex-col overflow-hidden"
+                : "flex shrink-0 flex-col"
             }
           >
             {searching ? (
@@ -106,10 +111,10 @@ export function FilterOptionsPanel({
               </>
             ) : (
               <>
-                <div className="flex min-h-0 min-w-0 flex-2 flex-col overflow-hidden">
+                <div className="flex min-w-0 shrink-0 flex-col">
                   <FocusAreas collapsed={false} />
                 </div>
-                <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+                <div className="flex min-w-0 shrink-0 flex-col">
                   <ActivityType collapsed={false} />
                 </div>
               </>
@@ -126,10 +131,6 @@ export function FilterOptionsPanel({
             <NetworkMenu
               subpanelOpen={networkSubpanelOpen}
               onToggleSubpanel={onToggleNetworkSubpanel}
-            />
-            <SubscribeMenu
-              subpanelOpen={subscribeSubpanelOpen}
-              onToggleSubpanel={onToggleSubscribeSubpanel}
             />
           </div>
         </div>

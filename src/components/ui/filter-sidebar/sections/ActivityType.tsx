@@ -38,7 +38,7 @@ export function ActivityType({
     <FilterSidebarSection
       title="Activity"
       onClearAll={clearAll}
-      scrollBody
+      scrollBody={chromeless}
       collapsed={collapsed}
       chromeless={chromeless}
       selectionTally={
