@@ -74,18 +74,18 @@ export const domainRowHighlightedBgClass: Record<
   string
 > = {
   "fae-briefings":
-    "bg-[color-mix(in_srgb,var(--color-filter-category-fae-briefings)_20%,#ececec)]",
+    "bg-[color-mix(in_srgb,var(--color-filter-category-fae-briefings)_5%,#ececec)]",
   "latest-updates":
-    "bg-[color-mix(in_srgb,var(--color-filter-category-latest-updates)_20%,#ececec)]",
-  rd: "bg-[color-mix(in_srgb,var(--color-filter-category-rd)_20%,#ececec)]",
+    "bg-[color-mix(in_srgb,var(--color-filter-category-latest-updates)_5%,#ececec)]",
+  rd: "bg-[color-mix(in_srgb,var(--color-filter-category-rd)_5%,#ececec)]",
   editorial:
-    "bg-[color-mix(in_srgb,var(--color-filter-category-editorial)_20%,#ececec)]",
+    "bg-[color-mix(in_srgb,var(--color-filter-category-editorial)_5%,#ececec)]",
   artists:
-    "bg-[color-mix(in_srgb,var(--color-filter-category-artists)_20%,#ececec)]",
+    "bg-[color-mix(in_srgb,var(--color-filter-category-artists)_5%,#ececec)]",
   network:
-    "bg-[color-mix(in_srgb,var(--color-filter-category-network)_20%,#ececec)]",
+    "bg-[color-mix(in_srgb,var(--color-filter-category-network)_5%,#ececec)]",
   subscribe:
-    "bg-[color-mix(in_srgb,var(--color-filter-pill-selection)_20%,#ececec)]",
+    "bg-[color-mix(in_srgb,var(--color-filter-pill-selection)_5%,#ececec)]",
 };
 
 /**
