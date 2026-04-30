@@ -473,7 +473,7 @@ export function AboutFullScreenRichContent() {
           <AboutSectionHeading title="Key Areas" />
           <AboutSectionDivider />
         </div>
-        <div className="grid w-full grid-cols-1 gap-2.5 md:grid-cols-2">
+        <div className="grid w-full grid-cols-1 md:grid-cols-2">
           {KEY_AREAS.map((area) => (
             <AboutKeyAreaCard
               key={area.title}
