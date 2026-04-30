@@ -251,6 +251,19 @@ button {
   }
 }
 
+@keyframes fae-mobile-popup-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(calc(-50% - 1rem));
+  }
+}
+
+.fae-mobile-popup-marquee {
+  animation: fae-mobile-popup-marquee 18s linear infinite;
+}
+
 /**
  * Direct children of `.fae-preview-cascade`: shared opacity fade (no stagger, no vertical motion)
  * so streaming detail doesn’t re-trigger a stepped cascade.

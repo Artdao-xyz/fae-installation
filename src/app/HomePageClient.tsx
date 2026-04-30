@@ -21,6 +21,7 @@ import { MarginGuideFrame } from "@/components/ui/margin-guide-frame";
 import { PixelTessellationBackground } from "@/components/ui/pixel-tessellation-background";
 import { ImageParticleSimulation } from "@/components/particle-canvas/ImageParticleSimulation";
 import { PreviewView } from "@/components/ui/preview/PreviewView";
+import { PopUp } from "@/components/ui/pop-up";
 import {
   IMAGE_FETCH_LIMIT,
   IMAGE_FETCH_LIMIT_MOBILE,
@@ -191,6 +192,24 @@ function HomeContent({ initialPreviewSlug }: HomePageClientProps) {
           className={[
             "min-w-0 w-full shrink-0 bg-surface-canvas lg:hidden",
             "max-lg:sticky max-lg:top-[calc(env(safe-area-inset-top,0px)+3.25rem)] max-lg:z-45",
+            hideMobileLandingSearch ? "hidden" : "",
+          ]
+            .filter(Boolean)
+            .join(" ")}
+        >
+          <PopUp
+            mainContent="Future Art Ecosystems 5"
+            secondaryContent="Out now in print with essays, interviews, and new research on advanced technologies in art"
+            cta="Read more"
+            url="https://futureartecosystems.org"
+            variant="mobile"
+          />
+        </div>
+
+        <div
+          className={[
+            "min-w-0 w-full shrink-0 bg-surface-canvas lg:hidden",
+            "max-lg:sticky max-lg:top-[calc(env(safe-area-inset-top,0px)+6.5rem)] max-lg:z-45",
             hideMobileLandingSearch ? "hidden" : "",
             searching ? "flex flex-col" : "",
           ]
