@@ -14,7 +14,6 @@ import {
 } from "react";
 import type { ContentRow } from "@/data/content-types";
 import {
-  filterMergedOptionLabelsToCatalogUsed,
   mergeCmsAndCatalogOptionLabels,
   uniqueSortedLabelsFromCatalog,
 } from "@/lib/content-catalog-filter-options";
@@ -430,55 +429,40 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
 
   const filterFocusOptionLabels = useMemo(
     () =>
-      filterMergedOptionLabelsToCatalogUsed(
-        mergeCmsAndCatalogOptionLabels(
-          taxonomyLabelsFromApi.focus,
-          focusDerivedFromRows,
-        ),
+      mergeCmsAndCatalogOptionLabels(
+        taxonomyLabelsFromApi.focus,
         focusDerivedFromRows,
       ),
     [taxonomyLabelsFromApi.focus, focusDerivedFromRows],
   );
   const filterActivityOptionLabels = useMemo(
     () =>
-      filterMergedOptionLabelsToCatalogUsed(
-        mergeCmsAndCatalogOptionLabels(
-          taxonomyLabelsFromApi.activity,
-          activityDerivedFromRows,
-        ),
+      mergeCmsAndCatalogOptionLabels(
+        taxonomyLabelsFromApi.activity,
         activityDerivedFromRows,
       ),
     [taxonomyLabelsFromApi.activity, activityDerivedFromRows],
   );
   const filterFormatOptionLabels = useMemo(
     () =>
-      filterMergedOptionLabelsToCatalogUsed(
-        mergeCmsAndCatalogOptionLabels(
-          taxonomyLabelsFromApi.format,
-          formatsDerivedFromRows,
-        ),
+      mergeCmsAndCatalogOptionLabels(
+        taxonomyLabelsFromApi.format,
         formatsDerivedFromRows,
       ),
     [taxonomyLabelsFromApi.format, formatsDerivedFromRows],
   );
   const filterNetworkOptionLabels = useMemo(
     () =>
-      filterMergedOptionLabelsToCatalogUsed(
-        mergeCmsAndCatalogOptionLabels(
-          taxonomyLabelsFromApi.network,
-          networksDerivedFromRows,
-        ),
+      mergeCmsAndCatalogOptionLabels(
+        taxonomyLabelsFromApi.network,
         networksDerivedFromRows,
       ),
     [taxonomyLabelsFromApi.network, networksDerivedFromRows],
   );
   const filterArtistOptionLabels = useMemo(
     () =>
-      filterMergedOptionLabelsToCatalogUsed(
-        mergeCmsAndCatalogOptionLabels(
-          taxonomyLabelsFromApi.artist,
-          artistsDerivedFromRows,
-        ),
+      mergeCmsAndCatalogOptionLabels(
+        taxonomyLabelsFromApi.artist,
         artistsDerivedFromRows,
       ),
     [taxonomyLabelsFromApi.artist, artistsDerivedFromRows],
