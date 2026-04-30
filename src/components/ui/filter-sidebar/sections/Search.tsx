@@ -1,22 +1,32 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, type ReactNode } from "react";
 import { filterContentRowsForSearchQuery } from "@/data/search-filter";
 import { useFilterSelection } from "../FilterSelectionContext";
 import { FilterPill } from "../primitives/FilterPill";
 import { FilterSearchField } from "../primitives/FilterSearchField";
+import {
+  filterFramedRoundedInnerClass,
+  filterPillSingleLayerBrightnessHoverClass,
+} from "../primitives/filterFramedClasses";
 
 type SearchProps = {
   value: string;
   onChange: (value: string) => void;
   /** Pass unique ids when both mobile (landing) and desktop (sidebar) instances exist. */
   fieldId?: string;
+  mobileLandingActions?: ReactNode;
+  mobileLandingExpanded?: boolean;
+  onMobileLandingExpand?: () => void;
 };
 
 export function Search({
   value,
   onChange,
   fieldId = "filter-search",
+  mobileLandingActions,
+  mobileLandingExpanded = true,
+  onMobileLandingExpand,
 }: SearchProps) {
   const { openContentPreview, contentCatalog } = useFilterSelection();
 
@@ -25,6 +35,7 @@ export function Search({
     [value, contentCatalog],
   );
   const searching = value.trim().length > 0;
+  const hasMobileLandingActions = mobileLandingActions != null;
 
   return (
     <div
@@ -35,13 +46,59 @@ export function Search({
       }
     >
       {/* Bar row: on landing mobile, parent keeps this outside the main scroll region so it stays put. */}
-      <div className="min-w-0 shrink-0 bg-surface-canvas px-3 py-4">
-        <FilterSearchField
-          id={fieldId}
-          label="Search"
-          value={value}
-          onChange={onChange}
-        />
+      <div
+        className={
+          hasMobileLandingActions
+            ? "min-w-0 shrink-0 bg-surface-canvas p-0 lg:px-3 lg:py-4"
+            : "min-w-0 shrink-0 bg-surface-canvas px-3 py-4"
+        }
+      >
+        {hasMobileLandingActions ? (
+          <div className="flex min-w-0 items-stretch gap-0 lg:hidden">
+            {mobileLandingExpanded ? (
+              <div className="relative z-20 flex h-13 min-w-0 flex-1">
+                <FilterSearchField
+                  id={fieldId}
+                  label="Search"
+                  value={value}
+                  onChange={onChange}
+                  outerClassName="fae-control-filter-outer-1px h-full"
+                  innerClassName="h-full"
+                  inputClassName="text-base leading-5 placeholder:text-base placeholder:leading-5"
+                />
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={onMobileLandingExpand}
+                className={`fae-control-filter-outer fae-search-field-outer fae-control-filter-outer-1px ${filterPillSingleLayerBrightnessHoverClass} relative z-20 inline-flex h-13 w-13 flex-none items-center justify-center focus-visible:outline-none`}
+                aria-label="Open search"
+                aria-controls={fieldId}
+              >
+                <span
+                  className={`${filterFramedRoundedInnerClass(false)} flex h-full w-full items-center justify-center px-0 py-0`}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element -- local static search icon */}
+                  <img
+                    src="/svg/search.svg"
+                    alt=""
+                    className="block size-4 max-h-4 max-w-4 shrink-0 object-contain"
+                    aria-hidden
+                  />
+                </span>
+              </button>
+            )}
+            {mobileLandingActions}
+          </div>
+        ) : null}
+        <div className={hasMobileLandingActions ? "hidden lg:block" : undefined}>
+          <FilterSearchField
+            id={fieldId}
+            label="Search"
+            value={value}
+            onChange={onChange}
+          />
+        </div>
       </div>
 
       {searching ? (

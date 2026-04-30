@@ -73,12 +73,12 @@ export function filterChromeRightEdgeClass(mergeWithSubpanel: boolean) {
 }
 
 /**
- * `max-lg` overlays (filter sheet, About): below `MobileSiteHeader` (safe area + `h-11`).
+ * `max-lg` overlays (filter sheet, About): below `MobileSiteHeader` (safe area + `h-13`).
  * Pair with `max-lg:h-auto` on the same `fixed` node — `h-full` + `top`/`bottom` fills the viewport
  * and ignores `bottom`.
  */
 export const MOBILE_OVERLAY_TOP_CLASS =
-  "max-lg:top-[calc(env(safe-area-inset-top,0px)+2.75rem)]";
+  "max-lg:top-[calc(env(safe-area-inset-top,0px)+3.25rem)]";
 
 /**
  * Stack above the Serpentine bar: `h-11` footer row + home indicator (`max-lg` matches other chrome strips).

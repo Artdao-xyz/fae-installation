@@ -216,6 +216,15 @@
     background-color: var(--color-ink-primary);
   }
 
+  .fae-control-filter-outer-1px {
+    border-width: 1px;
+  }
+
+  .fae-search-field-outer {
+    border-color: var(--color-border);
+    background-color: var(--color-border);
+  }
+
   /* Padding / type: `filterPillLabelBoxClass` in filterFramedClasses.ts */
   .fae-control-filter-inner {
     position: relative;

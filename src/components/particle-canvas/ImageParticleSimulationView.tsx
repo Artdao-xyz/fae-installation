@@ -180,6 +180,8 @@ export type ImageParticleSimulationViewProps = {
   rootClassName?: string;
   /** Share URL slug to open immediately when the page is loaded through `/[slug]`. */
   initialPreviewSlug?: string;
+  /** Called when the user clicks the empty canvas/background, excluding tiles and previews. */
+  onEmptyCanvasPointerDown?: () => void;
 };
 
 export function ImageParticleSimulationView({
@@ -194,6 +196,7 @@ export function ImageParticleSimulationView({
   filterMatchMode: filterMatchModeProp,
   rootClassName,
   initialPreviewSlug,
+  onEmptyCanvasPointerDown,
 }: ImageParticleSimulationViewProps) {
   const filterMatchMode = filterMatchModeProp ?? "intersection";
   const filterMatchModeRef = useRef(filterMatchMode);
@@ -1985,6 +1988,7 @@ export function ImageParticleSimulationView({
           if (t.closest("[data-fae-content-preview]")) return;
         }
         clearIdleHoverState();
+        onEmptyCanvasPointerDown?.();
         resetToIdle();
       }}
     >

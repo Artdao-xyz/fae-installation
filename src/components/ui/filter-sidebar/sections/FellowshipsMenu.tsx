@@ -2,11 +2,29 @@
 
 import { useFilterSelection } from "../FilterSelectionContext";
 import { FilterSidebarCategoryRow } from "../primitives/FilterSidebarCategoryRow";
+import { MobileLandingDomainButton } from "../primitives/MobileLandingDomainButton";
 
 /** Desktop domain row: clickable toggle; opens no subpanel (behavior wired separately). */
-export function FellowshipsMenu({ collapsed = false }: { collapsed?: boolean }) {
+export function FellowshipsMenu({
+  collapsed = false,
+  mobileLanding = false,
+}: {
+  collapsed?: boolean;
+  mobileLanding?: boolean;
+}) {
   const { selectedDesktopDomainMenuId, toggleDesktopDomainMenuSelection } =
     useFilterSelection();
+
+  if (mobileLanding) {
+    return (
+      <MobileLandingDomainButton
+        label="Fellowships"
+        tone="latest-updates"
+        compact={collapsed}
+      />
+    );
+  }
+
   return (
     <FilterSidebarCategoryRow
       label="Fellowships"

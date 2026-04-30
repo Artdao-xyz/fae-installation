@@ -37,6 +37,7 @@ function getDocumentBodySnapshot(): HTMLElement | null {
 type MobileSiteHeaderProps = {
   /** True while the full-screen menu or mobile glossary sheet from the menu is open (landing search, etc.). */
   onMobileOverlayOpenChange?: (open: boolean) => void;
+  onHomeClick?: () => void;
 };
 
 /**
@@ -45,6 +46,7 @@ type MobileSiteHeaderProps = {
  */
 export function MobileSiteHeader({
   onMobileOverlayOpenChange,
+  onHomeClick,
 }: MobileSiteHeaderProps) {
   const { contentPreviewRow, resetToIdle, closeContentPreview } =
     useFilterSelection();
@@ -83,10 +85,12 @@ export function MobileSiteHeader({
     } else if (!closingAbout) {
       resetToIdle();
     }
+    onHomeClick?.();
   }, [
     aboutView,
     closeContentPreview,
     contentPreviewRow,
+    onHomeClick,
     resetToIdle,
     setAboutView,
   ]);
@@ -112,10 +116,10 @@ export function MobileSiteHeader({
   return (
     <>
       <header
-        className="sticky top-0 z-40 flex w-full shrink-0 flex-col border-b-hairline border-solid border-border bg-surface-canvas pt-[env(safe-area-inset-top,0px)] lg:hidden"
+        className="sticky top-0 z-40 flex w-full shrink-0 flex-col bg-surface-canvas pt-[env(safe-area-inset-top,0px)] lg:hidden"
         role="banner"
       >
-        <div className="flex h-11 w-full flex-row items-center justify-between px-3">
+        <div className="flex h-13 w-full flex-row items-center justify-between px-3">
           <button
             type="button"
             onClick={goHome}
@@ -156,7 +160,7 @@ export function MobileSiteHeader({
       {portalEl && menuOpen
         ? createPortal(
             <div
-              className="fixed inset-x-0 bottom-0 top-[calc(env(safe-area-inset-top,0px)+2.75rem)] flex min-h-0 flex-col bg-surface-canvas lg:hidden"
+              className="fixed inset-x-0 bottom-0 top-[calc(env(safe-area-inset-top,0px)+3.25rem)] flex min-h-0 flex-col bg-surface-canvas lg:hidden"
               style={{ zIndex: Z_INDEX.mobileSiteMenu }}
               role="dialog"
               aria-modal="true"
