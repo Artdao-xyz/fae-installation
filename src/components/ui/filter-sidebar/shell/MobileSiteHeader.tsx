@@ -22,7 +22,7 @@ const MOBILE_HEADER_LABEL_CLASS =
   "font-suisseintl text-sm font-normal leading-5 transition-[color,filter] duration-150 motion-reduce:transition-none";
 
 const MENU_NAV_ITEM_CLASS =
-  "flex w-full items-center justify-center gap-4 border-x-hairline border-t-hairline border-b-hairline border-solid border-border py-4 font-suisseintl text-sm font-normal leading-6 text-ink-primary transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary";
+  "flex w-full items-center justify-center gap-4 border-x-hairline border-t-hairline last:border-b-hairline border-solid border-border py-4 font-suisseintl text-sm font-normal leading-6 text-ink-primary transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary";
 
 const MENU_NAV_ICON_CLASS = "size-6! shrink-0";
 

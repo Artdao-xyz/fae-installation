@@ -388,8 +388,8 @@ function AboutKeyAreaCard({
   iconSrc: string;
 }) {
   return (
-    <article className="flex h-full min-h-[130px] flex-col">
-      <header className="flex items-center gap-2 border-hairline border-solid border-border bg-surface-canvas px-2.5 py-1.5">
+    <article className="flex h-full min-h-[130px] flex-col bg-surface-canvas">
+      <header className="flex items-center gap-2 px-2.5 py-1.5">
         <Image
           src={iconSrc}
           alt=""
@@ -401,7 +401,7 @@ function AboutKeyAreaCard({
         />
         <h3 className="m-0 font-suisseintl text-xs leading-5 text-ink-body">{title}</h3>
       </header>
-      <div className="flex flex-1 border-r-hairline border-b-hairline border-l-hairline border-solid border-border px-2.5 py-2.5">
+      <div className="flex flex-1 border-t-hairline border-solid border-border px-2.5 py-2.5">
         <p className="m-0 font-suisseintl text-xs leading-[1.6] text-ink-primary">{body}</p>
       </div>
     </article>
@@ -473,7 +473,7 @@ export function AboutFullScreenRichContent() {
           <AboutSectionHeading title="Key Areas" />
           <AboutSectionDivider />
         </div>
-        <div className="grid w-full grid-cols-1 md:grid-cols-2">
+        <div className="grid w-full grid-cols-1 gap-px bg-border p-px md:grid-cols-2">
           {KEY_AREAS.map((area) => (
             <AboutKeyAreaCard
               key={area.title}
