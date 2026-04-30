@@ -93,10 +93,10 @@ function SquarePillFrame({
   const cellBorder = selected
     ? `${interactiveChromeMatClass} ${
         tone ? toneAccentClass[tone].marker : filterPillSelection.text
-      } border-thin border-solid ${
+      } [border-width:var(--border-width-thin)] border-solid ${
         tone ? toneSelectedBorderClass[tone] : filterPillSelection.border
       }`
-    : `${interactiveChromeMatClass} border-thin border-solid border-ink-primary text-ink-primary`;
+    : `${interactiveChromeMatClass} [border-width:var(--border-width-thin)] border-solid border-ink-primary text-ink-primary`;
 
   return (
     <span className="relative isolate inline-flex items-center justify-center">

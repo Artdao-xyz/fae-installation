@@ -93,7 +93,7 @@ export function filterDottedPillClassName(
   tone?: FilterSidebarCategoryTone,
 ) {
   /** `min-w-0` (not `shrink-0`) so pills can respect a narrow parent and show ellipsis instead of clipping at the border. */
-  const base = `fae-control-shape-square min-w-0 border-thin ${interactiveChromeMatClass} ${filterPillSingleLayerBrightnessHoverClass} ${filterPillLabelBoxClass}`;
+  const base = `fae-control-shape-square min-w-0 [border-width:var(--border-width-thin)] ${interactiveChromeMatClass} ${filterPillSingleLayerBrightnessHoverClass} ${filterPillLabelBoxClass}`;
   return `${base} ${filterFramedOuterFocusClass} ${
     selected
       ? `border-dotted ${selectedToneBorderClass(tone)} ${selectedToneTextClass(tone)}`
