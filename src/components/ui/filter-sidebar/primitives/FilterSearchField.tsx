@@ -45,7 +45,7 @@ export function FilterSearchField({
       >
         <div
           className={[
-            `${filterFramedRoundedInnerClass(false)} flex min-w-0 flex-1 items-center gap-2 text-left text-sm! whitespace-normal`,
+            `${filterFramedRoundedInnerClass(false)} flex min-h-[30px] min-w-0 flex-1 items-center gap-2 text-left text-sm! whitespace-normal`,
             innerClassName,
           ]
             .filter(Boolean)
