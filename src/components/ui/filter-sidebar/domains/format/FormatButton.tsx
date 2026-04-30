@@ -29,6 +29,12 @@ export function FormatButton({
   const cursorClass = unavailable
     ? "!cursor-not-allowed opacity-45"
     : "cursor-pointer";
+  const desktopHoverRevealClass =
+    !selected && !unavailable
+      ? fillAvailableWidth
+        ? "lg:group-hover:w-auto lg:group-hover:gap-1.5 lg:group-hover:px-2"
+        : "lg:group-hover:w-[100px] lg:group-hover:gap-1.5"
+      : "";
 
   return (
     <button
@@ -42,7 +48,7 @@ export function FormatButton({
       role="radio"
       aria-checked={selected}
       title={title ?? label}
-      className={`fae-control-filter-outer inline-flex items-baseline ${filterFramedOuterFocusClass} ${filterPillSingleLayerBrightnessHoverClass} ${
+      className={`fae-control-filter-outer group inline-flex items-baseline ${filterFramedOuterFocusClass} ${filterPillSingleLayerBrightnessHoverClass} ${
         selected ? filterFramedRoundedOuterSelectedClass : ""
       } ${
         fillAvailableWidth
@@ -61,14 +67,20 @@ export function FormatButton({
             : selected
               ? "w-[100px] justify-center gap-1.5 px-0"
               : "w-[50px] justify-center px-0"
-        }`}
+        } ${desktopHoverRevealClass}`}
       >
         <CategoryMarkerIcon
           tone="fae-briefings"
           className="h-3.5 w-3.5 shrink-0"
         />
-        {selected ? (
-          <span className={fillAvailableWidth ? "whitespace-nowrap" : "truncate"}>
+        {selected || !unavailable ? (
+          <span
+            className={`${
+              selected
+                ? ""
+                : "hidden lg:group-hover:block"
+            } ${fillAvailableWidth ? "whitespace-nowrap" : "truncate"}`}
+          >
             {label}
           </span>
         ) : null}

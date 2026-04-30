@@ -58,7 +58,7 @@ export const interactiveChromeGroupHoverClass = "group-hover:bg-surface-hover/60
  * `button` so hover matches across variants. `enabled:` skips hover when the control is `disabled` (e.g. unavailable).
  */
 export const filterPillSingleLayerBrightnessHoverClass =
-  "brightness-100 enabled:hover:brightness-[1.2] !transition-[filter,colors,background-color,border-color] duration-150 ease-out motion-reduce:!transition-none motion-reduce:enabled:hover:brightness-100";
+  "brightness-100 enabled:hover:brightness-[1.08] !transition-[filter,colors,background-color,border-color] duration-150 ease-out motion-reduce:!transition-none motion-reduce:enabled:hover:brightness-100";
 
 /** Shared ink-frame + rounded inner surface (Activity Type / `FilterPill` `rounded`). */
 export function filterFramedRoundedInnerClass(
