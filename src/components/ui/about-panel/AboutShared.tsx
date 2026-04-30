@@ -14,7 +14,7 @@ import {
 export const ABOUT_BODY = (
   <>
     <p className="m-0 line-clamp-6 whitespace-pre-line leading-[1.6]">
-      Future Art Ecosystems is Serpentine's initiative for building twenty-first century
+      Future Art Ecosystems is Serpentine’s initiative for building twenty-first century
       cultural infrastructure in support of practices that emerge from the
       superimposition of art and advanced technologies.
     </p>
@@ -164,7 +164,7 @@ export function AboutPanelRichContent() {
     <div className="flex w-full flex-col items-start gap-5 text-ink-body">
       <AboutContentPiece title="Mission Statement">
         <p className="m-0">
-          Future Art Ecosystems is Serpentine's initiative for building twenty-first
+          Future Art Ecosystems is Serpentine’s initiative for building twenty-first
           century cultural infrastructure in support of practices that emerge
           from the superimposition of art and advanced technologies.
         </p>
