@@ -433,7 +433,7 @@ export function PreviewMainContent({
         </p>
       ) : null}
       <Divider />
-      <div className="flex w-full max-w-full shrink-0 flex-col gap-2 max-lg:items-center lg:items-stretch">
+      <div className="flex w-full max-w-full shrink-0 flex-col gap-4 max-lg:items-center lg:items-stretch">
         {previewSlides.length > 0 ? (
           <PreviewImageCarousel
             key={previewSlides.join("\0")}

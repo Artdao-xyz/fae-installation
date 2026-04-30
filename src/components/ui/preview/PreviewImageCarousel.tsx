@@ -53,7 +53,7 @@ function CarouselImageSlide({
       fill
       sizes={sizes}
       unoptimized={isAnimatedGif}
-      className="pointer-events-none object-contain object-center lg:object-left"
+      className="pointer-events-none object-contain object-center lg:object-bottom"
     />
   );
 

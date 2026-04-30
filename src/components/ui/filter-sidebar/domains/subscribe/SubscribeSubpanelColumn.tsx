@@ -43,8 +43,10 @@ export function SubscribePanelContent({
     ? "group mt-[10px] flex w-full items-start gap-2 text-left transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary"
     : "group mt-[10px] flex w-full items-center gap-2 text-left transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary";
   const newsletterFormClass = tabbed
-    ? "flex h-full min-h-full w-full flex-col justify-evenly bg-surface-canvas px-[15px] py-5"
+    ? "flex h-full min-h-full w-full flex-col justify-between bg-surface-canvas px-[15px] pb-5 pt-12"
     : "w-full bg-surface-canvas px-[15px] py-5";
+  const inputPaddingClass = "py-4";
+  const ctaButtonClass = "w-full";
 
   async function submitSubscribeForm(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -112,113 +114,136 @@ export function SubscribePanelContent({
     }
   }
 
+  const newsletterInputs = (
+    <div className="mx-auto flex w-full flex-col items-center">
+      <div className="w-full border-t-hairline border-dotted border-ink-primary" />
+      <input
+        type="text"
+        name="tfa_2"
+        placeholder="First Name"
+        value={firstName}
+        onChange={(e) => setFirstName(e.target.value)}
+        required
+        className={`w-full border-0 bg-transparent ${inputPaddingClass} text-center font-fira-mono ${bodyTextClass} text-ink-body placeholder:text-ink-body/60 focus:outline-none`}
+      />
+      <div className="w-full border-t-hairline border-dotted border-ink-primary" />
+      <input
+        type="text"
+        name="tfa_4"
+        placeholder="Last Name"
+        value={lastName}
+        onChange={(e) => setLastName(e.target.value)}
+        required
+        className={`w-full border-0 bg-transparent ${inputPaddingClass} text-center font-fira-mono ${bodyTextClass} text-ink-body placeholder:text-ink-body/60 focus:outline-none`}
+      />
+      <div className="w-full border-t-hairline border-dotted border-ink-primary" />
+      <input
+        type="email"
+        name="tfa_6"
+        placeholder="Email Address"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        required
+        className={`w-full border-0 bg-transparent ${inputPaddingClass} text-center font-fira-mono ${bodyTextClass} text-ink-body placeholder:text-ink-body/60 focus:outline-none`}
+      />
+      <div className="w-full border-t-hairline border-dotted border-ink-primary" />
+    </div>
+  );
+
+  const newsletterConsentControls = (
+    <div className="mx-auto flex w-full flex-col items-center">
+      <button
+        type="button"
+        onClick={() => setNewsletterConsent((v) => !v)}
+        className={consentRowClass}
+        aria-pressed={newsletterConsent}
+        data-domain-active={newsletterConsent ? "true" : undefined}
+      >
+        <FilterSidebarDomainTrailing tone="latest-updates" />
+        <span className={`min-w-0 flex-1 font-fira-mono ${consentTextClass} text-ink-body/60`}>
+          Please add me to the Serpentine Arts Technologies newsletter
+        </span>
+      </button>
+      <button
+        type="button"
+        onClick={() => setUpdatesConsent((v) => !v)}
+        className={consentRowSecondaryClass}
+        aria-pressed={updatesConsent}
+        data-domain-active={updatesConsent ? "true" : undefined}
+      >
+        <FilterSidebarDomainTrailing tone="latest-updates" />
+        <span className={`min-w-0 flex-1 font-fira-mono ${consentTextClass} text-ink-body/60`}>
+          I&apos;d like to receive email updates from Serpentine
+        </span>
+      </button>
+      {message ? (
+        <p
+          role={status === "error" ? "alert" : "status"}
+          className={`mt-4 text-center font-fira-mono ${consentTextClass} ${
+            status === "error"
+              ? "text-(--color-filter-pill-selection)"
+              : "text-ink-body/60"
+          }`}
+        >
+          {message}
+        </p>
+      ) : null}
+    </div>
+  );
+
+  const newsletterSubmitButton = (
+    <button
+      type="submit"
+      disabled={status === "loading"}
+      className={`inline-flex ${ctaButtonClass} items-center justify-center gap-2 border-hairline border-solid border-[#424242] bg-surface-canvas px-[50px] py-2 font-fira-mono ${bodyTextClass} text-ink-body transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary`}
+    >
+      <span>{status === "loading" ? "Sending..." : "Submit"}</span>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/svg/blue-arrow.svg"
+        alt=""
+        width={5}
+        height={7}
+        className="block h-[7px] w-[5px]"
+        aria-hidden
+      />
+    </button>
+  );
+
   const newsletterForm = (
     <form
       className={newsletterFormClass}
       onSubmit={submitSubscribeForm}
       noValidate
     >
-      <div className="mx-auto flex w-full flex-col items-center">
-        <div className="w-full border-t-hairline border-dotted border-ink-primary" />
-        <input
-          type="text"
-          name="tfa_2"
-          placeholder="First Name"
-          value={firstName}
-          onChange={(e) => setFirstName(e.target.value)}
-          required
-          className={`w-full border-0 bg-transparent py-2 text-center font-fira-mono ${bodyTextClass} text-ink-body placeholder:text-ink-body/60 focus:outline-none`}
-        />
-        <div className="w-full border-t-hairline border-dotted border-ink-primary" />
-        <input
-          type="text"
-          name="tfa_4"
-          placeholder="Last Name"
-          value={lastName}
-          onChange={(e) => setLastName(e.target.value)}
-          required
-          className={`w-full border-0 bg-transparent py-2 text-center font-fira-mono ${bodyTextClass} text-ink-body placeholder:text-ink-body/60 focus:outline-none`}
-        />
-        <div className="w-full border-t-hairline border-dotted border-ink-primary" />
-        <input
-          type="email"
-          name="tfa_6"
-          placeholder="Email Address"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          className={`w-full border-0 bg-transparent py-2 text-center font-fira-mono ${bodyTextClass} text-ink-body placeholder:text-ink-body/60 focus:outline-none`}
-        />
-        <div className="w-full border-t-hairline border-dotted border-ink-primary" />
-        <button
-          type="button"
-          onClick={() => setNewsletterConsent((v) => !v)}
-          className={consentRowClass}
-          aria-pressed={newsletterConsent}
-          data-domain-active={newsletterConsent ? "true" : undefined}
-        >
-          <FilterSidebarDomainTrailing tone="latest-updates" />
-          <span className={`min-w-0 flex-1 font-fira-mono ${consentTextClass} text-ink-body/60`}>
-            Please add me to the Serpentine Arts Technologies newsletter
-          </span>
-        </button>
-        <button
-          type="button"
-          onClick={() => setUpdatesConsent((v) => !v)}
-          className={consentRowSecondaryClass}
-          aria-pressed={updatesConsent}
-          data-domain-active={updatesConsent ? "true" : undefined}
-        >
-          <FilterSidebarDomainTrailing tone="latest-updates" />
-          <span className={`min-w-0 flex-1 font-fira-mono ${consentTextClass} text-ink-body/60`}>
-            I&apos;d like to receive email updates from Serpentine
-          </span>
-        </button>
-        {message ? (
-          <p
-            role={status === "error" ? "alert" : "status"}
-            className={`mt-4 text-center font-fira-mono ${consentTextClass} ${
-              status === "error"
-                ? "text-(--color-filter-pill-selection)"
-                : "text-ink-body/60"
-            }`}
-          >
-            {message}
-          </p>
-        ) : null}
-      </div>
-      <div className={tabbed ? "flex justify-center" : "mt-5 flex justify-center"}>
-        <button
-          type="submit"
-          disabled={status === "loading"}
-          className={`inline-flex w-[200px] items-center justify-center gap-2 border-hairline border-solid border-[#424242] bg-surface-canvas px-[50px] py-2 font-fira-mono ${bodyTextClass} text-ink-body transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary`}
-        >
-          <span>{status === "loading" ? "Sending..." : "Submit"}</span>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/svg/blue-arrow.svg"
-            alt=""
-            width={5}
-            height={7}
-            className="block h-[7px] w-[5px]"
-            aria-hidden
-          />
-        </button>
-      </div>
+      {newsletterInputs}
+      {tabbed ? (
+        <div className="flex w-full flex-col gap-5">
+          {newsletterConsentControls}
+          <div className="flex justify-center">{newsletterSubmitButton}</div>
+        </div>
+      ) : (
+        <>
+          {newsletterConsentControls}
+          <div className="mt-5 flex justify-center">{newsletterSubmitButton}</div>
+        </>
+      )}
     </form>
   );
 
   const telegramContent = (
-    <section className="flex h-full min-h-full flex-col justify-evenly bg-surface-canvas px-[15px] py-5">
-      <p className={`text-center font-fira-mono ${bodyTextClass} text-ink-body/60`}>
-        Get Involved in our community
-      </p>
+    <section className="flex h-full min-h-full flex-col justify-between bg-surface-canvas px-[15px] py-5">
+      <div className="flex min-h-0 flex-1 items-center justify-center">
+        <p className={`text-center font-fira-mono ${bodyTextClass} text-ink-body/60`}>
+          Get Involved in our community
+        </p>
+      </div>
       <div className="flex justify-center">
         <a
           href="https://t.me/+RpackhOIPmQyODY0"
           target="_blank"
           rel="noreferrer"
-          className={`inline-flex w-[200px] items-center justify-center gap-2 border-hairline border-solid border-[#424242] bg-surface-canvas px-[50px] py-2 font-fira-mono ${bodyTextClass} text-ink-body transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary`}
+          className={`inline-flex ${ctaButtonClass} items-center justify-center gap-2 border-hairline border-solid border-[#424242] bg-surface-canvas px-[50px] py-2 font-fira-mono ${bodyTextClass} text-ink-body transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary`}
         >
           <span>Join</span>
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -236,16 +261,18 @@ export function SubscribePanelContent({
   );
 
   const communityCallContent = (
-    <section className="flex h-full min-h-full flex-col justify-evenly bg-surface-canvas px-[15px] py-5">
-      <p className={`text-center font-fira-mono ${bodyTextClass} text-ink-body/60`}>
-        Netx Call: 5 March, 2pm (UTC)
-      </p>
+    <section className="flex h-full min-h-full flex-col justify-between bg-surface-canvas px-[15px] py-5">
+      <div className="flex min-h-0 flex-1 items-center justify-center">
+        <p className={`text-center font-fira-mono ${bodyTextClass} text-ink-body/60`}>
+          Netx Call: 5 March, 2pm (UTC)
+        </p>
+      </div>
       <div className="flex justify-center">
         <a
           href="https://serpentinegalleries.ticketing.veevartapp.com/tickets/view/list/future-art-ecosystems-community-call-05032026"
           target="_blank"
           rel="noreferrer"
-          className={`inline-flex w-[200px] items-center justify-center gap-2 border-hairline border-solid border-[#424242] bg-surface-canvas px-[50px] py-2 font-fira-mono ${bodyTextClass} text-ink-body transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary`}
+          className={`inline-flex ${ctaButtonClass} items-center justify-center gap-2 border-hairline border-solid border-[#424242] bg-surface-canvas px-[50px] py-2 font-fira-mono ${bodyTextClass} text-ink-body transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary`}
         >
           <span>Join</span>
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -334,7 +361,7 @@ export function SubscribePanelContent({
             href="https://t.me/+RpackhOIPmQyODY0"
             target="_blank"
             rel="noreferrer"
-            className="inline-flex w-[200px] items-center justify-center gap-2 border-hairline border-solid border-[#424242] bg-surface-canvas px-[50px] py-2 font-fira-mono text-xs leading-[17px] text-ink-body transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary"
+            className="inline-flex w-full items-center justify-center gap-2 border-hairline border-solid border-[#424242] bg-surface-canvas px-[50px] py-2 font-fira-mono text-xs leading-[17px] text-ink-body transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary"
           >
             <span>Join</span>
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -361,7 +388,7 @@ export function SubscribePanelContent({
             href="https://serpentinegalleries.ticketing.veevartapp.com/tickets/view/list/future-art-ecosystems-community-call-05032026"
             target="_blank"
             rel="noreferrer"
-            className="inline-flex w-[200px] items-center justify-center gap-2 border-hairline border-solid border-[#424242] bg-surface-canvas px-[50px] py-2 font-fira-mono text-xs leading-[17px] text-ink-body transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary"
+            className="inline-flex w-full items-center justify-center gap-2 border-hairline border-solid border-[#424242] bg-surface-canvas px-[50px] py-2 font-fira-mono text-xs leading-[17px] text-ink-body transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary"
           >
             <span>Join</span>
             {/* eslint-disable-next-line @next/next/no-img-element */}
