@@ -350,7 +350,7 @@ function AboutSectionHeading({
         width={10}
         height={10}
         unoptimized
-        className={`pointer-events-none h-[10px] w-auto shrink-0 transition-transform ${expanded ? "rotate-90" : "rotate-0"}`}
+        className={`pointer-events-none h-[10px] w-auto shrink-0 transition-transform ${expanded ? "-rotate-90" : "rotate-90"}`}
         aria-hidden
       />
     </button>

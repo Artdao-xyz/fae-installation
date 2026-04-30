@@ -102,6 +102,7 @@ export function NetworkDropdownPanel({
             label="Search network"
             value={searchQuery}
             onChange={setSearchQuery}
+            outerClassName="!border-ink-primary !bg-ink-primary"
           />
         </div>
         {searching ? (

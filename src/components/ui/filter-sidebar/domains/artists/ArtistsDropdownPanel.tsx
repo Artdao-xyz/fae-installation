@@ -102,6 +102,7 @@ export function ArtistsDropdownPanel({
             label="Search artists"
             value={searchQuery}
             onChange={setSearchQuery}
+            outerClassName="!border-ink-primary !bg-ink-primary"
           />
         </div>
         {searching ? (
