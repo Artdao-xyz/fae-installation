@@ -19,7 +19,8 @@ const EMPHASIZED_RAIL_MAT_CLASS = `${matBaseTransitionClass} bg-[color:color-mix
 
 /** Selected: thick blue left stripe + blue label; background matches row type (no selected-only fill). */
 const SELECTED_BORDER_LEFT =
-  "border-t-hairline border-t-solid border-t-ink-primary border-l-[3px] border-l-solid border-l-[#0000ff] border-r-0";
+  "border-t-hairline border-t-solid border-t-border border-l-[3px] border-l-solid border-l-[#0000ff]";
+const SELECTED_BORDER_RIGHT_NONE = "border-r-0";
 const SELECTED_TEXT = "text-[#0000ff]";
 const selectedToneBorderLeftClass: Record<FilterSidebarCategoryTone, string> = {
   "fae-briefings": "border-l-filter-category-fae-briefings",
@@ -28,15 +29,16 @@ const selectedToneBorderLeftClass: Record<FilterSidebarCategoryTone, string> = {
   editorial: "border-l-filter-category-editorial",
   artists: "border-l-filter-category-artists",
   network: "border-l-filter-category-network",
+  subscribe: "border-l-[color:var(--color-filter-pill-selection)]",
 };
 /** Non-selected rail label: same ink as body, slightly softened. */
 const RAIL_LABEL_IDLE_TEXT = "text-ink-body/80";
 
-const ROW_BORDER_TOP_SOLID = "border-t-hairline border-t-solid border-t-ink-primary";
-const ROW_RIGHT_SOLID = "border-r-hairline border-r-solid border-r-ink-primary";
+const ROW_BORDER_TOP_SOLID = "border-t-hairline border-t-solid border-t-border";
+const ROW_RIGHT_SOLID = "border-r-hairline border-r-solid border-r-border";
 /** Focus / Activity only (`flexToFill`): hairline dotted rule (explicit per-side so it is not overridden). */
 const ROW_RIGHT_DOTTED =
-  "[border-right-width:var(--border-width-hairline)] [border-right-style:dotted] [border-right-color:var(--color-ink-primary)]";
+  "[border-right-width:var(--border-width-hairline)] [border-right-style:dotted] [border-right-color:var(--color-border)]";
 
 type FilterSidebarMobileRailButtonProps = {
   label: string;
@@ -47,8 +49,12 @@ type FilterSidebarMobileRailButtonProps = {
   hasSelection?: boolean;
   /** Category marker glyph (Focus / Activity omit on mobile rail). */
   showMarker?: boolean;
-  /** Split remaining rail height with other `flexToFill` rows (Focus + Activity only). */
+  /** Split remaining rail height with other `flexToFill` rows. */
   flexToFill?: boolean;
+  /** Use the slightly darker Focus-style rail mat without changing row height. */
+  emphasized?: boolean;
+  /** Keep the right rail rule dotted, including selected state. */
+  dottedRightBorder?: boolean;
   /** Use this category's tone instead of selection blue for the active rail state. */
   selectedTone?: boolean;
   /** No CMS-backed options yet — cannot open this category pane. */
@@ -66,19 +72,26 @@ export function FilterSidebarMobileRailButton({
   hasSelection = false,
   showMarker = true,
   flexToFill = false,
+  emphasized = false,
+  dottedRightBorder = false,
   selectedTone = false,
   disabled = false,
   onClick,
 }: FilterSidebarMobileRailButtonProps) {
   const { glow, marker } = toneAccentClass[tone];
   const showToneStripe = hasSelection && !selected;
+  const useEmphasizedMat = flexToFill || emphasized;
+  const useDottedRightBorder = flexToFill || dottedRightBorder;
   const selectedTextClass = selectedTone ? marker : SELECTED_TEXT;
-  const selectedBorderClass = selectedTone
-    ? `${SELECTED_BORDER_LEFT} ${selectedToneBorderLeftClass[tone]}`
-    : SELECTED_BORDER_LEFT;
+  const selectedBorderClass = [
+    selectedTone
+      ? `${SELECTED_BORDER_LEFT} ${selectedToneBorderLeftClass[tone]}`
+      : SELECTED_BORDER_LEFT,
+    useDottedRightBorder ? ROW_RIGHT_DOTTED : SELECTED_BORDER_RIGHT_NONE,
+  ].join(" ");
 
   const matClass = (() => {
-    if (flexToFill) {
+    if (useEmphasizedMat) {
       if (selected) return EMPHASIZED_RAIL_MAT_CLASS;
       if (hasSelection)
         return `${matBaseTransitionClass} ${categorySubpanelLabelSelectionBgClass[tone]}`;
@@ -106,7 +119,7 @@ export function FilterSidebarMobileRailButton({
     ? selectedBorderClass
     : [
         ROW_BORDER_TOP_SOLID,
-        flexToFill ? ROW_RIGHT_DOTTED : ROW_RIGHT_SOLID,
+        useDottedRightBorder ? ROW_RIGHT_DOTTED : ROW_RIGHT_SOLID,
       ].join(" ");
 
   return (

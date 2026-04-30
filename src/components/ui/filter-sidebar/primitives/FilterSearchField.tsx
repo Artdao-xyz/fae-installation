@@ -15,6 +15,9 @@ export type FilterSearchFieldProps = {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
+  outerClassName?: string;
+  innerClassName?: string;
+  inputClassName?: string;
 };
 
 export function FilterSearchField({
@@ -23,6 +26,9 @@ export function FilterSearchField({
   value,
   onChange,
   placeholder = "Search",
+  outerClassName,
+  innerClassName,
+  inputClassName,
 }: FilterSearchFieldProps) {
   return (
     <>
@@ -30,10 +36,20 @@ export function FilterSearchField({
         {label}
       </label>
       <div
-        className={`fae-control-filter-outer inline-flex w-full min-w-0 max-w-full items-stretch ${filterPillSingleLayerBrightnessHoverClass} focus-within:outline-none focus-within:ring-1 focus-within:ring-ink-primary focus-within:ring-offset-0`}
+        className={[
+          `fae-control-filter-outer fae-search-field-outer inline-flex w-full min-w-0 max-w-full items-stretch ${filterPillSingleLayerBrightnessHoverClass} focus-within:outline-none`,
+          outerClassName,
+        ]
+          .filter(Boolean)
+          .join(" ")}
       >
         <div
-          className={`${filterFramedRoundedInnerClass(false)} flex min-w-0 flex-1 items-center gap-2 text-left text-sm! whitespace-normal`}
+          className={[
+            `${filterFramedRoundedInnerClass(false)} flex min-h-[30px] min-w-0 flex-1 items-center gap-2 text-left text-sm! whitespace-normal`,
+            innerClassName,
+          ]
+            .filter(Boolean)
+            .join(" ")}
         >
           <input
             id={id}
@@ -43,7 +59,12 @@ export function FilterSearchField({
             value={value}
             onChange={(e) => onChange(e.target.value)}
             autoComplete="off"
-            className="min-w-0 flex-1 bg-transparent font-fira-mono text-base leading-5 text-ink-body placeholder:text-base placeholder:leading-5 placeholder:text-ink-body/50 focus:outline-none lg:text-sm lg:placeholder:text-sm"
+            className={[
+              "min-w-0 flex-1 bg-transparent font-fira-mono text-base leading-5 text-ink-body placeholder:text-base placeholder:leading-5 placeholder:text-ink-body/50 focus:outline-none lg:text-sm lg:placeholder:text-sm",
+              inputClassName,
+            ]
+              .filter(Boolean)
+              .join(" ")}
           />
           {value ? (
             <button

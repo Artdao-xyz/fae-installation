@@ -27,8 +27,8 @@ export function LatestUpdatesTabRail({
 }: LatestUpdatesTabRailProps) {
   const edgeClass =
     railLayout === "mobileStrip"
-      ? "border-t-hairline border-b-0 border-solid border-ink-primary"
-      : "border-b-hairline border-t-0 border-solid border-ink-primary";
+      ? "border-t-hairline border-b-0 border-solid border-border"
+      : "border-b-hairline border-t-0 border-solid border-border";
 
   return (
     <button

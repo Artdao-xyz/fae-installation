@@ -33,7 +33,7 @@ export function MobilePreviewSheet({
       aria-modal="true"
       aria-label="Content preview"
     >
-      <div className="flex w-full shrink-0 items-stretch border-b-hairline border-solid border-ink-primary bg-surface-canvas">
+      <div className="flex w-full shrink-0 items-stretch border-t-hairline border-b-hairline border-solid border-border bg-surface-canvas">
         <button
           type="button"
           onClick={onClose}

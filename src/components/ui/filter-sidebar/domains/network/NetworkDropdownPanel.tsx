@@ -48,9 +48,15 @@ export function NetworkDropdownPanel({
     clearSelectedNetworks();
   }, [minimizeAllFloatingPanels, onClearAllFromParent, clearSelectedNetworks]);
 
-  const pillClassName = searching
-    ? "box-border w-full min-w-0 max-w-full"
+  const mobilePanePillBorderClassName = mobilePane
+    ? "[border-left-width:var(--border-width-hairline)] [border-right-width:var(--border-width-hairline)]"
     : undefined;
+  const pillClassName = [
+    searching ? "box-border w-full min-w-0 max-w-full" : undefined,
+    mobilePanePillBorderClassName,
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   const networkPillProps = (label: string, className?: string) => {
     const selected = selectedNetworks.has(label);
@@ -78,6 +84,7 @@ export function NetworkDropdownPanel({
       tone="network"
       variant={variant}
       onClearAll={mobilePane ? undefined : handleClearAll}
+      subcolumnTitle={variant === "subcolumn" && !mobilePane ? "Network" : undefined}
       mobileHeader={
         mobilePane
           ? {
@@ -95,6 +102,7 @@ export function NetworkDropdownPanel({
             label="Search network"
             value={searchQuery}
             onChange={setSearchQuery}
+            outerClassName="!border-ink-primary !bg-ink-primary"
           />
         </div>
         {searching ? (
@@ -126,7 +134,7 @@ export function NetworkDropdownPanel({
             aria-label="Network"
           >
             {filterNetworkOptionLabels.map((label) => (
-              <FilterPill key={label} {...networkPillProps(label)} />
+              <FilterPill key={label} {...networkPillProps(label, pillClassName)} />
             ))}
           </div>
         )}

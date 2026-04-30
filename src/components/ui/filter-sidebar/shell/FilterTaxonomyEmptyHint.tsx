@@ -31,7 +31,7 @@ export function FilterTaxonomyEmptyHint() {
 
   return (
     <p
-      className="border-b-hairline border-t-hairline border-solid border-ink-primary bg-[#fafafa] px-3 py-2 font-fira-mono text-[10px] leading-snug text-ink-body/85"
+      className="border-t-hairline border-solid border-border bg-[#fafafa] px-3 py-2 font-fira-mono text-[10px] leading-snug text-ink-body/85"
       role="status"
     >
       No outputs match this combination. Remove a filter or choose another tag — unavailable

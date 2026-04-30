@@ -23,10 +23,7 @@ type SlideProps = {
   sourceLabel?: string;
 };
 
-/**
- * Fixed-height box + `fill` + `object-contain` so space is reserved before decode
- * (avoids CLS from swapping a guessed placeholder for measured intrinsic layout).
- */
+/** Use the loaded image ratio so square, portrait, and landscape slides avoid artificial top space. */
 function CarouselImageSlide({
   src,
   alt,
@@ -35,11 +32,12 @@ function CarouselImageSlide({
   sourceLabel,
 }: SlideProps) {
   const isAnimatedGif = /\.gif(?:[?#]|$)/i.test(src);
+  const [aspectRatio, setAspectRatio] = useState("1 / 1");
 
   const wrapperClass =
     variant === "heroSplit"
-      ? "relative h-[280px] w-full min-w-0"
-      : "relative h-[280px] w-full max-w-[362px] min-w-0";
+      ? "relative max-h-[280px] w-full min-w-0"
+      : "relative max-h-[280px] w-full max-w-[362px] min-w-0";
 
   const sizes =
     variant === "heroSplit"
@@ -53,7 +51,13 @@ function CarouselImageSlide({
       fill
       sizes={sizes}
       unoptimized={isAnimatedGif}
-      className="pointer-events-none object-contain object-center lg:object-left"
+      onLoad={(event) => {
+        const { naturalWidth, naturalHeight } = event.currentTarget;
+        if (naturalWidth > 0 && naturalHeight > 0) {
+          setAspectRatio(`${naturalWidth} / ${naturalHeight}`);
+        }
+      }}
+      className="pointer-events-none object-contain object-center lg:object-bottom"
     />
   );
 
@@ -67,6 +71,7 @@ function CarouselImageSlide({
         target="_blank"
         rel="noopener noreferrer"
         aria-label={ariaLabel}
+        style={{ aspectRatio }}
         className={`${wrapperClass} block cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ink-primary focus-visible:ring-offset-2`}
       >
         {image}
@@ -74,7 +79,11 @@ function CarouselImageSlide({
     );
   }
 
-  return <div className={wrapperClass}>{image}</div>;
+  return (
+    <div className={wrapperClass} style={{ aspectRatio }}>
+      {image}
+    </div>
+  );
 }
 
 const thumbNavButtonClass =

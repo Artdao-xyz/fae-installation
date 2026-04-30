@@ -8,6 +8,9 @@ import {
   Search,
   useFilterSelection,
 } from "@/components/ui/filter-sidebar";
+import { FAEBriefingsMenu } from "@/components/ui/filter-sidebar/sections/FAEBriefingsMenu";
+import { FellowshipsMenu } from "@/components/ui/filter-sidebar/sections/FellowshipsMenu";
+import { RDProjectsMenu } from "@/components/ui/filter-sidebar/sections/RDProjectsMenu";
 import { MobileFilteredThumbnailGrid } from "@/components/ui/filter-sidebar/shell/MobileFilteredThumbnailGrid";
 import { MobileSiteHeader } from "@/components/ui/filter-sidebar/shell/MobileSiteHeader";
 import { mobileMainScrollInsetClassName } from "@/components/ui/filter-sidebar/shell/layout-classes";
@@ -18,6 +21,7 @@ import { MarginGuideFrame } from "@/components/ui/margin-guide-frame";
 import { PixelTessellationBackground } from "@/components/ui/pixel-tessellation-background";
 import { ImageParticleSimulation } from "@/components/particle-canvas/ImageParticleSimulation";
 import { PreviewView } from "@/components/ui/preview/PreviewView";
+import { PopUp } from "@/components/ui/pop-up";
 import {
   IMAGE_FETCH_LIMIT,
   IMAGE_FETCH_LIMIT_MOBILE,
@@ -31,6 +35,10 @@ type Mode = "optimized" | "snappy";
 
 type HomePageClientProps = {
   initialPreviewSlug?: string;
+};
+
+type ParticleCanvasFieldProps = HomePageClientProps & {
+  onEmptyCanvasPointerDown?: () => void;
 };
 
 const SPEED_FACTOR = 0.5;
@@ -60,7 +68,10 @@ function readStoredMode(): Mode {
   return "optimized";
 }
 
-function ParticleCanvasField({ initialPreviewSlug }: HomePageClientProps) {
+function ParticleCanvasField({
+  initialPreviewSlug,
+  onEmptyCanvasPointerDown,
+}: ParticleCanvasFieldProps) {
   const particlePlacementRef = useRef<HTMLDivElement>(null);
   const { hasActiveTaxonomyFilters } = useFilterSelection();
   const isMaxLg = useIsMaxLg();
@@ -99,6 +110,7 @@ function ParticleCanvasField({ initialPreviewSlug }: HomePageClientProps) {
         speedFactor={SPEED_FACTOR}
         placementContainerRef={particlePlacementRef}
         initialPreviewSlug={initialPreviewSlug}
+        onEmptyCanvasPointerDown={onEmptyCanvasPointerDown}
         rootClassName={[
           "max-lg:pointer-events-none",
           /**
@@ -129,6 +141,8 @@ function HomeContent({ initialPreviewSlug }: HomePageClientProps) {
   const searching = filterSearchQuery.trim().length > 0;
   const [mobileHeaderOverlayOpen, setMobileHeaderOverlayOpen] = useState(false);
   const [mobilePreviewFullScreen, setMobilePreviewFullScreen] = useState(false);
+  const [mobileLandingSearchOpen, setMobileLandingSearchOpen] = useState(false);
+  const mobileLandingSearchExpanded = mobileLandingSearchOpen || searching;
   /** Mobile landing search sits under `MobileSiteHeader`; hide it while filter sheet, About, or menu/glossary is open. */
   const hideMobileLandingSearch =
     filtersPanelOpen ||
@@ -168,12 +182,34 @@ function HomeContent({ initialPreviewSlug }: HomePageClientProps) {
 
         <MobileSiteHeader
           onMobileOverlayOpenChange={setMobileHeaderOverlayOpen}
+          onHomeClick={() => {
+            setMobileLandingSearchOpen(false);
+            setFilterSearchQuery("");
+          }}
         />
 
         <div
           className={[
             "min-w-0 w-full shrink-0 bg-surface-canvas lg:hidden",
-            "max-lg:sticky max-lg:top-[calc(env(safe-area-inset-top,0px)+2.75rem)] max-lg:z-45 max-lg:border-b-hairline max-lg:border-solid max-lg:border-ink-primary",
+            "max-lg:sticky max-lg:top-[calc(env(safe-area-inset-top,0px)+3.25rem)] max-lg:z-45",
+            hideMobileLandingSearch ? "hidden" : "",
+          ]
+            .filter(Boolean)
+            .join(" ")}
+        >
+          <PopUp
+            mainContent="Future Art Ecosystems 5"
+            secondaryContent="Out now in print with essays, interviews, and new research on advanced technologies in art"
+            cta="Read more"
+            url="https://futureartecosystems.org"
+            variant="mobile"
+          />
+        </div>
+
+        <div
+          className={[
+            "min-w-0 w-full shrink-0 bg-surface-canvas lg:hidden",
+            "max-lg:sticky max-lg:top-[calc(env(safe-area-inset-top,0px)+6.5rem)] max-lg:z-45",
             hideMobileLandingSearch ? "hidden" : "",
             searching ? "flex flex-col" : "",
           ]
@@ -184,6 +220,28 @@ function HomeContent({ initialPreviewSlug }: HomePageClientProps) {
             value={filterSearchQuery}
             onChange={setFilterSearchQuery}
             fieldId="filter-search-landing"
+            mobileLandingExpanded={mobileLandingSearchExpanded}
+            onMobileLandingExpand={() => setMobileLandingSearchOpen(true)}
+            mobileLandingActions={
+              <div
+                className="contents"
+                role="radiogroup"
+                aria-label="Programme filters"
+              >
+                <FellowshipsMenu
+                  mobileLanding
+                  collapsed={mobileLandingSearchExpanded}
+                />
+                <RDProjectsMenu
+                  mobileLanding
+                  collapsed={mobileLandingSearchExpanded}
+                />
+                <FAEBriefingsMenu
+                  mobileLanding
+                  collapsed={mobileLandingSearchExpanded}
+                />
+              </div>
+            }
           />
         </div>
 
@@ -201,7 +259,10 @@ function HomeContent({ initialPreviewSlug }: HomePageClientProps) {
             />
 
             {HIDE_PARTICLE_CANVAS || showMobileFilteredResults ? null : (
-              <ParticleCanvasField initialPreviewSlug={initialPreviewSlug} />
+              <ParticleCanvasField
+                initialPreviewSlug={initialPreviewSlug}
+                onEmptyCanvasPointerDown={() => setMobileLandingSearchOpen(false)}
+              />
             )}
             {showMobileFilteredResults ? <MobileFilteredThumbnailGrid /> : null}
           </div>

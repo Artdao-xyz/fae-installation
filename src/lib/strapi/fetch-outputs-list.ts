@@ -70,21 +70,19 @@ function strapiOutputsListStatus(): "draft" | "published" {
 /** Strapi `output` type: relation to `artist` entries (field API id in Content-Type Builder). */
 const OUTPUT_ARTIST_RELATION = "Artists";
 
+function appendMediaFields(params: URLSearchParams, field: "Thumbnail" | "Image"): void {
+  for (const [i, value] of ["url", "formats", "mime", "ext", "width", "height", "size"].entries()) {
+    params.append(`populate[${field}][fields][${i}]`, value);
+  }
+}
+
 function appendOutputsDetailPopulate(
   params: URLSearchParams,
   options: { includeSources: boolean },
 ): void {
-  params.append("populate[Thumbnail][fields][0]", "url");
-  params.append("populate[Thumbnail][fields][1]", "formats");
-  params.append("populate[Thumbnail][fields][2]", "width");
-  params.append("populate[Thumbnail][fields][3]", "height");
-  params.append("populate[Thumbnail][fields][4]", "size");
+  appendMediaFields(params, "Thumbnail");
   /** Repeatable `Image` — request url + formats for each entry (carousel in preview). */
-  params.append("populate[Image][fields][0]", "url");
-  params.append("populate[Image][fields][1]", "formats");
-  params.append("populate[Image][fields][2]", "width");
-  params.append("populate[Image][fields][3]", "height");
-  params.append("populate[Image][fields][4]", "size");
+  appendMediaFields(params, "Image");
   params.append("populate[Focus]", "true");
   params.append("populate[Activity]", "true");
   params.append("populate[Network]", "true");
@@ -112,21 +110,14 @@ function appendOutputsListSlimQuery(params: URLSearchParams): void {
     "Short_Title",
     "Image_Caption",
     "Date",
+    "Programme",
     "updatedAt",
     "createdAt",
   ];
   fields.forEach((f, i) => params.append(`fields[${i}]`, f));
 
-  params.append("populate[Thumbnail][fields][0]", "url");
-  params.append("populate[Thumbnail][fields][1]", "formats");
-  params.append("populate[Thumbnail][fields][2]", "width");
-  params.append("populate[Thumbnail][fields][3]", "height");
-  params.append("populate[Thumbnail][fields][4]", "size");
-  params.append("populate[Image][fields][0]", "url");
-  params.append("populate[Image][fields][1]", "formats");
-  params.append("populate[Image][fields][2]", "width");
-  params.append("populate[Image][fields][3]", "height");
-  params.append("populate[Image][fields][4]", "size");
+  appendMediaFields(params, "Thumbnail");
+  appendMediaFields(params, "Image");
 
   /** Related types use `Name` (not all define `Title`; Strapi rejects invalid populate keys). */
   for (const key of ["Focus", "Activity", "Network", "Format"] as const) {

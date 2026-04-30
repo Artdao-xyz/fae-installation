@@ -1,25 +1,40 @@
 "use client";
 
-import { RD_PROJECT_OPTION_LABELS } from "../domains/rd-projects/constants";
+import { useFilterSelection } from "../FilterSelectionContext";
 import { FilterSidebarCategoryRow } from "../primitives/FilterSidebarCategoryRow";
+import { MobileLandingDomainButton } from "../primitives/MobileLandingDomainButton";
 
-type RDProjectsMenuProps = {
-  subpanelOpen: boolean;
-  onToggleSubpanel: () => void;
-};
-
+/** Desktop domain row: clickable toggle; opens no subpanel (behavior wired separately). */
 export function RDProjectsMenu({
-  subpanelOpen,
-  onToggleSubpanel,
-}: RDProjectsMenuProps) {
-  const hasOptions = RD_PROJECT_OPTION_LABELS.length > 0;
+  collapsed = false,
+  mobileLanding = false,
+}: {
+  collapsed?: boolean;
+  mobileLanding?: boolean;
+}) {
+  const { selectedDesktopDomainMenuId, toggleDesktopDomainMenuSelection } =
+    useFilterSelection();
+
+  if (mobileLanding) {
+    return (
+      <MobileLandingDomainButton
+        label="R&D Projects"
+        tone="rd"
+        compact={collapsed}
+        selected={selectedDesktopDomainMenuId === "rd"}
+        onPress={() => toggleDesktopDomainMenuSelection("rd")}
+      />
+    );
+  }
+
   return (
     <FilterSidebarCategoryRow
       label="R&D Projects"
       tone="rd"
-      expanded={subpanelOpen}
-      onClick={onToggleSubpanel}
-      disabled={!hasOptions}
+      appearance="domain"
+      collapsed={collapsed}
+      domainRowSelected={selectedDesktopDomainMenuId === "rd"}
+      onClick={() => toggleDesktopDomainMenuSelection("rd")}
     />
   );
 }

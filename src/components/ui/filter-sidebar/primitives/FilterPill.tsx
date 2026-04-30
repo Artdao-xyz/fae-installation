@@ -93,10 +93,10 @@ function SquarePillFrame({
   const cellBorder = selected
     ? `${interactiveChromeMatClass} ${
         tone ? toneAccentClass[tone].marker : filterPillSelection.text
-      } border-hairline border-solid ${
+      } [border-width:var(--border-width-thin)] border-solid ${
         tone ? toneSelectedBorderClass[tone] : filterPillSelection.border
       }`
-    : `${interactiveChromeMatClass} border-hairline border-solid border-ink-primary text-ink-primary`;
+    : `${interactiveChromeMatClass} [border-width:var(--border-width-thin)] border-solid border-ink-primary text-ink-primary`;
 
   return (
     <span className="relative isolate inline-flex items-center justify-center">
@@ -175,7 +175,9 @@ export function FilterPill({
         data-tone={tone}
         data-variant="dotted"
       >
-        <span className="block min-w-0 w-full truncate text-left">{label}</span>
+        <span className="block min-w-0 w-full truncate text-left font-fira-mono text-[12px] font-normal leading-4 max-lg:text-xs">
+          {label}
+        </span>
       </button>
     );
   }

@@ -4,7 +4,8 @@ export type FilterSidebarCategoryTone =
   | "rd"
   | "editorial"
   | "artists"
-  | "network";
+  | "network"
+  | "subscribe";
 
 /** Pre-colored marker assets in `/public/svg/` (20×20 source; shown at `size-5` in the filter UI). */
 export const categoryMarkerImageSrc: Record<
@@ -18,6 +19,7 @@ export const categoryMarkerImageSrc: Record<
   editorial: "/svg/editorial.svg",
   artists: "/svg/artists.svg",
   network: "/svg/network.svg",
+  subscribe: "/svg/subscribe.svg",
 };
 
 export const toneAccentClass: Record<
@@ -48,6 +50,10 @@ export const toneAccentClass: Record<
     glow: "bg-filter-category-network",
     marker: "text-filter-category-network",
   },
+  subscribe: {
+    glow: "bg-[color:var(--color-filter-pill-selection)]",
+    marker: "text-[color:var(--color-filter-pill-selection)]",
+  },
 };
 
 export const toneSelectedBorderClass: Record<FilterSidebarCategoryTone, string> = {
@@ -57,6 +63,29 @@ export const toneSelectedBorderClass: Record<FilterSidebarCategoryTone, string> 
   editorial: "border-filter-category-editorial",
   artists: "border-filter-category-artists",
   network: "border-filter-category-network",
+  subscribe: "border-[color:var(--color-filter-pill-selection)]",
+};
+
+/**
+ * Selected domain sidebar row (`appearance="domain"`): background tint aligns with `--color-filter-category-*`.
+ */
+export const domainRowHighlightedBgClass: Record<
+  FilterSidebarCategoryTone,
+  string
+> = {
+  "fae-briefings":
+    "bg-[color-mix(in_srgb,var(--color-filter-category-fae-briefings)_5%,#ececec)]",
+  "latest-updates":
+    "bg-[color-mix(in_srgb,var(--color-filter-category-latest-updates)_5%,#ececec)]",
+  rd: "bg-[color-mix(in_srgb,var(--color-filter-category-rd)_5%,#ececec)]",
+  editorial:
+    "bg-[color-mix(in_srgb,var(--color-filter-category-editorial)_5%,#ececec)]",
+  artists:
+    "bg-[color-mix(in_srgb,var(--color-filter-category-artists)_5%,#ececec)]",
+  network:
+    "bg-[color-mix(in_srgb,var(--color-filter-category-network)_5%,#ececec)]",
+  subscribe:
+    "bg-[color-mix(in_srgb,var(--color-filter-pill-selection)_5%,#ececec)]",
 };
 
 /**
@@ -78,4 +107,6 @@ export const categorySubpanelLabelSelectionBgClass: Record<
     "!bg-[color:color-mix(in_srgb,var(--color-filter-category-artists)_5%,var(--color-surface-canvas))]",
   network:
     "!bg-[color:color-mix(in_srgb,var(--color-filter-category-network)_5%,var(--color-surface-canvas))]",
+  subscribe:
+    "!bg-[color:color-mix(in_srgb,var(--color-filter-pill-selection)_5%,var(--color-surface-canvas))]",
 };

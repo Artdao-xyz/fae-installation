@@ -25,6 +25,7 @@ export function HeroTitleBlock({ title, subtitle, className = "" }: Props) {
     selectedFormats,
     selectedNetworks,
     selectedFaeBriefing,
+    selectedProgramme,
     contentPreviewRow,
     filtersPanelOpen,
   } = useFilterSelection();
@@ -40,6 +41,7 @@ export function HeroTitleBlock({ title, subtitle, className = "" }: Props) {
     selectedFormats.size === 0 &&
     selectedNetworks.size === 0 &&
     selectedFaeBriefing == null &&
+    selectedProgramme == null &&
     contentPreviewRow == null;
 
   const hideHero = !isHeroIdle;
@@ -75,16 +77,18 @@ export function HeroTitleBlock({ title, subtitle, className = "" }: Props) {
     : "fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2";
 
   const hiddenUntilFade = !heroTextEnter;
+  const mobileTitleParts = title.match(/^(.*\bArt)\s+(.*)$/);
+  const mobileSubtitleParts = subtitle.match(/^(.*\bAdvanced)\s+(.*)$/);
 
   return (
     <div
-      className={`z-20 flex flex-col items-start justify-center whitespace-nowrap [transition:opacity_300ms_ease-out] lg:[transition:left_500ms_ease-in-out,opacity_300ms_ease-out] motion-reduce:transition-none ${positionClass} ${
+      className={`z-20 flex flex-col items-start justify-center whitespace-nowrap [transition:opacity_300ms_ease-out] max-lg:items-center max-lg:gap-2 max-lg:text-center lg:[transition:left_500ms_ease-in-out,opacity_300ms_ease-out] motion-reduce:transition-none ${positionClass} ${
         hideHero ? "pointer-events-none opacity-0" : "opacity-100"
       } ${className}`}
       aria-hidden={hideHero}
     >
       <div
-        className={`font-lust-text justify-start text-6xl leading-[65px] text-black-fae max-lg:text-4xl max-lg:leading-[2.5rem] ${
+        className={`font-lust-text justify-start text-6xl leading-[65px] text-black-fae max-lg:text-center max-lg:text-5xl max-lg:leading-13 ${
           heroTextEnter ? "fae-hero-title-line" : ""
         }`}
         style={
@@ -93,10 +97,21 @@ export function HeroTitleBlock({ title, subtitle, className = "" }: Props) {
             : undefined
         }
       >
-        {title}
+        <span className="max-lg:hidden">{title}</span>
+        <span className="hidden max-lg:block">
+          {mobileTitleParts ? (
+            <>
+              {mobileTitleParts[1]}
+              <br />
+              {mobileTitleParts[2]}
+            </>
+          ) : (
+            title
+          )}
+        </span>
       </div>
       <div
-        className={`font-fira-mono justify-start text-sm font-medium leading-4 text-black-fae/50 max-lg:text-xs max-lg:leading-snug ${
+        className={`font-fira-mono justify-start text-sm font-medium leading-4 text-black-fae/50 max-lg:text-center max-lg:text-base max-lg:leading-5 ${
           heroTextEnter ? "fae-hero-subtitle-line" : ""
         }`}
         style={
@@ -105,7 +120,18 @@ export function HeroTitleBlock({ title, subtitle, className = "" }: Props) {
             : undefined
         }
       >
-        {subtitle}
+        <span className="max-lg:hidden">{subtitle}</span>
+        <span className="hidden max-lg:block">
+          {mobileSubtitleParts ? (
+            <>
+              {mobileSubtitleParts[1]}
+              <br />
+              {mobileSubtitleParts[2]}
+            </>
+          ) : (
+            subtitle
+          )}
+        </span>
       </div>
     </div>
   );

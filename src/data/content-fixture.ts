@@ -32,6 +32,7 @@ function formatCount1to2(index: number, salt: number): number {
 
 const YEAR_MIN = 2015;
 const YEAR_MAX = 2026;
+const PROGRAMME_LABELS = ["Briefings", "Fellowships", "R&D Projects"] as const;
 
 function yearForIndex(index: number): number {
   return YEAR_MIN + (mix(index, 2101) % (YEAR_MAX - YEAR_MIN + 1));
@@ -176,7 +177,7 @@ export const CONTENT_FIXTURE_ROWS: ContentRow[] = FIXTURE_SEED_TITLES.map(
     const artists = pickDistinctFromPool(
       index,
       ARTIST_LABELS,
-      formatCount1to2(index, 1529),
+      Math.min(ARTIST_LABELS.length, formatCount1to2(index, 1529) * 3),
       undefined,
       1631,
     );
@@ -206,6 +207,7 @@ export const CONTENT_FIXTURE_ROWS: ContentRow[] = FIXTURE_SEED_TITLES.map(
           : [],
       focusAreas,
       activityTypes,
+      programme: PROGRAMME_LABELS[index % PROGRAMME_LABELS.length] ?? null,
       year,
       yearLabel: String(year),
       formats,

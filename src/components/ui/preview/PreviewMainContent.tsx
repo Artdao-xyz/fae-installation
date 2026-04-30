@@ -23,7 +23,7 @@ import { PreviewImageCarousel } from "./PreviewImageCarousel";
 function Divider() {
   return (
     <div
-      className="h-0 w-full shrink-0 border-t-hairline border-dotted border-ink-primary"
+      className="h-0 w-full shrink-0 border-t-hairline border-dotted border-border"
       role="presentation"
     />
   );
@@ -433,7 +433,7 @@ export function PreviewMainContent({
         </p>
       ) : null}
       <Divider />
-      <div className="flex w-full max-w-full shrink-0 flex-col gap-2 max-lg:items-center lg:items-stretch">
+      <div className="flex w-full max-w-full shrink-0 flex-col gap-4 pt-2 max-lg:items-center lg:items-stretch">
         {previewSlides.length > 0 ? (
           <PreviewImageCarousel
             key={previewSlides.join("\0")}

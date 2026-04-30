@@ -4,12 +4,13 @@ import { useFilterSelection } from "@/components/ui/filter-sidebar/FilterSelecti
 import { ActivityType } from "../sections/ActivityType";
 import { ArtistsMenu } from "../sections/ArtistsMenu";
 import { FAEBriefingsMenu } from "../sections/FAEBriefingsMenu";
-import { LatestUpdatesMenu } from "../sections/LatestUpdatesMenu";
+import { FellowshipsMenu } from "../sections/FellowshipsMenu";
 import { FocusAreas } from "../sections/FocusAreas";
 import { Format } from "../sections/Format";
 import { NetworkMenu } from "../sections/NetworkMenu";
 import { RDProjectsMenu } from "../sections/RDProjectsMenu";
 import { Search } from "../sections/Search";
+import { SubscribeMenu } from "../sections/SubscribeMenu";
 import { FilterTaxonomyEmptyHint } from "./FilterTaxonomyEmptyHint";
 import { MobileFilterOptionsLayout } from "./MobileFilterOptionsLayout";
 import { filterChromeRightEdgeClass } from "./layout-classes";
@@ -19,24 +20,26 @@ export type FilterOptionsPanelProps = {
   panelId: string;
   briefingsSubpanelOpen: boolean;
   rdSubpanelOpen: boolean;
+  fellowshipsSubpanelOpen: boolean;
   artistsSubpanelOpen: boolean;
   networkSubpanelOpen: boolean;
-  onToggleBriefingsSubpanel: () => void;
-  onToggleRdSubpanel: () => void;
+  subscribeSubpanelOpen: boolean;
   onToggleArtistsSubpanel: () => void;
   onToggleNetworkSubpanel: () => void;
+  onToggleSubscribeSubpanel: () => void;
 };
 
 export function FilterOptionsPanel({
   panelId,
   briefingsSubpanelOpen,
   rdSubpanelOpen,
+  fellowshipsSubpanelOpen,
   artistsSubpanelOpen,
   networkSubpanelOpen,
-  onToggleBriefingsSubpanel,
-  onToggleRdSubpanel,
+  subscribeSubpanelOpen,
   onToggleArtistsSubpanel,
   onToggleNetworkSubpanel,
+  onToggleSubscribeSubpanel,
 }: FilterOptionsPanelProps) {
   const isMaxLg = useIsMaxLg();
   const { filterSearchQuery, setFilterSearchQuery } = useFilterSelection();
@@ -49,12 +52,14 @@ export function FilterOptionsPanel({
   const anySubpanelOpen =
     briefingsSubpanelOpen ||
     rdSubpanelOpen ||
+    fellowshipsSubpanelOpen ||
     artistsSubpanelOpen ||
-    networkSubpanelOpen;
+    networkSubpanelOpen ||
+    subscribeSubpanelOpen;
 
   return (
     <aside
-      className={`flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden border-solid border-ink-primary ${filterChromeRightEdgeClass(anySubpanelOpen)}`}
+      className={`flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden border-solid border-border ${filterChromeRightEdgeClass(anySubpanelOpen)}`}
       aria-label="Filters"
     >
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
@@ -79,28 +84,41 @@ export function FilterOptionsPanel({
           </div>
           <FilterTaxonomyEmptyHint />
           <div
+            className={`flex shrink-0 flex-col ${searching ? "" : "pb-4"}`}
+            role="radiogroup"
+            aria-label="Programme filters"
+          >
+            <FellowshipsMenu collapsed={searching} />
+            <RDProjectsMenu collapsed={searching} />
+            <FAEBriefingsMenu collapsed={searching} />
+          </div>
+          <div
             className={
               searching
                 ? "flex shrink-0 flex-col"
                 : "flex min-h-0 flex-1 flex-col overflow-hidden"
             }
           >
-            <FocusAreas collapsed={searching} />
-            <ActivityType collapsed={searching} />
+            {searching ? (
+              <>
+                <FocusAreas collapsed />
+                <ActivityType collapsed />
+              </>
+            ) : (
+              <>
+                <div className="flex min-h-0 min-w-0 flex-2 flex-col overflow-hidden">
+                  <FocusAreas collapsed={false} />
+                </div>
+                <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+                  <ActivityType collapsed={false} />
+                </div>
+              </>
+            )}
           </div>
           <div className="shrink-0">
             <Format collapsed={searching} />
           </div>
           <div className="shrink-0">
-            <LatestUpdatesMenu />
-            <FAEBriefingsMenu
-              subpanelOpen={briefingsSubpanelOpen}
-              onToggleSubpanel={onToggleBriefingsSubpanel}
-            />
-            <RDProjectsMenu
-              subpanelOpen={rdSubpanelOpen}
-              onToggleSubpanel={onToggleRdSubpanel}
-            />
             <ArtistsMenu
               subpanelOpen={artistsSubpanelOpen}
               onToggleSubpanel={onToggleArtistsSubpanel}
@@ -108,6 +126,10 @@ export function FilterOptionsPanel({
             <NetworkMenu
               subpanelOpen={networkSubpanelOpen}
               onToggleSubpanel={onToggleNetworkSubpanel}
+            />
+            <SubscribeMenu
+              subpanelOpen={subscribeSubpanelOpen}
+              onToggleSubpanel={onToggleSubscribeSubpanel}
             />
           </div>
         </div>

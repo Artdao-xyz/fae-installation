@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 
 export function FilterSidebarSection({
   title,
+  titleClassName,
   children,
   onClearAll,
   scrollBody = false,
@@ -14,6 +15,8 @@ export function FilterSidebarSection({
   selectionTally,
 }: {
   title: string;
+  /** Overrides default title sizing (desktop chrome headers use `text-sm`). */
+  titleClassName?: string;
   children: ReactNode;
   onClearAll?: () => void;
   scrollBody?: boolean;
@@ -36,12 +39,20 @@ export function FilterSidebarSection({
         aria-label={title}
       >
         <header className="flex shrink-0 items-center justify-between gap-2 px-3 pt-2 pb-1">
-          <h2 className="min-w-0 flex-1 font-lust-text text-sm font-medium text-ink-body">
+          <h2
+            className={
+              titleClassName ??
+              "min-w-0 flex-1 font-lust-text text-sm font-medium text-ink-body"
+            }
+          >
             {title}
           </h2>
           {selectionTally ? (
             <span className="shrink-0 font-fira-mono text-[10px] font-medium tabular-nums text-ink-caption">
-              {selectionTally.selected}/{selectionTally.total}
+              <span className="text-(--color-filter-pill-selection)">
+                {selectionTally.selected}
+              </span>
+              /{selectionTally.total}
             </span>
           ) : null}
         </header>
@@ -71,8 +82,13 @@ export function FilterSidebarSection({
       }`}
       aria-label={title}
     >
-      <header className="flex shrink-0 items-center justify-between gap-2 border-t-hairline border-solid border-ink-primary px-3 pb-2 pt-1.5">
-        <h2 className="min-w-0 flex-1 font-lust-text text-sm font-medium text-ink-body">
+      <header className="flex shrink-0 items-center justify-between gap-2 border-t-hairline border-solid border-border px-3 pb-2 pt-1.5">
+        <h2
+          className={
+            titleClassName ??
+            "min-w-0 flex-1 font-lust-text text-sm font-medium text-ink-body"
+          }
+        >
           {title}
         </h2>
         {showClear ? (

@@ -1,12 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useId, type ReactElement } from "react";
+import { useCallback, useId, type ReactElement } from "react";
 import { useFilterSelection } from "@/components/ui/filter-sidebar/FilterSelectionContext";
-import { FAE_BRIEFING_OPTIONS } from "@/components/ui/filter-sidebar/domains/briefings/constants";
-import { RD_PROJECT_OPTION_LABELS } from "@/components/ui/filter-sidebar/domains/rd-projects/constants";
 import { FilterOptionsPanel } from "./FilterOptionsPanel";
 import { FilterSubpanelsColumn } from "./FilterSubpanelsColumn";
-import { EmailSubscription } from "@/components/ui/email-subscription";
 import { Footer } from "./Footer";
 import { HomeBar } from "./HomeBar";
 import { MobileFiltersBar } from "./MobileFiltersBar";
@@ -31,12 +28,18 @@ export function FilterSidebar() {
     setBriefingsSubpanelOpen,
     rdSubpanelOpen,
     setRdSubpanelOpen,
+    fellowshipsSubpanelOpen,
+    setFellowshipsSubpanelOpen,
     networkSubpanelOpen,
     setNetworkSubpanelOpen,
     artistsSubpanelOpen,
     setArtistsSubpanelOpen,
+    subscribeSubpanelOpen,
+    setSubscribeSubpanelOpen,
     hasActiveTaxonomyFilters,
     selectedFaeBriefing,
+    clearAllFilters,
+    contentPreviewRow,
   } = useFilterSelection();
   const panelId = useId();
   const isMaxLg = useIsMaxLg();
@@ -44,20 +47,10 @@ export function FilterSidebar() {
   const anySubpanelOpen =
     briefingsSubpanelOpen ||
     rdSubpanelOpen ||
+    fellowshipsSubpanelOpen ||
     artistsSubpanelOpen ||
-    networkSubpanelOpen;
-
-  useEffect(() => {
-    if (FAE_BRIEFING_OPTIONS.length === 0 && briefingsSubpanelOpen) {
-      setBriefingsSubpanelOpen(false);
-    }
-  }, [briefingsSubpanelOpen, setBriefingsSubpanelOpen]);
-
-  useEffect(() => {
-    if (RD_PROJECT_OPTION_LABELS.length === 0 && rdSubpanelOpen) {
-      setRdSubpanelOpen(false);
-    }
-  }, [rdSubpanelOpen, setRdSubpanelOpen]);
+    networkSubpanelOpen ||
+    subscribeSubpanelOpen;
 
   const toggleFiltersOpen = useCallback(() => {
     setFiltersOpen((open) => {
@@ -65,8 +58,10 @@ export function FilterSidebar() {
       if (!next) {
         setBriefingsSubpanelOpen(false);
         setRdSubpanelOpen(false);
+        setFellowshipsSubpanelOpen(false);
         setArtistsSubpanelOpen(false);
         setNetworkSubpanelOpen(false);
+        setSubscribeSubpanelOpen(false);
       }
       return next;
     });
@@ -74,8 +69,10 @@ export function FilterSidebar() {
     setFiltersOpen,
     setBriefingsSubpanelOpen,
     setRdSubpanelOpen,
+    setFellowshipsSubpanelOpen,
     setArtistsSubpanelOpen,
     setNetworkSubpanelOpen,
+    setSubscribeSubpanelOpen,
   ]);
 
   const subpanelsColumn: ReactElement = (
@@ -84,20 +81,31 @@ export function FilterSidebar() {
       anySubpanelOpen={anySubpanelOpen}
       briefingsSubpanelOpen={briefingsSubpanelOpen}
       rdSubpanelOpen={rdSubpanelOpen}
+      fellowshipsSubpanelOpen={fellowshipsSubpanelOpen}
       artistsSubpanelOpen={artistsSubpanelOpen}
       networkSubpanelOpen={networkSubpanelOpen}
+      subscribeSubpanelOpen={subscribeSubpanelOpen}
       onCloseBriefings={() => setBriefingsSubpanelOpen(false)}
       onCloseRd={() => setRdSubpanelOpen(false)}
+      onCloseFellowships={() => setFellowshipsSubpanelOpen(false)}
       onCloseArtists={() => setArtistsSubpanelOpen(false)}
       onCloseNetwork={() => setNetworkSubpanelOpen(false)}
+      onCloseSubscribe={() => setSubscribeSubpanelOpen(false)}
     />
   );
 
   const showOptionsPanel = !isMaxLg || filtersOpen;
+  const hasSelectedFilters =
+    hasActiveTaxonomyFilters || selectedFaeBriefing != null;
+  const showMobileSelectedFiltersChrome =
+    hasSelectedFilters && contentPreviewRow == null;
 
   return (
     <>
-    <div className="relative z-40 flex h-screen min-h-0 w-auto min-w-0 shrink-0 flex-row items-stretch overflow-visible">
+    <div
+      className="relative z-40 flex h-screen min-h-0 w-auto min-w-0 shrink-0 flex-row items-stretch overflow-visible"
+      data-fae-filter-sidebar-root
+    >
       <div
         className={`z-50 flex h-full min-h-0 flex-col items-stretch self-stretch overflow-visible ${
           filtersOpen
@@ -142,17 +150,33 @@ export function FilterSidebar() {
                   panelId={panelId}
                   briefingsSubpanelOpen={briefingsSubpanelOpen}
                   rdSubpanelOpen={rdSubpanelOpen}
+                  fellowshipsSubpanelOpen={fellowshipsSubpanelOpen}
                   artistsSubpanelOpen={artistsSubpanelOpen}
                   networkSubpanelOpen={networkSubpanelOpen}
-                  onToggleBriefingsSubpanel={() =>
-                    setBriefingsSubpanelOpen((o) => !o)
-                  }
-                  onToggleRdSubpanel={() => setRdSubpanelOpen((o) => !o)}
+                  subscribeSubpanelOpen={subscribeSubpanelOpen}
                   onToggleArtistsSubpanel={() =>
-                    setArtistsSubpanelOpen((o) => !o)
+                    setArtistsSubpanelOpen((open) => {
+                      const next = !open;
+                      if (next) setSubscribeSubpanelOpen(false);
+                      return next;
+                    })
                   }
                   onToggleNetworkSubpanel={() =>
-                    setNetworkSubpanelOpen((o) => !o)
+                    setNetworkSubpanelOpen((open) => {
+                      const next = !open;
+                      if (next) setSubscribeSubpanelOpen(false);
+                      return next;
+                    })
+                  }
+                  onToggleSubscribeSubpanel={() =>
+                    setSubscribeSubpanelOpen((open) => {
+                      const next = !open;
+                      if (next) {
+                        setArtistsSubpanelOpen(false);
+                        setNetworkSubpanelOpen(false);
+                      }
+                      return next;
+                    })
                   }
                 />
               ) : null}
@@ -169,23 +193,36 @@ export function FilterSidebar() {
       <div className="contents lg:hidden">
         <div className="fixed inset-x-0 bottom-0 z-40 flex flex-col pb-[env(safe-area-inset-bottom,0px)] lg:hidden">
           {filtersOpen ||
-          hasActiveTaxonomyFilters ||
-          selectedFaeBriefing != null ? null : (
+          hasSelectedFilters ? null : (
             <MobileLatestUpdatesStrip />
           )}
           <div className="flex w-full shrink-0 flex-col bg-surface-canvas">
-            {filtersOpen ? null : (
+            {filtersOpen || contentPreviewRow != null ? null : (
               <MobileFiltersBar onOpen={toggleFiltersOpen} />
             )}
+            {!filtersOpen && showMobileSelectedFiltersChrome ? (
+              <button
+                type="button"
+                onClick={clearAllFilters}
+                className="flex h-13 w-full items-center justify-center gap-2 border-t-hairline border-solid border-border bg-surface-canvas px-3 font-lust-text text-sm leading-4 tracking-wide text-ink-body transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element -- local static icon asset */}
+                <img
+                  src="/svg/delete.svg"
+                  alt=""
+                  width={16}
+                  height={16}
+                  className="size-4 shrink-0"
+                  aria-hidden
+                />
+                Clear Filters
+              </button>
+            ) : null}
             <Footer showYear={false} mergeWithSubpanel={false} />
           </div>
         </div>
       </div>
     </div>
-    <EmailSubscription
-      className="fixed bottom-0 left-(--width-filter-chrome-column) z-51 hidden min-h-0 max-w-none lg:flex"
-      forceCollapsed={anySubpanelOpen}
-    />
     </>
   );
 }

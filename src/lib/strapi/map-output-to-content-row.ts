@@ -1,9 +1,15 @@
 import type { BlocksContent } from "@strapi/blocks-react-renderer";
-import type { ContentResource, ContentRow } from "@/data/content-types";
+import type {
+  ContentProgramme,
+  ContentResource,
+  ContentRow,
+} from "@/data/content-types";
 import { createOutputShareSlug } from "@/lib/output-share-slug";
 
 type StrapiMedia = {
   url?: unknown;
+  mime?: unknown;
+  ext?: unknown;
   width?: unknown;
   height?: unknown;
   size?: unknown;
@@ -38,6 +44,8 @@ const STRAPI_THUMBNAIL_URL_PRIORITY = [
 function mediaPreferredUrl(media: unknown): string | null {
   const m = mediaObject(media);
   if (!m) return null;
+  const originalUrl = typeof m.url === "string" && m.url.length > 0 ? m.url : null;
+  if (isAnimatedGifMedia(m)) return originalUrl;
   if (m.formats && typeof m.formats === "object") {
     for (const key of STRAPI_PREVIEW_IMAGE_URL_PRIORITY) {
       const f = m.formats[key];
@@ -53,19 +61,21 @@ function mediaPreferredUrl(media: unknown): string | null {
       if (f && typeof f.url === "string" && f.url.length > 0) return f.url;
     }
   }
-  return typeof m.url === "string" && m.url.length > 0 ? m.url : null;
+  return originalUrl;
 }
 
 function mediaPreferredThumbnailUrl(media: unknown): string | null {
   const m = mediaObject(media);
   if (!m) return null;
+  const originalUrl = typeof m.url === "string" && m.url.length > 0 ? m.url : null;
+  if (isAnimatedGifMedia(m)) return originalUrl;
   if (m.formats && typeof m.formats === "object") {
     for (const key of STRAPI_THUMBNAIL_URL_PRIORITY) {
       const f = m.formats[key];
       if (f && typeof f.url === "string" && f.url.length > 0) return f.url;
     }
   }
-  return typeof m.url === "string" && m.url.length > 0 ? m.url : null;
+  return originalUrl;
 }
 
 function mediaObject(media: unknown): StrapiMedia | null {
@@ -76,6 +86,13 @@ function mediaObject(media: unknown): StrapiMedia | null {
       ? (raw.attributes as StrapiMedia)
       : raw
   ) as StrapiMedia;
+}
+
+function isAnimatedGifMedia(media: StrapiMedia): boolean {
+  const mime = typeof media.mime === "string" ? media.mime.toLowerCase() : "";
+  const ext = typeof media.ext === "string" ? media.ext.toLowerCase() : "";
+  const url = typeof media.url === "string" ? media.url : "";
+  return mime === "image/gif" || ext === ".gif" || /\.gif(?:[?#]|$)/i.test(url);
 }
 
 /**
@@ -294,6 +311,20 @@ function strapiSystemTimestampIso(
     if (typeof v === "string" && v.trim().length > 0) return v.trim();
   }
   return "";
+}
+
+function programmeFromOutputDoc(
+  doc: Record<string, unknown>,
+): ContentProgramme | null {
+  const raw = doc.Programme ?? doc.programme;
+  if (
+    raw === "Briefings" ||
+    raw === "Fellowships" ||
+    raw === "R&D Projects"
+  ) {
+    return raw;
+  }
+  return null;
 }
 
 /**
@@ -560,6 +591,7 @@ export function mapStrapiOutputToContentRow(
     linkedOutputNames,
     focusAreas: relationNames(doc.Focus),
     activityTypes: relationNames(doc.Activity),
+    programme: programmeFromOutputDoc(doc),
     year,
     yearLabel,
     formats: formatsFromOutputDoc(doc),

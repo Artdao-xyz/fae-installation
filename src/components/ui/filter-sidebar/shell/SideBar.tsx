@@ -17,7 +17,7 @@ export function SideBar({
 }: SideBarProps) {
   return (
     <div
-      className="flex h-full min-h-0 w-filter-narrow-column shrink-0 select-none flex-col justify-between self-stretch border-r-hairline border-solid border-ink-primary bg-surface-canvas"
+      className="flex h-full min-h-0 w-filter-narrow-column shrink-0 select-none flex-col justify-between self-stretch border-r-hairline border-solid border-border bg-surface-canvas"
     >
       <button
         type="button"

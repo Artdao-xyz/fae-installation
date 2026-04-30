@@ -17,7 +17,7 @@ const breadcrumbFadeClassName =
   "transition-opacity duration-300 ease-out motion-reduce:transition-none";
 
 const resetFiltersButtonClassName =
-  "inline-flex h-full shrink-0 items-center justify-center border-l-hairline border-solid border-ink-primary bg-transparent px-3 leading-[0] transition-[opacity,background-color] hover:bg-[#F7F7F7] hover:opacity-90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ink-primary";
+  "inline-flex h-full shrink-0 items-center justify-center border-l-hairline border-solid border-border bg-transparent px-3 leading-[0] transition-[opacity,background-color] hover:bg-[#F7F7F7] hover:opacity-90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ink-primary";
 
 type HomeBarProps = {
   className?: string;
@@ -67,7 +67,7 @@ export function HomeBar({
 
   return (
     <div
-      className={`flex h-filter-chrome-bar min-w-0 shrink-0 border-b-hairline border-solid border-ink-primary bg-surface-canvas ${filterChromeRightEdgeClass(mergeWithSubpanel)} ${className}`}
+      className={`flex h-filter-chrome-bar min-w-0 shrink-0 border-b-hairline border-solid border-border bg-surface-canvas ${filterChromeRightEdgeClass(mergeWithSubpanel)} ${className}`}
     >
       <div className="flex min-h-0 min-w-0 flex-1 items-center gap-2 overflow-hidden pl-3 pr-0">
         <div className="flex min-h-0 min-w-0 flex-1 items-center gap-2 overflow-hidden">

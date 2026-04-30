@@ -19,7 +19,10 @@ import {
 } from "@/components/ui/preview/fullScreenContentChrome";
 import { PreviewPanelCollapseBar } from "@/components/ui/preview/PreviewPanelCollapseBar";
 import { Z_INDEX } from "@/lib/z-index-scale";
-import { AboutPanelRichContent, ABOUT_BODY } from "./AboutShared";
+import {
+  AboutFullScreenRichContent,
+  ABOUT_BODY,
+} from "./AboutShared";
 import { MobileAboutSheet } from "./MobileAboutSheet";
 
 /**
@@ -69,8 +72,8 @@ function AboutFullScreenView({
         onClose={onBackToPeek}
       />
       <div className={fullScreenContentScrollClass}>
-        <div className={fullScreenContentInnerClass}>
-          <AboutPanelRichContent />
+        <div className={`${fullScreenContentInnerClass} max-w-[645px]`}>
+          <AboutFullScreenRichContent />
         </div>
       </div>
       <div className="flex shrink-0 justify-start">
@@ -105,7 +108,7 @@ function AboutTabRail({
       aria-expanded={ariaExpanded}
       aria-controls={ariaControls}
       onClick={onClick}
-      className={`flex h-full min-h-0 w-filter-narrow-column shrink-0 flex-col items-center self-stretch border-b-0 border-solid border-ink-primary bg-surface-canvas/90 py-2.5 backdrop-blur-fae-sm transition-colors hover:bg-surface-hover/80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary ${
+      className={`flex h-full min-h-0 w-filter-narrow-column shrink-0 flex-col items-center self-stretch border-b-0 border-solid border-border bg-surface-canvas/90 py-2.5 backdrop-blur-fae-sm transition-colors hover:bg-surface-hover/80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary ${
         ariaExpanded ? "border-r-hairline" : ""
       }`}
     >
@@ -204,7 +207,7 @@ export function AboutPanel() {
     <>
       {aboutView !== "full" ? (
         <div
-          className={`fixed top-8.5 right-8.5 hidden min-h-0 max-h-about-panel flex-row items-stretch overflow-hidden border-solid border-ink-primary bg-surface-canvas/90 shadow-none backdrop-blur-fae-md lg:flex ${
+          className={`fixed top-8.5 right-8.5 hidden min-h-0 max-h-about-panel flex-row items-stretch overflow-hidden border-solid border-border bg-surface-canvas/90 shadow-none backdrop-blur-fae-md lg:flex ${
             peekOpen ? "border-hairline" : "border-hairline border-b-0"
           }`}
           style={{

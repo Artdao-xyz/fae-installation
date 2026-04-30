@@ -51,19 +51,24 @@
   --color-surface-canvas: #e8e8e8;
   --color-black-fae: #212121;
   --color-ink-primary: #414141;
+  --color-border: #b9b9b9;
   --color-ink-body: #303030;
   --color-ink-caption: #363636;
   --color-surface-muted: #ececec;
   --color-surface-hover: #e0e0e0;
 
-  --color-filter-category-fae-briefings: var(--color-ink-primary);
+  /** Fellowships (sidebar / filter tone `latest-updates`). */
   --color-filter-category-latest-updates: #0000ff;
+  /** FAE Briefings (sidebar / filter tone `fae-briefings`). */
+  --color-filter-category-fae-briefings: #0cdc2a;
   /** Shared selected state for filter pills (dotted / rounded / square). */
   --color-filter-pill-selection: #0000ff;
-  --color-filter-category-rd: #9005cc;
+  /** R&D Projects (tone `rd`). */
+  --color-filter-category-rd: #9004cb;
+  /** Activity rail (tone `editorial`) — unchanged from prior token. */
   --color-filter-category-editorial: #b22fb6;
   --color-filter-category-artists: #5e1937;
-  --color-filter-category-network: #0cdc2a;
+  --color-filter-category-network: #b22fb6;
   --shadow-fae-thumbnail: 0 0 40px 0 rgb(0 0 0 / 0.3);
 
   --color-page-gradient-edge: #e1e1e1;
@@ -72,8 +77,8 @@
   --blur-fae-sm: 10px;
   --blur-fae-md: 25px;
 
-  --border-width-hairline: 0.5px;
-  --border-width-fine: 0.3px;
+  --border-width-hairline: 1px;
+  --border-width-thin: 0.5px;
 
   /**
    * `2k` / `min-[2000px]` — wide & “2K-class” viewports; available as the `2k:` Tailwind variant.
@@ -205,10 +210,19 @@
     display: flex;
     align-items: center;
     padding: 0;
-    border-width: var(--border-width-hairline);
+    border-width: var(--border-width-thin);
     border-style: solid;
     border-color: var(--color-ink-primary);
     background-color: var(--color-ink-primary);
+  }
+
+  .fae-control-filter-outer-1px {
+    border-width: 1px;
+  }
+
+  .fae-search-field-outer {
+    border-color: var(--color-border);
+    background-color: var(--color-border);
   }
 
   /* Padding / type: `filterPillLabelBoxClass` in filterFramedClasses.ts */
@@ -235,6 +249,19 @@ button {
   to {
     opacity: 1;
   }
+}
+
+@keyframes fae-mobile-popup-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(calc(-50% - 1rem));
+  }
+}
+
+.fae-mobile-popup-marquee {
+  animation: fae-mobile-popup-marquee 18s linear infinite;
 }
 
 /**

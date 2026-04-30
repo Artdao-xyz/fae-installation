@@ -5,6 +5,8 @@ export const SITE_URL = "https://futureartecosystems.org";
 export const SITE_TITLE = "Future Art Ecosystems";
 export const SITE_DESCRIPTION = "Cultural Infrastructure Research";
 export const SITE_OG_IMAGE_PATH = "";
+export const SITE_FAVICON_LIGHT_PATH = "/favicon-light.ico";
+export const SITE_FAVICON_DARK_PATH = "/favicon-dark.ico";
 
 const metadataBase = new URL(SITE_URL);
 
@@ -21,6 +23,24 @@ function ogImages(): NonNullable<NonNullable<Metadata["openGraph"]>["images"]> {
   return SITE_OG_IMAGE_PATH ? [{ url: SITE_OG_IMAGE_PATH }] : [];
 }
 
+function siteIcons(): Metadata["icons"] {
+  return {
+    icon: [
+      {
+        url: SITE_FAVICON_LIGHT_PATH,
+        media: "(prefers-color-scheme: light)",
+        type: "image/x-icon",
+      },
+      {
+        url: SITE_FAVICON_DARK_PATH,
+        media: "(prefers-color-scheme: dark)",
+        type: "image/x-icon",
+      },
+    ],
+    shortcut: SITE_FAVICON_LIGHT_PATH,
+  };
+}
+
 function descriptionFromRow(row: ContentRow): string {
   const plain = row.content.replace(/\s+/g, " ").trim();
   if (!plain) return SITE_DESCRIPTION;
@@ -35,6 +55,7 @@ export function buildSiteMetadata(): Metadata {
     alternates: {
       canonical: "/",
     },
+    icons: siteIcons(),
     openGraph: {
       type: "website",
       url: "/",
@@ -64,6 +85,7 @@ export function buildOutputMetadata(row: ContentRow | null, slug: string): Metad
     alternates: {
       canonical: path,
     },
+    icons: siteIcons(),
     openGraph: {
       type: "article",
       url: path,

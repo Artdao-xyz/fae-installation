@@ -12,7 +12,7 @@ import {
   type ReactNode,
   type SetStateAction,
 } from "react";
-import type { ContentRow } from "@/data/content-types";
+import type { ContentProgramme, ContentRow } from "@/data/content-types";
 import {
   mergeCmsAndCatalogOptionLabels,
   uniqueSortedLabelsFromCatalog,
@@ -33,6 +33,21 @@ import { FAE_BRIEFING_OPTIONS } from "./domains/briefings/constants";
 
 /** Sidebar availability hints use the same AND semantics as the default particle spread. */
 const SIDEBAR_FILTER_MATCH_MODE: FilterMatchMode = "intersection";
+
+/** Fellowships / R&D / Briefings toolbar rows (`lg` filter chrome); click handles future actions and does not open domain subpanels. */
+export type DesktopDomainMenuSelectionId =
+  | "fellowships"
+  | "rd"
+  | "briefings";
+
+const PROGRAMME_BY_DOMAIN_ID: Record<
+  DesktopDomainMenuSelectionId,
+  ContentProgramme
+> = {
+  fellowships: "Fellowships",
+  rd: "R&D Projects",
+  briefings: "Briefings",
+};
 
 /** Matches Tailwind `lg` (64rem). Auto-opening the filter column is desktop-only; mobile sheet stays closed until the user taps Filters. */
 function shouldAutoOpenFiltersPanel(): boolean {
@@ -121,10 +136,21 @@ export type FilterSelectionContextValue = {
   setBriefingsSubpanelOpen: Dispatch<SetStateAction<boolean>>;
   rdSubpanelOpen: boolean;
   setRdSubpanelOpen: Dispatch<SetStateAction<boolean>>;
+  fellowshipsSubpanelOpen: boolean;
+  setFellowshipsSubpanelOpen: Dispatch<SetStateAction<boolean>>;
   networkSubpanelOpen: boolean;
   setNetworkSubpanelOpen: Dispatch<SetStateAction<boolean>>;
   artistsSubpanelOpen: boolean;
   setArtistsSubpanelOpen: Dispatch<SetStateAction<boolean>>;
+  subscribeSubpanelOpen: boolean;
+  setSubscribeSubpanelOpen: Dispatch<SetStateAction<boolean>>;
+  /**
+   * Which desktop domain toolbar row (`Fellowships` / `R&D` / `Briefings`) is toggled on.
+   * Single selection among the three (`null` = none).
+   */
+  selectedDesktopDomainMenuId: DesktopDomainMenuSelectionId | null;
+  selectedProgramme: ContentProgramme | null;
+  toggleDesktopDomainMenuSelection: (id: DesktopDomainMenuSelectionId) => void;
   /** Derived: any domain subpanel column open. */
   filterSubpanelsOpen: boolean;
   /** Opens the right-hand content preview for this row (wired from the particle canvas). */
@@ -175,6 +201,7 @@ type PreviewFilterSnapshot = {
   formats: string[];
   networks: string[];
   faeBriefing: string | null;
+  desktopDomainMenuId: DesktopDomainMenuSelectionId | null;
 };
 
 export function FilterSelectionProvider({ children }: { children: ReactNode }) {
@@ -352,13 +379,18 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
   const [filtersPanelOpen, setFiltersPanelOpen] = useState(false);
   const [briefingsSubpanelOpen, setBriefingsSubpanelOpen] = useState(false);
   const [rdSubpanelOpen, setRdSubpanelOpen] = useState(false);
+  const [fellowshipsSubpanelOpen, setFellowshipsSubpanelOpen] =
+    useState(false);
   const [networkSubpanelOpen, setNetworkSubpanelOpen] = useState(false);
   const [artistsSubpanelOpen, setArtistsSubpanelOpen] = useState(false);
+  const [subscribeSubpanelOpen, setSubscribeSubpanelOpen] = useState(false);
   const filterSubpanelsOpen =
     briefingsSubpanelOpen ||
     rdSubpanelOpen ||
+    fellowshipsSubpanelOpen ||
     artistsSubpanelOpen ||
-    networkSubpanelOpen;
+    networkSubpanelOpen ||
+    subscribeSubpanelOpen;
 
   const [selectedFocusAreas, setSelectedFocusAreas] = useState<Set<string>>(
     () => new Set(),
@@ -378,6 +410,11 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
   const [selectedFaeBriefing, setSelectedFaeBriefing] = useState<string | null>(
     null,
   );
+  const [selectedDesktopDomainMenuId, setSelectedDesktopDomainMenuId] =
+    useState<DesktopDomainMenuSelectionId | null>(null);
+  const selectedProgramme = selectedDesktopDomainMenuId
+    ? PROGRAMME_BY_DOMAIN_ID[selectedDesktopDomainMenuId]
+    : null;
 
   useEffect(() => {
     if (FAE_BRIEFING_OPTIONS.length === 0) {
@@ -391,6 +428,7 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
 
   const taxonomySelection = useMemo(
     (): TaxonomyFilterSelection => ({
+      programme: selectedProgramme,
       focus: selectedFocusAreas,
       activity: selectedActivityTypes,
       artists: selectedArtists,
@@ -398,6 +436,7 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
       networks: selectedNetworks,
     }),
     [
+      selectedProgramme,
       selectedFocusAreas,
       selectedActivityTypes,
       selectedArtists,
@@ -480,12 +519,14 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
 
   const hasActiveTaxonomyFilters = useMemo(
     () =>
+      selectedProgramme != null ||
       selectedFocusAreas.size > 0 ||
       selectedActivityTypes.size > 0 ||
       selectedArtists.size > 0 ||
       selectedFormats.size > 0 ||
       selectedNetworks.size > 0,
     [
+      selectedProgramme,
       selectedFocusAreas,
       selectedActivityTypes,
       selectedArtists,
@@ -639,11 +680,13 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
       formats: [...selectedFormats],
       networks: [...selectedNetworks],
       faeBriefing: selectedFaeBriefing,
+      desktopDomainMenuId: selectedDesktopDomainMenuId,
     };
   }, [
     selectedActivityTypes,
     selectedArtists,
     selectedFaeBriefing,
+    selectedDesktopDomainMenuId,
     selectedFocusAreas,
     selectedFormats,
     selectedNetworks,
@@ -660,6 +703,7 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
     setSelectedFormats(new Set(snap.formats.slice(0, 1)));
     setSelectedNetworks(new Set(snap.networks));
     setSelectedFaeBriefing(snap.faeBriefing);
+    setSelectedDesktopDomainMenuId(snap.desktopDomainMenuId);
   }, [minimizeAllFloatingPanels]);
 
   const openContentPreview = useCallback(
@@ -719,6 +763,15 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
     clearPendingPreviewFilterSnapshot();
     closeContentPreview();
   }, [clearPendingPreviewFilterSnapshot, closeContentPreview]);
+
+  const toggleDesktopDomainMenuSelection = useCallback(
+    (id: DesktopDomainMenuSelectionId) => {
+      minimizeAllFloatingPanels();
+      endContentPreviewOnSidebarFilterChange();
+      setSelectedDesktopDomainMenuId((prev) => (prev === id ? null : id));
+    },
+    [endContentPreviewOnSidebarFilterChange, minimizeAllFloatingPanels],
+  );
 
   const toggleFocusArea = useCallback(
     (label: string) => {
@@ -835,14 +888,17 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
     contentPreviewRow != null ||
     briefingsSubpanelOpen ||
     rdSubpanelOpen ||
+    fellowshipsSubpanelOpen ||
     networkSubpanelOpen ||
     artistsSubpanelOpen ||
+    subscribeSubpanelOpen ||
     selectedFocusAreas.size > 0 ||
     selectedActivityTypes.size > 0 ||
     selectedArtists.size > 0 ||
     selectedFormats.size > 0 ||
     selectedNetworks.size > 0 ||
     selectedFaeBriefing != null ||
+    selectedDesktopDomainMenuId != null ||
     filterSearchQuery.length > 0;
 
   const clearAllFilters = useCallback(() => {
@@ -851,14 +907,17 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
     minimizeAllFloatingPanels();
     setBriefingsSubpanelOpen(false);
     setRdSubpanelOpen(false);
+    setFellowshipsSubpanelOpen(false);
     setNetworkSubpanelOpen(false);
     setArtistsSubpanelOpen(false);
+    setSubscribeSubpanelOpen(false);
     setSelectedFocusAreas(new Set());
     setSelectedActivityTypes(new Set());
     setSelectedArtists(new Set());
     setSelectedFormats(new Set());
     setSelectedNetworks(new Set());
     setSelectedFaeBriefing(null);
+    setSelectedDesktopDomainMenuId(null);
     setFilterSearchQuery("");
     setFilterResetNonce((n) => n + 1);
   }, [
@@ -933,10 +992,17 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
       setBriefingsSubpanelOpen,
       rdSubpanelOpen,
       setRdSubpanelOpen,
+      fellowshipsSubpanelOpen,
+      setFellowshipsSubpanelOpen,
       networkSubpanelOpen,
       setNetworkSubpanelOpen,
       artistsSubpanelOpen,
       setArtistsSubpanelOpen,
+      subscribeSubpanelOpen,
+      setSubscribeSubpanelOpen,
+      selectedDesktopDomainMenuId,
+      selectedProgramme,
+      toggleDesktopDomainMenuSelection,
       filterSubpanelsOpen,
       openContentPreview,
       registerContentPreviewOpener,
@@ -993,8 +1059,13 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
       filtersPanelOpen,
       briefingsSubpanelOpen,
       rdSubpanelOpen,
+      fellowshipsSubpanelOpen,
       networkSubpanelOpen,
       artistsSubpanelOpen,
+      subscribeSubpanelOpen,
+      selectedDesktopDomainMenuId,
+      selectedProgramme,
+      toggleDesktopDomainMenuSelection,
       filterSubpanelsOpen,
       openContentPreview,
       registerContentPreviewOpener,

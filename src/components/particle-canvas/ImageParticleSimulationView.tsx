@@ -92,6 +92,7 @@ function taxonomySelectionFromContentRow(
   row: ContentRow,
 ): TaxonomyFilterSelection {
   return {
+    programme: null,
     focus: new Set(row.focusAreas),
     activity: new Set(row.activityTypes),
     artists: new Set(row.artists),
@@ -180,6 +181,8 @@ export type ImageParticleSimulationViewProps = {
   rootClassName?: string;
   /** Share URL slug to open immediately when the page is loaded through `/[slug]`. */
   initialPreviewSlug?: string;
+  /** Called when the user clicks the empty canvas/background, excluding tiles and previews. */
+  onEmptyCanvasPointerDown?: () => void;
 };
 
 export function ImageParticleSimulationView({
@@ -194,6 +197,7 @@ export function ImageParticleSimulationView({
   filterMatchMode: filterMatchModeProp,
   rootClassName,
   initialPreviewSlug,
+  onEmptyCanvasPointerDown,
 }: ImageParticleSimulationViewProps) {
   const filterMatchMode = filterMatchModeProp ?? "intersection";
   const filterMatchModeRef = useRef(filterMatchMode);
@@ -205,6 +209,7 @@ export function ImageParticleSimulationView({
     selectedArtists,
     selectedFormats,
     selectedNetworks,
+    selectedProgramme,
     filtersPanelOpen,
     setFiltersPanelOpen,
     filterSubpanelsOpen,
@@ -236,6 +241,7 @@ export function ImageParticleSimulationView({
   idleTextFullTitleRef.current = idleTextFullTitle;
 
   const spreadSelectionRef = useRef<TaxonomyFilterSelection>({
+    programme: selectedProgramme,
     focus: selectedFocusAreas,
     activity: selectedActivityTypes,
     artists: selectedArtists,
@@ -243,6 +249,7 @@ export function ImageParticleSimulationView({
     networks: selectedNetworks,
   });
   spreadSelectionRef.current = {
+    programme: selectedProgramme,
     focus: selectedFocusAreas,
     activity: selectedActivityTypes,
     artists: selectedArtists,
@@ -260,13 +267,16 @@ export function ImageParticleSimulationView({
       "|" +
       [...selectedFormats].sort().join("\0") +
       "|" +
-      [...selectedNetworks].sort().join("\0"),
+      [...selectedNetworks].sort().join("\0") +
+      "|" +
+      (selectedProgramme ?? ""),
     [
       selectedFocusAreas,
       selectedActivityTypes,
       selectedArtists,
       selectedFormats,
       selectedNetworks,
+      selectedProgramme,
     ],
   );
   const spreadSignatureRef = useRef("");
@@ -806,6 +816,7 @@ export function ImageParticleSimulationView({
 
   const spreadTaxonomy: TaxonomyFilterSelection = useMemo(
     () => ({
+      programme: selectedProgramme,
       focus: selectedFocusAreas,
       activity: selectedActivityTypes,
       artists: selectedArtists,
@@ -818,6 +829,7 @@ export function ImageParticleSimulationView({
       selectedArtists,
       selectedFormats,
       selectedNetworks,
+      selectedProgramme,
     ],
   );
 
@@ -1256,6 +1268,7 @@ export function ImageParticleSimulationView({
     const computeSpreadActive = (orderedLen: number): boolean => {
       const s = spreadSelectionRef.current;
       const filterSpreadActive =
+        s.programme != null ||
         s.focus.size > 0 ||
         s.activity.size > 0 ||
         s.artists.size > 0 ||
@@ -1985,6 +1998,7 @@ export function ImageParticleSimulationView({
           if (t.closest("[data-fae-content-preview]")) return;
         }
         clearIdleHoverState();
+        onEmptyCanvasPointerDown?.();
         resetToIdle();
       }}
     >
