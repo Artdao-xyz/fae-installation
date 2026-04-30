@@ -202,6 +202,8 @@ export function FilterSidebar() {
           </div>
           <div
             className={`absolute bottom-full left-full w-filter-options overflow-hidden border-r-hairline border-t-hairline border-solid border-border bg-surface-canvas transition-[max-height,opacity] duration-300 ease-in-out motion-reduce:transition-none ${
+              subscribeSubpanelOpen && !filtersOpen ? "border-l-hairline" : ""
+            } ${
               subscribeSubpanelOpen
                 ? "max-h-[calc(100dvh-var(--inset-margin-guide))] opacity-100"
                 : "pointer-events-none max-h-0 opacity-0"

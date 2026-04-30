@@ -377,6 +377,9 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
 
   /** Starts closed; opens after catalog + taxonomy load only at `lg+` (see `shouldAutoOpenFiltersPanel`). */
   const [filtersPanelOpen, setFiltersPanelOpen] = useState(false);
+  const filtersPanelOpenRef = useRef(filtersPanelOpen);
+  filtersPanelOpenRef.current = filtersPanelOpen;
+
   const [briefingsSubpanelOpen, setBriefingsSubpanelOpen] = useState(false);
   const [rdSubpanelOpen, setRdSubpanelOpen] = useState(false);
   const [fellowshipsSubpanelOpen, setFellowshipsSubpanelOpen] =
@@ -384,6 +387,11 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
   const [networkSubpanelOpen, setNetworkSubpanelOpen] = useState(false);
   const [artistsSubpanelOpen, setArtistsSubpanelOpen] = useState(false);
   const [subscribeSubpanelOpen, setSubscribeSubpanelOpen] = useState(false);
+
+  /** Close subscribe sheet only while the filters column is open and the user changes what actually filters catalogue rows (not subpanel chrome). */
+  const closeSubscribeWhenFiltersPanelOpen = useCallback(() => {
+    if (filtersPanelOpenRef.current) setSubscribeSubpanelOpen(false);
+  }, []);
   const filterSubpanelsOpen =
     briefingsSubpanelOpen ||
     rdSubpanelOpen ||
@@ -659,13 +667,14 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
       networks?: readonly string[];
     }) => {
       minimizeAllFloatingPanels();
+      closeSubscribeWhenFiltersPanelOpen();
       setSelectedFocusAreas(new Set(row.focusAreas));
       setSelectedActivityTypes(new Set(row.activityTypes));
       setSelectedArtists(new Set((row.artists ?? []).slice(0, 1)));
       setSelectedFormats(new Set((row.formats ?? []).slice(0, 1)));
       setSelectedNetworks(new Set((row.networks ?? []).slice(0, 1)));
     },
-    [minimizeAllFloatingPanels],
+    [closeSubscribeWhenFiltersPanelOpen, minimizeAllFloatingPanels],
   );
 
   const clearPendingPreviewFilterSnapshot = useCallback(() => {
@@ -767,15 +776,17 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
   const toggleDesktopDomainMenuSelection = useCallback(
     (id: DesktopDomainMenuSelectionId) => {
       minimizeAllFloatingPanels();
+      closeSubscribeWhenFiltersPanelOpen();
       endContentPreviewOnSidebarFilterChange();
       setSelectedDesktopDomainMenuId((prev) => (prev === id ? null : id));
     },
-    [endContentPreviewOnSidebarFilterChange, minimizeAllFloatingPanels],
+    [closeSubscribeWhenFiltersPanelOpen, endContentPreviewOnSidebarFilterChange, minimizeAllFloatingPanels],
   );
 
   const toggleFocusArea = useCallback(
     (label: string) => {
       minimizeAllFloatingPanels();
+      closeSubscribeWhenFiltersPanelOpen();
       endContentPreviewOnSidebarFilterChange();
       setSelectedFocusAreas((prev) => {
         const next = new Set(prev);
@@ -784,12 +795,13 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
         return next;
       });
     },
-    [endContentPreviewOnSidebarFilterChange, minimizeAllFloatingPanels],
+    [closeSubscribeWhenFiltersPanelOpen, endContentPreviewOnSidebarFilterChange, minimizeAllFloatingPanels],
   );
 
   const toggleActivityType = useCallback(
     (label: string) => {
       minimizeAllFloatingPanels();
+      closeSubscribeWhenFiltersPanelOpen();
       endContentPreviewOnSidebarFilterChange();
       setSelectedActivityTypes((prev) => {
         const next = new Set(prev);
@@ -798,49 +810,53 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
         return next;
       });
     },
-    [endContentPreviewOnSidebarFilterChange, minimizeAllFloatingPanels],
+    [closeSubscribeWhenFiltersPanelOpen, endContentPreviewOnSidebarFilterChange, minimizeAllFloatingPanels],
   );
 
   const toggleArtist = useCallback(
     (label: string) => {
       minimizeAllFloatingPanels();
+      closeSubscribeWhenFiltersPanelOpen();
       endContentPreviewOnSidebarFilterChange();
       setSelectedArtists((prev) => {
         return prev.has(label) ? new Set<string>() : new Set<string>([label]);
       });
     },
-    [endContentPreviewOnSidebarFilterChange, minimizeAllFloatingPanels],
+    [closeSubscribeWhenFiltersPanelOpen, endContentPreviewOnSidebarFilterChange, minimizeAllFloatingPanels],
   );
 
   const toggleFormat = useCallback(
     (label: string) => {
       minimizeAllFloatingPanels();
+      closeSubscribeWhenFiltersPanelOpen();
       endContentPreviewOnSidebarFilterChange();
       setSelectedFormats((prev) => {
         return prev.has(label) ? new Set<string>() : new Set<string>([label]);
       });
     },
-    [endContentPreviewOnSidebarFilterChange, minimizeAllFloatingPanels],
+    [closeSubscribeWhenFiltersPanelOpen, endContentPreviewOnSidebarFilterChange, minimizeAllFloatingPanels],
   );
 
   const toggleNetwork = useCallback(
     (label: string) => {
       minimizeAllFloatingPanels();
+      closeSubscribeWhenFiltersPanelOpen();
       endContentPreviewOnSidebarFilterChange();
       setSelectedNetworks((prev) => {
         return prev.has(label) ? new Set<string>() : new Set<string>([label]);
       });
     },
-    [endContentPreviewOnSidebarFilterChange, minimizeAllFloatingPanels],
+    [closeSubscribeWhenFiltersPanelOpen, endContentPreviewOnSidebarFilterChange, minimizeAllFloatingPanels],
   );
 
   const setSelectedFaeBriefingCb = useCallback(
     (label: string | null) => {
       minimizeAllFloatingPanels();
+      closeSubscribeWhenFiltersPanelOpen();
       endContentPreviewOnSidebarFilterChange();
       setSelectedFaeBriefing(label);
     },
-    [endContentPreviewOnSidebarFilterChange, minimizeAllFloatingPanels],
+    [closeSubscribeWhenFiltersPanelOpen, endContentPreviewOnSidebarFilterChange, minimizeAllFloatingPanels],
   );
 
   const exitContentPreviewToFilterCanvas = useCallback(() => {
