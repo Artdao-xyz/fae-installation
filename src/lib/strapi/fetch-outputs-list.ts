@@ -110,7 +110,7 @@ function appendOutputsListSlimQuery(params: URLSearchParams): void {
     "documentId",
     "Content_Title",
     "Short_Title",
-    "Caption",
+    "Image_Caption",
     "Date",
     "updatedAt",
     "createdAt",
@@ -370,7 +370,7 @@ export async function getCachedStrapiOutputsCatalog(): Promise<{
 }> {
   return unstable_cache(
     () => fetchStrapiOutputsCatalogOnly(),
-    ["strapi-output-catalog-v1"],
+    ["strapi-output-catalog-v2"],
     {
       revalidate: CATALOG_AND_TAXONOMY_ROUTE_CACHE_SECONDS,
       tags: ["strapi-catalog"],

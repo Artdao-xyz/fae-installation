@@ -6,6 +6,7 @@ import {
   filterFramedRoundedOuterSelectedClass,
   filterPillSingleLayerBrightnessHoverClass,
 } from "../../primitives/filterFramedClasses";
+import { CategoryMarkerIcon } from "../../primitives/CategoryMarkerIcon";
 
 type FormatButtonProps = {
   label: string;
@@ -62,14 +63,9 @@ export function FormatButton({
               : "w-[50px] justify-center px-0"
         }`}
       >
-        {/* eslint-disable-next-line @next/next/no-img-element -- filter button icons are local static SVG assets */}
-        <img
-          src="/svg/briefing.svg"
-          alt=""
-          width={14}
-          height={14}
-          className="h-3.5 w-3.5 shrink-0 object-contain"
-          aria-hidden
+        <CategoryMarkerIcon
+          tone="fae-briefings"
+          className="h-3.5 w-3.5 shrink-0"
         />
         {selected ? (
           <span className={fillAvailableWidth ? "whitespace-nowrap" : "truncate"}>

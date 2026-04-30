@@ -1,5 +1,8 @@
 import type { FilterSidebarCategoryTone } from "../config/filterSidebarTones";
-import { categoryMarkerImageSrc } from "../config/filterSidebarTones";
+import {
+  categoryMarkerImageSrc,
+  toneAccentClass,
+} from "../config/filterSidebarTones";
 
 type CategoryMarkerIconProps = {
   tone: FilterSidebarCategoryTone;
@@ -7,16 +10,21 @@ type CategoryMarkerIconProps = {
 };
 
 export function CategoryMarkerIcon({ tone, className }: CategoryMarkerIconProps) {
+  const maskSrc = categoryMarkerImageSrc[tone];
+
   return (
-    // Static category glyph from /public; pre-colored SVG.
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={categoryMarkerImageSrc[tone]}
-      alt=""
-      width={20}
-      height={20}
-      decoding="async"
-      className={className}
+    <span
+      className={[
+        "block mask-center mask-no-repeat mask-contain [-webkit-mask-position:center] [-webkit-mask-repeat:no-repeat] [-webkit-mask-size:contain]",
+        toneAccentClass[tone].glow,
+        className,
+      ]
+        .filter(Boolean)
+        .join(" ")}
+      style={{
+        maskImage: `url("${maskSrc}")`,
+        WebkitMaskImage: `url("${maskSrc}")`,
+      }}
       aria-hidden
     />
   );
