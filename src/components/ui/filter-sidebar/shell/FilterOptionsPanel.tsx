@@ -53,8 +53,7 @@ export function FilterOptionsPanel({
     rdSubpanelOpen ||
     fellowshipsSubpanelOpen ||
     artistsSubpanelOpen ||
-    networkSubpanelOpen ||
-    subscribeSubpanelOpen;
+    networkSubpanelOpen;
 
   return (
     <aside

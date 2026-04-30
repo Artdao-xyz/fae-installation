@@ -5,7 +5,6 @@ import { BriefingsSubpanelColumn } from "../domains/briefings/BriefingsSubpanelC
 import { FellowshipsSubpanelColumn } from "../domains/fellowships/FellowshipsSubpanelColumn";
 import { NetworkSubpanelColumn } from "../domains/network/NetworkSubpanelColumn";
 import { RDProjectsSubpanelColumn } from "../domains/rd-projects/RDProjectsSubpanelColumn";
-import { SubscribeSubpanelColumn } from "../domains/subscribe/SubscribeSubpanelColumn";
 import {
   FILTER_SUBPANELS_COLUMN_EXPANDED_CLASS,
   FILTER_SUBPANEL_COLUMN_TRANSITION_CLASS,
@@ -20,13 +19,11 @@ type FilterSubpanelsColumnProps = {
   fellowshipsSubpanelOpen: boolean;
   artistsSubpanelOpen: boolean;
   networkSubpanelOpen: boolean;
-  subscribeSubpanelOpen: boolean;
   onCloseBriefings: () => void;
   onCloseRd: () => void;
   onCloseFellowships: () => void;
   onCloseArtists: () => void;
   onCloseNetwork: () => void;
-  onCloseSubscribe: () => void;
 };
 
 export function FilterSubpanelsColumn({
@@ -37,28 +34,23 @@ export function FilterSubpanelsColumn({
   fellowshipsSubpanelOpen,
   artistsSubpanelOpen,
   networkSubpanelOpen,
-  subscribeSubpanelOpen,
   onCloseBriefings,
   onCloseRd,
   onCloseFellowships,
   onCloseArtists,
   onCloseNetwork,
-  onCloseSubscribe,
 }: FilterSubpanelsColumnProps) {
   const subpanelChromeVisible = filtersPanelOpen && anySubpanelOpen;
-  const guideHeightSubpanelOpenCount = [
-    artistsSubpanelOpen,
-    networkSubpanelOpen,
-    subscribeSubpanelOpen,
-  ].filter(Boolean).length;
+  const guideHeightSubpanelOpenCount = [artistsSubpanelOpen, networkSubpanelOpen].filter(
+    Boolean,
+  ).length;
   const splitGuideHeightSubpanels = guideHeightSubpanelOpenCount > 1;
 
   const belowBriefings =
     rdSubpanelOpen ||
     fellowshipsSubpanelOpen ||
     artistsSubpanelOpen ||
-    networkSubpanelOpen ||
-    subscribeSubpanelOpen;
+    networkSubpanelOpen;
 
   return (
     <div
@@ -110,19 +102,6 @@ export function FilterSubpanelsColumn({
             }
             splitHeight={splitGuideHeightSubpanels}
             onClose={onCloseNetwork}
-          />
-        ) : null}
-        {subscribeSubpanelOpen ? (
-          <SubscribeSubpanelColumn
-            mergeTopBorder={
-              briefingsSubpanelOpen ||
-              rdSubpanelOpen ||
-              fellowshipsSubpanelOpen ||
-              artistsSubpanelOpen ||
-              networkSubpanelOpen
-            }
-            splitHeight={splitGuideHeightSubpanels}
-            onClose={onCloseSubscribe}
           />
         ) : null}
       </div>

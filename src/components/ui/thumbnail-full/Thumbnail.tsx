@@ -69,6 +69,7 @@ function LabelChip({
   accessibilityLabel,
   rowWidth,
   labelFontSizePx,
+  labelTextMaxWidthPx,
 }: {
   label: string;
   dims: (typeof SIZE_DIMS)[ThumbnailSize];
@@ -77,8 +78,10 @@ function LabelChip({
   /** `hug` = width follows long labels (e.g. latest-updates strip). Default `full` = match image frame. */
   rowWidth?: "full" | "hug";
   labelFontSizePx?: number;
+  labelTextMaxWidthPx?: number;
 }) {
   const textPx = labelFontSizePx ?? dims.textPx;
+  const truncateLabel = labelTextMaxWidthPx != null;
   return (
     <div
       className={`flex shrink-0 justify-center overflow-visible ${
@@ -102,8 +105,16 @@ function LabelChip({
         />
         <p
           ref={labelRef}
-          className="whitespace-nowrap font-lust-text font-medium leading-tight"
-          style={{ fontSize: textPx, lineHeight: `${textPx + 3}px` }}
+          className={`font-lust-text font-medium leading-tight ${
+            truncateLabel ? "truncate" : "whitespace-nowrap"
+          }`}
+          style={{
+            fontSize: textPx,
+            lineHeight: `${textPx + 3}px`,
+            ...(truncateLabel && labelTextMaxWidthPx != null
+              ? { maxWidth: labelTextMaxWidthPx }
+              : {}),
+          }}
           aria-hidden
         >
           {label}
@@ -344,6 +355,7 @@ export function Thumbnail(props: ThumbnailProps) {
                   : "full"
             }
             labelFontSizePx={labelFontSizePx}
+            labelTextMaxWidthPx={160}
           />
         </div>
       )}

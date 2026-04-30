@@ -200,7 +200,7 @@ export function AboutPanel() {
 
   const peekOpen = aboutView === "peek";
   const peekClipClass = peekOpen
-    ? "max-w-[calc(var(--width-about-panel)-var(--width-filter-narrow-column))] opacity-100"
+    ? "max-w-[calc((var(--width-about-panel)-var(--width-filter-narrow-column))*0.7)] opacity-100"
     : "max-w-0 opacity-0 pointer-events-none";
 
   return (
@@ -229,7 +229,7 @@ export function AboutPanel() {
             aria-label={peekOpen ? "About" : undefined}
             className={`h-full min-h-0 shrink-0 overflow-hidden ${FLOATING_DOCK_PEEK_CLIP_CLASS} ${peekClipClass}`}
           >
-            <div className="flex h-full min-h-0 w-[calc(var(--width-about-panel)-var(--width-filter-narrow-column))] shrink-0 flex-col">
+            <div className="flex h-full min-h-0 w-[calc((var(--width-about-panel)-var(--width-filter-narrow-column))*0.7)] shrink-0 flex-col">
               <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pt-5">
                 <div className="font-suisseintl text-xs font-normal leading-[1.6] text-ink-body">
                   {ABOUT_BODY}

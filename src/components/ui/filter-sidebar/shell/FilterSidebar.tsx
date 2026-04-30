@@ -2,6 +2,8 @@
 
 import { useCallback, useId, type ReactElement } from "react";
 import { useFilterSelection } from "@/components/ui/filter-sidebar/FilterSelectionContext";
+import { SubscribeSubpanelColumn } from "../domains/subscribe/SubscribeSubpanelColumn";
+import { SubscribeMenu } from "../sections/SubscribeMenu";
 import { FilterOptionsPanel } from "./FilterOptionsPanel";
 import { FilterSubpanelsColumn } from "./FilterSubpanelsColumn";
 import { Footer } from "./Footer";
@@ -49,8 +51,7 @@ export function FilterSidebar() {
     rdSubpanelOpen ||
     fellowshipsSubpanelOpen ||
     artistsSubpanelOpen ||
-    networkSubpanelOpen ||
-    subscribeSubpanelOpen;
+    networkSubpanelOpen;
 
   const toggleFiltersOpen = useCallback(() => {
     setFiltersOpen((open) => {
@@ -84,13 +85,11 @@ export function FilterSidebar() {
       fellowshipsSubpanelOpen={fellowshipsSubpanelOpen}
       artistsSubpanelOpen={artistsSubpanelOpen}
       networkSubpanelOpen={networkSubpanelOpen}
-      subscribeSubpanelOpen={subscribeSubpanelOpen}
       onCloseBriefings={() => setBriefingsSubpanelOpen(false)}
       onCloseRd={() => setRdSubpanelOpen(false)}
       onCloseFellowships={() => setFellowshipsSubpanelOpen(false)}
       onCloseArtists={() => setArtistsSubpanelOpen(false)}
       onCloseNetwork={() => setNetworkSubpanelOpen(false)}
-      onCloseSubscribe={() => setSubscribeSubpanelOpen(false)}
     />
   );
 
@@ -184,10 +183,37 @@ export function FilterSidebar() {
           </div>
           <div className="min-h-0 min-w-0 flex-1 max-lg:hidden" aria-hidden />
         </div>
-        <Footer
-          className={`max-lg:hidden ${FILTER_SIDEBAR_COLUMN_CLASS}`}
-          mergeWithSubpanel={anySubpanelOpen}
-        />
+        <div className={`relative shrink-0 max-lg:hidden ${FILTER_SIDEBAR_COLUMN_CLASS}`}>
+          <Footer mergeWithSubpanel={anySubpanelOpen} />
+          <div className="absolute inset-y-0 left-full w-filter-options">
+            <SubscribeMenu
+              subpanelOpen={subscribeSubpanelOpen}
+              onToggleSubpanel={() =>
+                setSubscribeSubpanelOpen((open) => {
+                  const next = !open;
+                  if (next) {
+                    setArtistsSubpanelOpen(false);
+                    setNetworkSubpanelOpen(false);
+                  }
+                  return next;
+                })
+              }
+            />
+          </div>
+          <div
+            className={`absolute bottom-full left-full w-filter-options overflow-hidden border-r-hairline border-t-hairline border-solid border-border bg-surface-canvas transition-[max-height,opacity] duration-300 ease-in-out motion-reduce:transition-none ${
+              subscribeSubpanelOpen
+                ? "max-h-[calc(100dvh-var(--inset-margin-guide))] opacity-100"
+                : "pointer-events-none max-h-0 opacity-0"
+            }`}
+            aria-hidden={!subscribeSubpanelOpen}
+          >
+            <SubscribeSubpanelColumn
+              mergeTopBorder
+              onClose={() => setSubscribeSubpanelOpen(false)}
+            />
+          </div>
+        </div>
       </div>
       <div className="contents max-lg:hidden">{subpanelsColumn}</div>
       <div className="contents lg:hidden">

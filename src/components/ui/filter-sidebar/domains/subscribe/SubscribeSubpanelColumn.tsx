@@ -2,7 +2,6 @@
 
 import { FormEvent, useState } from "react";
 import { FilterSidebarDomainTrailing } from "../../primitives/FilterSidebarDomainTrailing";
-import { SubpanelCloseBar } from "../../shell/SubpanelCloseBar";
 import { filterSubpanelGuideViewportHeightClass } from "../../shell/layout-classes";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -234,6 +233,48 @@ export function SubscribePanelContent({
     </form>
   );
 
+  const bottomLinks = (
+    <div className="flex w-full flex-col border-t-hairline border-solid border-border bg-surface-canvas px-[15px] py-2">
+      <p className="m-0 mb-2 text-left font-lust-text text-xs font-normal leading-4 text-ink-body">
+        Resources
+      </p>
+      <a
+        href="https://t.me/+RpackhOIPmQyODY0"
+        target="_blank"
+        rel="noreferrer"
+        className="inline-flex w-full min-w-0 items-center justify-start gap-2 py-1 text-left font-fira-mono text-xs leading-4 text-ink-body transition-colors underline decoration-solid underline-offset-2 hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary"
+      >
+        <span className="min-w-0">Join the Telegram Group</span>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/svg/blue-arrow.svg"
+          alt=""
+          width={5}
+          height={7}
+          className="block h-[7px] w-[5px] shrink-0"
+          aria-hidden
+        />
+      </a>
+      <a
+        href="https://serpentinegalleries.ticketing.veevartapp.com/tickets/view/list/future-art-ecosystems-community-call-05032026"
+        target="_blank"
+        rel="noreferrer"
+        className="inline-flex w-full min-w-0 items-center justify-start gap-2 py-1 underline decoration-solid underline-offset-2 text-left font-fira-mono text-xs leading-4 text-ink-body transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary"
+      >
+        <span className="min-w-0">Join our monthly Community Call</span>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/svg/blue-arrow.svg"
+          alt=""
+          width={5}
+          height={7}
+          className="block h-[7px] w-[5px] shrink-0"
+          aria-hidden
+        />
+      </a>
+    </div>
+  );
+
   const telegramContent = (
     <section className="flex h-full min-h-full flex-col justify-between bg-surface-canvas px-[15px] py-5">
       <div className="flex min-h-0 flex-1 items-center justify-center">
@@ -349,63 +390,16 @@ export function SubscribePanelContent({
     );
   }
 
+  /** Desktop sidebar subscribe panel (`SubscribeSubpanelColumn`): newsletter + footer links only. */
   return (
     <div className={className}>
+      <div className="px-[15px] pt-4 pb-2">
+        <p className="m-0 text-left font-lust-text text-sm font-normal leading-4 text-ink-body">
+          Newsletter
+        </p>
+      </div>
       {newsletterForm}
-      <div className="w-full border-t-hairline border-solid border-border bg-surface-muted px-[50px] py-2 text-center font-lust-text text-xs leading-[17px] tracking-[0.05px] text-ink-body">
-        Telegram
-      </div>
-      <section className="w-full border-t-hairline border-dotted border-border bg-surface-canvas px-[15px] py-7">
-        <div className="mx-auto flex w-full flex-col items-center gap-6">
-          <p className="text-center font-fira-mono text-xs leading-[17px] text-ink-body/60">
-            Get Involved in our community
-          </p>
-          <a
-            href="https://t.me/+RpackhOIPmQyODY0"
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex w-full items-center justify-center gap-2 border-hairline border-solid border-border bg-surface-canvas px-[50px] py-3 font-fira-mono text-xs leading-[17px] text-ink-body transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary"
-          >
-            <span>Join</span>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/svg/blue-arrow.svg"
-              alt=""
-              width={5}
-              height={7}
-              className="block h-[7px] w-[5px]"
-              aria-hidden
-            />
-          </a>
-        </div>
-      </section>
-      <div className="w-full border-t-hairline border-solid border-border bg-surface-muted px-[50px] py-2 text-center font-lust-text text-xs leading-[17px] tracking-[0.05px] text-ink-body">
-        Community Call
-      </div>
-      <section className="w-full border-t-hairline border-dotted border-border bg-surface-canvas px-[15px] py-7">
-        <div className="mx-auto flex w-full flex-col items-center gap-6">
-          <p className="text-center font-fira-mono text-xs leading-[17px] text-ink-body/60">
-            Netx Call: 5 March, 2pm (UTC)
-          </p>
-          <a
-            href="https://serpentinegalleries.ticketing.veevartapp.com/tickets/view/list/future-art-ecosystems-community-call-05032026"
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex w-full items-center justify-center gap-2 border-hairline border-solid border-border bg-surface-canvas px-[50px] py-3 font-fira-mono text-xs leading-[17px] text-ink-body transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary"
-          >
-            <span>Join</span>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/svg/blue-arrow.svg"
-              alt=""
-              width={5}
-              height={7}
-              className="block h-[7px] w-[5px]"
-              aria-hidden
-            />
-          </a>
-        </div>
-      </section>
+      {bottomLinks}
     </div>
   );
 }
@@ -417,13 +411,12 @@ export function SubscribeSubpanelColumn({
 }: SubscribeSubpanelColumnProps) {
   return (
     <div
-      className={`flex min-h-0 w-full shrink-0 flex-col overflow-hidden border-l-0 border-r-hairline border-solid border-border bg-surface-canvas ${filterSubpanelGuideViewportHeightClass(splitHeight)} ${
+      className={`flex min-h-0 w-full shrink-0 flex-col overflow-hidden border-l-0 border-r-0 border-solid border-border bg-surface-canvas ${filterSubpanelGuideViewportHeightClass(splitHeight)} ${
         mergeTopBorder ? "border-t-0" : "border-t-hairline"
       }`}
       role="complementary"
       aria-label="Subscribe"
     >
-      <SubpanelCloseBar onClose={onClose} showTopBorder={false} />
       <SubscribePanelContent />
     </div>
   );

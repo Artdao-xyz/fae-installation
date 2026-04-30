@@ -37,6 +37,12 @@ export function FilterSidebarCategoryRow({
   /** `domain`: Fellowships / R&D / FAEBriefings desktop layout (Figma). */
   appearance = "chrome",
   large = false,
+  leadingIconSrc,
+  trailingIconSrc,
+  trailingIconClassName,
+  trailingIconExpandedClassName,
+  className,
+  showLeftAccentStripe = true,
 }: {
   label: string;
   secondaryLabel?: string;
@@ -51,13 +57,20 @@ export function FilterSidebarCategoryRow({
   collapsed?: boolean;
   appearance?: FilterSidebarCategoryAppearance;
   large?: boolean;
+  leadingIconSrc?: string;
+  trailingIconSrc?: string;
+  trailingIconClassName?: string;
+  trailingIconExpandedClassName?: string;
+  className?: string;
+  showLeftAccentStripe?: boolean;
 }) {
   const { glow } = toneAccentClass[tone];
   const showAccent = expanded === true;
   const hasSelection = hasSubpanelSelection === true;
 
   /** Left stripe + mat: desktop chrome rows only. */
-  const showLeftCategoryStripe = appearance === "chrome" && (showAccent || hasSelection);
+  const showLeftCategoryStripe =
+    showLeftAccentStripe && appearance === "chrome" && (showAccent || hasSelection);
 
   if (appearance === "domain") {
     const domainCollapsed = collapsed === true;
@@ -152,7 +165,7 @@ export function FilterSidebarCategoryRow({
         disabled
           ? "cursor-not-allowed opacity-45 motion-reduce:opacity-50"
           : hoverClass
-      } focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary`}
+      } focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary ${className ?? ""}`}
       data-name="Filters-Button-Dropdown"
     >
       {showLeftCategoryStripe ? (
@@ -162,7 +175,17 @@ export function FilterSidebarCategoryRow({
           data-name="Glow"
         />
       ) : null}
-      {showAccent && showCategoryMarker ? (
+      {leadingIconSrc ? (
+        // eslint-disable-next-line @next/next/no-img-element -- local static icon asset
+        <img
+          src={leadingIconSrc}
+          alt=""
+          width={20}
+          height={20}
+          className="size-5 shrink-0 object-contain"
+          aria-hidden
+        />
+      ) : showAccent && showCategoryMarker ? (
         <CategoryMarkerIcon
           tone={tone}
           className="size-5 shrink-0 object-contain"
@@ -183,13 +206,15 @@ export function FilterSidebarCategoryRow({
         ) : null}
       </span>
       {onClick && !disabled ? (
-        // eslint-disable-next-line @next/next/no-img-element -- same asset as HomeBar breadcrumb; file uses black fill
+        // eslint-disable-next-line @next/next/no-img-element -- local static icon asset
         <img
-          src="/svg/right-arrow.svg"
+          src={trailingIconSrc ?? "/svg/right-arrow.svg"}
           alt=""
           width={8}
           height={10}
-          className="block h-2.5 w-2 max-h-2.5 max-w-2 shrink-0 object-contain"
+          className={`block h-2.5 w-2 max-h-2.5 max-w-2 shrink-0 object-contain transition-transform duration-200 motion-reduce:transition-none ${
+            trailingIconClassName ?? ""
+          } ${expanded ? trailingIconExpandedClassName ?? "" : ""}`}
           style={hasSecondaryLabel ? { marginTop: "0.35rem" } : undefined}
           aria-hidden
         />
