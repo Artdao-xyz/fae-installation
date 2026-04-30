@@ -46,6 +46,12 @@ export function FilterSubpanelsColumn({
   onCloseSubscribe,
 }: FilterSubpanelsColumnProps) {
   const subpanelChromeVisible = filtersPanelOpen && anySubpanelOpen;
+  const guideHeightSubpanelOpenCount = [
+    artistsSubpanelOpen,
+    networkSubpanelOpen,
+    subscribeSubpanelOpen,
+  ].filter(Boolean).length;
+  const splitGuideHeightSubpanels = guideHeightSubpanelOpenCount > 1;
 
   const belowBriefings =
     rdSubpanelOpen ||
@@ -90,6 +96,7 @@ export function FilterSubpanelsColumn({
             mergeTopBorder={
               briefingsSubpanelOpen || rdSubpanelOpen || fellowshipsSubpanelOpen
             }
+            splitHeight={splitGuideHeightSubpanels}
             onClose={onCloseArtists}
           />
         ) : null}
@@ -101,6 +108,7 @@ export function FilterSubpanelsColumn({
               fellowshipsSubpanelOpen ||
               artistsSubpanelOpen
             }
+            splitHeight={splitGuideHeightSubpanels}
             onClose={onCloseNetwork}
           />
         ) : null}
@@ -113,6 +121,7 @@ export function FilterSubpanelsColumn({
               artistsSubpanelOpen ||
               networkSubpanelOpen
             }
+            splitHeight={splitGuideHeightSubpanels}
             onClose={onCloseSubscribe}
           />
         ) : null}

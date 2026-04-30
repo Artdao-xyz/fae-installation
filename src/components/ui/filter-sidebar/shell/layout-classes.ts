@@ -33,12 +33,23 @@ export const PREVIEW_DOCK_WIDTH_TRANSITION_CLASS =
 export const FILTER_SUBPANELS_COLUMN_EXPANDED_CLASS =
   "w-[20vw] max-w-[20vw] shrink-0";
 
-/**
- * Artists / Network subpanel: pill list height follows content, scrolls after ~¾ viewport minus
- * `SubpanelCloseBar` (see `--height-filter-close-bar`).
- */
+/** Domain subpanel max height: starts at the margin-guide top and can extend to viewport bottom. */
+export const FILTER_SUBPANEL_GUIDE_VIEWPORT_HEIGHT_CLASS =
+  "max-h-[calc(100dvh_-_var(--inset-margin-guide))]";
+
+/** Two open guide-height subpanels share the available top-guide-to-bottom viewport height. */
+export const FILTER_SUBPANEL_GUIDE_VIEWPORT_HALF_HEIGHT_CLASS =
+  "max-h-[calc((100dvh_-_var(--inset-margin-guide))_/_2)]";
+
+export function filterSubpanelGuideViewportHeightClass(splitHeight: boolean): string {
+  return splitHeight
+    ? FILTER_SUBPANEL_GUIDE_VIEWPORT_HALF_HEIGHT_CLASS
+    : FILTER_SUBPANEL_GUIDE_VIEWPORT_HEIGHT_CLASS;
+}
+
+/** Artists / Network subpanel: fill the assigned shell height; inner content scrolls as needed. */
 export const ARTISTS_NETWORK_SUBPANEL_SCROLL_BODY_CLASS =
-  "scrollbar-hide h-auto min-h-0 max-h-[calc(75dvh-var(--height-filter-close-bar))] overflow-x-hidden overflow-y-auto";
+  "scrollbar-hide min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto";
 
 /** Pixel width matching `FILTER_SUBPANELS_COLUMN_EXPANDED_CLASS` (20vw). */
 export function getFilterSubpanelColumnWidthPx(viewportWidth: number): number {

@@ -3,12 +3,14 @@
 import { FormEvent, useState } from "react";
 import { FilterSidebarDomainTrailing } from "../../primitives/FilterSidebarDomainTrailing";
 import { SubpanelCloseBar } from "../../shell/SubpanelCloseBar";
+import { filterSubpanelGuideViewportHeightClass } from "../../shell/layout-classes";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 type SubscribeSubpanelColumnProps = {
   onClose: () => void;
   mergeTopBorder?: boolean;
+  splitHeight?: boolean;
 };
 
 type SubscribePanelContentProps = {
@@ -17,7 +19,7 @@ type SubscribePanelContentProps = {
 };
 
 export function SubscribePanelContent({
-  className = "scrollbar-hide flex min-h-0 min-w-0 flex-1 flex-col justify-end overflow-y-auto bg-surface-canvas",
+  className = "scrollbar-hide flex min-h-0 min-w-0 flex-col overflow-y-auto bg-surface-canvas",
   tabbed = false,
 }: SubscribePanelContentProps) {
   const [activeTab, setActiveTab] = useState<"newsletter" | "telegram" | "community">(
@@ -38,15 +40,16 @@ export function SubscribePanelContent({
     : "text-[10px] leading-[12px]";
   const consentRowClass = tabbed
     ? "group mt-4 flex w-full items-start gap-2 text-left transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary"
-    : "group mt-4 flex w-full items-center gap-2 text-left transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary";
+    : "group mt-5 flex w-full items-center gap-2 text-left transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary";
   const consentRowSecondaryClass = tabbed
     ? "group mt-[10px] flex w-full items-start gap-2 text-left transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary"
-    : "group mt-[10px] flex w-full items-center gap-2 text-left transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary";
+    : "group mt-4 flex w-full items-center gap-2 text-left transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary";
   const newsletterFormClass = tabbed
     ? "flex h-full min-h-full w-full flex-col justify-between bg-surface-canvas px-[15px] pb-5 pt-12"
-    : "w-full bg-surface-canvas px-[15px] py-5";
-  const inputPaddingClass = "py-4";
+    : "w-full bg-surface-canvas px-[15px] py-7";
+  const inputPaddingClass = tabbed ? "py-4" : "py-5";
   const ctaButtonClass = "w-full";
+  const ctaButtonPaddingClass = tabbed ? "py-2" : "py-3";
 
   async function submitSubscribeForm(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -195,7 +198,7 @@ export function SubscribePanelContent({
     <button
       type="submit"
       disabled={status === "loading"}
-      className={`inline-flex ${ctaButtonClass} items-center justify-center gap-2 border-hairline border-solid border-[#424242] bg-surface-canvas px-[50px] py-2 font-fira-mono ${bodyTextClass} text-ink-body transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary`}
+      className={`inline-flex ${ctaButtonClass} items-center justify-center gap-2 border-hairline border-solid border-[#424242] bg-surface-canvas px-[50px] ${ctaButtonPaddingClass} font-fira-mono ${bodyTextClass} text-ink-body transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary`}
     >
       <span>{status === "loading" ? "Sending..." : "Submit"}</span>
       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -225,7 +228,7 @@ export function SubscribePanelContent({
       ) : (
         <>
           {newsletterConsentControls}
-          <div className="mt-5 flex justify-center">{newsletterSubmitButton}</div>
+          <div className="mt-6 flex justify-center">{newsletterSubmitButton}</div>
         </>
       )}
     </form>
@@ -352,8 +355,8 @@ export function SubscribePanelContent({
       <div className="w-full border-t-hairline border-solid border-[#424242] bg-surface-muted px-[50px] py-2 text-center font-lust-text text-xs leading-[17px] tracking-[0.05px] text-ink-body">
         Telegram
       </div>
-      <section className="w-full border-t-hairline border-dotted border-[#454545] bg-surface-canvas px-[15px] py-5">
-        <div className="mx-auto flex w-full flex-col items-center gap-5">
+      <section className="w-full border-t-hairline border-dotted border-[#454545] bg-surface-canvas px-[15px] py-7">
+        <div className="mx-auto flex w-full flex-col items-center gap-6">
           <p className="text-center font-fira-mono text-xs leading-[17px] text-ink-body/60">
             Get Involved in our community
           </p>
@@ -361,7 +364,7 @@ export function SubscribePanelContent({
             href="https://t.me/+RpackhOIPmQyODY0"
             target="_blank"
             rel="noreferrer"
-            className="inline-flex w-full items-center justify-center gap-2 border-hairline border-solid border-[#424242] bg-surface-canvas px-[50px] py-2 font-fira-mono text-xs leading-[17px] text-ink-body transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary"
+            className="inline-flex w-full items-center justify-center gap-2 border-hairline border-solid border-[#424242] bg-surface-canvas px-[50px] py-3 font-fira-mono text-xs leading-[17px] text-ink-body transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary"
           >
             <span>Join</span>
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -379,8 +382,8 @@ export function SubscribePanelContent({
       <div className="w-full border-t-hairline border-solid border-[#424242] bg-surface-muted px-[50px] py-2 text-center font-lust-text text-xs leading-[17px] tracking-[0.05px] text-ink-body">
         Community Call
       </div>
-      <section className="w-full border-t-hairline border-dotted border-[#454545] bg-surface-canvas px-[15px] py-5">
-        <div className="mx-auto flex w-full flex-col items-center gap-5">
+      <section className="w-full border-t-hairline border-dotted border-[#454545] bg-surface-canvas px-[15px] py-7">
+        <div className="mx-auto flex w-full flex-col items-center gap-6">
           <p className="text-center font-fira-mono text-xs leading-[17px] text-ink-body/60">
             Netx Call: 5 March, 2pm (UTC)
           </p>
@@ -388,7 +391,7 @@ export function SubscribePanelContent({
             href="https://serpentinegalleries.ticketing.veevartapp.com/tickets/view/list/future-art-ecosystems-community-call-05032026"
             target="_blank"
             rel="noreferrer"
-            className="inline-flex w-full items-center justify-center gap-2 border-hairline border-solid border-[#424242] bg-surface-canvas px-[50px] py-2 font-fira-mono text-xs leading-[17px] text-ink-body transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary"
+            className="inline-flex w-full items-center justify-center gap-2 border-hairline border-solid border-[#424242] bg-surface-canvas px-[50px] py-3 font-fira-mono text-xs leading-[17px] text-ink-body transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary"
           >
             <span>Join</span>
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -410,10 +413,11 @@ export function SubscribePanelContent({
 export function SubscribeSubpanelColumn({
   onClose,
   mergeTopBorder,
+  splitHeight = false,
 }: SubscribeSubpanelColumnProps) {
   return (
     <div
-      className={`flex h-fit min-h-0 max-h-[calc(100dvh-(var(--inset-margin-guide)*2))] w-full shrink-0 flex-col overflow-hidden border-l-0 border-r-hairline border-solid border-ink-primary bg-surface-canvas ${
+      className={`flex min-h-0 w-full shrink-0 flex-col overflow-hidden border-l-0 border-r-hairline border-solid border-ink-primary bg-surface-canvas ${filterSubpanelGuideViewportHeightClass(splitHeight)} ${
         mergeTopBorder ? "border-t-0" : "border-t-hairline"
       }`}
       role="complementary"
