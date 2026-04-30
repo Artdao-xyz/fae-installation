@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import {
   filterFramedOuterFocusClass,
   filterFramedRoundedInnerClass,
@@ -15,6 +14,7 @@ type FormatButtonProps = {
   disabled?: boolean;
   title?: string;
   fillAvailableWidth?: boolean;
+  revealOnHover?: boolean;
 };
 
 const formatIconSrcByLabel: Record<string, string> = {
@@ -32,13 +32,14 @@ export function FormatButton({
   disabled = false,
   title,
   fillAvailableWidth = false,
+  revealOnHover = true,
 }: FormatButtonProps) {
   const unavailable = disabled && !selected;
   const cursorClass = unavailable
     ? "!cursor-not-allowed opacity-45"
     : "cursor-pointer";
   const desktopHoverRevealClass =
-    !selected && !unavailable
+    revealOnHover && !selected && !unavailable
       ? fillAvailableWidth
         ? "lg:group-hover:w-auto lg:group-hover:gap-1.5 lg:group-hover:px-2"
         : "lg:group-hover:w-[100px] lg:group-hover:gap-1.5"
@@ -77,22 +78,22 @@ export function FormatButton({
               : "w-[50px] justify-center px-0"
         } ${desktopHoverRevealClass}`}
       >
-        <Image
-          src={formatIconSrcByLabel[label] ?? "/svg/view-icon.svg"}
-          alt=""
-          width={14}
-          height={14}
-          unoptimized
-          className="h-3.5 w-3.5 shrink-0"
+        <span
+          className="h-3.5 w-3.5 shrink-0 bg-current mask-center mask-no-repeat mask-contain [-webkit-mask-position:center] [-webkit-mask-repeat:no-repeat] [-webkit-mask-size:contain]"
+          style={{
+            maskImage: `url("${formatIconSrcByLabel[label] ?? "/svg/view-icon.svg"}")`,
+            WebkitMaskImage: `url("${formatIconSrcByLabel[label] ?? "/svg/view-icon.svg"}")`,
+          }}
           aria-hidden
-          draggable={false}
         />
         {selected || !unavailable ? (
           <span
             className={`${
               selected
                 ? ""
-                : "hidden lg:group-hover:block"
+                : revealOnHover
+                  ? "hidden lg:group-hover:block"
+                  : "hidden"
             } ${fillAvailableWidth ? "whitespace-nowrap" : "truncate"}`}
           >
             {label}

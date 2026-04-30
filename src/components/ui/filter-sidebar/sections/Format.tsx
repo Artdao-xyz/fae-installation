@@ -26,6 +26,7 @@ export function Format({
 
   const catalogReady =
     contentCatalogStatus === "success" && contentCatalog.length > 0;
+  const hasSelectedFormat = selectedFormats.size > 0;
 
   const clearAll = useCallback(() => {
     minimizeAllFloatingPanels();
@@ -57,6 +58,7 @@ export function Format({
             key={label}
             label={label}
             selected={selected}
+            revealOnHover={!hasSelectedFormat}
             onPress={() => {
               minimizeAllFloatingPanels();
               toggleFormat(label);

@@ -131,6 +131,7 @@ export function Search({
             label="Search"
             value={value}
             onChange={onChange}
+            outerClassName="lg:!border-ink-primary lg:!bg-ink-primary"
           />
         </div>
       </div>
