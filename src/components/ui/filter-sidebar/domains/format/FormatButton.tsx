@@ -1,12 +1,12 @@
 "use client";
 
+import Image from "next/image";
 import {
   filterFramedOuterFocusClass,
   filterFramedRoundedInnerClass,
   filterFramedRoundedOuterSelectedClass,
   filterPillSingleLayerBrightnessHoverClass,
 } from "../../primitives/filterFramedClasses";
-import { CategoryMarkerIcon } from "../../primitives/CategoryMarkerIcon";
 
 type FormatButtonProps = {
   label: string;
@@ -15,6 +15,14 @@ type FormatButtonProps = {
   disabled?: boolean;
   title?: string;
   fillAvailableWidth?: boolean;
+};
+
+const formatIconSrcByLabel: Record<string, string> = {
+  Build: "/svg/build-icon.svg",
+  Interact: "/svg/interact-icon.svg",
+  Join: "/svg/join-icon.svg",
+  Read: "/svg/read-icon.svg",
+  View: "/svg/view-icon.svg",
 };
 
 export function FormatButton({
@@ -69,9 +77,15 @@ export function FormatButton({
               : "w-[50px] justify-center px-0"
         } ${desktopHoverRevealClass}`}
       >
-        <CategoryMarkerIcon
-          tone="fae-briefings"
+        <Image
+          src={formatIconSrcByLabel[label] ?? "/svg/view-icon.svg"}
+          alt=""
+          width={14}
+          height={14}
+          unoptimized
           className="h-3.5 w-3.5 shrink-0"
+          aria-hidden
+          draggable={false}
         />
         {selected || !unavailable ? (
           <span
