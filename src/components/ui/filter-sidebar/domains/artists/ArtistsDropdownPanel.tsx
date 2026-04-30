@@ -48,9 +48,15 @@ export function ArtistsDropdownPanel({
     clearSelectedArtists();
   }, [minimizeAllFloatingPanels, onClearAllFromParent, clearSelectedArtists]);
 
-  const pillClassName = searching
-    ? "box-border w-full min-w-0 max-w-full"
+  const mobilePanePillBorderClassName = mobilePane
+    ? "[border-left-width:var(--border-width-hairline)] [border-right-width:var(--border-width-hairline)]"
     : undefined;
+  const pillClassName = [
+    searching ? "box-border w-full min-w-0 max-w-full" : undefined,
+    mobilePanePillBorderClassName,
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   const artistPillProps = (label: string, className?: string) => {
     const selected = selectedArtists.has(label);
@@ -127,7 +133,7 @@ export function ArtistsDropdownPanel({
             aria-label="Artists"
           >
             {filterArtistOptionLabels.map((label) => (
-              <FilterPill key={label} {...artistPillProps(label)} />
+              <FilterPill key={label} {...artistPillProps(label, pillClassName)} />
             ))}
           </div>
         )}

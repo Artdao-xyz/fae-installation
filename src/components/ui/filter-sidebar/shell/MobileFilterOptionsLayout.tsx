@@ -57,9 +57,21 @@ export function MobileFilterOptionsLayout({
       label: string,
       tone: FilterSidebarCategoryTone,
       hasSelection: boolean,
-      showMarker = true,
-      flexToFill = false,
-      disabled = false,
+      {
+        showMarker = true,
+        flexToFill = false,
+        emphasized = false,
+        dottedRightBorder = false,
+        selectedTone = !flexToFill && !emphasized,
+        disabled = false,
+      }: {
+        showMarker?: boolean;
+        flexToFill?: boolean;
+        emphasized?: boolean;
+        dottedRightBorder?: boolean;
+        selectedTone?: boolean;
+        disabled?: boolean;
+      } = {},
     ) => (
       <FilterSidebarMobileRailButton
         key={id}
@@ -69,7 +81,9 @@ export function MobileFilterOptionsLayout({
         hasSelection={hasSelection}
         showMarker={showMarker}
         flexToFill={flexToFill}
-        selectedTone={!flexToFill}
+        emphasized={emphasized}
+        dottedRightBorder={dottedRightBorder}
+        selectedTone={selectedTone}
         disabled={disabled}
         onClick={() => setActive(id)}
       />
@@ -98,19 +112,34 @@ export function MobileFilterOptionsLayout({
             "Focus",
             "fae-briefings",
             selectedFocusAreas.size > 0,
-            false,
-            true,
+            { showMarker: false, flexToFill: true },
           )}
           {rail(
             "activity",
             "Activity",
             "editorial",
             selectedActivityTypes.size > 0,
-            false,
-            false,
+            {
+              showMarker: false,
+              emphasized: true,
+              dottedRightBorder: true,
+              selectedTone: false,
+            },
           )}
-          {rail("artists", "Artists", "artists", selectedArtists.size > 0)}
-          {rail("network", "Network", "network", selectedNetworks.size > 0)}
+          {rail(
+            "artists",
+            "Artists",
+            "artists",
+            selectedArtists.size > 0,
+            { showMarker: false },
+          )}
+          {rail(
+            "network",
+            "Network",
+            "network",
+            selectedNetworks.size > 0,
+            { showMarker: false },
+          )}
         </nav>
         <div className="scrollbar-hide flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overflow-x-hidden bg-surface-canvas">
           {displayCategory === "focus" ? (
@@ -120,12 +149,12 @@ export function MobileFilterOptionsLayout({
             <ActivityType collapsed={false} chromeless />
           ) : null}
           {displayCategory === "artists" ? (
-            <div className="w-full shrink-0 p-2">
+            <div className="w-full shrink-0">
               <ArtistsDropdownPanel variant="subcolumn" mobilePane />
             </div>
           ) : null}
           {displayCategory === "network" ? (
-            <div className="w-full shrink-0 p-2">
+            <div className="w-full shrink-0">
               <NetworkDropdownPanel variant="subcolumn" mobilePane />
             </div>
           ) : null}

@@ -39,6 +39,7 @@ export function FilterSidebar() {
     hasActiveTaxonomyFilters,
     selectedFaeBriefing,
     clearAllFilters,
+    contentPreviewRow,
   } = useFilterSelection();
   const panelId = useId();
   const isMaxLg = useIsMaxLg();
@@ -96,6 +97,8 @@ export function FilterSidebar() {
   const showOptionsPanel = !isMaxLg || filtersOpen;
   const hasSelectedFilters =
     hasActiveTaxonomyFilters || selectedFaeBriefing != null;
+  const showMobileSelectedFiltersChrome =
+    hasSelectedFilters && contentPreviewRow == null;
 
   return (
     <>
@@ -194,10 +197,10 @@ export function FilterSidebar() {
             <MobileLatestUpdatesStrip />
           )}
           <div className="flex w-full shrink-0 flex-col bg-surface-canvas">
-            {filtersOpen ? null : (
+            {filtersOpen || contentPreviewRow != null ? null : (
               <MobileFiltersBar onOpen={toggleFiltersOpen} />
             )}
-            {!filtersOpen && hasSelectedFilters ? (
+            {!filtersOpen && showMobileSelectedFiltersChrome ? (
               <button
                 type="button"
                 onClick={clearAllFilters}
