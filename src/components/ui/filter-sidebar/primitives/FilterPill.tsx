@@ -175,7 +175,9 @@ export function FilterPill({
         data-tone={tone}
         data-variant="dotted"
       >
-        <span className="block min-w-0 w-full truncate text-left">{label}</span>
+        <span className="block min-w-0 w-full truncate text-left font-fira-mono">
+          {label}
+        </span>
       </button>
     );
   }
