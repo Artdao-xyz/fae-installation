@@ -22,10 +22,8 @@ export type FilterOptionsPanelProps = {
   fellowshipsSubpanelOpen: boolean;
   artistsSubpanelOpen: boolean;
   networkSubpanelOpen: boolean;
-  subscribeSubpanelOpen: boolean;
   onToggleArtistsSubpanel: () => void;
   onToggleNetworkSubpanel: () => void;
-  onToggleSubscribeSubpanel: () => void;
 };
 
 export function FilterOptionsPanel({
@@ -35,10 +33,8 @@ export function FilterOptionsPanel({
   fellowshipsSubpanelOpen,
   artistsSubpanelOpen,
   networkSubpanelOpen,
-  subscribeSubpanelOpen,
   onToggleArtistsSubpanel,
   onToggleNetworkSubpanel,
-  onToggleSubscribeSubpanel,
 }: FilterOptionsPanelProps) {
   const isMaxLg = useIsMaxLg();
   const { filterSearchQuery, setFilterSearchQuery } = useFilterSelection();

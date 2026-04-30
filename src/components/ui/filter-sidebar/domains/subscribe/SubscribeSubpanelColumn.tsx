@@ -7,7 +7,6 @@ import { filterSubpanelGuideViewportHeightClass } from "../../shell/layout-class
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 type SubscribeSubpanelColumnProps = {
-  onClose: () => void;
   mergeTopBorder?: boolean;
   splitHeight?: boolean;
 };
@@ -405,7 +404,6 @@ export function SubscribePanelContent({
 }
 
 export function SubscribeSubpanelColumn({
-  onClose,
   mergeTopBorder,
   splitHeight = false,
 }: SubscribeSubpanelColumnProps) {

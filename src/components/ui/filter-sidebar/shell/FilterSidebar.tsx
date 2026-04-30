@@ -152,7 +152,6 @@ export function FilterSidebar() {
                   fellowshipsSubpanelOpen={fellowshipsSubpanelOpen}
                   artistsSubpanelOpen={artistsSubpanelOpen}
                   networkSubpanelOpen={networkSubpanelOpen}
-                  subscribeSubpanelOpen={subscribeSubpanelOpen}
                   onToggleArtistsSubpanel={() =>
                     setArtistsSubpanelOpen((open) => {
                       const next = !open;
@@ -164,16 +163,6 @@ export function FilterSidebar() {
                     setNetworkSubpanelOpen((open) => {
                       const next = !open;
                       if (next) setSubscribeSubpanelOpen(false);
-                      return next;
-                    })
-                  }
-                  onToggleSubscribeSubpanel={() =>
-                    setSubscribeSubpanelOpen((open) => {
-                      const next = !open;
-                      if (next) {
-                        setArtistsSubpanelOpen(false);
-                        setNetworkSubpanelOpen(false);
-                      }
                       return next;
                     })
                   }
@@ -210,10 +199,7 @@ export function FilterSidebar() {
             }`}
             aria-hidden={!subscribeSubpanelOpen}
           >
-            <SubscribeSubpanelColumn
-              mergeTopBorder
-              onClose={() => setSubscribeSubpanelOpen(false)}
-            />
+            <SubscribeSubpanelColumn mergeTopBorder />
           </div>
         </div>
       </div>
