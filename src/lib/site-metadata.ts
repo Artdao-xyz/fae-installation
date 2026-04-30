@@ -5,7 +5,8 @@ export const SITE_URL = "https://futureartecosystems.org";
 export const SITE_TITLE = "Future Art Ecosystems";
 export const SITE_DESCRIPTION = "Cultural Infrastructure Research";
 export const SITE_OG_IMAGE_PATH = "";
-export const SITE_FAVICON_PATH = "/favicon.ico";
+export const SITE_FAVICON_LIGHT_PATH = "/favicon-light.ico";
+export const SITE_FAVICON_DARK_PATH = "/favicon-dark.ico";
 
 const metadataBase = new URL(SITE_URL);
 
@@ -24,8 +25,19 @@ function ogImages(): NonNullable<NonNullable<Metadata["openGraph"]>["images"]> {
 
 function siteIcons(): Metadata["icons"] {
   return {
-    icon: SITE_FAVICON_PATH,
-    shortcut: SITE_FAVICON_PATH,
+    icon: [
+      {
+        url: SITE_FAVICON_LIGHT_PATH,
+        media: "(prefers-color-scheme: light)",
+        type: "image/x-icon",
+      },
+      {
+        url: SITE_FAVICON_DARK_PATH,
+        media: "(prefers-color-scheme: dark)",
+        type: "image/x-icon",
+      },
+    ],
+    shortcut: SITE_FAVICON_LIGHT_PATH,
   };
 }
 
