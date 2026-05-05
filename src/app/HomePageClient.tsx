@@ -1,0 +1,291 @@
+"use client";
+
+import dynamic from "next/dynamic";
+import { useMemo, useRef, useState, useSyncExternalStore } from "react";
+import {
+  FilterSelectionProvider,
+  FilterSidebar,
+  Search,
+  useFilterSelection,
+} from "@/components/ui/filter-sidebar";
+import { FAEBriefingsMenu } from "@/components/ui/filter-sidebar/sections/FAEBriefingsMenu";
+import { FellowshipsMenu } from "@/components/ui/filter-sidebar/sections/FellowshipsMenu";
+import { RDProjectsMenu } from "@/components/ui/filter-sidebar/sections/RDProjectsMenu";
+import { MobileFilteredThumbnailGrid } from "@/components/ui/filter-sidebar/shell/MobileFilteredThumbnailGrid";
+import { MobileSiteHeader } from "@/components/ui/filter-sidebar/shell/MobileSiteHeader";
+import { mobileMainScrollInsetClassName } from "@/components/ui/filter-sidebar/shell/layout-classes";
+import { useIsMaxLg } from "@/components/ui/filter-sidebar/shell/useIsMaxLg";
+import { selectLatestUpdatesRows } from "@/components/ui/latest-updates-panel/latestUpdatesRows";
+import { HeroTitleBlock } from "@/components/ui/hero-title-block";
+import { MarginGuideFrame } from "@/components/ui/margin-guide-frame";
+import { PixelTessellationBackground } from "@/components/ui/pixel-tessellation-background";
+import { ImageParticleSimulation } from "@/components/particle-canvas/ImageParticleSimulation";
+import { PreviewView } from "@/components/ui/preview/PreviewView";
+import { PopUp } from "@/components/ui/pop-up";
+import {
+  IMAGE_FETCH_LIMIT,
+  IMAGE_FETCH_LIMIT_MOBILE,
+} from "@/components/particle-canvas/config";
+import {
+  FloatingPanelStackProvider,
+  useFloatingPanelStack,
+} from "@/components/ui/floating-panels/FloatingPanelStackContext";
+
+type Mode = "optimized" | "snappy";
+
+type HomePageClientProps = {
+  initialPreviewSlug?: string;
+};
+
+type ParticleCanvasFieldProps = HomePageClientProps & {
+  onEmptyCanvasPointerDown?: () => void;
+};
+
+const SPEED_FACTOR = 0.5;
+const MODE_STORAGE_KEY = "fae-particle-mode";
+const RES_MULTIPLIER = 1;
+const FETCHED_WIDTH = 440 * RES_MULTIPLIER;
+const FETCHED_HEIGHT = 440 * RES_MULTIPLIER;
+const DISPLAYED_WIDTH = 75 * RES_MULTIPLIER;
+const DISPLAYED_HEIGHT = 75 * RES_MULTIPLIER;
+
+/** Set to `true` to remove the particle layer entirely. */
+const HIDE_PARTICLE_CANVAS = false;
+
+const FloatingDockMount = dynamic(
+  () =>
+    import("@/components/ui/floating-panels/FloatingDockMount").then(
+      (m) => m.FloatingDockMount,
+    ),
+  { ssr: false },
+);
+
+function readStoredMode(): Mode {
+  const legacy = window.localStorage.getItem("fae-image-test-mode");
+  const saved = window.localStorage.getItem(MODE_STORAGE_KEY);
+  const initial = saved ?? legacy;
+  if (initial === "optimized" || initial === "snappy") return initial;
+  return "optimized";
+}
+
+function ParticleCanvasField({
+  initialPreviewSlug,
+  onEmptyCanvasPointerDown,
+}: ParticleCanvasFieldProps) {
+  const particlePlacementRef = useRef<HTMLDivElement>(null);
+  const { hasActiveTaxonomyFilters } = useFilterSelection();
+  const isMaxLg = useIsMaxLg();
+  const imageLimit = useMemo(() => {
+    const desktop = IMAGE_FETCH_LIMIT > 0 ? IMAGE_FETCH_LIMIT : undefined;
+    if (!isMaxLg) return desktop;
+    if (IMAGE_FETCH_LIMIT_MOBILE === 0) return desktop;
+    const mobile = IMAGE_FETCH_LIMIT_MOBILE;
+    if (desktop !== undefined) return Math.min(mobile, desktop);
+    return mobile;
+  }, [isMaxLg]);
+  const mode = useSyncExternalStore(
+    (onStoreChange) => {
+      const onStorage = () => onStoreChange();
+      window.addEventListener("storage", onStorage);
+      return () => window.removeEventListener("storage", onStorage);
+    },
+    readStoredMode,
+    (): Mode => "optimized",
+  );
+
+  return (
+    <div
+      ref={particlePlacementRef}
+      className={`relative flex min-h-0 w-full flex-col lg:flex-1 ${
+        hasActiveTaxonomyFilters ? "max-lg:w-full" : "max-lg:flex-none"
+      }`}
+    >
+      <ImageParticleSimulation
+        mode={mode}
+        imageLimit={imageLimit}
+        fetchedWidth={FETCHED_WIDTH}
+        fetchedHeight={FETCHED_HEIGHT}
+        displayedWidth={DISPLAYED_WIDTH}
+        displayedHeight={DISPLAYED_HEIGHT}
+        speedFactor={SPEED_FACTOR}
+        placementContainerRef={particlePlacementRef}
+        initialPreviewSlug={initialPreviewSlug}
+        onEmptyCanvasPointerDown={onEmptyCanvasPointerDown}
+        rootClassName={[
+          "max-lg:pointer-events-none",
+          /**
+           * Mobile filtered results use the thumbnail grid only; hide the idle orbit so the view
+           * reads as “results”, not orbit + grid. Desktop still uses spread on the canvas.
+           */
+          isMaxLg && hasActiveTaxonomyFilters ? "max-lg:opacity-0" : "",
+        ]
+          .filter(Boolean)
+          .join(" ")}
+      />
+    </div>
+  );
+}
+
+function HomeContent({ initialPreviewSlug }: HomePageClientProps) {
+  const {
+    filterSearchQuery,
+    setFilterSearchQuery,
+    filtersPanelOpen,
+    hasActiveTaxonomyFilters,
+    contentPreviewRow,
+    contentCatalog,
+    contentCatalogStatus,
+  } = useFilterSelection();
+  const { aboutView } = useFloatingPanelStack();
+  const isMaxLg = useIsMaxLg();
+  const searching = filterSearchQuery.trim().length > 0;
+  const [mobileHeaderOverlayOpen, setMobileHeaderOverlayOpen] = useState(false);
+  const [mobilePreviewFullScreen, setMobilePreviewFullScreen] = useState(false);
+  const [mobileLandingSearchOpen, setMobileLandingSearchOpen] = useState(false);
+  const mobileLandingSearchExpanded = mobileLandingSearchOpen || searching;
+  /** Mobile landing search sits under `MobileSiteHeader`; hide it while filter sheet, About, or menu/glossary is open. */
+  const hideMobileLandingSearch =
+    filtersPanelOpen ||
+    aboutView === "full" ||
+    mobileHeaderOverlayOpen;
+
+  const latestUpdatesStripRows = useMemo(
+    () => selectLatestUpdatesRows(contentCatalog, contentCatalogStatus),
+    [contentCatalog, contentCatalogStatus],
+  );
+  const showMobileLatestUpdatesStrip =
+    isMaxLg &&
+    !filtersPanelOpen &&
+    !hasActiveTaxonomyFilters &&
+    latestUpdatesStripRows.length > 0;
+  const showMobileFilteredResults = isMaxLg && hasActiveTaxonomyFilters;
+
+  const mobileScrollInsetClass = mobileMainScrollInsetClassName({
+    filtersPanelOpen,
+    hasActiveTaxonomyFilters,
+    showMobileLatestUpdatesStrip,
+  });
+
+  return (
+    <div className="flex min-h-screen w-full max-lg:h-svh max-lg:min-h-0 max-lg:max-h-svh max-lg:overflow-hidden">
+      <FilterSidebar />
+      <PixelTessellationBackground />
+      <FloatingDockMount suppressInitialAboutPeek={Boolean(initialPreviewSlug)} />
+      <main
+        className={`relative flex min-h-0 min-w-0 flex-1 flex-col p-5 text-ink-body max-lg:min-h-0 max-lg:overflow-hidden max-lg:p-0 lg:overflow-visible ${
+          searching ? "max-lg:z-45" : "z-15"
+        }`}
+      >
+        <div className="pointer-events-none max-lg:hidden" aria-hidden>
+          <MarginGuideFrame />
+        </div>
+
+        <MobileSiteHeader
+          onMobileOverlayOpenChange={setMobileHeaderOverlayOpen}
+          onHomeClick={() => {
+            setMobileLandingSearchOpen(false);
+            setFilterSearchQuery("");
+          }}
+        />
+
+        <div
+          className={[
+            "min-w-0 w-full shrink-0 bg-surface-canvas lg:hidden",
+            "max-lg:sticky max-lg:top-[calc(env(safe-area-inset-top,0px)+3.25rem)] max-lg:z-45",
+            hideMobileLandingSearch ? "hidden" : "",
+          ]
+            .filter(Boolean)
+            .join(" ")}
+        >
+          <PopUp
+            mainContent="Future Art Ecosystems 5"
+            secondaryContent="Out now in print with essays, interviews, and new research on advanced technologies in art"
+            cta="Read more"
+            url="https://futureartecosystems.org"
+            variant="mobile"
+          />
+        </div>
+
+        <div
+          className={[
+            "min-w-0 w-full shrink-0 bg-surface-canvas lg:hidden",
+            "max-lg:sticky max-lg:top-[calc(env(safe-area-inset-top,0px)+6.5rem)] max-lg:z-45",
+            hideMobileLandingSearch ? "hidden" : "",
+            searching ? "flex flex-col" : "",
+          ]
+            .filter(Boolean)
+            .join(" ")}
+        >
+          <Search
+            value={filterSearchQuery}
+            onChange={setFilterSearchQuery}
+            fieldId="filter-search-landing"
+            mobileLandingExpanded={mobileLandingSearchExpanded}
+            onMobileLandingExpand={() => setMobileLandingSearchOpen(true)}
+            mobileLandingActions={
+              <div
+                className="contents"
+                role="radiogroup"
+                aria-label="Programme filters"
+              >
+                <FellowshipsMenu
+                  mobileLanding
+                  collapsed={mobileLandingSearchExpanded}
+                />
+                <RDProjectsMenu
+                  mobileLanding
+                  collapsed={mobileLandingSearchExpanded}
+                />
+                <FAEBriefingsMenu
+                  mobileLanding
+                  collapsed={mobileLandingSearchExpanded}
+                />
+              </div>
+            }
+          />
+        </div>
+
+        <div
+          className={`fae-mobile-main-scroll relative z-10 flex min-h-0 w-full min-w-0 flex-1 flex-col overscroll-contain max-lg:min-h-0 max-lg:touch-pan-y lg:flex-none lg:overflow-visible ${
+            hasActiveTaxonomyFilters
+              ? "overflow-y-auto max-lg:overflow-y-scroll"
+              : "overflow-visible"
+          } ${mobileScrollInsetClass}`}
+        >
+          <div className="flex w-full min-h-min flex-col">
+            <HeroTitleBlock
+              title="Future Art Ecosystems"
+              subtitle="Art and Advanced Technologies Research"
+            />
+
+            {HIDE_PARTICLE_CANVAS || showMobileFilteredResults ? null : (
+              <ParticleCanvasField
+                initialPreviewSlug={initialPreviewSlug}
+                onEmptyCanvasPointerDown={() => setMobileLandingSearchOpen(false)}
+              />
+            )}
+            {showMobileFilteredResults ? <MobileFilteredThumbnailGrid /> : null}
+          </div>
+        </div>
+        {showMobileFilteredResults && contentPreviewRow ? (
+          <PreviewView
+            row={contentPreviewRow}
+            fullScreen={mobilePreviewFullScreen}
+            onFullScreenChange={setMobilePreviewFullScreen}
+          />
+        ) : null}
+      </main>
+    </div>
+  );
+}
+
+export function HomePageClient({ initialPreviewSlug }: HomePageClientProps) {
+  return (
+    <FloatingPanelStackProvider>
+      <FilterSelectionProvider>
+        <HomeContent initialPreviewSlug={initialPreviewSlug} />
+      </FilterSelectionProvider>
+    </FloatingPanelStackProvider>
+  );
+}
+

@@ -1,0 +1,31 @@
+"use client";
+
+import { SubpanelCloseBar } from "../../shell/SubpanelCloseBar";
+import { RDProjectsDropdownPanel } from "./RDProjectsDropdownPanel";
+
+type RDProjectsSubpanelColumnProps = {
+  onClose: () => void;
+  onClearAll?: () => void;
+  mergeTopBorder?: boolean;
+};
+
+export function RDProjectsSubpanelColumn({
+  onClose,
+  onClearAll,
+  mergeTopBorder,
+}: RDProjectsSubpanelColumnProps) {
+  return (
+    <div
+      className={`flex max-h-full w-full shrink-0 flex-col overflow-hidden border-l-0 border-r-hairline border-solid border-border bg-surface-canvas ${
+        mergeTopBorder ? "border-t-0" : "border-t-hairline"
+      }`}
+      role="complementary"
+      aria-label="R&D Projects filters"
+    >
+      <SubpanelCloseBar onClose={onClose} />
+      <div className="scrollbar-hide min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto">
+        <RDProjectsDropdownPanel variant="subcolumn" onClearAll={onClearAll} />
+      </div>
+    </div>
+  );
+}
