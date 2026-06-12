@@ -76,57 +76,63 @@ export function FilterOptionsPanel({
               fieldId="filter-search-sidebar"
             />
           </div>
-          <FilterTaxonomyEmptyHint />
-          <div
-            className={`flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden ${searching ? "" : "pb-4"}`}
-            role="radiogroup"
-            aria-label="Programme filters"
-          >
-            <div className="min-h-0 min-w-0 flex-1">
-              <FellowshipsMenu collapsed={searching} />
-            </div>
-            <div className="min-h-0 min-w-0 flex-1">
-              <RDProjectsMenu collapsed={searching} />
-            </div>
-            <div className="min-h-0 min-w-0 flex-1">
-              <FAEBriefingsMenu collapsed={searching} />
-            </div>
-          </div>
-          <div
-            className={
-              searching
-                ? "flex shrink-0 flex-col"
-                : "flex shrink-0 flex-col"
-            }
-          >
-            {searching ? (
-              <>
-                <FocusAreas collapsed />
-                <ActivityType collapsed />
-              </>
-            ) : (
-              <>
-                <div className="flex min-w-0 shrink-0 flex-col">
-                  <FocusAreas collapsed={false} />
+          <div className="scrollbar-hide flex min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden overflow-y-auto">
+            <div
+              className={`flex min-h-full min-w-0 flex-col ${searching ? "" : "pb-4"}`}
+            >
+              <FilterTaxonomyEmptyHint />
+              <div
+                className="flex min-w-0 flex-1 flex-col"
+                role="radiogroup"
+                aria-label="Programme filters"
+              >
+                <div
+                  className={`min-w-0 ${searching ? "shrink-0" : "min-h-10 shrink-0 flex-1"}`}
+                >
+                  <FellowshipsMenu collapsed={searching} />
                 </div>
-                <div className="flex min-w-0 shrink-0 flex-col">
-                  <ActivityType collapsed={false} />
+                <div
+                  className={`min-w-0 ${searching ? "shrink-0" : "min-h-10 shrink-0 flex-1"}`}
+                >
+                  <RDProjectsMenu collapsed={searching} />
                 </div>
-              </>
-            )}
-          </div>
-          <div className="shrink-0">
-            <Format collapsed={searching} />
-          </div>
-          <div className="shrink-0">
-            <ArtistsMenu
-              subpanelOpen={artistsSubpanelOpen}
-              onToggleSubpanel={onToggleArtistsSubpanel}
-            />
-            <NetworkMenu
-              subpanelOpen={networkSubpanelOpen}
-              onToggleSubpanel={onToggleNetworkSubpanel}
-            />
+                <div
+                  className={`min-w-0 ${searching ? "shrink-0" : "min-h-10 shrink-0 flex-1"}`}
+                >
+                  <FAEBriefingsMenu collapsed={searching} />
+                </div>
+              </div>
+              <div className="flex shrink-0 flex-col">
+                {searching ? (
+                  <>
+                    <FocusAreas collapsed />
+                    <ActivityType collapsed />
+                  </>
+                ) : (
+                  <>
+                    <div className="flex min-w-0 shrink-0 flex-col">
+                      <FocusAreas collapsed={false} />
+                    </div>
+                    <div className="flex min-w-0 shrink-0 flex-col">
+                      <ActivityType collapsed={false} />
+                    </div>
+                  </>
+                )}
+              </div>
+              <div className="shrink-0">
+                <Format collapsed={searching} />
+              </div>
+              <div className="shrink-0">
+                <ArtistsMenu
+                  subpanelOpen={artistsSubpanelOpen}
+                  onToggleSubpanel={onToggleArtistsSubpanel}
+                />
+                <NetworkMenu
+                  subpanelOpen={networkSubpanelOpen}
+                  onToggleSubpanel={onToggleNetworkSubpanel}
+                />
+              </div>
+            </div>
           </div>
         </div>
       </div>
