@@ -12,14 +12,18 @@
   "dependencies": {
     "@strapi/blocks-react-renderer": "^1.0.2",
     "next": "^16.2.1",
+    "node-thermal-printer": "^4.6.0",
+    "qrcode": "^1.5.4",
     "react": "19.1.0",
-    "react-dom": "19.1.0"
+    "react-dom": "19.1.0",
+    "react-qr-code": "^2.2.0"
   },
   "devDependencies": {
     "@netlify/plugin-nextjs": "^5.15.9",
     "@next/bundle-analyzer": "^16.2.4",
     "@tailwindcss/postcss": "^4.2.2",
     "@types/node": "^20",
+    "@types/qrcode": "^1.5.6",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9.39.4",
