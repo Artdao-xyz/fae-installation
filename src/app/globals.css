@@ -342,6 +342,18 @@ html {
     height: 100%;
     overflow: hidden;
   }
+
+  html.receipt-view-route,
+  html.receipt-view-route body {
+    position: static;
+    inset: auto;
+    width: auto;
+    height: auto;
+    min-height: 100dvh;
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
 }
 
 /* Content preview: top-level sections (outside @layer so it applies reliably) */
