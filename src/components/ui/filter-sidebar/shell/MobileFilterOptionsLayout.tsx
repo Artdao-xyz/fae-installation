@@ -11,6 +11,7 @@ import { FilterTaxonomyEmptyHint } from "./FilterTaxonomyEmptyHint";
 import { MobileFormatScrollRow } from "./MobileFormatScrollRow";
 import type { FilterSidebarCategoryTone } from "../config/filterSidebarTones";
 import { filterPillSelection } from "@/components/ui/filter-sidebar/primitives/filterFramedClasses";
+import { isInstallationMode } from "@/lib/installation-mode";
 import { filterChromeRightEdgeClass } from "./layout-classes";
 
 /** Recolor static SVG assets via `background-color` + mask (fills are fixed in the files). */
@@ -33,6 +34,7 @@ export type MobileFilterOptionsLayoutProps = {
 export function MobileFilterOptionsLayout({
   panelId,
 }: MobileFilterOptionsLayoutProps) {
+  const installation = isInstallationMode();
   const [active, setActive] = useState<MobileFilterCategoryId>("focus");
   const {
     selectedFocusAreas,
@@ -90,6 +92,49 @@ export function MobileFilterOptionsLayout({
     ),
     [displayCategory],
   );
+
+  if (installation) {
+    return (
+      <aside
+        className={`flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden border-solid border-border bg-surface-canvas ${filterChromeRightEdgeClass(false)}`}
+        aria-label="Filters"
+      >
+        <FilterTaxonomyEmptyHint />
+        <div
+          id={panelId}
+          className="scrollbar-hide flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overflow-x-hidden bg-surface-canvas"
+          role="region"
+          aria-label="Filter options"
+        >
+          <FocusAreas collapsed={false} chromeless />
+        </div>
+        <div
+          className="flex shrink-0 flex-row items-stretch border-t-hairline border-solid border-border bg-surface-canvas px-3"
+          role="group"
+          aria-label="Filter actions"
+        >
+          <button
+            type="button"
+            onClick={clearAllFilters}
+            className="flex h-11 min-w-0 flex-1 basis-0 items-center justify-center gap-2 pr-3 text-sm transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary"
+          >
+            <span className={MOBILE_FILTER_ACTIONS_LABEL_CLASS}>
+              Clear Filters
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setFiltersPanelOpen(false)}
+            className="flex h-11 min-w-0 flex-1 basis-0 items-center justify-center gap-2 border-l-hairline border-solid border-border pl-3 text-sm transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary"
+          >
+            <span className={MOBILE_FILTER_ACTIONS_LABEL_CLASS}>
+              Apply Filters
+            </span>
+          </button>
+        </div>
+      </aside>
+    );
+  }
 
   return (
     <aside

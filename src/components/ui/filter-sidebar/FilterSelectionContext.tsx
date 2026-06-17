@@ -29,7 +29,25 @@ import {
   mergePreviewRowWithDetail,
 } from "@/lib/preview-output-detail";
 import { useFloatingPanelStack } from "@/components/ui/floating-panels/FloatingPanelStackContext";
+import { isInstallationMode } from "@/lib/installation-mode";
+import { recordSessionEvent } from "@/lib/session-receipt/recorder";
+import type { SessionTagTaxonomy } from "@/lib/session-receipt/types";
 import { FAE_BRIEFING_OPTIONS } from "./domains/briefings/constants";
+
+function recordTagToggle(
+  taxonomy: SessionTagTaxonomy,
+  label: string,
+  turningOn: boolean,
+): void {
+  if (!isInstallationMode()) return;
+  recordSessionEvent({
+    type: "tag",
+    action: turningOn ? "on" : "off",
+    label,
+    taxonomy,
+    ts: Date.now(),
+  });
+}
 
 /** Sidebar availability hints use the same AND semantics as the default particle spread. */
 const SIDEBAR_FILTER_MATCH_MODE: FilterMatchMode = "intersection";
@@ -48,14 +66,6 @@ const PROGRAMME_BY_DOMAIN_ID: Record<
   rd: "R&D Projects",
   briefings: "Briefings",
 };
-
-/** Matches Tailwind `lg` (64rem). Auto-opening the filter column is desktop-only; mobile sheet stays closed until the user taps Filters. */
-function shouldAutoOpenFiltersPanel(): boolean {
-  return (
-    typeof window !== "undefined" &&
-    window.matchMedia("(min-width: 1024px)").matches
-  );
-}
 
 export type ContentCatalogStatus = "loading" | "success" | "error";
 
@@ -350,7 +360,6 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
           });
         }
 
-        if (!cancelled && shouldAutoOpenFiltersPanel()) setFiltersPanelOpen(true);
       } catch (e) {
         if (cancelled) return;
         setContentCatalog([]);
@@ -375,7 +384,7 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  /** Starts closed; opens after catalog + taxonomy load only at `lg+` (see `shouldAutoOpenFiltersPanel`). */
+  /** Starts closed until the user opens the filter column. */
   const [filtersPanelOpen, setFiltersPanelOpen] = useState(false);
   const filtersPanelOpenRef = useRef(filtersPanelOpen);
   filtersPanelOpenRef.current = filtersPanelOpen;
@@ -717,6 +726,15 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
 
   const openContentPreview = useCallback(
     (row: ContentRow) => {
+      if (isInstallationMode()) {
+        recordSessionEvent({
+          type: "page",
+          title: row.title,
+          slug: row.shareSlug,
+          focusAreas: [...row.focusAreas],
+          ts: Date.now(),
+        });
+      }
       minimizeAllFloatingPanels();
       const openViaCanvas = contentPreviewOpenerRef.current;
       if (openViaCanvas) {
@@ -758,9 +776,8 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
 
   const applyPreviewPillFilterAndClose = useCallback(() => {
     clearPendingPreviewFilterSnapshot();
-    if (shouldAutoOpenFiltersPanel()) setFiltersPanelOpen(true);
     closeContentPreview();
-  }, [clearPendingPreviewFilterSnapshot, setFiltersPanelOpen, closeContentPreview]);
+  }, [clearPendingPreviewFilterSnapshot, closeContentPreview]);
 
   /**
    * When the user changes a sidebar / subpanel filter while content preview is open, clear
@@ -788,12 +805,15 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
       minimizeAllFloatingPanels();
       closeSubscribeWhenFiltersPanelOpen();
       endContentPreviewOnSidebarFilterChange();
+      let turningOn = false;
       setSelectedFocusAreas((prev) => {
+        turningOn = !prev.has(label);
         const next = new Set(prev);
         if (next.has(label)) next.delete(label);
         else next.add(label);
         return next;
       });
+      recordTagToggle("focus", label, turningOn);
     },
     [closeSubscribeWhenFiltersPanelOpen, endContentPreviewOnSidebarFilterChange, minimizeAllFloatingPanels],
   );
@@ -803,12 +823,15 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
       minimizeAllFloatingPanels();
       closeSubscribeWhenFiltersPanelOpen();
       endContentPreviewOnSidebarFilterChange();
+      let turningOn = false;
       setSelectedActivityTypes((prev) => {
+        turningOn = !prev.has(label);
         const next = new Set(prev);
         if (next.has(label)) next.delete(label);
         else next.add(label);
         return next;
       });
+      recordTagToggle("activity", label, turningOn);
     },
     [closeSubscribeWhenFiltersPanelOpen, endContentPreviewOnSidebarFilterChange, minimizeAllFloatingPanels],
   );
@@ -818,9 +841,12 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
       minimizeAllFloatingPanels();
       closeSubscribeWhenFiltersPanelOpen();
       endContentPreviewOnSidebarFilterChange();
+      let turningOn = false;
       setSelectedArtists((prev) => {
+        turningOn = !prev.has(label);
         return prev.has(label) ? new Set<string>() : new Set<string>([label]);
       });
+      recordTagToggle("artist", label, turningOn);
     },
     [closeSubscribeWhenFiltersPanelOpen, endContentPreviewOnSidebarFilterChange, minimizeAllFloatingPanels],
   );
@@ -830,9 +856,12 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
       minimizeAllFloatingPanels();
       closeSubscribeWhenFiltersPanelOpen();
       endContentPreviewOnSidebarFilterChange();
+      let turningOn = false;
       setSelectedFormats((prev) => {
+        turningOn = !prev.has(label);
         return prev.has(label) ? new Set<string>() : new Set<string>([label]);
       });
+      recordTagToggle("format", label, turningOn);
     },
     [closeSubscribeWhenFiltersPanelOpen, endContentPreviewOnSidebarFilterChange, minimizeAllFloatingPanels],
   );
@@ -842,9 +871,12 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
       minimizeAllFloatingPanels();
       closeSubscribeWhenFiltersPanelOpen();
       endContentPreviewOnSidebarFilterChange();
+      let turningOn = false;
       setSelectedNetworks((prev) => {
+        turningOn = !prev.has(label);
         return prev.has(label) ? new Set<string>() : new Set<string>([label]);
       });
+      recordTagToggle("network", label, turningOn);
     },
     [closeSubscribeWhenFiltersPanelOpen, endContentPreviewOnSidebarFilterChange, minimizeAllFloatingPanels],
   );
@@ -862,7 +894,6 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
   const exitContentPreviewToFilterCanvas = useCallback(() => {
     if (contentPreviewRow == null) return;
     clearPendingPreviewFilterSnapshot();
-    if (shouldAutoOpenFiltersPanel()) setFiltersPanelOpen(true);
     closeContentPreview();
   }, [
     contentPreviewRow,

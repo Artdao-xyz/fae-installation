@@ -16,6 +16,7 @@ import { OpenSvgIcon } from "@/components/ui/icons/OpenSvgIcon";
 import { useFloatingPanelStack } from "@/components/ui/floating-panels/FloatingPanelStackContext";
 import { SubscribePanelContent } from "@/components/ui/filter-sidebar/domains/subscribe/SubscribeSubpanelColumn";
 import { MobileGlossarySheet } from "@/components/ui/glossary-panel/MobileGlossarySheet";
+import { isInstallationMode } from "@/lib/installation-mode";
 import { Z_INDEX } from "@/lib/z-index-scale";
 
 const MOBILE_HEADER_LABEL_CLASS =
@@ -54,6 +55,7 @@ export function MobileSiteHeader({
   const [menuOpen, setMenuOpen] = useState(false);
   const [glossaryOpen, setGlossaryOpen] = useState(false);
   const [subscribeOpen, setSubscribeOpen] = useState(false);
+  const installation = isInstallationMode();
   const portalEl = useSyncExternalStore(
     subscribeToDocumentBody,
     getDocumentBodySnapshot,
@@ -131,29 +133,31 @@ export function MobileSiteHeader({
               Future Arts Ecosystems
             </span>
           </button>
-          <button
-            type="button"
-            onClick={() => {
-              setMenuOpen((open) => {
-                const next = !open;
-                if (!next) setSubscribeOpen(false);
-                return next;
-              });
-            }}
-            aria-label="Open menu"
-            aria-expanded={menuOpen}
-            className="flex size-8 shrink-0 items-center justify-center text-ink-primary transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary"
-          >
-            <Image
-              src="/svg/menu.svg"
-              alt=""
-              width={32}
-              height={32}
-              unoptimized
-              className="size-6 shrink-0 object-contain"
-              aria-hidden
-            />
-          </button>
+          {installation ? null : (
+            <button
+              type="button"
+              onClick={() => {
+                setMenuOpen((open) => {
+                  const next = !open;
+                  if (!next) setSubscribeOpen(false);
+                  return next;
+                });
+              }}
+              aria-label="Open menu"
+              aria-expanded={menuOpen}
+              className="flex size-8 shrink-0 items-center justify-center text-ink-primary transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary"
+            >
+              <Image
+                src="/svg/menu.svg"
+                alt=""
+                width={32}
+                height={32}
+                unoptimized
+                className="size-6 shrink-0 object-contain"
+                aria-hidden
+              />
+            </button>
+          )}
         </div>
       </header>
 

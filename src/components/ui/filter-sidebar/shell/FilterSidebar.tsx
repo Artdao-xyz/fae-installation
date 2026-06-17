@@ -20,6 +20,7 @@ import {
   MOBILE_OVERLAY_X_CLASS,
 } from "./layout-classes";
 import { SideBar } from "./SideBar";
+import { isInstallationMode } from "@/lib/installation-mode";
 import { useIsMaxLg } from "./useIsMaxLg";
 
 export function FilterSidebar() {
@@ -45,6 +46,7 @@ export function FilterSidebar() {
   } = useFilterSelection();
   const panelId = useId();
   const isMaxLg = useIsMaxLg();
+  const installation = isInstallationMode();
 
   const anySubpanelOpen =
     briefingsSubpanelOpen ||
@@ -76,7 +78,7 @@ export function FilterSidebar() {
     setSubscribeSubpanelOpen,
   ]);
 
-  const subpanelsColumn: ReactElement = (
+  const subpanelsColumn: ReactElement | null = installation ? null : (
     <FilterSubpanelsColumn
       filtersPanelOpen={filtersOpen}
       anySubpanelOpen={anySubpanelOpen}
@@ -173,41 +175,46 @@ export function FilterSidebar() {
           <div className="min-h-0 min-w-0 flex-1 max-lg:hidden" aria-hidden />
         </div>
         <div className={`relative shrink-0 max-lg:hidden ${FILTER_SIDEBAR_COLUMN_CLASS}`}>
-          <Footer mergeWithSubpanel={anySubpanelOpen} />
-          <div className="absolute inset-y-0 left-full w-filter-options">
-            <SubscribeMenu
-              subpanelOpen={subscribeSubpanelOpen}
-              onToggleSubpanel={() =>
-                setSubscribeSubpanelOpen((open) => {
-                  const next = !open;
-                  if (next) {
-                    setArtistsSubpanelOpen(false);
-                    setNetworkSubpanelOpen(false);
+          <Footer mergeWithSubpanel={installation ? false : anySubpanelOpen} />
+          {installation ? null : (
+            <>
+              <div className="absolute inset-y-0 left-full w-filter-options">
+                <SubscribeMenu
+                  subpanelOpen={subscribeSubpanelOpen}
+                  onToggleSubpanel={() =>
+                    setSubscribeSubpanelOpen((open) => {
+                      const next = !open;
+                      if (next) {
+                        setArtistsSubpanelOpen(false);
+                        setNetworkSubpanelOpen(false);
+                      }
+                      return next;
+                    })
                   }
-                  return next;
-                })
-              }
-            />
-          </div>
-          <div
-            className={`absolute bottom-full left-full w-filter-options overflow-hidden border-r-hairline border-t-hairline border-solid border-border bg-surface-canvas transition-[max-height,opacity] duration-300 ease-in-out motion-reduce:transition-none ${
-              subscribeSubpanelOpen && !filtersOpen ? "border-l-hairline" : ""
-            } ${
-              subscribeSubpanelOpen
-                ? "max-h-[calc(100dvh-var(--inset-margin-guide))] opacity-100"
-                : "pointer-events-none max-h-0 opacity-0"
-            }`}
-            aria-hidden={!subscribeSubpanelOpen}
-          >
-            <SubscribeSubpanelColumn mergeTopBorder />
-          </div>
+                />
+              </div>
+              <div
+                className={`absolute bottom-full left-full w-filter-options overflow-hidden border-r-hairline border-t-hairline border-solid border-border bg-surface-canvas transition-[max-height,opacity] duration-300 ease-in-out motion-reduce:transition-none ${
+                  subscribeSubpanelOpen && !filtersOpen ? "border-l-hairline" : ""
+                } ${
+                  subscribeSubpanelOpen
+                    ? "max-h-[calc(100dvh-var(--inset-margin-guide))] opacity-100"
+                    : "pointer-events-none max-h-0 opacity-0"
+                }`}
+                aria-hidden={!subscribeSubpanelOpen}
+              >
+                <SubscribeSubpanelColumn mergeTopBorder />
+              </div>
+            </>
+          )}
         </div>
       </div>
-      <div className="contents max-lg:hidden">{subpanelsColumn}</div>
+      {subpanelsColumn ? (
+        <div className="contents max-lg:hidden">{subpanelsColumn}</div>
+      ) : null}
       <div className="contents lg:hidden">
         <div className="fixed inset-x-0 bottom-0 z-40 flex flex-col pb-[env(safe-area-inset-bottom,0px)] lg:hidden">
-          {filtersOpen ||
-          hasSelectedFilters ? null : (
+          {installation || filtersOpen || hasSelectedFilters ? null : (
             <MobileLatestUpdatesStrip />
           )}
           <div className="flex w-full shrink-0 flex-col bg-surface-canvas">

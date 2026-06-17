@@ -30,6 +30,9 @@ import {
   FloatingPanelStackProvider,
   useFloatingPanelStack,
 } from "@/components/ui/floating-panels/FloatingPanelStackContext";
+import { InstallationLinkGuard } from "@/components/session-receipt/InstallationLinkGuard";
+import { SessionReceiptProvider } from "@/components/session-receipt/SessionReceiptProvider";
+import { isInstallationMode } from "@/lib/installation-mode";
 
 type Mode = "optimized" | "snappy";
 
@@ -159,6 +162,7 @@ function HomeContent({ initialPreviewSlug }: HomePageClientProps) {
     !hasActiveTaxonomyFilters &&
     latestUpdatesStripRows.length > 0;
   const showMobileFilteredResults = isMaxLg && hasActiveTaxonomyFilters;
+  const installation = isInstallationMode();
 
   const mobileScrollInsetClass = mobileMainScrollInsetClassName({
     filtersPanelOpen,
@@ -170,7 +174,9 @@ function HomeContent({ initialPreviewSlug }: HomePageClientProps) {
     <div className="flex min-h-screen w-full max-lg:h-svh max-lg:min-h-0 max-lg:max-h-svh max-lg:overflow-hidden">
       <FilterSidebar />
       <PixelTessellationBackground />
-      <FloatingDockMount suppressInitialAboutPeek={Boolean(initialPreviewSlug)} />
+      {installation ? null : (
+        <FloatingDockMount suppressInitialAboutPeek={Boolean(initialPreviewSlug)} />
+      )}
       <main
         className={`relative flex min-h-0 min-w-0 flex-1 flex-col p-5 text-ink-body max-lg:min-h-0 max-lg:overflow-hidden max-lg:p-0 lg:overflow-visible ${
           searching ? "max-lg:z-45" : "z-15"
@@ -188,28 +194,32 @@ function HomeContent({ initialPreviewSlug }: HomePageClientProps) {
           }}
         />
 
-        <div
-          className={[
-            "min-w-0 w-full shrink-0 bg-surface-canvas lg:hidden",
-            "max-lg:sticky max-lg:top-[calc(env(safe-area-inset-top,0px)+3.25rem)] max-lg:z-45",
-            hideMobileLandingSearch ? "hidden" : "",
-          ]
-            .filter(Boolean)
-            .join(" ")}
-        >
-          <PopUp
-            mainContent="Future Art Ecosystems 5"
-            secondaryContent="Out now in print with essays, interviews, and new research on advanced technologies in art"
-            cta="Read more"
-            url="https://futureartecosystems.org"
-            variant="mobile"
-          />
-        </div>
+        {installation ? null : (
+          <div
+            className={[
+              "min-w-0 w-full shrink-0 bg-surface-canvas lg:hidden",
+              "max-lg:sticky max-lg:top-[calc(env(safe-area-inset-top,0px)+3.25rem)] max-lg:z-45",
+              hideMobileLandingSearch ? "hidden" : "",
+            ]
+              .filter(Boolean)
+              .join(" ")}
+          >
+            <PopUp
+              mainContent="Future Art Ecosystems 5"
+              secondaryContent="Out now in print with essays, interviews, and new research on advanced technologies in art"
+              cta="Read more"
+              url="https://futureartecosystems.org"
+              variant="mobile"
+            />
+          </div>
+        )}
 
         <div
           className={[
             "min-w-0 w-full shrink-0 bg-surface-canvas lg:hidden",
-            "max-lg:sticky max-lg:top-[calc(env(safe-area-inset-top,0px)+6.5rem)] max-lg:z-45",
+            installation
+              ? "max-lg:sticky max-lg:top-[calc(env(safe-area-inset-top,0px)+3.25rem)] max-lg:z-45"
+              : "max-lg:sticky max-lg:top-[calc(env(safe-area-inset-top,0px)+6.5rem)] max-lg:z-45",
             hideMobileLandingSearch ? "hidden" : "",
             searching ? "flex flex-col" : "",
           ]
@@ -223,24 +233,26 @@ function HomeContent({ initialPreviewSlug }: HomePageClientProps) {
             mobileLandingExpanded={mobileLandingSearchExpanded}
             onMobileLandingExpand={() => setMobileLandingSearchOpen(true)}
             mobileLandingActions={
-              <div
-                className="contents"
-                role="radiogroup"
-                aria-label="Programme filters"
-              >
-                <FellowshipsMenu
-                  mobileLanding
-                  collapsed={mobileLandingSearchExpanded}
-                />
-                <RDProjectsMenu
-                  mobileLanding
-                  collapsed={mobileLandingSearchExpanded}
-                />
-                <FAEBriefingsMenu
-                  mobileLanding
-                  collapsed={mobileLandingSearchExpanded}
-                />
-              </div>
+              installation ? undefined : (
+                <div
+                  className="contents"
+                  role="radiogroup"
+                  aria-label="Programme filters"
+                >
+                  <FellowshipsMenu
+                    mobileLanding
+                    collapsed={mobileLandingSearchExpanded}
+                  />
+                  <RDProjectsMenu
+                    mobileLanding
+                    collapsed={mobileLandingSearchExpanded}
+                  />
+                  <FAEBriefingsMenu
+                    mobileLanding
+                    collapsed={mobileLandingSearchExpanded}
+                  />
+                </div>
+              )
             }
           />
         </div>
@@ -283,7 +295,11 @@ export function HomePageClient({ initialPreviewSlug }: HomePageClientProps) {
   return (
     <FloatingPanelStackProvider>
       <FilterSelectionProvider>
-        <HomeContent initialPreviewSlug={initialPreviewSlug} />
+        <SessionReceiptProvider>
+          <InstallationLinkGuard>
+            <HomeContent initialPreviewSlug={initialPreviewSlug} />
+          </InstallationLinkGuard>
+        </SessionReceiptProvider>
       </FilterSelectionProvider>
     </FloatingPanelStackProvider>
   );

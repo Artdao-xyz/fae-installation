@@ -13,6 +13,7 @@ import { Search } from "../sections/Search";
 import { FilterTaxonomyEmptyHint } from "./FilterTaxonomyEmptyHint";
 import { MobileFilterOptionsLayout } from "./MobileFilterOptionsLayout";
 import { filterChromeRightEdgeClass } from "./layout-classes";
+import { isInstallationMode } from "@/lib/installation-mode";
 import { useIsMaxLg } from "./useIsMaxLg";
 
 export type FilterOptionsPanelProps = {
@@ -37,11 +38,42 @@ export function FilterOptionsPanel({
   onToggleNetworkSubpanel,
 }: FilterOptionsPanelProps) {
   const isMaxLg = useIsMaxLg();
+  const installation = isInstallationMode();
   const { filterSearchQuery, setFilterSearchQuery } = useFilterSelection();
   const searching = filterSearchQuery.trim().length > 0;
 
   if (isMaxLg) {
     return <MobileFilterOptionsLayout panelId={panelId} />;
+  }
+
+  if (installation) {
+    return (
+      <aside
+        className={`flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden border-solid border-border ${filterChromeRightEdgeClass(false)}`}
+        aria-label="Filters"
+      >
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+          <div
+            id={panelId}
+            className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
+            role="region"
+            aria-label="Filter options"
+          >
+            <div className="hidden min-w-0 shrink-0 flex-col lg:flex">
+              <Search
+                value={filterSearchQuery}
+                onChange={setFilterSearchQuery}
+                fieldId="filter-search-sidebar"
+              />
+            </div>
+            <div className="scrollbar-hide flex min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden overflow-y-auto pb-4">
+              <FilterTaxonomyEmptyHint />
+              <FocusAreas collapsed={false} />
+            </div>
+          </div>
+        </div>
+      </aside>
+    );
   }
 
   const anySubpanelOpen =
