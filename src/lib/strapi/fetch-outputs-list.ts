@@ -8,8 +8,7 @@
  *
  * Taxonomy option lists: `GET /api/strapi/taxonomy-options`.
  *
- * Optional offline data: `offline-fixture` import + `offlineFixture*` calls below — removable as a unit
- * (see `src/lib/strapi/offline-fixture/index.ts`).
+ * Optional offline data: `offline-fixture` or `local-data` (see `src/lib/local-data/index.ts`).
  */
 
 import { unstable_cache } from "next/cache";
@@ -22,6 +21,12 @@ import {
   strapiOutputEntryToFlatRecord,
 } from "@/lib/strapi/map-output-to-content-row";
 import { createOutputShareSlug } from "@/lib/output-share-slug";
+import {
+  localCatalogOrNull,
+  localDataEnabled,
+  localDetailIfEnabled,
+  localTaxonomyOrNull,
+} from "@/lib/local-data";
 import {
   offlineFixtureCatalogOrNull,
   offlineFixtureDetailIfEnabled,
@@ -223,6 +228,9 @@ export async function fetchStrapiTaxonomyOptionLabelsStaged(): Promise<StrapiTax
   const offline = offlineFixtureTaxonomyOrNull();
   if (offline) return offline;
 
+  const local = localTaxonomyOrNull();
+  if (local) return local;
+
   const [
     focusOptionLabels,
     activityOptionLabels,
@@ -265,6 +273,9 @@ export async function fetchStrapiOutputsCatalogOnly(options?: {
 }> {
   const offline = offlineFixtureCatalogOrNull();
   if (offline) return offline;
+
+  const local = localCatalogOrNull();
+  if (local) return local;
 
   const started = performance.now();
   const pageSize = Math.min(
@@ -401,6 +412,18 @@ export async function fetchStrapiOutputDetailByDocumentId(
       return { ...offlineRow, resources: [] } as ContentRow;
     }
     return offlineRow;
+  }
+
+  const localRow = localDetailIfEnabled(trimmed);
+  if (localRow !== undefined) {
+    if (!includeSources) {
+      return localRow ? ({ ...localRow, resources: [] } as ContentRow) : null;
+    }
+    return localRow;
+  }
+
+  if (localDataEnabled()) {
+    return null;
   }
 
   const base = strapiBaseUrl();
