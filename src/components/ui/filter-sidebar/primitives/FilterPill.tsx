@@ -8,10 +8,7 @@ import {
   filterFramedRoundedInnerClass,
   filterFramedRoundedOuterSelectedClass,
   filterFramedRoundedOuterSelectedToneClass,
-  filterPillSelection,
-  filterPillLabelBoxClass,
   filterPillSingleLayerBrightnessHoverClass,
-  interactiveChromeMatClass,
 } from "./filterFramedClasses";
 import { SquarePillFrame } from "./SquarePillFrame";
 

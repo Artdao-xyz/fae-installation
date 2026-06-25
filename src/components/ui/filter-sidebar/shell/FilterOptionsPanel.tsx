@@ -49,28 +49,40 @@ export function FilterOptionsPanel({
   if (installation) {
     return (
       <aside
-        className={`flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden border-solid border-border ${filterChromeRightEdgeClass(false)}`}
+        className={`flex w-full min-w-0 shrink-0 flex-col border-t-hairline border-solid border-border bg-surface-canvas ${filterChromeRightEdgeClass(false)} ${
+          searching
+            ? "h-full min-h-0 overflow-hidden"
+            : "min-h-0 overflow-hidden"
+        }`}
         aria-label="Filters"
       >
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+        <div
+          id={panelId}
+          className={`flex min-w-0 flex-col overflow-hidden ${
+            searching ? "min-h-0 flex-1" : "shrink-0"
+          }`}
+          role="region"
+          aria-label="Filter options"
+        >
           <div
-            id={panelId}
-            className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
-            role="region"
-            aria-label="Filter options"
+            className={
+              searching
+                ? "hidden min-h-0 min-w-0 flex-1 flex-col lg:flex"
+                : "hidden min-w-0 shrink-0 flex-col lg:flex"
+            }
           >
-            <div className="hidden min-w-0 shrink-0 flex-col lg:flex">
-              <Search
-                value={filterSearchQuery}
-                onChange={setFilterSearchQuery}
-                fieldId="filter-search-sidebar"
-              />
-            </div>
-            <div className="scrollbar-hide flex min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden overflow-y-auto pb-4">
+            <Search
+              value={filterSearchQuery}
+              onChange={setFilterSearchQuery}
+              fieldId="filter-search-sidebar"
+            />
+          </div>
+          {searching ? null : (
+            <div className="flex min-w-0 shrink-0 flex-col pb-4">
               <FilterTaxonomyEmptyHint />
               <FocusAreas collapsed={false} />
             </div>
-          </div>
+          )}
         </div>
       </aside>
     );

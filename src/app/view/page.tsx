@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { decodeReceiptPayload } from "@/lib/session-receipt/encode";
 import { logSessionReceiptServer } from "@/lib/session-receipt/log";
-import { RECEIPT_TITLE } from "@/lib/session-receipt/types";
+import { RECEIPT_ARTIFACT_TITLE } from "@/lib/session-receipt/types";
 import { ViewReceiptClient } from "./ViewReceiptClient";
 
 type ViewPageProps = {
@@ -10,7 +10,7 @@ type ViewPageProps = {
 };
 
 export const metadata: Metadata = {
-  title: RECEIPT_TITLE,
+  title: RECEIPT_ARTIFACT_TITLE,
   robots: { index: false, follow: false },
 };
 

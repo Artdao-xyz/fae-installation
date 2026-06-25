@@ -86,19 +86,19 @@
    */
   --breakpoint-2k: 2000px;
 
-  --width-filter-narrow-column: 35px;
+  --width-filter-narrow-column: 31.5px;
   /**
    * Main filter column width (px only). Below `lg` uses a default; `lg` / `xl` / `2xl` / `2k` are set in media
    * queries below (align with Tailwind: 64rem, 80rem, 96rem, plus 2000px for 2K).
    */
-  --width-filter-chrome-column: 260px;
+  --width-filter-chrome-column: 234px;
   /** Options strip = chrome column minus the narrow rail. */
   --width-filter-options: calc(
     var(--width-filter-chrome-column) - var(--width-filter-narrow-column)
   );
   --inset-margin-guide: calc(var(--width-filter-narrow-column) - 1px);
   --height-filter-chrome-bar: var(--width-filter-narrow-column);
-  --height-filter-narrow-toggle: 35px;
+  --height-filter-narrow-toggle: var(--width-filter-narrow-column);
   --height-filter-close-bar: 22px;
   --width-format-icon: 38px;
   --height-format-icon: 25px;
@@ -127,25 +127,25 @@
 /* Tailwind `lg` (64rem / 1024px). */
 @media (min-width: 64rem) {
   :root {
-    --width-filter-chrome-column: 380px;
+    --width-filter-chrome-column: 342px;
   }
 }
 /* Tailwind `xl` (80rem / 1280px). */
 @media (min-width: 80rem) {
   :root {
-    --width-filter-chrome-column: 440px;
+    --width-filter-chrome-column: 396px;
   }
 }
 /* Tailwind `2xl` (96rem / 1536px). */
 @media (min-width: 96rem) {
   :root {
-    --width-filter-chrome-column: 430px;
+    --width-filter-chrome-column: 387px;
   }
 }
 /* 2K+ viewports (2000px) — e.g. large / QHD-class widths; `2k` screen in @theme. */
 @media (min-width: 2000px) {
   :root {
-    --width-filter-chrome-column: 380px;
+    --width-filter-chrome-column: 342px;
   }
 }
 

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useFilterSelection } from "@/components/ui/filter-sidebar/FilterSelectionContext";
 import { filterPillSelection } from "@/components/ui/filter-sidebar/primitives/filterFramedClasses";
 import { HomeSvgIcon } from "@/components/ui/icons/HomeSvgIcon";
+import { isInstallationMode } from "@/lib/installation-mode";
 import { filterChromeRightEdgeClass } from "./layout-classes";
 
 /** Suisse Intl, 12px / regular — HomeBar breadcrumb (Home → preview title when open). */
@@ -119,21 +120,23 @@ export function HomeBar({
             </div>
           ) : null}
         </div>
-        <button
-          type="button"
-          onClick={resetToIdle}
-          aria-label="Clear all filters"
-          className={resetFiltersButtonClassName}
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element -- small static chrome icon */}
-          <img
-            src="/svg/reset.svg"
-            alt="Reset"
-            width={17}
-            height={14}
-            className="m-0 block h-3.5 w-auto max-h-3.5 shrink-0 object-contain object-center"
-          />
-        </button>
+        {!isInstallationMode() ? (
+          <button
+            type="button"
+            onClick={resetToIdle}
+            aria-label="Clear all filters"
+            className={resetFiltersButtonClassName}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element -- small static chrome icon */}
+            <img
+              src="/svg/reset.svg"
+              alt="Reset"
+              width={17}
+              height={14}
+              className="m-0 block h-3.5 w-auto max-h-3.5 shrink-0 object-contain object-center"
+            />
+          </button>
+        ) : null}
       </div>
     </div>
   );

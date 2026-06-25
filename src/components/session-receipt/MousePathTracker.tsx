@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { createEmptyPath, samplePathPoint } from "@/lib/session-receipt/path-grid";
+import { samplePathPoint } from "@/lib/session-receipt/path-grid";
 import { useSessionReceipt } from "./SessionReceiptProvider";
 
 const SAMPLE_MS = 120;

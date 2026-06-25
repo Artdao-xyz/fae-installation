@@ -12,6 +12,7 @@ import {
   type RefObject,
 } from "react";
 import { isInstallationMode } from "@/lib/installation-mode";
+import { resolvePrintRequestTimeoutMs } from "@/lib/installation/idle";
 import { buildSessionReceipt } from "@/lib/session-receipt/build-receipt";
 import { buildReceiptViewUrl } from "@/lib/session-receipt/encode";
 import { useReceiptViewOrigin } from "@/lib/session-receipt/use-receipt-view-origin";
@@ -26,14 +27,20 @@ import {
 import { setSessionReceiptRecorder } from "@/lib/session-receipt/recorder";
 import {
   createEmptyPath,
+  hasPathActivity,
   type SessionPath,
 } from "@/lib/session-receipt/path-grid";
 import type { SessionEvent, SessionReceipt } from "@/lib/session-receipt/types";
+import { InstallationAboutScreen } from "./InstallationAboutScreen";
+import { InstallationIntroScreen } from "./InstallationIntroScreen";
+import { InstallationPrintConfirmDialog } from "./InstallationPrintConfirmDialog";
+import { InstallationPrinterBanner } from "./InstallationPrinterBanner";
+import { InstallationPathRecordingLabel } from "./InstallationPathRecordingLabel";
+import { InstallationRecordingIndicator } from "./InstallationRecordingIndicator";
 import { MousePathTracker } from "./MousePathTracker";
-import { InstallationControls } from "./InstallationControls";
 import { ReceiptPreviewModal } from "./ReceiptPreviewModal";
-import { SessionStartDialog } from "./SessionStartDialog";
 import type { PrintStatus } from "./print-status";
+import { INSTALLATION_OVERLAY_TRANSITION_MS } from "./use-installation-overlay-enter";
 
 type SessionReceiptContextValue = {
   enabled: boolean;
@@ -41,15 +48,24 @@ type SessionReceiptContextValue = {
   events: SessionEvent[];
   sessionStart: string;
   pathRef: RefObject<SessionPath>;
+  aboutOpen: boolean;
+  printConfirmOpen: boolean;
   previewOpen: boolean;
   printStatus: PrintStatus;
   printMessage: string | null;
+  screensaverActive: boolean;
   buildReceipt: () => SessionReceipt;
-  openPreview: () => void;
+  openPrintConfirm: () => void;
+  closePrintConfirm: () => void;
+  confirmEndJourney: () => Promise<void>;
   closePreview: () => void;
-  printReceipt: (receipt: SessionReceipt) => Promise<void>;
+  printReceipt: (receipt: SessionReceipt) => Promise<boolean>;
   startRecording: () => void;
   clearSession: () => void;
+  openAbout: () => void;
+  closeAbout: () => void;
+  enterScreensaver: () => void;
+  dismissScreensaver: () => void;
 };
 
 const SessionReceiptContext = createContext<SessionReceiptContextValue | null>(
@@ -61,13 +77,17 @@ export function SessionReceiptProvider({ children }: { children: ReactNode }) {
   const [recording, setRecording] = useState(false);
   const [sessionStart, setSessionStart] = useState("");
   const [events, setEvents] = useState<SessionEvent[]>([]);
+  const [aboutOpen, setAboutOpen] = useState(false);
+  const [printConfirmOpen, setPrintConfirmOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewReceipt, setPreviewReceipt] = useState<SessionReceipt | null>(
     null,
   );
   const [printStatus, setPrintStatus] = useState<PrintStatus>("idle");
   const [printMessage, setPrintMessage] = useState<string | null>(null);
+  const [screensaverActive, setScreensaverActive] = useState(false);
   const didLogInitRef = useRef(false);
+  const previewClearTimerRef = useRef<number | null>(null);
   const pathRef = useRef<SessionPath>(createEmptyPath());
   const { origin: viewOrigin, ready: originReady } = useReceiptViewOrigin();
 
@@ -76,6 +96,24 @@ export function SessionReceiptProvider({ children }: { children: ReactNode }) {
       logSessionEvent(event, prev.length);
       return [...prev, event];
     });
+  }, []);
+
+  const schedulePreviewReceiptClear = useCallback(() => {
+    if (previewClearTimerRef.current !== null) {
+      window.clearTimeout(previewClearTimerRef.current);
+    }
+    previewClearTimerRef.current = window.setTimeout(() => {
+      setPreviewReceipt(null);
+      previewClearTimerRef.current = null;
+    }, INSTALLATION_OVERLAY_TRANSITION_MS);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (previewClearTimerRef.current !== null) {
+        window.clearTimeout(previewClearTimerRef.current);
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -92,17 +130,20 @@ export function SessionReceiptProvider({ children }: { children: ReactNode }) {
   }, [enabled, recording, appendEvent]);
 
   const startRecording = useCallback(() => {
+    setScreensaverActive(false);
+    setAboutOpen(false);
     const nextStart = new Date().toISOString();
     pathRef.current = createEmptyPath();
     setRecording(true);
     setSessionStart(nextStart);
     setEvents([]);
+    setPrintConfirmOpen(false);
     setPreviewOpen(false);
-    setPreviewReceipt(null);
+    schedulePreviewReceiptClear();
     setPrintStatus("idle");
     setPrintMessage(null);
     logSessionSnapshot("recording started", nextStart, []);
-  }, []);
+  }, [schedulePreviewReceiptClear]);
 
   const buildReceipt = useCallback(() => {
     const receipt = buildSessionReceipt(
@@ -121,20 +162,53 @@ export function SessionReceiptProvider({ children }: { children: ReactNode }) {
     setRecording(false);
     setSessionStart("");
     setEvents([]);
+    setAboutOpen(false);
+    setPrintConfirmOpen(false);
     setPreviewOpen(false);
-    setPreviewReceipt(null);
+    schedulePreviewReceiptClear();
     setPrintStatus("idle");
     setPrintMessage(null);
-  }, [sessionStart, events]);
+  }, [sessionStart, events, schedulePreviewReceiptClear]);
+
+  const openAbout = useCallback(() => {
+    setAboutOpen(true);
+  }, []);
+
+  const closeAbout = useCallback(() => {
+    setAboutOpen(false);
+  }, []);
+
+  const openPrintConfirm = useCallback(() => {
+    setPrintConfirmOpen(true);
+  }, []);
+
+  const closePrintConfirm = useCallback(() => {
+    setPrintConfirmOpen(false);
+  }, []);
+
+  const enterScreensaver = useCallback(() => {
+    setAboutOpen(false);
+    setPrintConfirmOpen(false);
+    setScreensaverActive(true);
+  }, []);
+
+  const dismissScreensaver = useCallback(() => {
+    setScreensaverActive(false);
+  }, []);
 
   const printReceipt = useCallback(
-    async (receipt: SessionReceipt, scanOrigin?: string) => {
+    async (receipt: SessionReceipt, scanOrigin?: string): Promise<boolean> => {
       setPrintStatus("printing");
       setPrintMessage(null);
       const origin = scanOrigin ?? viewOrigin;
+      const timeoutMs = resolvePrintRequestTimeoutMs();
+      const controller = new AbortController();
+      const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs);
+
       try {
         const res = await fetch("/api/print", {
           method: "POST",
+          signal: controller.signal,
           headers: {
             "Content-Type": "application/json",
             ...(origin ? { "X-Receipt-View-Origin": origin } : {}),
@@ -145,26 +219,51 @@ export function SessionReceiptProvider({ children }: { children: ReactNode }) {
         if (!res.ok || !data.ok) {
           setPrintStatus(res.status === 503 ? "offline" : "error");
           setPrintMessage(data.error ?? "Print failed");
-          return;
+          return false;
         }
         setPrintStatus("idle");
         setPrintMessage("Sent to printer");
-      } catch {
-        setPrintStatus("offline");
-        setPrintMessage("Printer unreachable");
+        return true;
+      } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError") {
+          setPrintStatus("error");
+          setPrintMessage("Print timed out — try again");
+        } else {
+          setPrintStatus("offline");
+          setPrintMessage("Printer unreachable");
+        }
+        return false;
+      } finally {
+        window.clearTimeout(timeoutId);
       }
     },
     [viewOrigin],
   );
 
-  const openPreview = useCallback(async () => {
+  const confirmEndJourney = useCallback(async () => {
     const receipt = buildReceipt();
     const origin = originReady ? viewOrigin : await fetchReceiptViewOrigin();
+    setPrintStatus("printing");
+    setPrintMessage(null);
     setPreviewReceipt(receipt);
-    logReceiptQrUrl(buildReceiptViewUrl(receipt, origin));
     setPreviewOpen(true);
+    setPrintConfirmOpen(false);
+    setRecording(false);
+    logReceiptQrUrl(buildReceiptViewUrl(receipt, origin));
     await printReceipt(receipt, origin);
-  }, [buildReceipt, printReceipt, viewOrigin, originReady]);
+  }, [buildReceipt, viewOrigin, originReady, printReceipt]);
+
+  const retryPrint = useCallback(async () => {
+    if (!previewReceipt) return;
+    const origin = originReady ? viewOrigin : await fetchReceiptViewOrigin();
+    await printReceipt(previewReceipt, origin);
+  }, [previewReceipt, printReceipt, viewOrigin, originReady]);
+
+  const showIntro =
+    enabled && !recording && !screensaverActive && !aboutOpen && !previewOpen;
+
+  const minimalJourney =
+    events.length === 0 && !hasPathActivity(pathRef.current);
 
   const value = useMemo<SessionReceiptContextValue>(
     () => ({
@@ -173,52 +272,86 @@ export function SessionReceiptProvider({ children }: { children: ReactNode }) {
       events,
       sessionStart,
       pathRef,
+      aboutOpen,
+      printConfirmOpen,
       previewOpen,
       printStatus,
       printMessage,
+      screensaverActive,
       buildReceipt,
-      openPreview,
+      openPrintConfirm,
+      closePrintConfirm,
+      confirmEndJourney,
       closePreview: () => {
         setPreviewOpen(false);
-        setPreviewReceipt(null);
+        schedulePreviewReceiptClear();
       },
       printReceipt,
       startRecording,
       clearSession,
+      openAbout,
+      closeAbout,
+      enterScreensaver,
+      dismissScreensaver,
     }),
     [
       enabled,
       recording,
       events,
       sessionStart,
+      aboutOpen,
+      printConfirmOpen,
       previewOpen,
       printStatus,
       printMessage,
+      screensaverActive,
       buildReceipt,
-      openPreview,
+      openPrintConfirm,
+      closePrintConfirm,
+      confirmEndJourney,
       printReceipt,
       startRecording,
       clearSession,
+      openAbout,
+      closeAbout,
+      enterScreensaver,
+      dismissScreensaver,
+      schedulePreviewReceiptClear,
     ],
   );
 
   return (
     <SessionReceiptContext.Provider value={value}>
       {enabled ? <MousePathTracker /> : null}
-      {enabled ? <InstallationControls /> : null}
+      {enabled ? <InstallationRecordingIndicator /> : null}
+      {enabled ? <InstallationPathRecordingLabel /> : null}
+      {enabled ? <InstallationPrinterBanner /> : null}
       {children}
-      {enabled && !recording ? (
-        <SessionStartDialog onStart={startRecording} />
+      {enabled ? (
+        <InstallationIntroScreen
+          open={showIntro}
+          onReadAbout={openAbout}
+          onStartJourney={startRecording}
+        />
       ) : null}
-      {enabled && previewOpen && previewReceipt ? (
+      {enabled ? (
+        <InstallationAboutScreen open={aboutOpen} onClose={closeAbout} />
+      ) : null}
+      {enabled ? (
+        <InstallationPrintConfirmDialog
+          open={printConfirmOpen}
+          minimalJourney={minimalJourney}
+          onConfirm={confirmEndJourney}
+          onKeepExploring={closePrintConfirm}
+        />
+      ) : null}
+      {enabled && previewReceipt ? (
         <ReceiptPreviewModal
+          open={previewOpen}
           receipt={previewReceipt}
           printStatus={printStatus}
           printMessage={printMessage}
-          onClose={() => {
-            setPreviewOpen(false);
-            setPreviewReceipt(null);
-          }}
+          onRetryPrint={retryPrint}
         />
       ) : null}
     </SessionReceiptContext.Provider>

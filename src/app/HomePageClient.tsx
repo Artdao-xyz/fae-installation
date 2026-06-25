@@ -30,6 +30,8 @@ import {
   FloatingPanelStackProvider,
   useFloatingPanelStack,
 } from "@/components/ui/floating-panels/FloatingPanelStackContext";
+import { InstallationHealthGuard } from "@/components/session-receipt/InstallationHealthGuard";
+import { InstallationIdleGuard } from "@/components/session-receipt/InstallationIdleGuard";
 import { InstallationLinkGuard } from "@/components/session-receipt/InstallationLinkGuard";
 import { SessionReceiptProvider } from "@/components/session-receipt/SessionReceiptProvider";
 import { isInstallationMode } from "@/lib/installation-mode";
@@ -296,9 +298,12 @@ export function HomePageClient({ initialPreviewSlug }: HomePageClientProps) {
     <FloatingPanelStackProvider>
       <FilterSelectionProvider>
         <SessionReceiptProvider>
-          <InstallationLinkGuard>
-            <HomeContent initialPreviewSlug={initialPreviewSlug} />
-          </InstallationLinkGuard>
+          <InstallationHealthGuard>
+            <InstallationLinkGuard>
+              <HomeContent initialPreviewSlug={initialPreviewSlug} />
+              <InstallationIdleGuard />
+            </InstallationLinkGuard>
+          </InstallationHealthGuard>
         </SessionReceiptProvider>
       </FilterSelectionProvider>
     </FloatingPanelStackProvider>
