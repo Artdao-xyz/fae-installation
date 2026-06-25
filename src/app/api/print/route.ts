@@ -1,8 +1,13 @@
 import { NextResponse } from "next/server";
+import {
+  recordPrintResult,
+  resolvePrinterInterface,
+  resolvePrinterUrl,
+} from "@/lib/installation/config";
 import { logSessionReceiptServer } from "@/lib/session-receipt/log";
 import { isLocalReceiptOrigin } from "@/lib/session-receipt/resolve-view-origin";
 import { resolveReceiptViewOriginFromRequest } from "@/lib/session-receipt/resolve-view-origin-server";
-import { printSessionReceiptToInterface } from "@/lib/session-receipt/thermal-print/print-receipt";
+import { printSessionReceiptToInterface } from "@/lib/session-receipt/thermal-print/receipt-print";
 import type { SessionReceipt } from "@/lib/session-receipt/types";
 
 function isSessionPath(value: unknown): boolean {
@@ -53,16 +58,18 @@ export async function POST(request: Request) {
       ? headerOrigin
       : resolveReceiptViewOriginFromRequest(request);
 
-  const printerInterface = process.env.RECEIPT_PRINTER_INTERFACE?.trim();
-  const printerUrl = process.env.RECEIPT_PRINTER_URL?.trim();
+  const printerInterface = resolvePrinterInterface();
+  const printerUrl = resolvePrinterUrl();
 
   if (printerInterface) {
     try {
       await printSessionReceiptToInterface(body, printerInterface, viewOrigin);
+      recordPrintResult(true);
       return NextResponse.json({ ok: true });
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Local printer failed";
+      recordPrintResult(false, message);
       return NextResponse.json({ ok: false, error: message }, { status: 502 });
     }
   }
@@ -72,7 +79,7 @@ export async function POST(request: Request) {
       {
         ok: false,
         error:
-          "Printer not configured (set RECEIPT_PRINTER_INTERFACE for USB/local, or RECEIPT_PRINTER_URL to forward)",
+          "Printer not configured — open /admin to select a printer, or set RECEIPT_PRINTER_INTERFACE",
       },
       { status: 503 },
     );
