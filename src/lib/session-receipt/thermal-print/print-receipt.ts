@@ -5,25 +5,132 @@ import {
 } from "../format-transcript";
 import { formatTagFortuneLine } from "../journey-prompt";
 import { hasPathActivity } from "../path-grid";
-import { RECEIPT_TITLE, type SessionReceipt } from "../types";
-import { THERMAL_CHARS_PER_LINE } from "../thermal-spec";
+import {
+  RECEIPT_ACTIVITY_HEADING,
+  RECEIPT_ARTIFACT_TITLE,
+  RECEIPT_BRAND,
+  type SessionReceipt,
+} from "../types";
+import {
+  THERMAL_CHARS_AT_FULL_BLEED,
+  THERMAL_CONTENT_DOTS,
+  THERMAL_HORIZONTAL_MARGIN_DOTS,
+} from "../thermal-spec";
+import { rasterizeReceiptFooter } from "./footer-raster";
+import {
+  insetRasterHorizontally,
+  padThermalLineLeft,
+  padThermalLineStart,
+} from "./margins";
+import { rasterizeQrCode } from "./qr-raster";
 import {
   buildEscPosRasterCommand,
   rasterizePathStars,
 } from "./star-raster";
 
-function wrapLine(text: string, width = THERMAL_CHARS_PER_LINE): string[] {
-  if (text.length <= width) return [text];
-  const lines: string[] = [];
-  let rest = text;
-  while (rest.length > width) {
-    let breakAt = rest.lastIndexOf(" ", width);
-    if (breakAt <= 0) breakAt = width;
-    lines.push(rest.slice(0, breakAt).trimEnd());
-    rest = rest.slice(breakAt).trimStart();
+type ThermalPrinterInstance = {
+  clear: () => void;
+  newLine: () => void;
+  alignLeft: () => void;
+  add: (buffer: Buffer) => void;
+  bold: (enabled: boolean) => void;
+  println: (text: string) => void;
+  cut: () => void;
+  execute: () => Promise<unknown>;
+  getBuffer: () => Buffer | null;
+};
+
+const DUMMY_PRINTER_INTERFACE =
+  process.platform === "win32" ? "\\\\.\\NUL" : "/dev/null";
+
+async function createThermalPrinter(interfacePath: string) {
+  const { ThermalPrinter, PrinterTypes, CharacterSet, BreakLine } =
+    await import("node-thermal-printer");
+
+  return new ThermalPrinter({
+    type: PrinterTypes.EPSON,
+    interface: interfacePath,
+    width: THERMAL_CHARS_AT_FULL_BLEED,
+    characterSet: CharacterSet.PC437_USA,
+    breakLine: BreakLine.WORD,
+    removeSpecialCharacters: false,
+    options: { timeout: 10000 },
+  }) as ThermalPrinterInstance;
+}
+
+async function appendSessionReceiptToPrinter(
+  printer: ThermalPrinterInstance,
+  receipt: SessionReceipt,
+  viewOrigin?: string,
+): Promise<void> {
+  printer.clear();
+  printer.newLine();
+  printer.alignLeft();
+
+  if (receipt.path && hasPathActivity(receipt.path)) {
+    const raster = insetRasterHorizontally(
+      rasterizePathStars(receipt.path, THERMAL_CONTENT_DOTS),
+      THERMAL_HORIZONTAL_MARGIN_DOTS,
+    );
+    printer.add(buildEscPosRasterCommand(raster));
+    printer.newLine();
   }
-  if (rest.length > 0) lines.push(rest);
-  return lines;
+
+  printer.bold(true);
+  printer.println(padThermalLineLeft(RECEIPT_BRAND));
+  printer.bold(false);
+  printer.println(padThermalLineLeft(RECEIPT_ARTIFACT_TITLE));
+  printer.println(padThermalLineLeft(formatReceiptDate(receipt.sessionStart)));
+  printer.newLine();
+  printer.newLine();
+
+  printer.println(padThermalLineLeft(RECEIPT_ACTIVITY_HEADING));
+  printer.newLine();
+
+  const transcript = formatSessionTranscript(receipt.events);
+  if (transcript.length === 0) {
+    printer.println(padThermalLineLeft("No activity recorded"));
+  } else {
+    for (const line of transcript) {
+      printer.println(padThermalLineLeft(`${line.time} ${line.text}`));
+    }
+  }
+
+  printer.newLine();
+  printer.newLine();
+  printer.println(padThermalLineStart(formatTagFortuneLine(receipt.prompt)));
+  printer.newLine();
+
+  const qrUrl = buildReceiptViewUrl(receipt, viewOrigin);
+  printer.add(
+    buildEscPosRasterCommand(
+      insetRasterHorizontally(rasterizeQrCode(qrUrl), THERMAL_HORIZONTAL_MARGIN_DOTS),
+    ),
+  );
+
+  printer.newLine();
+  const footer = await rasterizeReceiptFooter();
+  printer.add(
+    buildEscPosRasterCommand(
+      insetRasterHorizontally(footer, THERMAL_HORIZONTAL_MARGIN_DOTS),
+    ),
+  );
+
+  printer.cut();
+}
+
+/** Build the raw ESC/POS byte stream for a session receipt (export / review). */
+export async function buildSessionReceiptEscPosBuffer(
+  receipt: SessionReceipt,
+  viewOrigin?: string,
+): Promise<Buffer> {
+  const printer = await createThermalPrinter(DUMMY_PRINTER_INTERFACE);
+  await appendSessionReceiptToPrinter(printer, receipt, viewOrigin);
+  const buffer = printer.getBuffer();
+  if (!buffer?.length) {
+    throw new Error("Empty ESC/POS buffer");
+  }
+  return buffer;
 }
 
 /**
@@ -35,60 +142,7 @@ export async function printSessionReceiptToInterface(
   printerInterface: string,
   viewOrigin?: string,
 ): Promise<void> {
-  const { ThermalPrinter, PrinterTypes, CharacterSet, BreakLine } =
-    await import("node-thermal-printer");
-
-  const printer = new ThermalPrinter({
-    type: PrinterTypes.EPSON,
-    interface: printerInterface,
-    width: THERMAL_CHARS_PER_LINE,
-    characterSet: CharacterSet.PC437_USA,
-    breakLine: BreakLine.WORD,
-    removeSpecialCharacters: false,
-    options: { timeout: 10000 },
-  });
-
-  printer.clear();
-  printer.alignCenter();
-  printer.bold(true);
-  printer.println(RECEIPT_TITLE);
-  printer.bold(false);
-  printer.newLine();
-  printer.println(formatReceiptDate(receipt.sessionStart));
-  printer.drawLine();
-
-  const transcript = formatSessionTranscript(receipt.events);
-  printer.alignLeft();
-  if (transcript.length === 0) {
-    printer.alignCenter();
-    printer.println("No activity recorded");
-  } else {
-    for (const line of transcript) {
-      printer.println(`${line.time} ${line.text}`);
-    }
-  }
-
-  printer.alignCenter();
-  printer.drawLine();
-
-  const qrUrl = buildReceiptViewUrl(receipt, viewOrigin);
-  await printer.printQR(qrUrl, {
-    cellSize: 6,
-    correction: "L",
-  });
-
-  printer.newLine();
-  for (const line of wrapLine(formatTagFortuneLine(receipt.prompt))) {
-    printer.println(line);
-  }
-
-  if (receipt.path && hasPathActivity(receipt.path)) {
-    printer.newLine();
-    const raster = rasterizePathStars(receipt.path);
-    printer.raw(buildEscPosRasterCommand(raster));
-    printer.newLine();
-  }
-
-  printer.cut();
+  const printer = await createThermalPrinter(printerInterface);
+  await appendSessionReceiptToPrinter(printer, receipt, viewOrigin);
   await printer.execute();
 }

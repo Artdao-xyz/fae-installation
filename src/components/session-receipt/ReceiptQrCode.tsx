@@ -30,7 +30,7 @@ export function ReceiptQrCode({
       margin: 1,
       errorCorrectionLevel: "L",
       type: "image/jpeg",
-      quality: 0.92,
+      rendererOpts: { quality: 0.92 },
     }).then((dataUrl) => {
       if (!cancelled) setSrc(dataUrl);
     });
@@ -42,7 +42,7 @@ export function ReceiptQrCode({
 
   if (asImage) {
     return (
-      <div className="flex justify-center py-2" aria-hidden>
+      <div className="py-2" aria-hidden>
         {src ? (
           // eslint-disable-next-line @next/next/no-img-element -- client-generated JPEG for mobile Safari
           <img
@@ -51,7 +51,7 @@ export function ReceiptQrCode({
             width={size}
             height={size}
             className="block"
-            style={{ width: size, height: size, maxWidth: "100%" }}
+            style={{ width: size, height: size }}
           />
         ) : (
           <div
@@ -67,7 +67,7 @@ export function ReceiptQrCode({
   if (!value) {
     return (
       <div
-        className="mx-auto bg-white py-2"
+        className="bg-white py-2"
         style={{ width: size, height: size }}
         aria-hidden
       />
@@ -75,14 +75,14 @@ export function ReceiptQrCode({
   }
 
   return (
-    <div className="flex justify-center py-2" aria-hidden>
+    <div className="py-2" aria-hidden>
       <QRCode
         value={value}
         size={size}
         level="L"
         bgColor="#ffffff"
         fgColor="#000000"
-        style={{ height: "auto", maxWidth: "100%", width: size }}
+        style={{ height: "auto", width: size }}
       />
     </div>
   );

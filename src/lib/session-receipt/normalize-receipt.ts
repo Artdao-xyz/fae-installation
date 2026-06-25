@@ -1,5 +1,4 @@
 import { deriveTagFortune } from "./journey-prompt";
-import { decodePathField } from "./path-grid";
 import { computeSessionSeed } from "./seed";
 import type { SessionEvent, SessionReceipt } from "./types";
 
@@ -11,6 +10,7 @@ export function normalizeSessionReceipt(
     sessionEnd?: string;
     prompt?: string;
     path?: SessionReceipt["path"];
+    qrOmittedInteractionCount?: number;
   },
 ): SessionReceipt {
   const path = options?.path;
@@ -23,5 +23,6 @@ export function normalizeSessionReceipt(
     path,
     seed,
     prompt,
+    qrOmittedInteractionCount: options?.qrOmittedInteractionCount,
   };
 }

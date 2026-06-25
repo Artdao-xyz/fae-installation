@@ -1,7 +1,40 @@
 const LOCAL_HOSTNAMES = new Set(["localhost", "127.0.0.1", "[::1]"]);
+const RECEIPT_ORIGIN_LOCAL_HOSTNAMES = new Set(["localhost", "127.0.0.1"]);
 
 export function isLocalHostname(hostname: string): boolean {
   return LOCAL_HOSTNAMES.has(hostname.toLowerCase());
+}
+
+export function isPrivateLanIPv4(hostname: string): boolean {
+  const parts = hostname.split(".").map(Number);
+  if (parts.length !== 4 || parts.some((n) => !Number.isFinite(n) || n < 0 || n > 255)) {
+    return false;
+  }
+  if (parts[0] === 10) return true;
+  if (parts[0] === 172 && parts[1] >= 16 && parts[1] <= 31) return true;
+  if (parts[0] === 192 && parts[1] === 168) return true;
+  return false;
+}
+
+/** Custom hostname override (not localhost / LAN IP — those are auto-detected). */
+export function isReceiptOriginOverride(configured: string): boolean {
+  try {
+    const hostname = new URL(configured).hostname.toLowerCase();
+    if (RECEIPT_ORIGIN_LOCAL_HOSTNAMES.has(hostname)) return false;
+    if (isPrivateLanIPv4(hostname)) return false;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** Saved LAN IPs are ignored — QR always uses the machine's current address. */
+export function isIgnoredLanReceiptOrigin(
+  configured: string | undefined | null,
+): boolean {
+  const trimmed = configured?.trim();
+  if (!trimmed) return false;
+  return !isReceiptOriginOverride(trimmed);
 }
 
 export function isLocalReceiptOrigin(origin: string): boolean {
@@ -39,12 +72,10 @@ export function pickReceiptViewOrigin(resolvedOrigin?: string): string {
   return typeof window !== "undefined" ? window.location.origin : "";
 }
 
-let cachedOrigin: string | null = null;
 let inflight: Promise<string> | null = null;
 
 /** Server-detected LAN origin — used when the kiosk browser is on localhost. */
 export async function fetchReceiptViewOrigin(): Promise<string> {
-  if (cachedOrigin) return cachedOrigin;
   if (inflight) return inflight;
 
   inflight = fetch("/api/receipt-origin")
@@ -55,14 +86,9 @@ export async function fetchReceiptViewOrigin(): Promise<string> {
         typeof data.origin === "string" && data.origin.length > 0
           ? stripTrailingSlash(data.origin)
           : pickReceiptViewOrigin();
-      cachedOrigin = origin;
       return origin;
     })
-    .catch(() => {
-      const fallback = pickReceiptViewOrigin();
-      cachedOrigin = fallback;
-      return fallback;
-    })
+    .catch(() => pickReceiptViewOrigin())
     .finally(() => {
       inflight = null;
     });

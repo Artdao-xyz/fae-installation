@@ -26,7 +26,7 @@ export function ReceiptDigitalView({
 
   return (
     <main
-      className="min-h-dvh overflow-x-hidden bg-[#e9e9e9]"
+      className="flex min-h-dvh flex-col items-center overflow-x-hidden bg-[#e9e9e9]"
       style={receiptSafePadding}
     >
       <ReceiptPaper receipt={receipt} variant="digital" encoded={encoded} />

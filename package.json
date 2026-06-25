@@ -7,7 +7,14 @@
     "build": "npm run lint && next build --turbopack",
     "analyze": "ANALYZE=true next build --webpack",
     "start": "next start",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "sync:local-data": "node scripts/sync-local-data.mjs",
+    "build:local-catalog": "node scripts/build-local-catalog.mjs",
+    "prepare:local-data": "npm run sync:local-data && npm run build:local-catalog",
+    "installation:start": "bash scripts/start-installation.sh",
+    "release": "node scripts/release-installation.mjs",
+    "release:quick": "node scripts/release-installation.mjs --skip-build",
+    "export:receipt-escpos": "node scripts/export-receipt-escpos.mjs"
   },
   "dependencies": {
     "@strapi/blocks-react-renderer": "^1.0.2",
@@ -16,7 +23,8 @@
     "qrcode": "^1.5.4",
     "react": "19.1.0",
     "react-dom": "19.1.0",
-    "react-qr-code": "^2.2.0"
+    "react-qr-code": "^2.2.0",
+    "sharp": "^0.35.1"
   },
   "devDependencies": {
     "@netlify/plugin-nextjs": "^5.15.9",

@@ -26,7 +26,7 @@ export function ReceiptPathStars({
   if (!src) {
     return (
       <div
-        className="mx-auto bg-white"
+        className="w-full bg-white"
         style={{ width: widthPx, height: heightPx, maxWidth: "100%" }}
         aria-hidden
       />
@@ -40,7 +40,7 @@ export function ReceiptPathStars({
       alt="Your browsing path"
       width={widthPx}
       height={heightPx}
-      className="mx-auto block"
+      className="block w-full"
       style={{ width: widthPx, height: "auto", maxWidth: "100%" }}
     />
   );

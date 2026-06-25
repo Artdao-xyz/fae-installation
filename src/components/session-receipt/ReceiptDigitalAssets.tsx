@@ -10,20 +10,18 @@ type ReceiptDigitalQrProps = {
   scale?: number;
 };
 
-export function ReceiptDigitalQr({ payload, scale = 1 }: ReceiptDigitalQrProps) {
-  // Render the PNG at high resolution but display at a fixed size so the QR
-  // stays crisp and doesn't dominate the receipt.
+export function ReceiptDigitalQr({ payload }: ReceiptDigitalQrProps) {
   const params = `d=${encodeURIComponent(payload)}&px=${RECEIPT_QR_RENDER_PX}`;
 
   return (
-    <div className="flex w-full justify-center py-2">
+    <div className="py-2">
       {/* eslint-disable-next-line @next/next/no-img-element -- server-rendered receipt asset */}
       <img
         src={`/api/receipt-qr?${params}`}
         alt="Receipt QR code"
         width={RECEIPT_DIGITAL_QR_DISPLAY_PX}
         height={RECEIPT_DIGITAL_QR_DISPLAY_PX}
-        className="block aspect-square h-auto max-w-full"
+        className="block aspect-square h-auto"
         style={{ width: RECEIPT_DIGITAL_QR_DISPLAY_PX }}
       />
     </div>
@@ -42,7 +40,7 @@ export function ReceiptDigitalStars({
   const params = `d=${encodeURIComponent(payload)}&s=${scale}`;
 
   return (
-    <div className="mt-4 flex w-full justify-center">
+    <div className="flex w-full justify-start">
       {/* eslint-disable-next-line @next/next/no-img-element -- server-rendered receipt asset */}
       <img
         src={`/api/receipt-stars?${params}`}
