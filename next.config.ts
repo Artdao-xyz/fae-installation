@@ -1,9 +1,7 @@
 import type { NextConfig } from "next";
-import bundleAnalyzer from "@next/bundle-analyzer";
+import { createRequire } from "node:module";
 
-const withBundleAnalyzer = bundleAnalyzer({
-  enabled: process.env.ANALYZE === "true",
-});
+const require = createRequire(import.meta.url);
 
 const nextConfig: NextConfig = {
   allowedDevOrigins: ["192.168.1.60"],
@@ -21,4 +19,16 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default withBundleAnalyzer(nextConfig);
+function withOptionalBundleAnalyzer(config: NextConfig): NextConfig {
+  if (process.env.ANALYZE !== "true") return config;
+  try {
+    const bundleAnalyzer = require("@next/bundle-analyzer") as (
+      options: { enabled: boolean },
+    ) => (cfg: NextConfig) => NextConfig;
+    return bundleAnalyzer({ enabled: true })(config);
+  } catch {
+    return config;
+  }
+}
+
+export default withOptionalBundleAnalyzer(nextConfig);
