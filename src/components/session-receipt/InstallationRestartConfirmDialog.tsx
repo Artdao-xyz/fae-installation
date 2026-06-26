@@ -34,11 +34,11 @@ export function InstallationRestartConfirmDialog({
       }`}
       role="dialog"
       aria-modal="true"
-      aria-label="Restart session"
+      aria-label="Restart Journey"
     >
       <InstallationScreenContent>
         <h2 className="font-lust-text text-left text-5xl leading-tight text-black-fae sm:text-6xl sm:leading-[65px]">
-          Restart session?
+          Restart Journey?
         </h2>
         <p className="text-left font-fira-mono text-sm font-medium leading-5 text-black-fae/50 sm:text-base">
           Your current journey will be lost and cannot be recovered.
@@ -49,10 +49,10 @@ export function InstallationRestartConfirmDialog({
             type="button"
             onClick={onConfirm}
             autoFocus
-            aria-label="Confirm restart"
+            aria-label="Restart Journey"
             className={installationIntroButtonClass}
           >
-            Restart
+            Restart Journey
             <InstallationArrowIcon className="block size-[10px] shrink-0 object-contain" />
           </button>
           <button
