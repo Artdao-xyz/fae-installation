@@ -41,7 +41,7 @@ export const FORMAT_LABELS = [
   "Interact",
 ] as const;
 
-/** Sample artist names for local fixtures (Strapi uses the `artists` collection). */
+/** Artist names referenced by receipt tag fortunes. */
 export const ARTIST_LABELS = [
   "Refik Anadol",
   "Holly Herndon",

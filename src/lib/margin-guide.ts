@@ -3,21 +3,21 @@
  * Used when JS needs the same inset as the margin guide (e.g. preview panel + particle bounds).
  */
 export function getMarginGuideInsetPx(): number {
-  if (typeof document === "undefined") return 34;
+  if (typeof document === "undefined") return 30.5;
   const raw = getComputedStyle(document.documentElement).getPropertyValue(
     "--width-filter-narrow-column",
   );
   const w = parseFloat(raw);
-  const narrow = Number.isFinite(w) ? w : 35;
+  const narrow = Number.isFinite(w) ? w : 31.5;
   return Math.max(0, narrow - 1);
 }
 
 /** Matches `--width-filter-narrow-column` (filter rail width). */
 export function getFilterNarrowColumnWidthPx(): number {
-  if (typeof document === "undefined") return 35;
+  if (typeof document === "undefined") return 31.5;
   const raw = getComputedStyle(document.documentElement).getPropertyValue(
     "--width-filter-narrow-column",
   );
   const w = parseFloat(raw);
-  return Number.isFinite(w) ? w : 35;
+  return Number.isFinite(w) ? w : 31.5;
 }

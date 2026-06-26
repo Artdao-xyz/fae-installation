@@ -20,6 +20,7 @@ import {
   MOBILE_OVERLAY_X_CLASS,
 } from "./layout-classes";
 import { SideBar } from "./SideBar";
+import { isInstallationMode } from "@/lib/installation-mode";
 import { useIsMaxLg } from "./useIsMaxLg";
 
 export function FilterSidebar() {
@@ -42,9 +43,15 @@ export function FilterSidebar() {
     selectedFaeBriefing,
     clearAllFilters,
     contentPreviewRow,
+    filterSearchQuery,
   } = useFilterSelection();
   const panelId = useId();
   const isMaxLg = useIsMaxLg();
+  const installation = isInstallationMode();
+  const installationDesktopSearching =
+    installation &&
+    !isMaxLg &&
+    filterSearchQuery.trim().length > 0;
 
   const anySubpanelOpen =
     briefingsSubpanelOpen ||
@@ -76,7 +83,7 @@ export function FilterSidebar() {
     setSubscribeSubpanelOpen,
   ]);
 
-  const subpanelsColumn: ReactElement = (
+  const subpanelsColumn: ReactElement | null = installation ? null : (
     <FilterSubpanelsColumn
       filtersPanelOpen={filtersOpen}
       anySubpanelOpen={anySubpanelOpen}
@@ -98,6 +105,77 @@ export function FilterSidebar() {
     hasActiveTaxonomyFilters || selectedFaeBriefing != null;
   const showMobileSelectedFiltersChrome =
     hasSelectedFilters && contentPreviewRow == null;
+
+  const installationDesktopChrome = installation;
+
+  const filterChromeRow = (
+    <>
+      <div
+        className={`relative hidden shrink-0 lg:flex lg:min-h-0 lg:flex-col ${
+          installation
+            ? installationDesktopSearching
+              ? "h-full self-stretch"
+              : "self-stretch"
+            : "h-full min-h-0 self-stretch"
+        }`}
+      >
+        <SideBar
+          filtersOpen={filtersOpen}
+          onToggleFilters={toggleFiltersOpen}
+          filterPanelId={panelId}
+          showTopBorder={installationDesktopChrome}
+          fillHeight
+        />
+      </div>
+      <div
+        className={`shrink-0 overflow-hidden ${FILTER_OPTIONS_PANEL_CLIP_TRANSITION_CLASS} max-lg:min-w-0 ${
+          filtersOpen
+            ? `w-filter-options max-lg:w-full max-lg:flex-1 opacity-100 ${
+                installation
+                  ? installationDesktopSearching
+                    ? "h-full min-h-0 self-stretch"
+                    : "min-h-0 self-stretch"
+                  : "h-full min-h-0"
+              }`
+            : installation
+              ? "pointer-events-none invisible w-0 opacity-0 max-lg:h-0 max-lg:w-0"
+              : "pointer-events-none h-0 w-0 max-lg:w-0 opacity-0"
+        }`}
+        aria-hidden={installation && !filtersOpen ? true : undefined}
+      >
+        <div
+          className={`w-filter-options min-w-0 overflow-hidden max-lg:w-full ${
+            filtersOpen || !installation ? "h-full min-h-0" : ""
+          }`}
+        >
+          {showOptionsPanel ? (
+            <FilterOptionsPanel
+              panelId={panelId}
+              briefingsSubpanelOpen={briefingsSubpanelOpen}
+              rdSubpanelOpen={rdSubpanelOpen}
+              fellowshipsSubpanelOpen={fellowshipsSubpanelOpen}
+              artistsSubpanelOpen={artistsSubpanelOpen}
+              networkSubpanelOpen={networkSubpanelOpen}
+              onToggleArtistsSubpanel={() =>
+                setArtistsSubpanelOpen((open) => {
+                  const next = !open;
+                  if (next) setSubscribeSubpanelOpen(false);
+                  return next;
+                })
+              }
+              onToggleNetworkSubpanel={() =>
+                setNetworkSubpanelOpen((open) => {
+                  const next = !open;
+                  if (next) setSubscribeSubpanelOpen(false);
+                  return next;
+                })
+              }
+            />
+          ) : null}
+        </div>
+      </div>
+    </>
+  );
 
   return (
     <>
@@ -125,89 +203,74 @@ export function FilterSidebar() {
           mergeWithSubpanel={anySubpanelOpen}
         />
         <div
-          className={`flex min-h-0 min-w-0 flex-1 flex-row overflow-hidden transition-colors duration-500 ease-in-out motion-reduce:transition-none ${
-            filtersOpen ? "bg-surface-canvas" : "bg-transparent"
-          }`}
+          className={
+            installation
+              ? installationDesktopSearching
+                ? "flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
+                : "flex min-h-0 min-w-0 flex-1 flex-col justify-end overflow-visible"
+              : `flex min-h-0 min-w-0 flex-1 flex-row overflow-hidden transition-colors duration-500 ease-in-out motion-reduce:transition-none ${
+                  filtersOpen ? "bg-surface-canvas" : "bg-transparent"
+                }`
+          }
         >
-          <div className="hidden h-full min-h-0 shrink-0 lg:block">
-            <SideBar
-              filtersOpen={filtersOpen}
-              onToggleFilters={toggleFiltersOpen}
-              filterPanelId={panelId}
-            />
-          </div>
-          <div
-            className={`h-full min-h-0 shrink-0 overflow-hidden ${FILTER_OPTIONS_PANEL_CLIP_TRANSITION_CLASS} max-lg:min-w-0 ${
-              filtersOpen
-                ? "w-filter-options max-lg:w-full max-lg:flex-1 opacity-100"
-                : "pointer-events-none w-0 max-lg:w-0 opacity-0"
-            }`}
-          >
-            <div className="h-full min-h-0 w-filter-options max-lg:w-full min-w-0 overflow-hidden">
-              {showOptionsPanel ? (
-                <FilterOptionsPanel
-                  panelId={panelId}
-                  briefingsSubpanelOpen={briefingsSubpanelOpen}
-                  rdSubpanelOpen={rdSubpanelOpen}
-                  fellowshipsSubpanelOpen={fellowshipsSubpanelOpen}
-                  artistsSubpanelOpen={artistsSubpanelOpen}
-                  networkSubpanelOpen={networkSubpanelOpen}
-                  onToggleArtistsSubpanel={() =>
-                    setArtistsSubpanelOpen((open) => {
+          {installation ? (
+            <div
+              className={`flex min-h-0 flex-row items-stretch ${
+                installationDesktopSearching
+                  ? "min-h-0 flex-1 overflow-hidden"
+                  : "shrink-0 overflow-visible"
+              }`}
+            >
+              {filterChromeRow}
+            </div>
+          ) : (
+            <>
+              {filterChromeRow}
+              <div className="min-h-0 min-w-0 flex-1 max-lg:hidden" aria-hidden />
+            </>
+          )}
+        </div>
+        <div className={`relative shrink-0 max-lg:hidden ${FILTER_SIDEBAR_COLUMN_CLASS}`}>
+          <Footer mergeWithSubpanel={installation ? false : anySubpanelOpen} />
+          {installation ? null : (
+            <>
+              <div className="absolute inset-y-0 left-full w-filter-options">
+                <SubscribeMenu
+                  subpanelOpen={subscribeSubpanelOpen}
+                  onToggleSubpanel={() =>
+                    setSubscribeSubpanelOpen((open) => {
                       const next = !open;
-                      if (next) setSubscribeSubpanelOpen(false);
-                      return next;
-                    })
-                  }
-                  onToggleNetworkSubpanel={() =>
-                    setNetworkSubpanelOpen((open) => {
-                      const next = !open;
-                      if (next) setSubscribeSubpanelOpen(false);
+                      if (next) {
+                        setArtistsSubpanelOpen(false);
+                        setNetworkSubpanelOpen(false);
+                      }
                       return next;
                     })
                   }
                 />
-              ) : null}
-            </div>
-          </div>
-          <div className="min-h-0 min-w-0 flex-1 max-lg:hidden" aria-hidden />
-        </div>
-        <div className={`relative shrink-0 max-lg:hidden ${FILTER_SIDEBAR_COLUMN_CLASS}`}>
-          <Footer mergeWithSubpanel={anySubpanelOpen} />
-          <div className="absolute inset-y-0 left-full w-filter-options">
-            <SubscribeMenu
-              subpanelOpen={subscribeSubpanelOpen}
-              onToggleSubpanel={() =>
-                setSubscribeSubpanelOpen((open) => {
-                  const next = !open;
-                  if (next) {
-                    setArtistsSubpanelOpen(false);
-                    setNetworkSubpanelOpen(false);
-                  }
-                  return next;
-                })
-              }
-            />
-          </div>
-          <div
-            className={`absolute bottom-full left-full w-filter-options overflow-hidden border-r-hairline border-t-hairline border-solid border-border bg-surface-canvas transition-[max-height,opacity] duration-300 ease-in-out motion-reduce:transition-none ${
-              subscribeSubpanelOpen && !filtersOpen ? "border-l-hairline" : ""
-            } ${
-              subscribeSubpanelOpen
-                ? "max-h-[calc(100dvh-var(--inset-margin-guide))] opacity-100"
-                : "pointer-events-none max-h-0 opacity-0"
-            }`}
-            aria-hidden={!subscribeSubpanelOpen}
-          >
-            <SubscribeSubpanelColumn mergeTopBorder />
-          </div>
+              </div>
+              <div
+                className={`absolute bottom-full left-full w-filter-options overflow-hidden border-r-hairline border-t-hairline border-solid border-border bg-surface-canvas transition-[max-height,opacity] duration-300 ease-in-out motion-reduce:transition-none ${
+                  subscribeSubpanelOpen && !filtersOpen ? "border-l-hairline" : ""
+                } ${
+                  subscribeSubpanelOpen
+                    ? "max-h-[calc(100dvh-var(--inset-margin-guide))] opacity-100"
+                    : "pointer-events-none max-h-0 opacity-0"
+                }`}
+                aria-hidden={!subscribeSubpanelOpen}
+              >
+                <SubscribeSubpanelColumn mergeTopBorder />
+              </div>
+            </>
+          )}
         </div>
       </div>
-      <div className="contents max-lg:hidden">{subpanelsColumn}</div>
+      {subpanelsColumn ? (
+        <div className="contents max-lg:hidden">{subpanelsColumn}</div>
+      ) : null}
       <div className="contents lg:hidden">
         <div className="fixed inset-x-0 bottom-0 z-40 flex flex-col pb-[env(safe-area-inset-bottom,0px)] lg:hidden">
-          {filtersOpen ||
-          hasSelectedFilters ? null : (
+          {installation || filtersOpen || hasSelectedFilters ? null : (
             <MobileLatestUpdatesStrip />
           )}
           <div className="flex w-full shrink-0 flex-col bg-surface-canvas">

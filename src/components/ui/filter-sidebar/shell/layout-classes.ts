@@ -1,6 +1,6 @@
 /**
  * Main filter chrome column: `--width-filter-chrome-column` (25vw below 2xl, 20vw from 2xl up).
- * Domain subpanel stack: 20vw. Preview dock: `--width-preview-panel` (30vw).
+ * Domain subpanel stack: 18vw. Preview dock: `--width-preview-panel` (30vw).
  * Options strip: `FILTER_OPTIONS_PANEL_CLIP_TRANSITION_CLASS`.
  */
 export const FILTER_SIDEBAR_COLUMN_CLASS =
@@ -31,7 +31,7 @@ export const PREVIEW_DOCK_WIDTH_TRANSITION_CLASS =
 
 /** Expanded domain subpanel stack column (narrower than `FILTER_SIDEBAR_COLUMN_CLASS`). */
 export const FILTER_SUBPANELS_COLUMN_EXPANDED_CLASS =
-  "w-[20vw] max-w-[20vw] shrink-0";
+  "w-[18vw] max-w-[18vw] shrink-0";
 
 /** Domain subpanel max height: starts at the margin-guide top and can extend to viewport bottom. */
 export const FILTER_SUBPANEL_GUIDE_VIEWPORT_HEIGHT_CLASS =
@@ -51,9 +51,9 @@ export function filterSubpanelGuideViewportHeightClass(splitHeight: boolean): st
 export const ARTISTS_NETWORK_SUBPANEL_SCROLL_BODY_CLASS =
   "scrollbar-hide min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto";
 
-/** Pixel width matching `FILTER_SUBPANELS_COLUMN_EXPANDED_CLASS` (20vw). */
+/** Pixel width matching `FILTER_SUBPANELS_COLUMN_EXPANDED_CLASS` (18vw). */
 export function getFilterSubpanelColumnWidthPx(viewportWidth: number): number {
-  return viewportWidth * 0.2;
+  return viewportWidth * 0.18;
 }
 
 /** Pixel width matching `--width-preview-panel` (30vw); keep in sync with `globals.css`. */

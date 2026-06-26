@@ -5,6 +5,7 @@ import { useFilterSelection } from "@/components/ui/filter-sidebar/FilterSelecti
 import { AboutPanel } from "@/components/ui/about-panel/AboutPanel";
 import { GlossaryPanel } from "@/components/ui/glossary-panel";
 import { LatestUpdatesPanel } from "@/components/ui/latest-updates-panel/LatestUpdatesPanel";
+import { isInstallationMode } from "@/lib/installation-mode";
 import { useFloatingPanelStack } from "./FloatingPanelStackContext";
 
 /**
@@ -45,6 +46,8 @@ function AboutPeekWhenFilterSidebarOpens({
 export function FloatingDockMount({
   suppressInitialAboutPeek = false,
 }: FloatingDockMountProps) {
+  if (isInstallationMode()) return null;
+
   return (
     <>
       {/* About is opened from `MobileSiteHeader` on `max-lg`; dock peek rail stays `lg+` only inside `AboutPanel`. */}

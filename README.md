@@ -1,36 +1,48 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# FAE Installation
 
-## Getting Started
+Offline exhibition kiosk for Future Art Ecosystems. Next.js app that runs locally with content from `data/catalog.json` and images in `data/media/`.
 
-First, run the development server:
+## Requirements
+
+- Node.js 20.x
+- macOS (for thermal printer + release package)
+
+## Run locally
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run installation:start
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Opens the kiosk at `http://localhost:3000`. Admin panel: `/admin` (default PIN: `fae`).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+For development:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+cp .env.example .env.local
+npm run dev
+```
 
-## Learn More
+## Content
 
-To learn more about Next.js, take a look at the following resources:
+The installation reads **local data** when `data/catalog.json` exists (default). No live CMS connection is required on the show machine.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+To refresh content from exports in `new-data/`:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npm run import:new-data
+```
 
-## Deploy on Vercel
+See `data/README.txt` for details.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Useful scripts
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| Command | Purpose |
+|---|---|
+| `npm run installation:start` | Production kiosk |
+| `npm run import:new-data` | Build `data/` from `new-data/` |
+| `npm run release` | Package for exhibition (`release/FAE-Installation/`) |
+
+## Docs
+
+- **[HOW-TO-RUN.md](./HOW-TO-RUN.md)** — for exhibition staff (start kiosk, printer, troubleshooting)
