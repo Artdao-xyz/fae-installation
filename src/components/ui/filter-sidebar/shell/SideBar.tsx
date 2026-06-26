@@ -8,16 +8,24 @@ type SideBarProps = {
   filtersOpen: boolean;
   onToggleFilters: () => void;
   filterPanelId: string;
+  showTopBorder?: boolean;
+  fillHeight?: boolean;
 };
 
 export function SideBar({
   filtersOpen,
   onToggleFilters,
   filterPanelId,
+  showTopBorder = false,
+  fillHeight = true,
 }: SideBarProps) {
   return (
     <div
-      className="flex h-full min-h-0 w-filter-narrow-column shrink-0 select-none flex-col justify-between self-stretch border-r-hairline border-solid border-border bg-surface-canvas"
+      className={`flex w-filter-narrow-column shrink-0 select-none flex-col justify-between self-stretch border-r-hairline border-solid border-border bg-surface-canvas ${
+        fillHeight ? "min-h-0 flex-1" : "h-auto shrink-0"
+      } ${
+        showTopBorder ? "border-t-hairline" : ""
+      }`}
     >
       <button
         type="button"

@@ -10,6 +10,7 @@ export default defineConfig([
     "out/**",
     "build/**",
     "node_modules/**",
+    "release/**",
     "next-env.d.ts",
   ]),
 ]);

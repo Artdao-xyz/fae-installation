@@ -10,7 +10,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    // `suppressHydrationWarning`: the receipt view routes add a scroll-unlock
+    // class to <html> via an inline pre-hydration script (see ReceiptViewScroll).
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`subpixel-antialiased`}
       >
