@@ -21,6 +21,7 @@ export function InstallationGlyphMark({
       width={width}
       height={height}
       priority={priority}
+      draggable={false}
       aria-hidden
       className={installationGlyphMarkClass}
       sizes="440px"
