@@ -2,16 +2,11 @@
  * Offline CMS snapshot: `data/catalog.json` + `data/media/`.
  *
  * Source selection: `FAE_DATA_SOURCE=local` | `FAE_DATA_SOURCE=strapi`.
- * Synthetic dev fixture: `FAE_USE_STRAPI_FIXTURE=1` (takes priority).
  */
 
 import type { ContentRow } from "@/data/content-types";
-import {
-  getConfiguredDataSource,
-  type DataSource,
-} from "@/lib/data-source";
+import { getConfiguredDataSource } from "@/lib/data-source";
 import type { StrapiTaxonomyOptionLabels } from "@/lib/strapi/fetch-outputs-list";
-import { offlineFixtureEnabled } from "@/lib/strapi/offline-fixture";
 
 import { loadLocalCatalog } from "./load-catalog";
 import { localCatalogExists } from "./paths";
@@ -34,12 +29,11 @@ export function localDataSourceRequested(): boolean {
 function assertLocalCatalogPresent(): void {
   if (localCatalogExists()) return;
   throw new Error(
-    "FAE_DATA_SOURCE=local but data/catalog.json is missing. Run: npm run prepare:local-data",
+    "FAE_DATA_SOURCE=local but data/catalog.json is missing. Run: npm run import:new-data",
   );
 }
 
 export function localDataEnabled(): boolean {
-  if (offlineFixtureEnabled()) return false;
   if (!localDataSourceRequested()) return false;
   if (getConfiguredDataSource() === "local") {
     assertLocalCatalogPresent();
@@ -79,12 +73,10 @@ export function strapiDataSourceConfigured(): boolean {
   return Boolean(process.env.STRAPI_URL?.trim());
 }
 
-export type ContentSourceKind = "fixture" | "local" | "strapi" | "none";
+export type ContentSourceKind = "local" | "strapi" | "none";
 
 /** Active catalog source without throwing when local data is misconfigured. */
 export function resolveContentSourceKind(): ContentSourceKind {
-  if (offlineFixtureEnabled()) return "fixture";
-
   const configured = getConfiguredDataSource();
   if (configured === "local" || (configured !== "strapi" && localCatalogExists())) {
     return localCatalogExists() ? "local" : "none";

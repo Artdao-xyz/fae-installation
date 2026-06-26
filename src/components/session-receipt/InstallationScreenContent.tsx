@@ -3,10 +3,14 @@ import { installationScreenContentClass } from "./installation-screen-chrome";
 
 export function InstallationScreenContent({
   children,
+  className,
 }: {
   children: ReactNode;
+  className?: string;
 }) {
   return (
-    <div className={installationScreenContentClass}>{children}</div>
+    <div className={`${installationScreenContentClass} ${className ?? ""}`}>
+      {children}
+    </div>
   );
 }

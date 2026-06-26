@@ -16,6 +16,7 @@ import { OpenSvgIcon } from "@/components/ui/icons/OpenSvgIcon";
 import { useFloatingPanelStack } from "@/components/ui/floating-panels/FloatingPanelStackContext";
 import { SubscribePanelContent } from "@/components/ui/filter-sidebar/domains/subscribe/SubscribeSubpanelColumn";
 import { MobileGlossarySheet } from "@/components/ui/glossary-panel/MobileGlossarySheet";
+import { InstallationHeaderRestartButton } from "@/components/session-receipt/InstallationHeaderRestartButton";
 import { isInstallationMode } from "@/lib/installation-mode";
 import { Z_INDEX } from "@/lib/z-index-scale";
 
@@ -133,7 +134,9 @@ export function MobileSiteHeader({
               Future Arts Ecosystems
             </span>
           </button>
-          {installation ? null : (
+          {installation ? (
+            <InstallationHeaderRestartButton className="size-8 shrink-0" />
+          ) : (
             <button
               type="button"
               onClick={() => {

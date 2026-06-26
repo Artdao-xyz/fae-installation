@@ -5,18 +5,17 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "npm run lint && next build --turbopack",
-    "analyze": "ANALYZE=true next build --webpack",
     "start": "next start",
     "lint": "eslint .",
-    "sync:local-data": "node scripts/sync-local-data.mjs",
-    "build:local-catalog": "node scripts/build-local-catalog.mjs",
-    "prepare:local-data": "npm run sync:local-data && npm run build:local-catalog",
+    "import:new-data": "node scripts/import-new-data.mjs",
+    "prepare:local-data": "npm run import:new-data",
     "installation:start": "bash scripts/start-installation.sh",
     "release": "node scripts/release-installation.mjs",
     "release:quick": "node scripts/release-installation.mjs --skip-build",
     "export:receipt-escpos": "node scripts/export-receipt-escpos.mjs"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1075.0",
     "@strapi/blocks-react-renderer": "^1.0.2",
     "next": "^16.2.1",
     "node-thermal-printer": "^4.6.0",
@@ -27,8 +26,6 @@
     "sharp": "^0.35.1"
   },
   "devDependencies": {
-    "@netlify/plugin-nextjs": "^5.15.9",
-    "@next/bundle-analyzer": "^16.2.4",
     "@tailwindcss/postcss": "^4.2.2",
     "@types/node": "^20",
     "@types/qrcode": "^1.5.6",

@@ -19,7 +19,6 @@ import {
   MOBILE_OVERLAY_TOP_CLASS,
   MOBILE_OVERLAY_X_CLASS,
 } from "./layout-classes";
-import { InstallationSidebarActions } from "@/components/session-receipt/InstallationSidebarActions";
 import { SideBar } from "./SideBar";
 import { isInstallationMode } from "@/lib/installation-mode";
 import { useIsMaxLg } from "./useIsMaxLg";
@@ -232,7 +231,6 @@ export function FilterSidebar() {
           )}
         </div>
         <div className={`relative shrink-0 max-lg:hidden ${FILTER_SIDEBAR_COLUMN_CLASS}`}>
-          {installation ? <InstallationSidebarActions /> : null}
           <Footer mergeWithSubpanel={installation ? false : anySubpanelOpen} />
           {installation ? null : (
             <>

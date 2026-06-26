@@ -35,6 +35,7 @@ import { InstallationAboutScreen } from "./InstallationAboutScreen";
 import { InstallationIntroScreen } from "./InstallationIntroScreen";
 import { InstallationPrintConfirmDialog } from "./InstallationPrintConfirmDialog";
 import { InstallationPrinterBanner } from "./InstallationPrinterBanner";
+import { InstallationCompleteJourneyControl } from "./InstallationCompleteJourneyControl";
 import { InstallationPathRecordingLabel } from "./InstallationPathRecordingLabel";
 import { InstallationRecordingIndicator } from "./InstallationRecordingIndicator";
 import { MousePathTracker } from "./MousePathTracker";
@@ -325,6 +326,7 @@ export function SessionReceiptProvider({ children }: { children: ReactNode }) {
       {enabled ? <MousePathTracker /> : null}
       {enabled ? <InstallationRecordingIndicator /> : null}
       {enabled ? <InstallationPathRecordingLabel /> : null}
+      {enabled ? <InstallationCompleteJourneyControl /> : null}
       {enabled ? <InstallationPrinterBanner /> : null}
       {children}
       {enabled ? (

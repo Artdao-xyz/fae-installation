@@ -62,11 +62,11 @@ fi
 
 if [[ ! -f data/catalog.json ]]; then
   echo "Catalog missing at data/catalog.json"
-  if [[ -d backups ]] && [[ -f scripts/sync-local-data.mjs ]]; then
-    echo "Preparing local data from backups/..."
-    npm run prepare:local-data || fail "Could not prepare local data"
+  if [[ -d new-data/content ]] && [[ -f scripts/import-new-data.mjs ]]; then
+    echo "Preparing local data from new-data/..."
+    npm run import:new-data || fail "Could not import new-data"
   else
-    fail "Copy the data/ folder into the installation package, or include backups/."
+    fail "Copy the data/ folder into the installation package, or include new-data/."
   fi
 fi
 

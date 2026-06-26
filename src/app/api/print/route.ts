@@ -4,6 +4,8 @@ import {
   resolvePrinterInterface,
   resolvePrinterUrl,
 } from "@/lib/installation/config";
+import { scheduleSessionReceiptArchive } from "@/lib/session-receipt/archive-receipt";
+import { scheduleSessionReceiptCloudArchive } from "@/lib/session-receipt/archive-receipt-cloud";
 import { logSessionReceiptServer } from "@/lib/session-receipt/log";
 import { isLocalReceiptOrigin } from "@/lib/session-receipt/resolve-view-origin";
 import { resolveReceiptViewOriginFromRequest } from "@/lib/session-receipt/resolve-view-origin-server";
@@ -51,6 +53,8 @@ export async function POST(request: Request) {
   }
 
   logSessionReceiptServer("POST /api/print", body);
+  scheduleSessionReceiptArchive(body);
+  scheduleSessionReceiptCloudArchive(body);
 
   const headerOrigin = request.headers.get("x-receipt-view-origin")?.trim();
   const viewOrigin =

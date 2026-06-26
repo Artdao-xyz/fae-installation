@@ -1,9 +1,9 @@
 import type { NextConfig } from "next";
-import { createRequire } from "node:module";
-
-const require = createRequire(import.meta.url);
 
 const nextConfig: NextConfig = {
+  async redirects() {
+    return [{ source: "/view", destination: "/v", permanent: true }];
+  },
   allowedDevOrigins: ["192.168.1.60"],
   images: {
     remotePatterns: [
@@ -19,16 +19,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-function withOptionalBundleAnalyzer(config: NextConfig): NextConfig {
-  if (process.env.ANALYZE !== "true") return config;
-  try {
-    const bundleAnalyzer = require("@next/bundle-analyzer") as (
-      options: { enabled: boolean },
-    ) => (cfg: NextConfig) => NextConfig;
-    return bundleAnalyzer({ enabled: true })(config);
-  } catch {
-    return config;
-  }
-}
-
-export default withOptionalBundleAnalyzer(nextConfig);
+export default nextConfig;

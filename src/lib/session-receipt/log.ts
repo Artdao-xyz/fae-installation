@@ -69,7 +69,7 @@ export function logSessionReceipt(label: string, receipt: SessionReceipt): void 
 }
 
 export function logReceiptQrUrl(url: string): void {
-  console.info(`${LOG_PREFIX} QR → /view (${url.length} chars, no database)`);
+  console.info(`${LOG_PREFIX} QR → /v (${url.length} chars, no database)`);
   console.info(`${LOG_PREFIX} ${url}`);
 }
 

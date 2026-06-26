@@ -17,7 +17,7 @@ type InstallationStatus = {
   installationMode: boolean;
   catalogPresent: boolean;
   contentSourceReady: boolean;
-  contentSource: "fixture" | "local" | "strapi" | "none";
+  contentSource: "local" | "strapi" | "none";
   configuredDataSource: "local" | "strapi" | null;
   mediaFileCount: number;
   printerConfigured: boolean;
@@ -320,9 +320,7 @@ export function AdminPanel() {
                           ? ""
                           : " — auto (FAE_DATA_SOURCE unset)"
                       }`
-                    : status.contentSource === "fixture"
-                      ? "Dev fixture"
-                      : status.configuredDataSource === "local"
+                    : status.configuredDataSource === "local"
                         ? "FAE_DATA_SOURCE=local but catalog missing"
                         : "Set FAE_DATA_SOURCE and STRAPI_URL or sync local data"
               }

@@ -9,8 +9,6 @@ export const installationOverlayZClass = "z-[250]";
 export const installationOverlayBackdropClass =
   "bg-surface-canvas/80 backdrop-blur-fae-md";
 
-export const installationScreensaverBackdropClass = "bg-black";
-
 /** Start screen hero glyph (intro / idle return). */
 export const installationIntroGlyphSrc = "/glyph-2.png";
 
@@ -30,11 +28,15 @@ export const installationScreenSubtitleClass =
 /** Title + subtitle stack — keeps the pair visually tight inside the screen column. */
 export const installationScreenTitleBlockClass = "flex flex-col gap-0";
 
+/** Screensaver title stack — centered within the bouncing content column. */
+export const installationScreensaverTitleBlockClass =
+  "flex w-full flex-col items-center gap-0";
+
 export const installationScreensaverTitleClass =
-  "font-lust-text whitespace-nowrap text-left text-[clamp(2rem,7vw,3rem)] leading-tight text-white";
+  "font-lust-text whitespace-nowrap text-center text-[clamp(2rem,7vw,3rem)] leading-tight text-black-fae";
 
 export const installationScreensaverSubtitleClass =
-  "text-left font-fira-mono text-sm font-medium leading-5 text-white/50 sm:text-base";
+  "text-center font-fira-mono text-sm font-medium leading-5 text-black-fae/50 sm:text-base";
 
 export const installationModalOverlayClass = [
   "fixed inset-0",

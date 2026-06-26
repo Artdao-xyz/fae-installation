@@ -4,15 +4,16 @@ import { useEffect } from "react";
 import { InstallationGlyphMark } from "./InstallationGlyphMark";
 import { InstallationScreenContent } from "./InstallationScreenContent";
 import {
+  installationOverlayBackdropClass,
   installationOverlayEnterClass,
   installationScreenStageClass,
-  installationScreensaverBackdropClass,
   installationScreensaverGlyphSrc,
-  installationScreenTitleBlockClass,
   installationScreensaverSubtitleClass,
+  installationScreensaverTitleBlockClass,
   installationScreensaverTitleClass,
 } from "./installation-screen-chrome";
 import { useBodyScrollLock } from "./use-body-scroll-lock";
+import { useDvdScreensaverMotion } from "./use-dvd-screensaver-motion";
 import { useInstallationOverlayTransition } from "./use-installation-overlay-enter";
 
 const SCREENSAVER_CTA = "Touch or move to continue";
@@ -27,6 +28,7 @@ export function InstallationScreensaver({
   onDismiss,
 }: InstallationScreensaverProps) {
   const { mounted, entered } = useInstallationOverlayTransition(open);
+  const { contentRef, reducedMotion } = useDvdScreensaverMotion(mounted);
   useBodyScrollLock(mounted);
 
   useEffect(() => {
@@ -45,39 +47,56 @@ export function InstallationScreensaver({
 
   if (!mounted) return null;
 
+  const screenBody = (
+    <>
+      <InstallationGlyphMark
+        src={installationScreensaverGlyphSrc}
+        width={3776}
+        height={3609}
+        priority
+      />
+      <div className={installationScreensaverTitleBlockClass}>
+        <div className={installationScreensaverTitleClass}>
+          Future Art Ecosystems
+        </div>
+        <p className={installationScreensaverSubtitleClass}>
+          Art and Advanced Technologies Research
+        </p>
+      </div>
+      <p
+        className={`w-full text-center font-fira-mono text-xs leading-4 text-black-fae/40 motion-safe:animate-pulse sm:text-sm sm:leading-5 ${
+          entered ? "opacity-100" : "opacity-0"
+        }`}
+      >
+        {SCREENSAVER_CTA}
+      </p>
+    </>
+  );
+
   return (
     <div
-      className={`fixed inset-0 z-300 cursor-default ${installationScreenStageClass} ${installationScreensaverBackdropClass} ${installationOverlayEnterClass} ${
-        entered ? "opacity-100" : "opacity-0"
-      }`}
+      className={`fixed inset-0 z-300 cursor-default ${installationOverlayBackdropClass} ${
+        reducedMotion ? installationScreenStageClass : "overflow-hidden"
+      } ${installationOverlayEnterClass} ${entered ? "opacity-100" : "opacity-0"}`}
       role="dialog"
       aria-modal="true"
       aria-label="Future Art Ecosystems"
       onPointerDown={onDismiss}
     >
-      <InstallationScreenContent>
-        <InstallationGlyphMark
-          src={installationScreensaverGlyphSrc}
-          width={3776}
-          height={3609}
-          priority
-        />
-        <div className={installationScreenTitleBlockClass}>
-          <div className={installationScreensaverTitleClass}>
-            Future Art Ecosystems
-          </div>
-          <p className={installationScreensaverSubtitleClass}>
-            Art and Advanced Technologies Research
-          </p>
-        </div>
-        <p
-          className={`text-left font-fira-mono text-xs leading-4 text-white/40 motion-safe:animate-pulse sm:text-sm sm:leading-5 ${
-            entered ? "opacity-100" : "opacity-0"
-          }`}
+      {reducedMotion ? (
+        <InstallationScreenContent className="items-center">
+          {screenBody}
+        </InstallationScreenContent>
+      ) : (
+        <div
+          ref={contentRef}
+          className="absolute top-0 left-0 will-change-transform"
         >
-          {SCREENSAVER_CTA}
-        </p>
-      </InstallationScreenContent>
+          <InstallationScreenContent className="items-center">
+            {screenBody}
+          </InstallationScreenContent>
+        </div>
+      )}
     </div>
   );
 }

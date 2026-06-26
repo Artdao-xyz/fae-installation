@@ -15,7 +15,7 @@ type InstallationHealth = {
   installationMode: boolean;
   catalogPresent: boolean;
   contentSourceReady: boolean;
-  contentSource: "fixture" | "local" | "strapi" | "none";
+  contentSource: "local" | "strapi" | "none";
   printerConfigured: boolean;
   mediaFileCount: number;
   visitorReady: boolean;

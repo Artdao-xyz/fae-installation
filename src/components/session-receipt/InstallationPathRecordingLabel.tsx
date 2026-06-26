@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
-import { marginGuideBottomStripRightClass } from "@/components/ui/margin-guide-frame/marginGuideChrome";
+import { marginGuideBottomStripCenterClass } from "@/components/ui/margin-guide-frame/marginGuideChrome";
 import { useFilterSelection } from "@/components/ui/filter-sidebar/FilterSelectionContext";
 import { Z_INDEX } from "@/lib/z-index-scale";
 import {
@@ -104,8 +104,6 @@ export function InstallationPathRecordingLabel() {
     [],
   );
 
-  const dockedPreviewOpen = contentPreviewRow != null;
-
   if (!enabled || !recording || screensaverActive || previewOpen || !mounted) {
     return null;
   }
@@ -116,12 +114,9 @@ export function InstallationPathRecordingLabel() {
   return createPortal(
     <div
       className={[
-        "pointer-events-none mr-2",
-        marginGuideBottomStripRightClass,
-        dockedPreviewOpen
-          ? "right-[calc(var(--inset-margin-guide)+var(--width-preview-panel))]"
-          : "",
-        "max-lg:bottom-[calc(env(safe-area-inset-bottom,0px)+4.5rem)] max-lg:right-5 max-lg:h-auto",
+        "pointer-events-none",
+        marginGuideBottomStripCenterClass,
+        "max-lg:bottom-[calc(env(safe-area-inset-bottom,0px)+4.5rem)] max-lg:h-auto",
       ].join(" ")}
       style={{ zIndex: Z_INDEX.guiFloatingDock }}
       role="status"

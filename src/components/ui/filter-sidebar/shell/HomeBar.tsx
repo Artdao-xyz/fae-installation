@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useFilterSelection } from "@/components/ui/filter-sidebar/FilterSelectionContext";
 import { filterPillSelection } from "@/components/ui/filter-sidebar/primitives/filterFramedClasses";
 import { HomeSvgIcon } from "@/components/ui/icons/HomeSvgIcon";
+import { InstallationHeaderRestartButton } from "@/components/session-receipt/InstallationHeaderRestartButton";
 import { isInstallationMode } from "@/lib/installation-mode";
 import { filterChromeRightEdgeClass } from "./layout-classes";
 
@@ -136,7 +137,11 @@ export function HomeBar({
               className="m-0 block h-3.5 w-auto max-h-3.5 shrink-0 object-contain object-center"
             />
           </button>
-        ) : null}
+        ) : (
+          <InstallationHeaderRestartButton
+            className={`${resetFiltersButtonClassName} max-lg:hidden`}
+          />
+        )}
       </div>
     </div>
   );

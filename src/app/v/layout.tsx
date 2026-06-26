@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import {
   ReceiptViewScroll,
   ReceiptViewScrollScript,
-} from "../view/ReceiptViewScroll";
+} from "./ReceiptViewScroll";
 
 export default function VLayout({ children }: { children: ReactNode }) {
   return (

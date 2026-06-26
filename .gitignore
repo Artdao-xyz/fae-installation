@@ -46,6 +46,7 @@ yarn-error.log*
 /data/media/*
 !/data/media/.gitkeep
 /data/source.json
+/data/receipts.jsonl
 
 # vercel
 .vercel
