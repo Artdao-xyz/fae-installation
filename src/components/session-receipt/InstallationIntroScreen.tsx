@@ -24,7 +24,6 @@ type InstallationIntroScreenProps = {
 
 export function InstallationIntroScreen({
   open,
-  onReadAbout,
   onStartJourney,
 }: InstallationIntroScreenProps) {
   const { mounted, entered } = useInstallationOverlayTransition(open);
@@ -66,9 +65,10 @@ export function InstallationIntroScreen({
           </button>
           <button
             type="button"
-            onClick={onReadAbout}
+            disabled
             aria-label="Read about exhibition"
-            className={installationIntroButtonClass}
+            aria-disabled="true"
+            className={`${installationIntroButtonClass} disabled:cursor-not-allowed disabled:opacity-40`}
           >
             Read About Exhibition
             <InstallationArrowIcon className="block size-[10px] shrink-0 object-contain" />

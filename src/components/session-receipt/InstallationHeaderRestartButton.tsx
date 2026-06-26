@@ -27,7 +27,7 @@ export function InstallationHeaderRestartButton({
         type="button"
         onClick={() => setRestartConfirmOpen(true)}
         className={`${restartButtonClassName} ${className}`}
-        aria-label="Restart session"
+        aria-label="Restart Journey"
       >
         {/* eslint-disable-next-line @next/next/no-img-element -- small static chrome icon */}
         <img

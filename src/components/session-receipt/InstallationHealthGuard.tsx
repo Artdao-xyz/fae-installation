@@ -123,30 +123,3 @@ export function InstallationHealthGuard({ children }: { children: React.ReactNod
     </>
   );
 }
-
-export function useInstallationPrinterReady(): boolean | null {
-  const enabled = isInstallationMode();
-  const [printerReady, setPrinterReady] = useState<boolean | null>(null);
-
-  useEffect(() => {
-    if (!enabled) return;
-
-    let cancelled = false;
-
-    const poll = async () => {
-      const health = await fetchInstallationHealth();
-      if (cancelled) return;
-      setPrinterReady(health?.printerConfigured ?? false);
-    };
-
-    void poll();
-    const id = window.setInterval(() => void poll(), POLL_MS);
-    return () => {
-      cancelled = true;
-      window.clearInterval(id);
-    };
-  }, [enabled]);
-
-  if (!enabled) return null;
-  return printerReady;
-}
