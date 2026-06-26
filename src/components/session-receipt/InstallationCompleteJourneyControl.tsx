@@ -9,12 +9,12 @@ import { InstallationArrowIcon } from "./InstallationArrowIcon";
 import { useSessionReceipt } from "./SessionReceiptProvider";
 
 const completeJourneyButtonClass = [
-  "inline-flex h-[calc(var(--inset-margin-guide)+1px)] w-[300px] shrink-0 items-center justify-between gap-2",
+  "inline-flex h-[calc(var(--inset-margin-guide)+1px)] w-[300px] shrink-0 items-center justify-center gap-2",
   "border-x-hairline border-t-hairline border-solid",
-  "border-[color:var(--color-filter-pill-selection)] bg-[color:var(--color-filter-pill-selection)]",
-  "px-2.5 font-fira-mono text-[12px] leading-[15px] text-surface-canvas",
-  "transition-[filter,opacity] duration-150 enabled:hover:brightness-[1.08]",
-  "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-surface-canvas",
+  "border-[color:var(--color-filter-pill-selection)] bg-surface-canvas",
+  "px-2.5 font-fira-mono text-[12px] leading-[15px] text-[color:var(--color-filter-pill-selection)]",
+  "transition-colors duration-150 enabled:hover:bg-surface-hover/60",
+  "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-[color:var(--color-filter-pill-selection)]",
 ].join(" ");
 
 export function InstallationCompleteJourneyControl() {
@@ -56,7 +56,7 @@ export function InstallationCompleteJourneyControl() {
           aria-label="Complete journey and print receipt"
         >
           <span className="min-w-0 truncate">Complete Journey</span>
-          <InstallationArrowIcon className="block h-[9px] w-[7px] shrink-0 object-contain brightness-0 invert" />
+          <InstallationArrowIcon className="block h-[9px] w-[7px] shrink-0 object-contain" />
         </button>
       </div>
     </div>,
