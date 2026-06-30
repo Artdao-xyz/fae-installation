@@ -286,3 +286,104 @@ export function computeSpreadTargets(
   relaxViewportCardCenters(work, vw, vh, cw, ch, SPREAD_GAP_X, SPREAD_GAP_Y);
   return work.map((c, j) => v3(c.px - vw / 2, c.py - vh / 2, afterJitter[j]!.z));
 }
+
+/** Sub-rectangle inside the union placement box (offsets from its top-left). */
+export type SpreadPlacementZone = {
+  width: number;
+  height: number;
+  offsetX: number;
+  offsetY: number;
+};
+
+function allocateSpreadCountsByArea(
+  total: number,
+  zones: readonly SpreadPlacementZone[],
+): number[] {
+  if (total <= 0 || zones.length === 0) return zones.map(() => 0);
+  const areas = zones.map((z) => Math.max(0, z.width) * Math.max(0, z.height));
+  const sum = areas.reduce((a, b) => a + b, 0);
+  if (sum <= 0) return zones.map(() => 0);
+
+  const raw = areas.map((a) => (total * a) / sum);
+  const counts = raw.map((x) => Math.floor(x));
+  let remainder = total - counts.reduce((a, b) => a + b, 0);
+  const order = raw
+    .map((x, i) => ({ i, frac: x - counts[i]! }))
+    .sort((a, b) => b.frac - a.frac);
+  for (let k = 0; remainder > 0; k++) {
+    counts[order[k % order.length]!.i]! += 1;
+    remainder--;
+  }
+  return counts;
+}
+
+function zoneTargetToUnionSpace(
+  target: Vec3,
+  zone: SpreadPlacementZone,
+  unionWidth: number,
+  unionHeight: number,
+): Vec3 {
+  return v3(
+    zone.offsetX + target.x + zone.width / 2 - unionWidth / 2,
+    zone.offsetY + target.y + zone.height / 2 - unionHeight / 2,
+    target.z,
+  );
+}
+
+/**
+ * Pack filtered tiles into multiple zones (e.g. installation: band above the filter panel + main
+ * canvas). Targets are in the union box’s center-relative space — same as {@link computeSpreadTargets}.
+ */
+export function computeSpreadTargetsInZones(
+  unionWidth: number,
+  unionHeight: number,
+  zones: readonly SpreadPlacementZone[],
+  zNear: number,
+  count: number,
+  cardSize: ThumbnailSize = "lg",
+  layoutSalt: number = 0,
+): Vec3[] {
+  const validZones = zones.filter((z) => z.width > 0 && z.height > 0);
+  if (validZones.length === 0) {
+    return computeSpreadTargets(
+      unionWidth,
+      unionHeight,
+      zNear,
+      count,
+      cardSize,
+      layoutSalt,
+    );
+  }
+  if (validZones.length === 1) {
+    const z = validZones[0]!;
+    return computeSpreadTargets(
+      z.width,
+      z.height,
+      zNear,
+      count,
+      cardSize,
+      layoutSalt,
+    ).map((t) => zoneTargetToUnionSpace(t, z, unionWidth, unionHeight));
+  }
+
+  const perZone = allocateSpreadCountsByArea(count, validZones);
+  const out: Vec3[] = [];
+  for (let zi = 0; zi < validZones.length; zi++) {
+    const zone = validZones[zi]!;
+    const n = perZone[zi] ?? 0;
+    if (n <= 0) continue;
+    const zoneSalt = (layoutSalt ^ Math.imul(zi + 1, 0x9e3779b1)) | 0;
+    const packed = computeSpreadTargets(
+      zone.width,
+      zone.height,
+      zNear,
+      n,
+      cardSize,
+      zoneSalt,
+    );
+    for (const t of packed) {
+      out.push(zoneTargetToUnionSpace(t, zone, unionWidth, unionHeight));
+    }
+  }
+  return out;
+}
