@@ -22,8 +22,11 @@ export const installationGlyphMarkClass =
 export const installationScreenTitleClass =
   "font-lust-text whitespace-nowrap text-left text-[clamp(2rem,7vw,3rem)] leading-tight text-black-fae";
 
-export const installationScreenSubtitleClass =
-  "text-left font-fira-mono text-sm font-medium leading-5 text-black-fae/50 sm:text-base";
+/** Matches home hero subtitle (`HeroTitleBlock`). */
+export const installationScreenSubtitleBaseClass =
+  "font-fira-mono text-sm font-medium leading-4 text-black-fae/50 sm:text-base sm:leading-5";
+
+export const installationScreenSubtitleClass = `text-left ${installationScreenSubtitleBaseClass}`;
 
 /** Title + subtitle stack — keeps the pair visually tight inside the screen column. */
 export const installationScreenTitleBlockClass = "flex flex-col gap-0";
@@ -35,8 +38,7 @@ export const installationScreensaverTitleBlockClass =
 export const installationScreensaverTitleClass =
   "font-lust-text whitespace-nowrap text-center text-[clamp(2rem,7vw,3rem)] leading-tight text-black-fae";
 
-export const installationScreensaverSubtitleClass =
-  "text-center font-fira-mono text-sm font-medium leading-5 text-black-fae/50 sm:text-base";
+export const installationScreensaverSubtitleClass = `text-center ${installationScreenSubtitleBaseClass}`;
 
 export const installationModalOverlayClass = [
   "fixed inset-0",
