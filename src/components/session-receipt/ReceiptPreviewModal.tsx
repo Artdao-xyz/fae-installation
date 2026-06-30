@@ -164,13 +164,15 @@ export function ReceiptPreviewModal({
             <PrintingState />
           </div>
         ) : showDigital ? (
-          <DigitalReceiptState
-            receipt={receipt}
-            printFailed={printFailed}
-            printMessage={printMessage}
-            onRetryPrint={onRetryPrint}
-            onStartNewJourney={startNewJourney}
-          />
+          <div className={`${installationScreenStageClass} min-h-dvh w-full`}>
+            <DigitalReceiptState
+              receipt={receipt}
+              printFailed={printFailed}
+              printMessage={printMessage}
+              onRetryPrint={onRetryPrint}
+              onStartNewJourney={startNewJourney}
+            />
+          </div>
         ) : null}
       </div>
     </div>
