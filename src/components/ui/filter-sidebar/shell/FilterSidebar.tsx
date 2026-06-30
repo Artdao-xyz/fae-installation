@@ -215,6 +215,7 @@ export function FilterSidebar() {
         >
           {installation ? (
             <div
+              data-fae-filter-chrome-row
               className={`flex min-h-0 flex-row items-stretch ${
                 installationDesktopSearching
                   ? "min-h-0 flex-1 overflow-hidden"

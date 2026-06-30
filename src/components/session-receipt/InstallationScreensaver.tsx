@@ -47,14 +47,8 @@ export function InstallationScreensaver({
 
   if (!mounted) return null;
 
-  const screenBody = (
+  const staticTextBlock = (
     <>
-      <InstallationGlyphMark
-        src={installationScreensaverGlyphSrc}
-        width={3776}
-        height={3609}
-        priority
-      />
       <div className={installationScreensaverTitleBlockClass}>
         <div className={installationScreensaverTitleClass}>
           Future Art Ecosystems
@@ -85,17 +79,35 @@ export function InstallationScreensaver({
     >
       {reducedMotion ? (
         <InstallationScreenContent className="items-center">
-          {screenBody}
+          <InstallationGlyphMark
+            src={installationScreensaverGlyphSrc}
+            width={3776}
+            height={3609}
+            priority
+          />
+          {staticTextBlock}
         </InstallationScreenContent>
       ) : (
-        <div
-          ref={contentRef}
-          className="absolute top-0 left-0 will-change-transform"
-        >
-          <InstallationScreenContent className="items-center">
-            {screenBody}
-          </InstallationScreenContent>
-        </div>
+        <>
+          <div
+            className={`${installationScreenStageClass} pointer-events-none absolute inset-0`}
+          >
+            <InstallationScreenContent className="items-center">
+              {staticTextBlock}
+            </InstallationScreenContent>
+          </div>
+          <div
+            ref={contentRef}
+            className="absolute top-0 left-0 will-change-transform"
+          >
+            <InstallationGlyphMark
+              src={installationScreensaverGlyphSrc}
+              width={3776}
+              height={3609}
+              priority
+            />
+          </div>
+        </>
       )}
     </div>
   );

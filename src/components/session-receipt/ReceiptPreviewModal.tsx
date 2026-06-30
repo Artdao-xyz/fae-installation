@@ -10,15 +10,12 @@ import {
   installationActionButtonClass,
   installationModalOverlayClass,
   installationOverlayEnterClass,
-  installationPhaseEnterClass,
-  installationPhaseHiddenClass,
-  installationPhaseVisibleClass,
   installationScreenStageClass,
 } from "./installation-screen-chrome";
 import type { PrintStatus } from "./print-status";
+import { ReceiptConfirmQr } from "./ReceiptConfirmQr";
 import { ReceiptPaper } from "./ReceiptPaper";
 import { useSessionReceipt } from "./SessionReceiptProvider";
-import { useBodyScrollLock } from "./use-body-scroll-lock";
 import { useInstallationOverlayTransition } from "./use-installation-overlay-enter";
 
 type ReceiptPreviewModalProps = {
@@ -61,16 +58,7 @@ function DigitalReceiptState({
   onStartNewJourney,
 }: DigitalReceiptStateProps) {
   return (
-    <div className="flex h-full w-full max-w-[618px] flex-col items-center justify-center gap-10 px-4 py-6">
-      <div className="scrollbar-hide flex min-h-0 w-full flex-1 justify-center overflow-y-auto overscroll-y-contain">
-        <div
-          className="mx-auto h-fit w-full shrink-0 overflow-hidden shadow-[0px_4px_10px_0px_rgba(0,0,0,0.05)]"
-          style={{ maxWidth: RECEIPT_DIGITAL_MAX_WIDTH_PX }}
-        >
-          <ReceiptPaper receipt={receipt} variant="confirm" />
-        </div>
-      </div>
-
+    <div className="flex w-full max-w-[618px] flex-col items-center gap-10 px-4 py-6">
       <div className="flex w-full shrink-0 flex-col gap-5">
         {printFailed ? (
           <div className="flex flex-col gap-2.5 text-center" role="alert">
@@ -93,7 +81,8 @@ function DigitalReceiptState({
               Collect your printed receipt below.
             </p>
             <p className="font-fira-mono text-sm leading-5 text-black/50">
-              Scan the code on gallery Wi‑Fi to view your journey on your phone.
+              Scroll down and scan the code on gallery Wi‑Fi to view your journey
+              on your phone.
             </p>
           </div>
         )}
@@ -121,6 +110,15 @@ function DigitalReceiptState({
           </button>
         </div>
       </div>
+
+      <div
+        className="mx-auto h-fit w-full shrink-0 overflow-hidden shadow-[0px_4px_10px_0px_rgba(0,0,0,0.05)]"
+        style={{ maxWidth: RECEIPT_DIGITAL_MAX_WIDTH_PX }}
+      >
+        <ReceiptPaper receipt={receipt} variant="confirm" showQr={false} />
+      </div>
+
+      {!printFailed ? <ReceiptConfirmQr receipt={receipt} /> : null}
     </div>
   );
 }
@@ -137,7 +135,6 @@ export function ReceiptPreviewModal({
   const { mounted, entered } = useInstallationOverlayTransition(open, {
     skipEnterTransition: true,
   });
-  useBodyScrollLock(mounted);
 
   const startNewJourney = useCallback(() => {
     clearSession();
@@ -153,7 +150,7 @@ export function ReceiptPreviewModal({
 
   return (
     <div
-      className={`${installationModalOverlayClass} ${installationScreenStageClass} h-screen overflow-hidden ${installationOverlayEnterClass} ${
+      className={`${installationModalOverlayClass} min-h-dvh overflow-y-auto overscroll-y-contain ${installationOverlayEnterClass} ${
         entered ? "opacity-100" : "opacity-0"
       }`}
       role="dialog"
@@ -161,41 +158,20 @@ export function ReceiptPreviewModal({
       aria-label="Receipt"
       aria-busy={showPrinting}
     >
-      <div
-        className="relative flex h-full w-full max-w-[618px] flex-col items-center justify-center"
-        aria-live="polite"
-      >
-        <div
-          className={[
-            "absolute inset-0 flex items-center justify-center",
-            showPrinting
-              ? `${installationPhaseEnterClass} ${installationPhaseVisibleClass}`
-              : installationPhaseHiddenClass,
-          ].join(" ")}
-          aria-hidden={!showPrinting}
-        >
-          <PrintingState />
-        </div>
-
-        <div
-          className={[
-            "absolute inset-0 flex items-center justify-center",
-            showDigital
-              ? `${installationPhaseEnterClass} ${installationPhaseVisibleClass}`
-              : installationPhaseHiddenClass,
-          ].join(" ")}
-          aria-hidden={!showDigital}
-        >
-          {showDigital ? (
-            <DigitalReceiptState
-              receipt={receipt}
-              printFailed={printFailed}
-              printMessage={printMessage}
-              onRetryPrint={onRetryPrint}
-              onStartNewJourney={startNewJourney}
-            />
-          ) : null}
-        </div>
+      <div className="flex w-full flex-col items-center" aria-live="polite">
+        {showPrinting ? (
+          <div className={`${installationScreenStageClass} min-h-dvh w-full`}>
+            <PrintingState />
+          </div>
+        ) : showDigital ? (
+          <DigitalReceiptState
+            receipt={receipt}
+            printFailed={printFailed}
+            printMessage={printMessage}
+            onRetryPrint={onRetryPrint}
+            onStartNewJourney={startNewJourney}
+          />
+        ) : null}
       </div>
     </div>
   );

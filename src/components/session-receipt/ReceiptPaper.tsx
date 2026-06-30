@@ -43,6 +43,8 @@ type ReceiptPaperProps = {
   qrUrl?: string;
   /** Raw `d` payload — used on /v; preview derives from receipt when omitted. */
   encoded?: string | null;
+  /** When false, omits the QR block (e.g. kiosk confirm screen renders it below the fold). */
+  showQr?: boolean;
 };
 
 /**
@@ -55,6 +57,7 @@ export function ReceiptPaper({
   variant = "thermal",
   qrUrl: qrUrlOverride,
   encoded,
+  showQr = true,
 }: ReceiptPaperProps) {
   const isDigital = variant === "digital";
   const isConfirm = variant === "confirm";
@@ -148,22 +151,24 @@ export function ReceiptPaper({
         </p>
       ) : null}
 
-      <div className="mt-4">
-        {isScaledPreview ? (
-          <ReceiptDigitalQr payload={payload} scale={scale} />
-        ) : canShowThermalQr ? (
-          <ReceiptQrCode value={qrUrl} scale={scale} />
-        ) : (
-          <div
-            className="bg-white py-2"
-            style={{
-              width: Math.round(RECEIPT_QR_PX * scale),
-              height: Math.round(RECEIPT_QR_PX * scale),
-            }}
-            aria-hidden
-          />
-        )}
-      </div>
+      {showQr ? (
+        <div className="mt-4">
+          {isScaledPreview ? (
+            <ReceiptDigitalQr payload={payload} scale={scale} />
+          ) : canShowThermalQr ? (
+            <ReceiptQrCode value={qrUrl} scale={scale} />
+          ) : (
+            <div
+              className="bg-white py-2"
+              style={{
+                width: Math.round(RECEIPT_QR_PX * scale),
+                height: Math.round(RECEIPT_QR_PX * scale),
+              }}
+              aria-hidden
+            />
+          )}
+        </div>
+      ) : null}
 
       <ReceiptFooter />
     </article>

@@ -55,6 +55,7 @@ import {
 } from "./particle-system";
 import {
   computeSpreadTargets,
+  computeSpreadTargetsInZones,
   countContentRowsMatchingFilter,
   maxSpreadCountForViewport,
   pickSpreadIndicesLinkedThenRelated,
@@ -68,9 +69,11 @@ import {
   FILTER_BG_GRAYSCALE_MAX,
   FILTER_BG_OPACITY_MUL,
   type FilterMatchMode,
+  type SpreadPlacementZone,
   type SpreadLayoutPhase,
   type TaxonomyFilterSelection,
 } from "./image-particle-spread";
+import { isInstallationMode } from "@/lib/installation-mode";
 import { rowMatchesFilterSelection } from "@/lib/filter-row-match";
 import { scaleForTargetVisualWidth } from "./image-particle-scale";
 import { extractWordsFromTitle, scrambleWord } from "./image-particle-scramble";
@@ -211,6 +214,8 @@ export function ImageParticleSimulationView({
     selectedNetworks,
     selectedProgramme,
     filtersPanelOpen,
+    filterSearchQuery,
+    hasActiveTaxonomyFilters,
     setFiltersPanelOpen,
     filterSubpanelsOpen,
     setBriefingsSubpanelOpen,
@@ -547,6 +552,7 @@ export function ImageParticleSimulationView({
   });
   const placementBoundsRef = useRef(placementBounds);
   placementBoundsRef.current = placementBounds;
+  const spreadPlacementZonesRef = useRef<SpreadPlacementZone[] | null>(null);
   const placementDebug = useFaePlacementDebugEnabled();
   /** True while spread layout chrome applies (enter → hold → leave). */
   const [spreadChromeActive, setSpreadChromeActive] = useState(false);
@@ -947,6 +953,7 @@ export function ImageParticleSimulationView({
       const h = viewportHForSim;
 
       if (!filtersPanelOpen) {
+        spreadPlacementZonesRef.current = null;
         /**
          * Sidebar closed: normal idle uses the full viewport. With a docked preview,
          * use the full region left of the preview panel; centering on `vw / 2` would
@@ -987,9 +994,54 @@ export function ImageParticleSimulationView({
         filterSubpanelsOpenRef.current && isWindowResize
           ? getFilterSubpanelColumnWidthPx(vw)
           : 0;
-      const leftV = r.left - subW;
-      const w = Math.max(64, right - leftV);
-      const cx = leftV + w / 2;
+      const mainLeft = r.left - subW;
+      const mainW = Math.max(64, right - mainLeft);
+
+      let unionLeft = mainLeft;
+      let unionW = mainW;
+      let zones: SpreadPlacementZone[] | null = null;
+
+      const useInstallationUpperBand =
+        isInstallationMode() &&
+        !isMaxLg &&
+        filterSearchQuery.trim().length === 0 &&
+        hasActiveTaxonomyFilters;
+
+      if (useInstallationUpperBand) {
+        const chromeRow = document.querySelector("[data-fae-filter-chrome-row]");
+        const sidebar = document.querySelector("[data-fae-filter-sidebar-root]");
+        if (chromeRow instanceof HTMLElement && sidebar instanceof HTMLElement) {
+          const chromeRect = chromeRow.getBoundingClientRect();
+          const sidebarRect = sidebar.getBoundingClientRect();
+          const upperH = chromeRect.top - marginGuideInset;
+          const minUpperH = 72;
+          if (upperH >= minUpperH && sidebarRect.width > 0) {
+            const leftInset = marginGuideInset;
+            unionLeft = sidebarRect.left + leftInset;
+            unionW = Math.max(mainW, right - unionLeft);
+            const upperW = Math.max(0, sidebarRect.right - unionLeft);
+            zones = [
+              {
+                width: upperW,
+                height: upperH,
+                offsetX: 0,
+                offsetY: 0,
+              },
+              {
+                width: mainW,
+                height: h,
+                offsetX: mainLeft - unionLeft,
+                offsetY: 0,
+              },
+            ];
+          }
+        }
+      }
+
+      spreadPlacementZonesRef.current = zones;
+
+      const cx = unionLeft + unionW / 2;
+      const w = unionW;
       const next: PlacementBounds = { cx, cy, w, h };
       setPlacementBounds((prev) =>
         approxEqualPlacementBounds(prev, next) ? prev : next,
@@ -1013,6 +1065,10 @@ export function ImageParticleSimulationView({
     const el = placementContainerRef?.current;
     const ro = new ResizeObserver(onRoOrScroll);
     if (el) ro.observe(el);
+    const chromeRow = document.querySelector("[data-fae-filter-chrome-row]");
+    if (chromeRow) ro.observe(chromeRow);
+    const sidebarRoot = document.querySelector("[data-fae-filter-sidebar-root]");
+    if (sidebarRoot) ro.observe(sidebarRoot);
     window.addEventListener("resize", onResize);
     window.addEventListener("scroll", onRoOrScroll, true);
     return () => {
@@ -1029,6 +1085,9 @@ export function ImageParticleSimulationView({
     previewRow,
     previewFullScreen,
     filtersPanelOpen,
+    filterSearchQuery,
+    hasActiveTaxonomyFilters,
+    isMaxLg,
     settleAfterSubpanelCloseNonce,
   ]);
 
@@ -1347,14 +1406,26 @@ export function ImageParticleSimulationView({
       const f = sel.length;
       const pb = placementBoundsRef.current;
       const packSalt = ++spreadLayoutSaltRef.current;
-      const filteredTargets = computeSpreadTargets(
-        pb.w,
-        pb.h,
-        cfg.zNear,
-        f,
-        "lg",
-        packSalt,
-      );
+      const spreadZones = spreadPlacementZonesRef.current;
+      const filteredTargets =
+        spreadZones && spreadZones.length > 0
+          ? computeSpreadTargetsInZones(
+              pb.w,
+              pb.h,
+              spreadZones,
+              cfg.zNear,
+              f,
+              "lg",
+              packSalt,
+            )
+          : computeSpreadTargets(
+              pb.w,
+              pb.h,
+              cfg.zNear,
+              f,
+              "lg",
+              packSalt,
+            );
       const fCount = Math.min(f, filteredTargets.length);
       sel = sel.slice(0, fCount);
       const nextTargets = filteredTargets.slice(0, fCount);
