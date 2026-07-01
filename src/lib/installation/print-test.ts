@@ -3,6 +3,7 @@ import {
   padThermalLineLeft,
   thermalDividerLine,
 } from "@/lib/session-receipt/thermal-print/margins";
+import { createThermalPrinter } from "@/lib/session-receipt/thermal-print/thermal-printer-factory";
 
 /**
  * Minimal ESC/POS page to verify printer wiring without a full session receipt.
@@ -10,12 +11,9 @@ import {
 export async function printInstallationTestPage(
   printerInterface: string,
 ): Promise<void> {
-  const { ThermalPrinter, PrinterTypes, CharacterSet, BreakLine } =
-    await import("node-thermal-printer");
+  const { CharacterSet, BreakLine } = await import("node-thermal-printer");
 
-  const printer = new ThermalPrinter({
-    type: PrinterTypes.EPSON,
-    interface: printerInterface,
+  const printer = await createThermalPrinter(printerInterface, {
     width: THERMAL_CHARS_AT_FULL_BLEED,
     characterSet: CharacterSet.PC437_USA,
     breakLine: BreakLine.WORD,

@@ -27,6 +27,7 @@ import {
   buildEscPosRasterCommand,
   rasterizePathStars,
 } from "./star-raster";
+import { createThermalPrinter } from "./thermal-printer-factory";
 
 type ThermalPrinterInstance = {
   clear: () => void;
@@ -43,19 +44,16 @@ type ThermalPrinterInstance = {
 const DUMMY_PRINTER_INTERFACE =
   process.platform === "win32" ? "\\\\.\\NUL" : "/dev/null";
 
-async function createThermalPrinter(interfacePath: string) {
-  const { ThermalPrinter, PrinterTypes, CharacterSet, BreakLine } =
-    await import("node-thermal-printer");
+async function openThermalPrinter(interfacePath: string) {
+  const { CharacterSet, BreakLine } = await import("node-thermal-printer");
 
-  return new ThermalPrinter({
-    type: PrinterTypes.EPSON,
-    interface: interfacePath,
+  return (await createThermalPrinter(interfacePath, {
     width: THERMAL_CHARS_AT_FULL_BLEED,
     characterSet: CharacterSet.PC437_USA,
     breakLine: BreakLine.WORD,
     removeSpecialCharacters: false,
     options: { timeout: 10000 },
-  }) as ThermalPrinterInstance;
+  })) as ThermalPrinterInstance;
 }
 
 async function appendSessionReceiptToPrinter(
@@ -124,7 +122,7 @@ export async function buildSessionReceiptEscPosBuffer(
   receipt: SessionReceipt,
   viewOrigin?: string,
 ): Promise<Buffer> {
-  const printer = await createThermalPrinter(DUMMY_PRINTER_INTERFACE);
+  const printer = await openThermalPrinter(DUMMY_PRINTER_INTERFACE);
   await appendSessionReceiptToPrinter(printer, receipt, viewOrigin);
   const buffer = printer.getBuffer();
   if (!buffer?.length) {
@@ -142,7 +140,7 @@ export async function printSessionReceiptToInterface(
   printerInterface: string,
   viewOrigin?: string,
 ): Promise<void> {
-  const printer = await createThermalPrinter(printerInterface);
+  const printer = await openThermalPrinter(printerInterface);
   await appendSessionReceiptToPrinter(printer, receipt, viewOrigin);
   await printer.execute();
 }

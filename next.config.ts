@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  serverExternalPackages: ["node-thermal-printer"],
   async redirects() {
     return [{ source: "/view", destination: "/v", permanent: true }];
   },
