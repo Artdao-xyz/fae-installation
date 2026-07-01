@@ -1,7 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { INSTALLATION_ADMIN_PIN_HEADER } from "@/lib/installation/constants";
+import {
+  DEFAULT_RECEIPT_PRINT_MODE,
+  INSTALLATION_ADMIN_PIN_HEADER,
+  RECEIPT_PRINT_MODE_OPTIONS,
+  type ReceiptPrintMode,
+} from "@/lib/installation/constants";
 import { isReceiptOriginOverride } from "@/lib/session-receipt/resolve-view-origin";
 
 const PIN_STORAGE_KEY = "fae-installation-admin-pin";
@@ -28,6 +33,7 @@ type InstallationStatus = {
   nodeVersion: string;
   config: {
     printerInterface?: string;
+    receiptPrintMode?: ReceiptPrintMode;
     receiptViewBaseUrl?: string;
     adminPin?: string;
     lastPrintError?: string;
@@ -91,6 +97,8 @@ export function AdminPanel() {
   const [statusData, setStatusData] = useState<StatusResponse | null>(null);
   const [printers, setPrinters] = useState<PrinterOption[]>([]);
   const [selectedPrinter, setSelectedPrinter] = useState("");
+  const [selectedPrintMode, setSelectedPrintMode] =
+    useState<ReceiptPrintMode>(DEFAULT_RECEIPT_PRINT_MODE);
   const [receiptViewBaseUrl, setReceiptViewBaseUrl] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -139,6 +147,12 @@ export function AdminPanel() {
           statusJson.status.printerInterface ??
           "",
       );
+      const savedPrintMode = configJson.config?.receiptPrintMode;
+      setSelectedPrintMode(
+        savedPrintMode === "raster" || savedPrintMode === "escpos-text"
+          ? savedPrintMode
+          : DEFAULT_RECEIPT_PRINT_MODE,
+      );
       const savedQrUrl =
         configJson.config?.receiptViewBaseUrl ??
         statusJson.status.receiptViewBaseUrl ??
@@ -182,14 +196,17 @@ export function AdminPanel() {
     setError(null);
     const res = await adminFetch(storedPin, "/api/admin/config", {
       method: "PATCH",
-      body: JSON.stringify({ printerInterface: selectedPrinter }),
+      body: JSON.stringify({
+        printerInterface: selectedPrinter,
+        receiptPrintMode: selectedPrintMode,
+      }),
     });
     const data = (await res.json()) as { ok?: boolean; error?: string };
     if (!res.ok || !data.ok) {
       setError(data.error ?? "Failed to save printer");
       return;
     }
-    setMessage("Printer saved");
+    setMessage("Printer settings saved");
     await refresh(storedPin);
   };
 
@@ -331,6 +348,17 @@ export function AdminPanel() {
               detail={status.printerInterface ?? undefined}
             />
             <StatusRow
+              label="Receipt print mode"
+              ok
+              detail={
+                status.config.receiptPrintMode === "escpos-text"
+                  ? "ESC/POS text"
+                  : status.config.receiptPrintMode === "raster"
+                    ? "Raster"
+                    : `Raster (default — not saved yet)`
+              }
+            />
+            <StatusRow
               label="QR origin"
               ok={Boolean(statusData?.urls.receiptViewOrigin) && !qrUrlStale}
               detail={
@@ -398,13 +426,37 @@ export function AdminPanel() {
             No printers detected. Check USB connection and OS printer settings.
           </p>
         ) : null}
+        <label
+          className="mt-4 block text-sm text-ink-caption"
+          htmlFor="print-mode-select"
+        >
+          Receipt print mode
+        </label>
+        <select
+          id="print-mode-select"
+          value={selectedPrintMode}
+          onChange={(e) =>
+            setSelectedPrintMode(e.target.value as ReceiptPrintMode)
+          }
+          className="mt-2 w-full border border-solid border-border bg-white px-3 py-2 font-mono text-sm"
+        >
+          {RECEIPT_PRINT_MODE_OPTIONS.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+        <p className="mt-2 text-xs text-ink-caption">
+          Raster matches the designed receipt layout. Use ESC/POS text only for
+          troubleshooting.
+        </p>
         <div className="mt-4 flex flex-wrap gap-2">
           <button
             type="button"
             onClick={() => void savePrinter()}
             className="border border-solid border-border px-4 py-2 text-sm hover:bg-surface-hover"
           >
-            Save printer
+            Save printer settings
           </button>
           <button
             type="button"

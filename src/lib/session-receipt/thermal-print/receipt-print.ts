@@ -1,4 +1,4 @@
-import { readInstallationConfig } from "@/lib/installation/config";
+import { readInstallationConfig, DEFAULT_RECEIPT_PRINT_MODE } from "@/lib/installation/config";
 import type { SessionReceipt } from "../types";
 import {
   buildSessionReceiptEscPosBuffer as buildSessionReceiptEscPosBufferText,
@@ -9,9 +9,10 @@ import {
   printSessionReceiptToInterfaceRaster,
 } from "./print-receipt-raster";
 
-export type ReceiptPrintMode = "escpos-text" | "raster";
+export type { ReceiptPrintMode } from "@/lib/installation/constants";
+export { DEFAULT_RECEIPT_PRINT_MODE } from "@/lib/installation/constants";
 
-export function resolveReceiptPrintMode(): ReceiptPrintMode {
+export function resolveReceiptPrintMode(): import("@/lib/installation/constants").ReceiptPrintMode {
   const fromConfig = readInstallationConfig().receiptPrintMode;
   if (fromConfig === "raster" || fromConfig === "escpos-text") {
     return fromConfig;
@@ -22,7 +23,7 @@ export function resolveReceiptPrintMode(): ReceiptPrintMode {
     return fromEnv;
   }
 
-  return "escpos-text";
+  return DEFAULT_RECEIPT_PRINT_MODE;
 }
 
 export function isRasterReceiptPrintMode(): boolean {
