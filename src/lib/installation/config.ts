@@ -1,11 +1,15 @@
 import fs from "node:fs";
 import path from "node:path";
+import { type ReceiptPrintMode } from "./constants";
+
+export type { ReceiptPrintMode } from "./constants";
+export { DEFAULT_RECEIPT_PRINT_MODE } from "./constants";
 
 export type InstallationConfig = {
   /** CUPS name (`printer:Name`) or Linux device (`/dev/usb/lp0`). */
   printerInterface?: string;
-  /** `escpos-text` (default) or `raster` — see thermal-print/receipt-print.ts */
-  receiptPrintMode?: "escpos-text" | "raster";
+  /** `raster` (default) or `escpos-text` — see thermal-print/receipt-print.ts */
+  receiptPrintMode?: ReceiptPrintMode;
   /** Optional custom hostname for receipt QR codes (LAN IPs are auto-detected). */
   receiptViewBaseUrl?: string;
   /** PIN for /admin and admin APIs. Default: `fae`. */

@@ -1,6 +1,6 @@
 {
   "printerInterface": "",
-  "receiptPrintMode": "escpos-text",
+  "receiptPrintMode": "raster",
   "receiptViewBaseUrl": "",
   "adminPin": "fae"
 }
