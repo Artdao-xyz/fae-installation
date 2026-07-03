@@ -23,6 +23,9 @@ export const FOCUS_AREA_LABELS = [
   "Worldbuilding",
 ] as const;
 
+/** Focus tags hidden from the filter sidebar (disabled / not yet in catalog). */
+export const HIDDEN_FOCUS_AREA_LABELS = new Set<string>(["Metrics", "Robotics"]);
+
 export const ACTIVITY_TYPE_LABELS = [
   "Artist Talk",
   "Case Studies",
