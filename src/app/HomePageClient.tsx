@@ -17,6 +17,7 @@ import { mobileMainScrollInsetClassName } from "@/components/ui/filter-sidebar/s
 import { useIsMaxLg } from "@/components/ui/filter-sidebar/shell/useIsMaxLg";
 import { selectLatestUpdatesRows } from "@/components/ui/latest-updates-panel/latestUpdatesRows";
 import { HeroTitleBlock } from "@/components/ui/hero-title-block";
+import { FAE_LANDING_DESCRIPTION } from "@/lib/site-copy";
 import { MarginGuideFrame } from "@/components/ui/margin-guide-frame";
 import { PixelTessellationBackground } from "@/components/ui/pixel-tessellation-background";
 import { ImageParticleSimulation } from "@/components/particle-canvas/ImageParticleSimulation";
@@ -269,7 +270,7 @@ function HomeContent({ initialPreviewSlug }: HomePageClientProps) {
           <div className="flex w-full min-h-min flex-col">
             <HeroTitleBlock
               title="Future Art Ecosystems"
-              subtitle="Art and Advanced Technologies Research"
+              subtitle={FAE_LANDING_DESCRIPTION}
             />
 
             {HIDE_PARTICLE_CANVAS || showMobileFilteredResults ? null : (

@@ -13,6 +13,7 @@ import {
   installationScreenTitleBlockClass,
   installationScreenTitleClass,
 } from "./installation-screen-chrome";
+import { FAE_LANDING_DESCRIPTION } from "@/lib/site-copy";
 import { useBodyScrollLock } from "./use-body-scroll-lock";
 import { useInstallationOverlayTransition } from "./use-installation-overlay-enter";
 
@@ -49,8 +50,8 @@ export function InstallationIntroScreen({
         />
         <div className={installationScreenTitleBlockClass}>
           <div className={installationScreenTitleClass}>Future Art Ecosystems</div>
-          <p className={installationScreenSubtitleClass}>
-            Art and Advanced Technologies Research
+          <p className={`${installationScreenSubtitleClass} max-w-full whitespace-normal`}>
+            {FAE_LANDING_DESCRIPTION}
           </p>
         </div>
         <div className="flex items-center gap-[5px]">
