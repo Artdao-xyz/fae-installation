@@ -1,5 +1,5 @@
 /** Default inactivity period before the installation screensaver appears. */
-export const DEFAULT_INSTALLATION_IDLE_TIMEOUT_MS = 120_000;
+export const DEFAULT_INSTALLATION_IDLE_TIMEOUT_MS = 60_000;
 
 /** How long the receipt screen may sit open before auto-reset. */
 export const DEFAULT_RECEIPT_IDLE_TIMEOUT_MS = 90_000;
