@@ -1,13 +1,13 @@
 /**
- * CSN-A4L / 58mm thermal receipt printer (Pi Hut).
- * 384 dots/line @ 8 dots/mm — preview and QR size follow the same proportions.
+ * 80mm thermal receipt printer.
+ * 640 dots/line @ 8 dots/mm — preview and QR size follow the same proportions.
  */
 
-export const THERMAL_PAPER_WIDTH_MM = 58;
+export const THERMAL_PAPER_WIDTH_MM = 80;
 export const THERMAL_DOTS_PER_MM = 8;
-export const THERMAL_LINE_DOTS = 384;
+export const THERMAL_LINE_DOTS = 640;
 
-/** ~2 mm side inset on 58 mm paper (8 dots/mm). Applied via ESC/POS on print. */
+/** ~2 mm side inset on 80 mm paper (8 dots/mm). Applied via ESC/POS on print. */
 export const THERMAL_HORIZONTAL_MARGIN_DOTS = 16;
 
 /** Side inset as a fraction of paper width — used for full-width digital layout. */
@@ -19,7 +19,7 @@ export const THERMAL_CONTENT_DOTS =
   THERMAL_LINE_DOTS - THERMAL_HORIZONTAL_MARGIN_DOTS * 2;
 
 /** Monospace chars spanning full paper width (before side padding). */
-export const THERMAL_CHARS_AT_FULL_BLEED = 32;
+export const THERMAL_CHARS_AT_FULL_BLEED = 53;
 
 /** Space chars per side — derived from dot inset (~2 mm → 2 chars). */
 export const THERMAL_MARGIN_CHARS = Math.max(
@@ -36,10 +36,14 @@ export const THERMAL_CHARS_PER_LINE = Math.max(
   THERMAL_CHARS_AT_FULL_BLEED - THERMAL_MARGIN_CHARS * 2,
 );
 
-/** CSS px width for on-screen receipt (matches 58mm at ~96dpi). */
+/** CSS px width for on-screen receipt (matches 80mm at ~96dpi). */
 export const RECEIPT_PAPER_WIDTH_PX = Math.round(
   (THERMAL_PAPER_WIDTH_MM / 25.4) * 96,
 );
+
+/** Legacy 58mm receipt — used to preserve digital card proportions after paper change. */
+const LEGACY_RECEIPT_PAPER_WIDTH_PX = Math.round((58 / 25.4) * 96);
+const LEGACY_RECEIPT_DIGITAL_MAX_WIDTH_PX = 300;
 
 /** Screen preview / digital twin — larger than thermal, same proportions. */
 export const RECEIPT_DIGITAL_SCALE = 1.75;
@@ -48,8 +52,36 @@ export const RECEIPT_DIGITAL_WIDTH_PX = Math.round(
   RECEIPT_PAPER_WIDTH_PX * RECEIPT_DIGITAL_SCALE,
 );
 
-/** Max width for on-screen digital / confirm receipt (preview modal + /v page). */
-export const RECEIPT_DIGITAL_MAX_WIDTH_PX = 300;
+/**
+ * Digital / confirm card width — same visual proportion as legacy 300px @ 58mm,
+ * scaled to the current {@link RECEIPT_PAPER_WIDTH_PX} (80mm).
+ */
+export const RECEIPT_DIGITAL_MAX_WIDTH_PX = Math.round(
+  RECEIPT_PAPER_WIDTH_PX *
+    (LEGACY_RECEIPT_DIGITAL_MAX_WIDTH_PX / LEGACY_RECEIPT_PAPER_WIDTH_PX),
+);
+
+/** Multiplier for printed receipt typography (raster ESC/POS only). */
+export const RECEIPT_PRINT_TEXT_SCALE = 2;
+
+/** On-screen thermal preview typography (digital twin uses fixed Tailwind sizes). */
+export const RECEIPT_THERMAL_BODY_PX = 11;
+export const RECEIPT_THERMAL_LEADING_PX = 14;
+export const RECEIPT_THERMAL_TITLE_PX = 12;
+
+/** Fixed digital receipt typography — same on kiosk, /v, and archive. */
+export const RECEIPT_DIGITAL_BODY_PX = 12;
+export const RECEIPT_DIGITAL_LEADING_PX = 15;
+export const RECEIPT_DIGITAL_TITLE_PX = 14;
+export const RECEIPT_DIGITAL_LOGO_HEIGHT_PX = 12;
+
+/** Constellation width inside the digital / confirm card (80mm content column). */
+export function receiptDigitalStarsWidthPx(): number {
+  return Math.round(
+    thermalContentWidthPx() *
+      (RECEIPT_DIGITAL_MAX_WIDTH_PX / RECEIPT_PAPER_WIDTH_PX),
+  );
+}
 
 /** Journey text stored in QR + printed (ESC/POS text only). */
 export const THERMAL_JOURNEY_PROMPT_MAX_LENGTH = 150;
@@ -59,7 +91,7 @@ export const THERMAL_JOURNEY_PROMPT_MAX_LENGTH = 150;
  * - 1-bit monochrome only — solid black or white, no opacity / gray
  * - Text: plain + bold; THERMAL_CHARS_PER_LINE within side margins
  * - QR raster at THERMAL_QR_SIZE_MM (~25 mm), left-aligned in side margins
- * - Footer wordmarks rasterized from SVG (FAE + Serpentine)
+ * - Footer wordmark rasterized from SVG (Serpentine)
  * - Star map: solid fills, size encodes dwell (THERMAL_STAR_SCALE_*)
  */
 
@@ -72,8 +104,8 @@ export const THERMAL_STAR_SCALE_MAX = 1.15;
  */
 export const THERMAL_QR_SIZE_MM = 25;
 
-/** Footer logo height (~1.25 mm). */
-export const THERMAL_FOOTER_LOGO_HEIGHT_DOTS = 10;
+/** Footer logo height on print (~2.5 mm at 2× type scale). */
+export const THERMAL_FOOTER_LOGO_HEIGHT_DOTS = 10 * RECEIPT_PRINT_TEXT_SCALE;
 
 /** Max width per footer wordmark within the content column. */
 export const THERMAL_FOOTER_FAE_MAX_WIDTH_DOTS = 220;
@@ -100,10 +132,25 @@ export function thermalContentWidthPx(): number {
 
 export const RECEIPT_QR_PX = thermalMmToReceiptPx(THERMAL_QR_SIZE_MM);
 
-/** On-screen QR beside thermal preview — same proportions, digital scale. */
+/** Digital QR is larger than the thermal print proportion — phones need a bigger target. */
+export const RECEIPT_DIGITAL_QR_SCALE = 1.5;
+
+/** On-screen QR inside the digital card — proportional to 80mm paper width. */
+export const RECEIPT_DIGITAL_QR_WIDTH_PERCENT =
+  (THERMAL_QR_SIZE_MM / THERMAL_PAPER_WIDTH_MM) *
+  100 *
+  RECEIPT_DIGITAL_QR_SCALE;
+
 export const RECEIPT_DIGITAL_QR_DISPLAY_PX = Math.round(
-  RECEIPT_QR_PX * RECEIPT_DIGITAL_SCALE,
+  RECEIPT_DIGITAL_MAX_WIDTH_PX *
+    (THERMAL_QR_SIZE_MM / THERMAL_PAPER_WIDTH_MM) *
+    RECEIPT_DIGITAL_QR_SCALE,
 );
+
+/** Pixel width for the digital QR from a measured card host width. */
+export function receiptDigitalQrDisplayPx(hostWidthPx: number): number {
+  return Math.round(hostWidthPx * (RECEIPT_DIGITAL_QR_WIDTH_PERCENT / 100));
+}
 
 export const RECEIPT_QR_MAX_RENDER_PX = 1200;
 

@@ -8,9 +8,19 @@ import {
   ReceiptDigitalViewShell,
 } from "@/components/session-receipt/ReceiptDigitalView";
 
-export function ViewReceiptClient() {
+type ViewReceiptClientProps = {
+  /** Server-read `d` param — survives client navigations where searchParams lag. */
+  encoded?: string;
+  /** Server-built `/v?d=` URL for the share QR on scanned pages. */
+  shareScanUrl?: string;
+};
+
+export function ViewReceiptClient({
+  encoded: encodedFromServer,
+  shareScanUrl,
+}: ViewReceiptClientProps) {
   const searchParams = useSearchParams();
-  const encoded = searchParams.get("d");
+  const encoded = searchParams.get("d") ?? encodedFromServer ?? null;
 
   const receipt = useMemo(
     () => (encoded ? decodeReceiptPayload(encoded) : null),
@@ -28,5 +38,12 @@ export function ViewReceiptClient() {
     );
   }
 
-  return <ReceiptDigitalView receipt={receipt} encoded={encoded} />;
+  return (
+    <ReceiptDigitalView
+      receipt={receipt}
+      encoded={encoded}
+      variant="digital"
+      shareScanUrl={shareScanUrl}
+    />
+  );
 }

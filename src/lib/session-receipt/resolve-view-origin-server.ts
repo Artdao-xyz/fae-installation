@@ -14,20 +14,21 @@ function stripTrailingSlash(url: string): string {
   return url.replace(/\/$/, "");
 }
 
-/** Origin phones should use to open `/v` — for print API and receipt-origin. */
-export function resolveReceiptViewOriginFromRequest(request: Request): string {
+function resolveReceiptViewOriginFromHeaderValues(
+  host: string,
+  forwardedProto: string | null,
+): string {
   const configured = resolveReceiptViewBaseUrl();
   if (configured && isReceiptOriginOverride(configured)) {
     return stripTrailingSlash(configured);
   }
 
-  const host = request.headers.get("host")?.trim() ?? "";
-  const proto =
-    request.headers.get("x-forwarded-proto")?.trim().split(",")[0] ?? "http";
-  const [hostname, port = "3000"] = host.split(":");
+  const trimmedHost = host.trim();
+  const proto = forwardedProto?.trim().split(",")[0] ?? "http";
+  const [hostname, port = "3000"] = trimmedHost.split(":");
 
   if (hostname && !LOCAL_HOSTNAMES.has(hostname)) {
-    return `${proto}://${host}`;
+    return `${proto}://${trimmedHost}`;
   }
 
   const lanIp = listLocalIPv4()[0];
@@ -36,4 +37,22 @@ export function resolveReceiptViewOriginFromRequest(request: Request): string {
   }
 
   return `http://localhost:${port}`;
+}
+
+/** Origin phones should use to open `/v` — from Next `headers()`. */
+export function resolveReceiptViewOriginFromHeaders(
+  requestHeaders: Headers,
+): string {
+  return resolveReceiptViewOriginFromHeaderValues(
+    requestHeaders.get("host") ?? "",
+    requestHeaders.get("x-forwarded-proto"),
+  );
+}
+
+/** Origin phones should use to open `/v` — for print API and receipt-origin. */
+export function resolveReceiptViewOriginFromRequest(request: Request): string {
+  return resolveReceiptViewOriginFromHeaderValues(
+    request.headers.get("host") ?? "",
+    request.headers.get("x-forwarded-proto"),
+  );
 }

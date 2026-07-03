@@ -347,13 +347,52 @@ html {
   html.receipt-view-route body {
     position: static;
     inset: auto;
-    width: auto;
+    width: 100%;
+    max-width: 100vw;
     height: auto;
     min-height: 100dvh;
-    overflow-x: hidden;
+    overflow-x: clip;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
   }
+}
+
+/* Digital receipt — scales typography and assets with container width (414px design). */
+.receipt-digital-host {
+  container-type: inline-size;
+  width: 100%;
+  min-width: 0;
+  max-width: 414px;
+  margin-inline: auto;
+}
+
+.receipt-paper-digital {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  font-size: 2.8986cqw;
+  line-height: 3.6232cqw;
+}
+
+.receipt-paper-digital__title {
+  font-size: 3.3816cqw;
+  line-height: 3.6232cqw;
+}
+
+.receipt-digital-qr-wrap {
+  max-width: 100%;
+}
+
+.receipt-digital-qr {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+}
+
+.receipt-digital-logo {
+  height: 2.8986cqw;
+  width: auto;
 }
 
 /* Content preview: top-level sections (outside @layer so it applies reliably) */

@@ -4,8 +4,8 @@ import { useCallback } from "react";
 import { useFilterSelection } from "@/components/ui/filter-sidebar/FilterSelectionContext";
 import { PrintSvgIcon } from "@/components/ui/icons/PrintSvgIcon";
 import type { SessionReceipt } from "@/lib/session-receipt/types";
-import { RECEIPT_DIGITAL_MAX_WIDTH_PX } from "@/lib/session-receipt/thermal-spec";
 import { InstallationArrowIcon } from "./InstallationArrowIcon";
+import { ReceiptDigitalCardFrame } from "./ReceiptDigitalCardFrame";
 import {
   installationActionButtonClass,
   installationModalOverlayClass,
@@ -13,7 +13,6 @@ import {
   installationScreenStageClass,
 } from "./installation-screen-chrome";
 import type { PrintStatus } from "./print-status";
-import { ReceiptConfirmQr } from "./ReceiptConfirmQr";
 import { ReceiptPaper } from "./ReceiptPaper";
 import { useSessionReceipt } from "./SessionReceiptProvider";
 import { useInstallationOverlayTransition } from "./use-installation-overlay-enter";
@@ -111,14 +110,11 @@ function DigitalReceiptState({
         </div>
       </div>
 
-      <div
-        className="mx-auto h-fit w-full shrink-0 overflow-hidden shadow-[0px_4px_10px_0px_rgba(0,0,0,0.05)]"
-        style={{ maxWidth: RECEIPT_DIGITAL_MAX_WIDTH_PX }}
-      >
-        <ReceiptPaper receipt={receipt} variant="confirm" showQr={false} />
+      <div className="w-full min-w-0">
+        <ReceiptDigitalCardFrame className="shadow-[0px_4px_10px_0px_rgba(0,0,0,0.05)]">
+          <ReceiptPaper receipt={receipt} variant="confirm" />
+        </ReceiptDigitalCardFrame>
       </div>
-
-      {!printFailed ? <ReceiptConfirmQr receipt={receipt} /> : null}
     </div>
   );
 }
