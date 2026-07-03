@@ -4,10 +4,34 @@ For exhibition staff. No coding needed.
 
 ## What’s in this folder
 
+- **Prepare FAE Installation.command** — run **once** after download (clears Mac security blocks)
 - **Start FAE Installation.command** — double-click this to run the show
 - **Install Node (optional).command** — fallback only if bundled Node is missing
 - **HOW-TO-RUN.md** — this file
 - **app/** — the application (pre-built; includes `app/.node/` for offline use)
+
+## First install from Google Drive (or email)
+
+macOS marks downloaded files as untrusted. Without prep, you may see several **“cannot be opened”** or **Privacy & Security** prompts (launcher, Node, native modules).
+
+**Do this once on each Mac:**
+
+1. Unzip **FAE-Installation.zip** (double-click is fine).
+2. Double-click **`Prepare FAE Installation.command`**.
+   - If macOS blocks it: **Right-click → Open → Open** (only needed this one time).
+3. Double-click **`Start FAE Installation.command`**.
+
+**Alternative (Terminal, one line)** — paste after unzip, then start as usual:
+
+```bash
+xattr -cr ~/Downloads/FAE-Installation
+```
+
+(Adjust the path if you unzipped somewhere else.)
+
+**Printer driver** is separate from this zip — install the MUNBYN / POS-80 driver once in **System Settings → Printers & Scanners** before the show. That is a one-time Mac setup, not part of the FAE app folder.
+
+**Smoother delivery:** copying the unzipped folder via **USB stick** or **AnyDesk** often triggers fewer blocks than Google Drive.
 
 ## Before the exhibition (new Mac)
 

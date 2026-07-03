@@ -93,7 +93,7 @@ if [[ ! -f .next/BUILD_ID ]]; then
     echo "No build found."
   fi
   echo "Building app — first run may take a few minutes..."
-  run_next build || fail "Build failed"
+  npm run build || fail "Build failed"
 fi
 
 if lsof -i ":${PORT}" -sTCP:LISTEN >/dev/null 2>&1; then

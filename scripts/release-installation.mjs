@@ -68,6 +68,7 @@ function ensureProductionBuild() {
   const buildId = path.join(projectRoot, ".next", "BUILD_ID");
   if (skipBuild && fs.existsSync(buildId)) {
     log("build", "skipped (--skip-build, existing production build)");
+    verifyProductionBuild();
     return;
   }
   log("build", "running production build with installation mode");
@@ -80,6 +81,36 @@ function ensureProductionBuild() {
   if (!fs.existsSync(buildId)) {
     throw new Error("Production build failed — .next/BUILD_ID not found");
   }
+  verifyProductionBuild();
+}
+
+function verifyProductionBuild() {
+  const serverDir = path.join(projectRoot, ".next", "server");
+  const webpackRuntime = path.join(serverDir, "webpack-runtime.js");
+  if (!fs.existsSync(webpackRuntime)) {
+    throw new Error(
+      "Release requires a webpack production build (.next/server/webpack-runtime.js missing). Run: npm run build",
+    );
+  }
+
+  const turbopackRuntime = path.join(serverDir, "chunks", "[turbopack]_runtime.js");
+  if (fs.existsSync(turbopackRuntime)) {
+    throw new Error(
+      "Release build was produced with Turbopack. Rebuild with: npm run build (uses --webpack)",
+    );
+  }
+
+  const printRoute = path.join(serverDir, "app", "api", "print", "route.js");
+  if (fs.existsSync(printRoute)) {
+    const source = fs.readFileSync(printRoute, "utf8");
+    if (/sharp-[0-9a-f]{8,}/.test(source)) {
+      throw new Error(
+        "Print route still references Turbopack externalized sharp. Rebuild with: npm run build",
+      );
+    }
+  }
+
+  log("verify", "webpack production build OK (no Turbopack runtime externals)");
 }
 
 function writeReleaseDocs() {
@@ -104,6 +135,91 @@ exec bash ./scripts/install-node.sh
     path.join(outputRoot, "Install Node (optional).command"),
     installNodeLauncher,
     { mode: 0o755 },
+  );
+
+  copyPath(
+    path.join(__dirname, "prepare-installation.sh"),
+    path.join(appDir, "scripts", "prepare-installation.sh"),
+  );
+  fs.chmodSync(path.join(appDir, "scripts", "prepare-installation.sh"), 0o755);
+
+  const prepareLauncher = `#!/bin/bash
+cd "$(dirname "$0")/app"
+exec bash ./scripts/prepare-installation.sh
+`;
+  fs.writeFileSync(
+    path.join(outputRoot, "Prepare FAE Installation.command"),
+    prepareLauncher,
+    { mode: 0o755 },
+  );
+}
+
+function parseEnvFile(filePath) {
+  if (!fs.existsSync(filePath)) return {};
+  const out = {};
+  for (const line of fs.readFileSync(filePath, "utf8").split("\n")) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) continue;
+    const eq = trimmed.indexOf("=");
+    if (eq === -1) continue;
+    const key = trimmed.slice(0, eq).trim();
+    let value = trimmed.slice(eq + 1).trim();
+    if (
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
+      value = value.slice(1, -1);
+    }
+    out[key] = value;
+  }
+  return out;
+}
+
+const RELEASE_ENV_KEYS = [
+  "RECEIPT_ARCHIVE_CLOUD",
+  "RECEIPT_ARCHIVE_INSTALLATION_ID",
+  "R2_ACCOUNT_ID",
+  "R2_ACCESS_KEY_ID",
+  "R2_SECRET_ACCESS_KEY",
+  "R2_BUCKET_NAME",
+  "R2_RECEIPT_PREFIX",
+  "NEXT_PUBLIC_RECEIPT_VIEW_BASE_URL",
+];
+
+function writeReleaseEnvLocal() {
+  const releaseEnv = parseEnvFile(path.join(projectRoot, ".env.release.local"));
+  const devEnv = parseEnvFile(path.join(projectRoot, ".env.local"));
+  const merged = { ...devEnv, ...releaseEnv };
+
+  const lines = [
+    "NEXT_PUBLIC_FAE_INSTALLATION_MODE=1",
+    "FAE_DATA_SOURCE=local",
+  ];
+
+  for (const key of RELEASE_ENV_KEYS) {
+    const value = merged[key]?.trim();
+    if (value) {
+      const escaped = /[\s#"]/.test(value) ? `"${value.replace(/"/g, '\\"')}"` : value;
+      lines.push(`${key}=${escaped}`);
+    }
+  }
+
+  fs.writeFileSync(path.join(appDir, ".env.local"), `${lines.join("\n")}\n`);
+
+  const r2Ready =
+    merged.R2_ACCOUNT_ID?.trim() &&
+    merged.R2_ACCESS_KEY_ID?.trim() &&
+    merged.R2_SECRET_ACCESS_KEY?.trim() &&
+    merged.R2_BUCKET_NAME?.trim();
+
+  if (r2Ready) {
+    log("env", "R2 cloud archive credentials included in app/.env.local");
+    return;
+  }
+
+  log(
+    "env",
+    "No R2 credentials in release — add .env.release.local (see .env.release.local.example) or R2 vars in .env.local",
   );
 }
 
@@ -146,10 +262,7 @@ function copyAppRuntime() {
   fs.chmodSync(path.join(appDir, "scripts", "install-node.sh"), 0o755);
   fs.chmodSync(path.join(appDir, "scripts", "resolve-bundled-node.sh"), 0o755);
 
-  fs.writeFileSync(
-    path.join(appDir, ".env.local"),
-    "NEXT_PUBLIC_FAE_INSTALLATION_MODE=1\nFAE_DATA_SOURCE=local\n",
-  );
+  writeReleaseEnvLocal();
 
   // Stale compiled config from dev machines breaks `next start` in the package.
   const compiledConfig = path.join(appDir, "next.config.compiled.js");

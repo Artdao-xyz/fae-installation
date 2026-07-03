@@ -36,6 +36,7 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 !.env.example
+!.env.release.local.example
 
 # exhibition runtime config (written by /admin)
 /installation.local.json

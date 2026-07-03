@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "npm run lint && next build --turbopack",
+    "build": "npm run lint && next build --webpack",
     "start": "next start",
     "lint": "eslint .",
     "import:new-data": "node scripts/import-new-data.mjs",
