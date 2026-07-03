@@ -8,7 +8,6 @@ import { hasPathActivity } from "../path-grid";
 import {
   RECEIPT_ACTIVITY_HEADING,
   RECEIPT_ARTIFACT_TITLE,
-  RECEIPT_BRAND,
   type SessionReceipt,
 } from "../types";
 import {
@@ -18,7 +17,9 @@ import {
 } from "../thermal-spec";
 import { rasterizeReceiptFooter } from "./footer-raster";
 import {
+  centerRasterOnPaper,
   insetRasterHorizontally,
+  padThermalLineCenter,
   padThermalLineLeft,
   padThermalLineStart,
 } from "./margins";
@@ -74,15 +75,14 @@ async function appendSessionReceiptToPrinter(
     printer.newLine();
   }
 
-  printer.bold(true);
-  printer.println(padThermalLineLeft(RECEIPT_BRAND));
-  printer.bold(false);
-  printer.println(padThermalLineLeft(RECEIPT_ARTIFACT_TITLE));
-  printer.println(padThermalLineLeft(formatReceiptDate(receipt.sessionStart)));
-  printer.newLine();
+  printer.println(padThermalLineLeft(RECEIPT_ACTIVITY_HEADING));
   printer.newLine();
 
-  printer.println(padThermalLineLeft(RECEIPT_ACTIVITY_HEADING));
+  printer.bold(true);
+  printer.println(padThermalLineLeft(RECEIPT_ARTIFACT_TITLE));
+  printer.bold(false);
+  printer.println(padThermalLineLeft(formatReceiptDate(receipt.sessionStart)));
+  printer.newLine();
   printer.newLine();
 
   const transcript = formatSessionTranscript(receipt.events);
@@ -100,10 +100,9 @@ async function appendSessionReceiptToPrinter(
   printer.newLine();
 
   const qrUrl = buildReceiptViewUrl(receipt, viewOrigin);
+  printer.println(padThermalLineCenter("share"));
   printer.add(
-    buildEscPosRasterCommand(
-      insetRasterHorizontally(rasterizeQrCode(qrUrl), THERMAL_HORIZONTAL_MARGIN_DOTS),
-    ),
+    buildEscPosRasterCommand(centerRasterOnPaper(rasterizeQrCode(qrUrl))),
   );
 
   printer.newLine();
