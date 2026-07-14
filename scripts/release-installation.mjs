@@ -127,16 +127,6 @@ exec bash ./scripts/start-installation.sh
   const launcherPath = path.join(outputRoot, "Start FAE Installation.command");
   fs.writeFileSync(launcherPath, launcher, { mode: 0o755 });
 
-  const installNodeLauncher = `#!/bin/bash
-cd "$(dirname "$0")/app"
-exec bash ./scripts/install-node.sh
-`;
-  fs.writeFileSync(
-    path.join(outputRoot, "Install Node (optional).command"),
-    installNodeLauncher,
-    { mode: 0o755 },
-  );
-
   copyPath(
     path.join(__dirname, "prepare-installation.sh"),
     path.join(appDir, "scripts", "prepare-installation.sh"),
@@ -237,6 +227,15 @@ function copyAppRuntime() {
     copyPath(path.join(projectRoot, file), path.join(appDir, file));
   }
 
+  const installationConfigExample = path.join(
+    projectRoot,
+    "installation.local.json.example",
+  );
+  copyPath(
+    installationConfigExample,
+    path.join(appDir, "installation.local.json"),
+  );
+
   copyPath(path.join(projectRoot, ".next"), path.join(appDir, ".next"));
   copyPath(path.join(projectRoot, "public"), path.join(appDir, "public"));
   copyPath(path.join(projectRoot, "data"), path.join(appDir, "data"));
@@ -247,10 +246,6 @@ function copyAppRuntime() {
     path.join(appDir, "scripts", "start-installation.sh"),
   );
   copyPath(
-    path.join(projectRoot, "scripts", "install-node.sh"),
-    path.join(appDir, "scripts", "install-node.sh"),
-  );
-  copyPath(
     path.join(projectRoot, "scripts", "installation-node-version.sh"),
     path.join(appDir, "scripts", "installation-node-version.sh"),
   );
@@ -259,7 +254,6 @@ function copyAppRuntime() {
     path.join(appDir, "scripts", "resolve-bundled-node.sh"),
   );
   fs.chmodSync(path.join(appDir, "scripts", "start-installation.sh"), 0o755);
-  fs.chmodSync(path.join(appDir, "scripts", "install-node.sh"), 0o755);
   fs.chmodSync(path.join(appDir, "scripts", "resolve-bundled-node.sh"), 0o755);
 
   writeReleaseEnvLocal();

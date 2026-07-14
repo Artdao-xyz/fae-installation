@@ -48,6 +48,10 @@ export type SvgTextSpan = {
 
 export type SvgTextLine = {
   y: number;
+  /** Anchor point x (dots). Defaults to 0 / start-aligned. */
+  x?: number;
+  /** When `middle`, `x` is the horizontal center of the line. */
+  anchor?: "start" | "middle";
   spans: readonly SvgTextSpan[];
 };
 
@@ -65,16 +69,22 @@ export function buildSvgTextBlock({
   const fontCss = rasterReceiptFontFaceCss();
   const textNodes = lines
     .map((line) => {
+      const anchor = line.anchor ?? "start";
+      const anchorX = line.x ?? 0;
       const spans = line.spans
         .map((span) => {
           const family = span.family ?? "FiraMono";
           const size = span.size ?? RASTER_RECEIPT_TYPE.bodySize;
           const weight = span.weight ?? 400;
           const fill = span.fill ?? RASTER_RECEIPT_INK.primary;
-          return `<tspan x="${span.x}" font-family="${family}" font-size="${size}" font-weight="${weight}" fill="${fill}">${escapeSvgText(span.text)}</tspan>`;
+          const xAttr =
+            anchor === "middle" ? "" : ` x="${span.x}"`;
+          return `<tspan${xAttr} font-family="${family}" font-size="${size}" font-weight="${weight}" fill="${fill}">${escapeSvgText(span.text)}</tspan>`;
         })
         .join("");
-      return `<text y="${line.y}" dominant-baseline="alphabetic">${spans}</text>`;
+      const anchorAttr =
+        anchor === "middle" ? ` x="${anchorX}" text-anchor="middle"` : "";
+      return `<text y="${line.y}"${anchorAttr} dominant-baseline="alphabetic">${spans}</text>`;
     })
     .join("");
 
@@ -85,6 +95,9 @@ ${textNodes}
 </svg>`;
 }
 
-export async function rasterizeReceiptSvgBlock(svg: string): Promise<StarRaster> {
-  return rasterizeSvgString(svg, RASTER_RECEIPT_WIDTH_DOTS);
+export async function rasterizeReceiptSvgBlock(
+  svg: string,
+  widthDots = RASTER_RECEIPT_WIDTH_DOTS,
+): Promise<StarRaster> {
+  return rasterizeSvgString(svg, widthDots);
 }

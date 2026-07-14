@@ -61,8 +61,11 @@ export const RECEIPT_DIGITAL_MAX_WIDTH_PX = Math.round(
     (LEGACY_RECEIPT_DIGITAL_MAX_WIDTH_PX / LEGACY_RECEIPT_PAPER_WIDTH_PX),
 );
 
-/** Multiplier for printed receipt typography (raster ESC/POS only). */
-export const RECEIPT_PRINT_TEXT_SCALE = 2;
+/**
+ * Extra multiplier on Figma→thermal raster typography.
+ * 1.25 ≈ ~3.75 mm body on 80 mm paper; 2× overshoots.
+ */
+export const RECEIPT_PRINT_TEXT_SCALE = 1.25;
 
 /** On-screen thermal preview typography (digital twin uses fixed Tailwind sizes). */
 export const RECEIPT_THERMAL_BODY_PX = 11;
@@ -90,7 +93,7 @@ export const THERMAL_JOURNEY_PROMPT_MAX_LENGTH = 150;
  * Thermal-safe receipt constraints (CSN-A4L / ESC/POS):
  * - 1-bit monochrome only — solid black or white, no opacity / gray
  * - Text: plain + bold; THERMAL_CHARS_PER_LINE within side margins
- * - QR raster at THERMAL_QR_SIZE_MM (~25 mm), left-aligned in side margins
+ * - QR raster at THERMAL_QR_SIZE_MM (~42 mm), centered in content column
  * - Footer wordmark rasterized from SVG (Serpentine)
  * - Star map: solid fills, size encodes dwell (THERMAL_STAR_SCALE_*)
  */
@@ -100,12 +103,31 @@ export const THERMAL_STAR_SCALE_MIN = 0.45;
 export const THERMAL_STAR_SCALE_MAX = 1.15;
 
 /**
- * Target QR width on thermal paper (~25 mm). Print raster scales modules to fit.
+ * Target QR width on thermal paper (~42 mm). Print raster scales modules to fit.
  */
-export const THERMAL_QR_SIZE_MM = 25;
+export const THERMAL_QR_SIZE_MM = 42;
 
-/** Footer logo height on print (~2.5 mm at 2× type scale). */
-export const THERMAL_FOOTER_LOGO_HEIGHT_DOTS = 10 * RECEIPT_PRINT_TEXT_SCALE;
+/** Target QR width on thermal paper in dots (8 dots/mm). */
+export const THERMAL_QR_PRINT_DOTS = Math.round(
+  THERMAL_QR_SIZE_MM * THERMAL_DOTS_PER_MM,
+);
+
+/** Thermal print QR — ECC M tolerates ink spread better than on-screen L. */
+export const THERMAL_QR_PRINT_ERROR_CORRECTION = "M" as const;
+
+/** Minimum QR module size on paper (dots) for reliable thermal scans. */
+export const THERMAL_QR_MIN_MODULE_DOTS = 6;
+
+/**
+ * Digital / kiosk QR proportion on screen (~32 mm @ 80 mm + {@link RECEIPT_DIGITAL_QR_SCALE}).
+ * Independent of {@link THERMAL_QR_SIZE_MM} — print size can be tuned without affecting /v.
+ */
+export const RECEIPT_DIGITAL_QR_SIZE_MM = 32;
+
+/** Footer logo height on print (ESC/POS text path; raster uses RASTER_RECEIPT_TYPE.footerSize). */
+export const THERMAL_FOOTER_LOGO_HEIGHT_DOTS = Math.round(
+  10 * RECEIPT_PRINT_TEXT_SCALE,
+);
 
 /** Max width per footer wordmark within the content column. */
 export const THERMAL_FOOTER_FAE_MAX_WIDTH_DOTS = 220;
@@ -135,15 +157,15 @@ export const RECEIPT_QR_PX = thermalMmToReceiptPx(THERMAL_QR_SIZE_MM);
 /** Digital QR is larger than the thermal print proportion — phones need a bigger target. */
 export const RECEIPT_DIGITAL_QR_SCALE = 1.5;
 
-/** On-screen QR inside the digital card — proportional to 80mm paper width. */
+/** On-screen QR inside the digital card — not tied to print QR size. */
 export const RECEIPT_DIGITAL_QR_WIDTH_PERCENT =
-  (THERMAL_QR_SIZE_MM / THERMAL_PAPER_WIDTH_MM) *
+  (RECEIPT_DIGITAL_QR_SIZE_MM / THERMAL_PAPER_WIDTH_MM) *
   100 *
   RECEIPT_DIGITAL_QR_SCALE;
 
 export const RECEIPT_DIGITAL_QR_DISPLAY_PX = Math.round(
   RECEIPT_DIGITAL_MAX_WIDTH_PX *
-    (THERMAL_QR_SIZE_MM / THERMAL_PAPER_WIDTH_MM) *
+    (RECEIPT_DIGITAL_QR_SIZE_MM / THERMAL_PAPER_WIDTH_MM) *
     RECEIPT_DIGITAL_QR_SCALE,
 );
 

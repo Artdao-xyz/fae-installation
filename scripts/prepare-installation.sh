@@ -22,7 +22,6 @@ xattr -cr "$ROOT" 2>/dev/null || true
 echo "Restoring execute permissions..."
 chmod +x \
   "Start FAE Installation.command" \
-  "Install Node (optional).command" \
   "Prepare FAE Installation.command" \
   2>/dev/null || true
 

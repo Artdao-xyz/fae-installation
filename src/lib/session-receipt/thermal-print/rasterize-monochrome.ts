@@ -59,6 +59,8 @@ export function blitRaster(
       if (((source.data[srcByteIdx] ?? 0) >> srcBit) & 1) {
         const px = destX + x;
         const py = destY + y;
+        if (px < 0 || px >= targetWidth || py < 0) continue;
+        if (py >= target.length / targetBytesPerRow) continue;
         const destByteIdx = py * targetBytesPerRow + Math.floor(px / 8);
         const destBit = 7 - (px % 8);
         target[destByteIdx] = (target[destByteIdx] ?? 0) | (1 << destBit);
@@ -130,7 +132,7 @@ export async function rasterizeSvgString(
   widthDots: number,
 ): Promise<StarRaster> {
   const { data, info } = await sharp(Buffer.from(svg))
-    .resize({ width: widthDots, fit: "inside" })
+    .resize({ width: Math.round(widthDots), fit: "inside" })
     .flatten({ background: "#ffffff" })
     .ensureAlpha()
     .raw()
@@ -155,7 +157,7 @@ export async function rasterizeSvgFile(
 
   const { data, info } = await sharp(absolutePath)
     .resize({
-      height: heightDots,
+      height: Math.max(1, Math.round(heightDots)),
       width: maxWidthDots,
       fit: "inside",
     })

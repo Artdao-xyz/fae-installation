@@ -1,4 +1,4 @@
-import { buildReceiptViewUrl } from "../encode";
+import { buildReceiptPrintViewUrl } from "../encode";
 import {
   formatReceiptDate,
   formatSessionTranscript,
@@ -17,9 +17,7 @@ import {
 } from "../thermal-spec";
 import { rasterizeReceiptFooter } from "./footer-raster";
 import {
-  centerRasterOnPaper,
   insetRasterHorizontally,
-  padThermalLineCenter,
   padThermalLineLeft,
   padThermalLineStart,
 } from "./margins";
@@ -28,18 +26,24 @@ import {
   buildEscPosRasterCommand,
   rasterizePathStars,
 } from "./star-raster";
-import { createThermalPrinter } from "./thermal-printer-factory";
+import { createThermalPrinter, usesCupsPrinterDriver } from "./thermal-printer-factory";
+import {
+  parseCupsPrinterName,
+  printRawEscPosToCups,
+} from "./cups-lp-raw-print";
 
 type ThermalPrinterInstance = {
   clear: () => void;
   newLine: () => void;
   alignLeft: () => void;
+  alignCenter: () => void;
   add: (buffer: Buffer) => void;
   bold: (enabled: boolean) => void;
   println: (text: string) => void;
   cut: () => void;
   execute: () => Promise<unknown>;
   getBuffer: () => Buffer | null;
+  setBuffer: (buffer: Buffer) => void;
 };
 
 const DUMMY_PRINTER_INTERFACE =
@@ -99,11 +103,11 @@ async function appendSessionReceiptToPrinter(
   printer.println(padThermalLineStart(formatTagFortuneLine(receipt.prompt)));
   printer.newLine();
 
-  const qrUrl = buildReceiptViewUrl(receipt, viewOrigin);
-  printer.println(padThermalLineCenter("share"));
-  printer.add(
-    buildEscPosRasterCommand(centerRasterOnPaper(rasterizeQrCode(qrUrl))),
-  );
+  const qrUrl = buildReceiptPrintViewUrl(receipt, viewOrigin);
+  printer.alignCenter();
+  printer.println("share");
+  printer.add(buildEscPosRasterCommand(rasterizeQrCode(qrUrl)));
+  printer.alignLeft();
 
   printer.newLine();
   const footer = await rasterizeReceiptFooter();
@@ -139,7 +143,18 @@ export async function printSessionReceiptToInterface(
   printerInterface: string,
   viewOrigin?: string,
 ): Promise<void> {
+  const buffer = await buildSessionReceiptEscPosBuffer(receipt, viewOrigin);
+
+  if (usesCupsPrinterDriver(printerInterface)) {
+    const printerName = parseCupsPrinterName(printerInterface);
+    console.info(
+      `[print] CUPS raw escpos-text → ${printerName} (${buffer.length} bytes)`,
+    );
+    await printRawEscPosToCups(printerName, buffer);
+    return;
+  }
+
   const printer = await openThermalPrinter(printerInterface);
-  await appendSessionReceiptToPrinter(printer, receipt, viewOrigin);
+  printer.setBuffer(buffer);
   await printer.execute();
 }

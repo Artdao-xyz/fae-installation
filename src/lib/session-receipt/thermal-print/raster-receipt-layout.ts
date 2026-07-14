@@ -1,4 +1,4 @@
-import { buildReceiptViewUrl } from "../encode";
+import { buildReceiptPrintViewUrl } from "../encode";
 import {
   formatReceiptDate,
   formatSessionTranscript,
@@ -60,30 +60,6 @@ function lineY(
   padY = RASTER_RECEIPT_TYPE.sectionPadY,
 ): number {
   return padY + startY + leading * (index + 1);
-}
-
-function centerRasterInContent(raster: StarRaster): StarRaster {
-  const left = Math.max(0, Math.floor((RASTER_RECEIPT_WIDTH_DOTS - raster.widthDots) / 2));
-  const bytesPerRow = Math.ceil(RASTER_RECEIPT_WIDTH_DOTS / 8);
-  const data = new Uint8Array(bytesPerRow * raster.heightDots);
-  for (let y = 0; y < raster.heightDots; y++) {
-    for (let x = 0; x < raster.widthDots; x++) {
-      const srcByteIdx = y * raster.bytesPerRow + Math.floor(x / 8);
-      const srcBit = 7 - (x % 8);
-      if (((raster.data[srcByteIdx] ?? 0) >> srcBit) & 1) {
-        const destX = x + left;
-        const destByteIdx = y * bytesPerRow + Math.floor(destX / 8);
-        const destBit = 7 - (destX % 8);
-        data[destByteIdx] = (data[destByteIdx] ?? 0) | (1 << destBit);
-      }
-    }
-  }
-  return {
-    widthDots: RASTER_RECEIPT_WIDTH_DOTS,
-    heightDots: raster.heightDots,
-    bytesPerRow,
-    data,
-  };
 }
 
 function rasterizeHorizontalRule(): StarRaster {
@@ -166,7 +142,7 @@ async function rasterizeTranscriptBlock(
   receipt: SessionReceipt,
 ): Promise<StarRaster | null> {
   const transcript = formatSessionTranscript(receipt.events);
-  const { bodySize, transcriptLeading, sectionPadY, transcriptColGap } =
+  const { bodySize, bodyLeading, transcriptLeading, sectionPadY, transcriptColGap } =
     RASTER_RECEIPT_TYPE;
 
   const timeColumnWidth = Math.ceil(rasterMonoCharWidth(bodySize) * 6);
@@ -183,12 +159,21 @@ async function rasterizeTranscriptBlock(
   }
 
   const lines: SvgTextLine[] = [];
-  let rowIndex = 0;
+  let cursorY = sectionPadY;
+
   for (const row of rows) {
     const labelLines = wrapMonoText(row.label, labelMaxWidth, bodySize);
     for (let i = 0; i < labelLines.length; i++) {
+      if (lines.length === 0) {
+        cursorY += bodyLeading;
+      } else if (i === 0) {
+        cursorY += transcriptLeading;
+      } else {
+        cursorY += bodyLeading;
+      }
+
       lines.push({
-        y: lineY(rowIndex, 0, transcriptLeading, sectionPadY),
+        y: cursorY,
         spans: [
           {
             x: 0,
@@ -204,33 +189,36 @@ async function rasterizeTranscriptBlock(
           },
         ],
       });
-      rowIndex++;
     }
   }
 
   if (lines.length === 0) return null;
 
-  const height = padHeight(transcriptLeading * lines.length, sectionPadY);
+  const height = sectionPadY + cursorY;
   const svg = buildSvgTextBlock({ heightDots: height, lines });
   return rasterizeReceiptSvgBlock(svg);
 }
 
 async function rasterizeQuoteBlock(receipt: SessionReceipt): Promise<StarRaster> {
-  const { bodySize, quoteLeading, blockPadY } = RASTER_RECEIPT_TYPE;
+  const { bodySize, bodyLeading, blockPadY } = RASTER_RECEIPT_TYPE;
   const quote = formatTagFortuneLine(receipt.prompt);
   const wrapped = wrapMonoText(quote, RASTER_RECEIPT_WIDTH_DOTS, bodySize);
-  const lines: SvgTextLine[] = wrapped.map((text, index) => ({
-    y: lineY(index, 0, quoteLeading, blockPadY),
-    spans: [
-      {
-        x: 0,
-        text,
-        size: bodySize,
-        fill: RASTER_RECEIPT_INK.secondary,
-      },
-    ],
-  }));
-  const textHeight = padHeight(quoteLeading * wrapped.length, blockPadY);
+  let cursorY = blockPadY;
+  const lines: SvgTextLine[] = wrapped.map((text) => {
+    cursorY += bodyLeading;
+    return {
+      y: cursorY,
+      spans: [
+        {
+          x: 0,
+          text,
+          size: bodySize,
+          fill: RASTER_RECEIPT_INK.secondary,
+        },
+      ],
+    };
+  });
+  const textHeight = blockPadY + cursorY;
   const textBlock = await rasterizeReceiptSvgBlock(
     buildSvgTextBlock({ heightDots: textHeight, lines }),
   );
@@ -242,19 +230,22 @@ async function rasterizeQuoteBlock(receipt: SessionReceipt): Promise<StarRaster>
   );
 }
 
+/** Sized to its own text width — printer native centering positions it, we don't guess. */
 async function rasterizeShareLabel(): Promise<StarRaster> {
   const { bodySize, bodyLeading, sectionPadY } = RASTER_RECEIPT_TYPE;
   const height = padHeight(bodyLeading, sectionPadY);
-  const labelWidth = rasterMonoCharWidth(bodySize) * RECEIPT_QR_SHARE_LABEL.length;
-  const x = Math.max(0, Math.floor((RASTER_RECEIPT_WIDTH_DOTS - labelWidth) / 2));
+  const widthDots = Math.ceil(
+    rasterMonoCharWidth(bodySize) * RECEIPT_QR_SHARE_LABEL.length,
+  );
   const svg = buildSvgTextBlock({
+    widthDots,
     heightDots: height,
     lines: [
       {
         y: lineY(0, 0, bodyLeading, sectionPadY),
         spans: [
           {
-            x,
+            x: 0,
             text: RECEIPT_QR_SHARE_LABEL,
             size: bodySize,
             fill: RASTER_RECEIPT_INK.secondary,
@@ -263,7 +254,7 @@ async function rasterizeShareLabel(): Promise<StarRaster> {
       },
     ],
   });
-  return rasterizeReceiptSvgBlock(svg);
+  return rasterizeReceiptSvgBlock(svg, widthDots);
 }
 
 async function rasterizeFooterBlock(): Promise<StarRaster> {
@@ -271,17 +262,25 @@ async function rasterizeFooterBlock(): Promise<StarRaster> {
   return rasterizeSvgFile(SERPENTINE_LOGO_SVG, logoHeight, 120);
 }
 
+export type ReceiptRasterSection = {
+  /** How the printer should justify this section — native ESC/POS alignment, not manual dot math. */
+  align: "left" | "center";
+  raster: StarRaster;
+};
+
 /**
- * Compose the full session receipt as one 1-bit raster (Figma-aligned typography).
+ * Compose the full session receipt as ordered 1-bit raster sections (Figma-aligned typography).
+ * The QR / "share" label are sized to their own natural width and tagged `center` — the printer's
+ * own justification centers them on its real printable area, instead of us assuming paper width.
  */
 export async function buildSessionReceiptRaster(
   receipt: SessionReceipt,
   viewOrigin?: string,
-): Promise<StarRaster> {
-  const sections: StarRaster[] = [];
+): Promise<ReceiptRasterSection[]> {
+  const topSections: StarRaster[] = [];
 
   if (receipt.path && hasPathActivity(receipt.path)) {
-    sections.push(
+    topSections.push(
       stackRastersVertically(
         [
           blankRaster(RASTER_RECEIPT_WIDTH_DOTS, RASTER_RECEIPT_TYPE.starsPadY),
@@ -293,35 +292,56 @@ export async function buildSessionReceiptRaster(
     );
   }
 
-  sections.push(await rasterizeProcessingHeading());
-  sections.push(await rasterizeHeaderBlock(receipt));
+  topSections.push(await rasterizeProcessingHeading());
+  topSections.push(await rasterizeHeaderBlock(receipt));
 
   const transcript = await rasterizeTranscriptBlock(receipt);
-  if (transcript) sections.push(transcript);
+  if (transcript) topSections.push(transcript);
 
-  sections.push(await rasterizeQuoteBlock(receipt));
+  topSections.push(await rasterizeQuoteBlock(receipt));
 
-  const qrUrl = buildReceiptViewUrl(receipt, viewOrigin);
-  sections.push(await rasterizeShareLabel());
-  sections.push(
+  const topBlock = insetRasterHorizontally(
     stackRastersVertically(
-      [
-        blankRaster(RASTER_RECEIPT_WIDTH_DOTS, RASTER_RECEIPT_TYPE.qrPadTop),
-        centerRasterInContent(rasterizeQrCode(qrUrl)),
-        blankRaster(RASTER_RECEIPT_WIDTH_DOTS, RASTER_RECEIPT_TYPE.qrPadBottom),
-      ],
+      topSections,
       RASTER_RECEIPT_WIDTH_DOTS,
-      0,
+      RASTER_RECEIPT_TYPE.sectionGap,
     ),
+    THERMAL_HORIZONTAL_MARGIN_DOTS,
+    THERMAL_LINE_DOTS,
   );
 
-  sections.push(await rasterizeFooterBlock());
-
-  const stacked = stackRastersVertically(
-    sections,
-    RASTER_RECEIPT_WIDTH_DOTS,
-    RASTER_RECEIPT_TYPE.sectionGap,
+  const shareLabel = await rasterizeShareLabel();
+  const shareBlock = stackRastersVertically(
+    [blankRaster(shareLabel.widthDots, RASTER_RECEIPT_TYPE.sectionGap), shareLabel],
+    shareLabel.widthDots,
+    0,
   );
 
-  return insetRasterHorizontally(stacked, THERMAL_HORIZONTAL_MARGIN_DOTS, THERMAL_LINE_DOTS);
+  const qrUrl = buildReceiptPrintViewUrl(receipt, viewOrigin);
+  const qrRaster = rasterizeQrCode(qrUrl);
+  const qrBlock = stackRastersVertically(
+    [
+      blankRaster(
+        qrRaster.widthDots,
+        RASTER_RECEIPT_TYPE.sectionGap + RASTER_RECEIPT_TYPE.qrPadTop,
+      ),
+      qrRaster,
+      blankRaster(qrRaster.widthDots, RASTER_RECEIPT_TYPE.qrPadBottom),
+    ],
+    qrRaster.widthDots,
+    0,
+  );
+
+  const footerBlock = insetRasterHorizontally(
+    await rasterizeFooterBlock(),
+    THERMAL_HORIZONTAL_MARGIN_DOTS,
+    THERMAL_LINE_DOTS,
+  );
+
+  return [
+    { align: "left", raster: topBlock },
+    { align: "center", raster: shareBlock },
+    { align: "center", raster: qrBlock },
+    { align: "left", raster: footerBlock },
+  ];
 }

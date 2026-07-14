@@ -1,9 +1,8 @@
 "use client";
 
-import { AboutFullScreenRichContent } from "@/components/ui/about-panel/AboutShared";
+import { InstallationExhibitionAboutContent } from "./InstallationExhibitionAboutContent";
 import { OpenSvgIcon } from "@/components/ui/icons/OpenSvgIcon";
 import {
-  fullScreenContentInnerClass,
   fullScreenContentScrollClass,
   fullScreenContentShellClass,
   fullScreenContentShellEnterTransitionClass,
@@ -35,7 +34,7 @@ export function InstallationAboutScreen({ open, onClose }: InstallationAboutScre
       } motion-reduce:scale-100 motion-reduce:opacity-100`}
       role="dialog"
       aria-modal="true"
-      aria-label="About Future Art Ecosystems"
+      aria-label="About the exhibition"
     >
       <div className="flex w-full shrink-0 items-stretch border-b-hairline border-solid border-border bg-surface-canvas">
         <button
@@ -49,8 +48,8 @@ export function InstallationAboutScreen({ open, onClose }: InstallationAboutScre
         </button>
       </div>
       <div className={fullScreenContentScrollClass}>
-        <div className={`${fullScreenContentInnerClass} max-w-[645px]`}>
-          <AboutFullScreenRichContent />
+        <div className="flex min-h-full w-full items-center justify-center">
+          <InstallationExhibitionAboutContent />
         </div>
       </div>
     </div>

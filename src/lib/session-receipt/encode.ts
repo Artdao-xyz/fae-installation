@@ -2,7 +2,10 @@ import type { SessionEvent, SessionReceipt, SessionTagTaxonomy } from "./types";
 import { encodePathField, decodePathField } from "./path-grid";
 import { normalizeSessionReceipt } from "./normalize-receipt";
 import { pickReceiptViewOrigin } from "./resolve-view-origin";
-import { receiptUrlFitsInQr } from "./qr-payload-fit";
+import {
+  receiptUrlFitsInQr,
+  receiptUrlFitsThermalPrintQr,
+} from "./qr-payload-fit";
 import {
   QR_SUMMARY_TIERS,
   summarizeEventsForQr,
@@ -249,6 +252,7 @@ function encodeEmergencyReceiptPayload(
 
 function buildEmergencyQrPayload(
   receipt: SessionReceipt,
+  fit: (url: string) => boolean,
   origin?: string,
 ): ReceiptQrPayload {
   const attempts: Array<() => string> = [
@@ -261,7 +265,7 @@ function buildEmergencyQrPayload(
   for (const encode of attempts) {
     const encoded = encode();
     const url = buildReceiptViewUrlFromEncoded(encoded, origin);
-    if (receiptUrlFitsInQr(url)) {
+    if (fit(url)) {
       return {
         encoded,
         omittedInteractionCount: receipt.events.length,
@@ -280,12 +284,9 @@ function buildEmergencyQrPayload(
   };
 }
 
-/**
- * Pick the richest event summary that still fits in a scannable QR for `origin`.
- * Always returns a payload — falls back to journey metadata only if needed.
- */
-export function buildReceiptQrPayload(
+function buildReceiptQrPayloadWithFit(
   receipt: SessionReceipt,
+  fit: (url: string) => boolean,
   origin?: string,
 ): ReceiptQrPayload {
   for (const tier of QR_SUMMARY_TIERS) {
@@ -295,7 +296,7 @@ export function buildReceiptQrPayload(
       omittedInteractionCount: summary.omittedCount,
     });
     const url = buildReceiptViewUrlFromEncoded(encoded, origin);
-    if (receiptUrlFitsInQr(url)) {
+    if (fit(url)) {
       if (summary.omittedCount > 0 || tier > 0) {
         logQrSummary(tier, receipt.events.length, summary);
       }
@@ -308,12 +309,37 @@ export function buildReceiptQrPayload(
     }
   }
 
-  const encoded = buildEmergencyQrPayload(receipt, origin);
   logQrSummary(4, receipt.events.length, {
     events: [],
     omittedCount: receipt.events.length,
   });
-  return encoded;
+  return buildEmergencyQrPayload(receipt, fit, origin);
+}
+
+/**
+ * Pick the richest event summary that still fits in a scannable QR for `origin`.
+ * Always returns a payload — falls back to journey metadata only if needed.
+ */
+export function buildReceiptQrPayload(
+  receipt: SessionReceipt,
+  origin?: string,
+): ReceiptQrPayload {
+  return buildReceiptQrPayloadWithFit(receipt, receiptUrlFitsInQr, origin);
+}
+
+/**
+ * Pick a QR payload that fits thermal print constraints (ECC M, min module dots).
+ * May omit more interactions than {@link buildReceiptQrPayload} — digital stays on L.
+ */
+export function buildReceiptPrintQrPayload(
+  receipt: SessionReceipt,
+  origin?: string,
+): ReceiptQrPayload {
+  return buildReceiptQrPayloadWithFit(
+    receipt,
+    receiptUrlFitsThermalPrintQr,
+    origin,
+  );
 }
 
 function logQrSummary(
@@ -407,6 +433,15 @@ export function buildReceiptViewUrl(
   }
 
   return url;
+}
+
+/** Thermal print QR URL — stricter fit than {@link buildReceiptViewUrl}. */
+export function buildReceiptPrintViewUrl(
+  receipt: SessionReceipt,
+  origin?: string,
+): string {
+  const { encoded } = buildReceiptPrintQrPayload(receipt, origin);
+  return buildReceiptViewUrlFromEncoded(encoded, origin);
 }
 
 /** Fields stored inside the QR payload (for debugging). */
