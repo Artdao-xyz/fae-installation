@@ -66,6 +66,22 @@ function ensureCatalog() {
 
 function ensureProductionBuild() {
   const buildId = path.join(projectRoot, ".next", "BUILD_ID");
+  const merged = readMergedReleaseEnv();
+  const buildEnv = {
+    ...process.env,
+    NEXT_PUBLIC_FAE_INSTALLATION_MODE: "1",
+  };
+  const receiptViewUrl = merged.NEXT_PUBLIC_RECEIPT_VIEW_BASE_URL?.trim();
+  if (receiptViewUrl) {
+    buildEnv.NEXT_PUBLIC_RECEIPT_VIEW_BASE_URL = receiptViewUrl;
+    log("build", `NEXT_PUBLIC_RECEIPT_VIEW_BASE_URL=${receiptViewUrl}`);
+  } else {
+    log(
+      "warn",
+      "NEXT_PUBLIC_RECEIPT_VIEW_BASE_URL not set — set it in .env.release.local (or .env.local) before release so QR codes point at your public viewer",
+    );
+  }
+
   if (skipBuild && fs.existsSync(buildId)) {
     log("build", "skipped (--skip-build, existing production build)");
     verifyProductionBuild();
@@ -73,10 +89,7 @@ function ensureProductionBuild() {
   }
   log("build", "running production build with installation mode");
   run("npm run build", {
-    env: {
-      ...process.env,
-      NEXT_PUBLIC_FAE_INSTALLATION_MODE: "1",
-    },
+    env: buildEnv,
   });
   if (!fs.existsSync(buildId)) {
     throw new Error("Production build failed — .next/BUILD_ID not found");
@@ -165,6 +178,12 @@ function parseEnvFile(filePath) {
   return out;
 }
 
+function readMergedReleaseEnv() {
+  const releaseEnv = parseEnvFile(path.join(projectRoot, ".env.release.local"));
+  const devEnv = parseEnvFile(path.join(projectRoot, ".env.local"));
+  return { ...devEnv, ...releaseEnv };
+}
+
 const RELEASE_ENV_KEYS = [
   "RECEIPT_ARCHIVE_CLOUD",
   "RECEIPT_ARCHIVE_INSTALLATION_ID",
@@ -177,9 +196,7 @@ const RELEASE_ENV_KEYS = [
 ];
 
 function writeReleaseEnvLocal() {
-  const releaseEnv = parseEnvFile(path.join(projectRoot, ".env.release.local"));
-  const devEnv = parseEnvFile(path.join(projectRoot, ".env.local"));
-  const merged = { ...devEnv, ...releaseEnv };
+  const merged = readMergedReleaseEnv();
 
   const lines = [
     "NEXT_PUBLIC_FAE_INSTALLATION_MODE=1",
@@ -195,6 +212,18 @@ function writeReleaseEnvLocal() {
   }
 
   fs.writeFileSync(path.join(appDir, ".env.local"), `${lines.join("\n")}\n`);
+
+  if (!merged.NEXT_PUBLIC_RECEIPT_VIEW_BASE_URL?.trim()) {
+    log(
+      "warn",
+      "app/.env.local has no NEXT_PUBLIC_RECEIPT_VIEW_BASE_URL — printed QR codes will not point at your public viewer",
+    );
+  } else {
+    log(
+      "env",
+      `NEXT_PUBLIC_RECEIPT_VIEW_BASE_URL=${merged.NEXT_PUBLIC_RECEIPT_VIEW_BASE_URL.trim()}`,
+    );
+  }
 
   const r2Ready =
     merged.R2_ACCOUNT_ID?.trim() &&
