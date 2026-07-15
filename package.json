@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "next dev --turbopack -H 0.0.0.0",
     "build": "npm run lint && next build --webpack",
     "start": "next start",
     "lint": "eslint .",
@@ -17,7 +17,6 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1075.0",
     "@strapi/blocks-react-renderer": "^1.0.2",
-    "html-to-image": "^1.11.13",
     "next": "^16.2.1",
     "node-thermal-printer": "^4.6.0",
     "qrcode": "^1.5.4",

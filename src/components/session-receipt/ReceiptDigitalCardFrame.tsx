@@ -1,4 +1,4 @@
-import { forwardRef, type CSSProperties, type ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 
 type ReceiptDigitalCardFrameProps = {
   children: ReactNode;
@@ -7,17 +7,17 @@ type ReceiptDigitalCardFrameProps = {
 };
 
 /** Fluid digital receipt container — children use `cqw` units from {@link globals.css}. */
-export const ReceiptDigitalCardFrame = forwardRef<
-  HTMLDivElement,
-  ReceiptDigitalCardFrameProps
->(function ReceiptDigitalCardFrame({ children, className = "", style }, ref) {
+export function ReceiptDigitalCardFrame({
+  children,
+  className = "",
+  style,
+}: ReceiptDigitalCardFrameProps) {
   return (
     <div
-      ref={ref}
       className={`receipt-digital-host ${className}`.trim()}
       style={style}
     >
       {children}
     </div>
   );
-});
+}
