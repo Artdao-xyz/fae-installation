@@ -1,9 +1,10 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useRef, type ReactNode } from "react";
 import type { SessionReceipt } from "@/lib/session-receipt/types";
 import { useReceiptViewScroll } from "@/lib/session-receipt/use-receipt-view-scroll";
 import { ReceiptDigitalCardFrame } from "./ReceiptDigitalCardFrame";
+import { ReceiptDownloadButton } from "./ReceiptDownloadButton";
 import { ReceiptPaper, type ReceiptPaperVariant } from "./ReceiptPaper";
 
 type ReceiptDigitalViewProps = {
@@ -16,6 +17,8 @@ type ReceiptDigitalViewProps = {
   variant?: Extract<ReceiptPaperVariant, "digital" | "confirm">;
   /** Passed through to {@link ReceiptPaper} (default on — same as pre-layout work). */
   showQr?: boolean;
+  /** Show a PNG download button below the card (scanned `/v` pages). */
+  showDownloadButton?: boolean;
 };
 
 const receiptSafePadding = {
@@ -32,8 +35,10 @@ export function ReceiptDigitalView({
   shareScanUrl,
   variant = "confirm",
   showQr = true,
+  showDownloadButton = false,
 }: ReceiptDigitalViewProps) {
   useReceiptViewScroll();
+  const cardRef = useRef<HTMLDivElement>(null);
 
   return (
     <main
@@ -41,7 +46,10 @@ export function ReceiptDigitalView({
       style={receiptSafePadding}
     >
       <div className="w-full min-w-0 max-w-full">
-        <ReceiptDigitalCardFrame className="shadow-[0px_4px_10px_0px_rgba(0,0,0,0.05)]">
+        <ReceiptDigitalCardFrame
+          ref={cardRef}
+          className="shadow-[0px_4px_10px_0px_rgba(0,0,0,0.05)]"
+        >
           <ReceiptPaper
             receipt={receipt}
             variant={variant}
@@ -50,6 +58,12 @@ export function ReceiptDigitalView({
             showQr={showQr}
           />
         </ReceiptDigitalCardFrame>
+        {showDownloadButton ? (
+          <ReceiptDownloadButton
+            captureRef={cardRef}
+            sessionStart={receipt.sessionStart}
+          />
+        ) : null}
       </div>
     </main>
   );

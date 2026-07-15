@@ -1,6 +1,6 @@
 {
   "printerInterface": "printer:Printer_POS-80",
   "receiptPrintMode": "raster",
-  "receiptViewBaseUrl": "",
+  "receiptViewBaseUrl": "https://YOUR-PROJECT.vercel.app",
   "adminPin": "fae"
 }

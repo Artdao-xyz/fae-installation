@@ -38,6 +38,17 @@ To stop: close Terminal or press **Ctrl+C**.
 2. PIN: **`fae`**
 3. Select the printer → **Save printer** → **Test print**
 
+## Receipt QR (phones at home)
+
+Printed QR codes must open a **public** website, not localhost.
+
+1. Deploy the receipt viewer to **your** Vercel account.
+2. On the kiosk, set the QR URL to your Vercel URL (e.g. `https://fae-processing.vercel.app`):
+   - **Admin** → QR code → Custom hostname override → Save, **or**
+   - Set `NEXT_PUBLIC_RECEIPT_VIEW_BASE_URL` before running `npm run release`.
+
+After a test print, scan the QR on your phone (cellular). It should open the digital receipt with a **Download receipt** button at the bottom.
+
 ## If something goes wrong
 
 | Problem | What to do |
