@@ -4,6 +4,7 @@ import { normalizeSessionReceipt } from "./normalize-receipt";
 import { pickReceiptViewOrigin } from "./resolve-view-origin";
 import {
   receiptUrlAcceptableForThermalPrint,
+  receiptUrlFitsDenseThermalPrintQr,
   receiptUrlFitsInQr,
 } from "./qr-payload-fit";
 import {
@@ -381,6 +382,9 @@ function tryReceiptQrPayloadWithFit(
 ): ReceiptQrPayload | null {
   for (const tier of QR_SUMMARY_TIERS) {
     const summary = summarizeEventsForQr(receipt.events, tier);
+    // An empty summary (tier 4 / pagesOnly) always "fits" — accepting it here
+    // would short-circuit richer fallbacks and ship a transcript-less QR.
+    if (receipt.events.length > 0 && summary.events.length === 0) continue;
     const encoded = encodeReceiptPayload(receipt, {
       events: summary.events,
       omittedInteractionCount: summary.omittedCount,
@@ -435,7 +439,7 @@ export function buildReceiptPrintQrPayload(
 
   const dense = tryReceiptQrPayloadWithFit(
     receipt,
-    () => true,
+    receiptUrlFitsDenseThermalPrintQr,
     origin,
     false,
   );

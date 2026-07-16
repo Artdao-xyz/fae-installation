@@ -1,6 +1,11 @@
 @import "tailwindcss";
 @source "../**/*.{js,ts,jsx,tsx}";
 
+/* Light-only design — opt out of Android/Chrome forced auto-dark (see layout.tsx). */
+:root {
+  color-scheme: only light;
+}
+
 @font-face {
   font-family: SuisseIntl;
   src: url("/fonts/SuisseIntl-Medium.woff2") format("woff2");

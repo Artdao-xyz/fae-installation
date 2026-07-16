@@ -33,10 +33,9 @@ export function thermalPrintQrLayout(url: string): ThermalPrintQrLayout {
   );
   let widthDots = gridModules * moduleDots;
   if (widthDots > THERMAL_CONTENT_DOTS) {
-    moduleDots = Math.max(
-      THERMAL_QR_MIN_MODULE_DOTS,
-      Math.floor(THERMAL_CONTENT_DOTS / gridModules),
-    );
+    // Width cap is HARD (a raster wider than the 576-dot head garbles the whole
+    // print — see thermal-spec.ts); the module minimum is soft and yields to it.
+    moduleDots = Math.max(1, Math.floor(THERMAL_CONTENT_DOTS / gridModules));
     widthDots = gridModules * moduleDots;
   }
   return { moduleCount, gridModules, moduleDots, widthDots };
@@ -64,6 +63,25 @@ export function receiptUrlAcceptableForThermalPrint(url: string): boolean {
     const { moduleCount, widthDots } = thermalPrintQrLayout(url);
     return (
       moduleCount <= THERMAL_PRINT_QR_MAX_MODULES &&
+      widthDots <= THERMAL_CONTENT_DOTS
+    );
+  } catch {
+    return false;
+  }
+}
+
+/** Floor for the dense fallback — 4 dots/module (~0.5mm) still scans on a clean print. */
+const THERMAL_QR_DENSE_MIN_MODULE_DOTS = 4;
+
+/**
+ * Last-resort print density before giving up on the transcript: modules may
+ * shrink below the comfortable minimum but never below the scannable floor.
+ */
+export function receiptUrlFitsDenseThermalPrintQr(url: string): boolean {
+  try {
+    const { moduleDots, widthDots } = thermalPrintQrLayout(url);
+    return (
+      moduleDots >= THERMAL_QR_DENSE_MIN_MODULE_DOTS &&
       widthDots <= THERMAL_CONTENT_DOTS
     );
   } catch {
