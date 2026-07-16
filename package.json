@@ -17,6 +17,7 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1075.0",
     "@strapi/blocks-react-renderer": "^1.0.2",
+    "fflate": "^0.8.3",
     "next": "^16.2.1",
     "node-thermal-printer": "^4.6.0",
     "qrcode": "^1.5.4",

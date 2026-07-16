@@ -2,6 +2,14 @@
 
 For exhibition staff. No coding needed.
 
+## Every show day
+
+1. Plug in the thermal printer (USB + power).
+2. Double-click **`Start FAE Installation.command`**.
+3. Leave Terminal open.
+
+To stop: close Terminal or press **Ctrl+C**.
+
 ## First time on this Mac
 
 1. Unzip **FAE-Installation.zip**.
@@ -23,14 +31,6 @@ For exhibition staff. No coding needed.
 7. Double-click **`Start FAE Installation.command`**.
 
    A Terminal window opens — **leave it open** while the show is running. Your browser opens to the kiosk.
-
-## Every show day
-
-1. Plug in the thermal printer (USB + power).
-2. Double-click **`Start FAE Installation.command`**.
-3. Leave Terminal open.
-
-To stop: close Terminal or press **Ctrl+C**.
 
 ## Printer setup (once)
 
