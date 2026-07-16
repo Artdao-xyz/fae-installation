@@ -21,11 +21,11 @@ export const installationAboutShellClass = [
 ].join(" ");
 
 export const installationAboutScrollClass =
-  "scrollbar-hide min-h-0 flex-1 overflow-y-auto overscroll-contain";
+  "scrollbar-hide flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overscroll-contain";
 
-/** Centers about copy in the remaining shell on `lg+`; top-aligned scroll on smaller viewports. */
+/** Centers about copy in the remaining shell; scrolls when content exceeds viewport height. */
 export const installationAboutContentStageClass =
-  "flex w-full px-3 py-3 lg:min-h-full lg:items-center lg:justify-center lg:px-6 lg:py-6";
+  "flex min-h-full w-full flex-col items-center justify-center px-3 py-3 max-lg:text-center lg:px-6 lg:py-6";
 
 /** Start screen hero glyph (intro / idle return). */
 export const installationIntroGlyphSrc = "/glyph-2.png";
@@ -38,16 +38,17 @@ export const installationGlyphMarkClass =
   "h-auto w-[440px] max-w-[90vw] shrink-0 self-center object-contain";
 
 export const installationScreenTitleClass =
-  "font-lust-text text-left text-[clamp(2rem,7vw,3rem)] leading-tight text-black-fae max-lg:whitespace-normal lg:whitespace-nowrap";
+  "font-lust-text text-left text-[clamp(2rem,7vw,3rem)] leading-tight text-black-fae max-lg:text-center max-lg:whitespace-normal lg:whitespace-nowrap";
 
 /** Matches home hero subtitle (`HeroTitleBlock`). */
 export const installationScreenSubtitleBaseClass =
   "font-fira-mono text-sm font-medium leading-4 text-black-fae/50 sm:text-base sm:leading-5";
 
-export const installationScreenSubtitleClass = `text-left ${installationScreenSubtitleBaseClass}`;
+export const installationScreenSubtitleClass = `text-left max-lg:text-center ${installationScreenSubtitleBaseClass}`;
 
 /** Title + subtitle stack — keeps the pair visually tight inside the screen column. */
-export const installationScreenTitleBlockClass = "flex flex-col gap-0";
+export const installationScreenTitleBlockClass =
+  "flex w-full flex-col gap-0 max-lg:items-center max-lg:text-center";
 
 /** Screensaver title stack — centered within the bouncing content column. */
 export const installationScreensaverTitleBlockClass =
@@ -73,7 +74,7 @@ export const installationScreenStageClass =
  * so title, subtitle, and buttons stay aligned across screen swaps.
  */
 export const installationScreenContentClass =
-  "flex w-[605px] max-w-[calc(100vw-2rem)] shrink-0 flex-col items-start gap-5 sm:max-w-[calc(100vw-3rem)]";
+  "flex w-[605px] max-w-[calc(100vw-2rem)] shrink-0 flex-col items-start gap-5 max-lg:items-center sm:max-w-[calc(100vw-3rem)]";
 
 /** Intro / confirm action rows — stack full-width buttons on `max-lg`. */
 export const installationScreenActionsRowClass =
