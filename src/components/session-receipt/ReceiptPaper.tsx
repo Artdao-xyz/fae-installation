@@ -15,13 +15,14 @@ import type { SessionReceipt } from "@/lib/session-receipt/types";
 import {
   RECEIPT_ACTIVITY_HEADING,
   RECEIPT_ARTIFACT_TITLE,
-  RECEIPT_BRAND,
 } from "@/lib/session-receipt/types";
 import {
   RECEIPT_DIGITAL_SCALE,
-  RECEIPT_DIGITAL_MAX_WIDTH_PX,
   RECEIPT_PAPER_WIDTH_PX,
   RECEIPT_QR_PX,
+  RECEIPT_THERMAL_BODY_PX,
+  RECEIPT_THERMAL_LEADING_PX,
+  RECEIPT_THERMAL_TITLE_PX,
   THERMAL_HORIZONTAL_MARGIN_RATIO,
   thermalReceiptHorizontalPaddingPx,
 } from "@/lib/session-receipt/thermal-spec";
@@ -37,12 +38,14 @@ export type ReceiptPaperVariant = "thermal" | "digital" | "confirm";
 type ReceiptPaperProps = {
   receipt: SessionReceipt;
   className?: string;
-  /** `thermal` = 58mm fidelity; `digital` = larger on-screen twin. */
+  /** `thermal` = 80mm fidelity; `digital` = larger on-screen twin. */
   variant?: ReceiptPaperVariant;
   /** Override QR target (used on kiosk preview). */
   qrUrl?: string;
   /** Raw `d` payload — used on /v; preview derives from receipt when omitted. */
   encoded?: string | null;
+  /** Client-side share QR target on /v (current scan URL). */
+  shareScanUrl?: string;
   /** When false, omits the QR block (e.g. kiosk confirm screen renders it below the fold). */
   showQr?: boolean;
 };
@@ -57,6 +60,7 @@ export function ReceiptPaper({
   variant = "thermal",
   qrUrl: qrUrlOverride,
   encoded,
+  shareScanUrl,
   showQr = true,
 }: ReceiptPaperProps) {
   const isDigital = variant === "digital";
@@ -89,14 +93,12 @@ export function ReceiptPaper({
     <article
       className={`mx-auto bg-white font-mono text-black ${
         isScaledPreview
-          ? "box-border w-full min-w-0 border-hairline border-solid border-border py-5 text-[12px] leading-[15px] shadow-[0_8px_32px_rgba(0,0,0,0.14)]"
-          : "py-4 text-[11px] leading-[14px]"
+          ? "receipt-paper-digital box-border min-w-0 border-hairline border-solid border-border py-5 shadow-[0_8px_32px_rgba(0,0,0,0.14)]"
+          : "py-4"
       } ${className}`}
       style={
         isScaledPreview
           ? {
-              width: "100%",
-              maxWidth: RECEIPT_DIGITAL_MAX_WIDTH_PX,
               paddingLeft: horizontalMargin,
               paddingRight: horizontalMargin,
             }
@@ -104,33 +106,50 @@ export function ReceiptPaper({
               width: paperWidth,
               paddingLeft: horizontalPad,
               paddingRight: horizontalPad,
+              fontSize: RECEIPT_THERMAL_BODY_PX,
+              lineHeight: `${RECEIPT_THERMAL_LEADING_PX}px`,
             }
       }
       aria-label="Session receipt"
     >
       {isScaledPreview && showPath ? (
-        <ReceiptDigitalStars payload={payload} scale={scale} />
+        <ReceiptDigitalStars payload={payload} />
       ) : null}
       {!isScaledPreview && showPath ? (
         <ReceiptPathStars path={showPath} scale={scale} />
       ) : null}
 
+      {showPath ? (
+        <p className={`${isScaledPreview ? "mt-4" : "mt-4"} mb-0`}>
+          {RECEIPT_ACTIVITY_HEADING}
+        </p>
+      ) : null}
+
       <header className={showPath ? "mt-4" : undefined}>
         <p
           className={`font-bold tracking-wide ${
-            isScaledPreview ? "text-sm" : "text-xs"
+            isScaledPreview ? "receipt-paper-digital__title" : ""
           }`}
+          style={
+            isScaledPreview
+              ? undefined
+              : {
+                  fontSize: RECEIPT_THERMAL_TITLE_PX,
+                  lineHeight: `${RECEIPT_THERMAL_LEADING_PX}px`,
+                }
+          }
         >
-          {RECEIPT_BRAND}
+          {RECEIPT_ARTIFACT_TITLE}
         </p>
-        <p className="mt-1">{RECEIPT_ARTIFACT_TITLE}</p>
         <p className="mt-1">{formatReceiptDate(receipt.sessionStart)}</p>
       </header>
 
       <section className="mt-8">
-        <p className="mb-4">{RECEIPT_ACTIVITY_HEADING}</p>
+        {!showPath ? (
+          <p className="mb-4">{RECEIPT_ACTIVITY_HEADING}</p>
+        ) : null}
         {transcript.length === 0 ? (
-          <p className="text-[10px]">No activity recorded</p>
+          <p>No activity recorded</p>
         ) : (
           <div className="space-y-1">
             {transcript.map((line, i) => (
@@ -145,18 +164,29 @@ export function ReceiptPaper({
       <ReceiptJourneyPrompt prompt={receipt.prompt} className="mt-8 mb-4" />
 
       {isDigital && omittedInteractionCount > 0 ? (
-        <p className="mb-4 text-[10px] leading-[13px] text-black/50">
+        <p className="mb-4 text-black/50">
           Digital summary — {omittedInteractionCount} more interaction
           {omittedInteractionCount === 1 ? "" : "s"} on your printed receipt.
         </p>
       ) : null}
 
       {showQr ? (
-        <div className="mt-4">
+        <div className="mt-4 flex w-full flex-col items-center">
           {isScaledPreview ? (
-            <ReceiptDigitalQr payload={payload} scale={scale} />
+            payload ? (
+              <ReceiptDigitalQr
+                payload={payload}
+                scale={scale}
+                scanUrl={shareScanUrl}
+              />
+            ) : null
           ) : canShowThermalQr ? (
-            <ReceiptQrCode value={qrUrl} scale={scale} />
+            <>
+              <p className="mb-2 text-center text-black/50">share</p>
+              <ReceiptQrCode value={qrUrl} scale={scale} />
+            </>
+          ) : payload ? (
+            <ReceiptDigitalQr payload={payload} scale={scale} />
           ) : (
             <div
               className="bg-white py-2"
@@ -170,7 +200,7 @@ export function ReceiptPaper({
         </div>
       ) : null}
 
-      <ReceiptFooter />
+      <ReceiptFooter digital={isScaledPreview} />
     </article>
   );
 }

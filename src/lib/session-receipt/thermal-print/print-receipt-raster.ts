@@ -1,15 +1,25 @@
 import type { SessionReceipt } from "../types";
-import { buildSessionReceiptRaster } from "./raster-receipt-layout";
+import {
+  parseCupsPrinterName,
+  printRawEscPosToCups,
+} from "./cups-lp-raw-print";
+import {
+  buildSessionReceiptRaster,
+  type ReceiptRasterSection,
+} from "./raster-receipt-layout";
 import { buildEscPosRasterCommand } from "./star-raster";
-import { createThermalPrinter } from "./thermal-printer-factory";
+import { createThermalPrinter, usesCupsPrinterDriver } from "./thermal-printer-factory";
 
 type ThermalPrinterInstance = {
   clear: () => void;
   newLine: () => void;
+  alignLeft: () => void;
+  alignCenter: () => void;
   add: (buffer: Buffer) => void;
   cut: () => void;
   execute: () => Promise<unknown>;
   getBuffer: () => Buffer | null;
+  setBuffer: (buffer: Buffer) => void;
 };
 
 const DUMMY_PRINTER_INTERFACE =
@@ -26,16 +36,24 @@ async function openThermalPrinter(interfacePath: string) {
   })) as ThermalPrinterInstance;
 }
 
-async function appendRasterReceiptToPrinter(
+function appendRasterReceiptToPrinter(
   printer: ThermalPrinterInstance,
-  receipt: SessionReceipt,
-  viewOrigin?: string,
-): Promise<void> {
+  sections: ReceiptRasterSection[],
+): void {
   printer.clear();
   printer.newLine();
+  printer.alignLeft();
 
-  const raster = await buildSessionReceiptRaster(receipt, viewOrigin);
-  printer.add(buildEscPosRasterCommand(raster));
+  for (const section of sections) {
+    if (section.align === "center") {
+      printer.alignCenter();
+    } else {
+      printer.alignLeft();
+    }
+    printer.add(buildEscPosRasterCommand(section.raster));
+  }
+
+  printer.alignLeft();
   printer.cut();
 }
 
@@ -45,7 +63,8 @@ export async function buildSessionReceiptEscPosBufferRaster(
   viewOrigin?: string,
 ): Promise<Buffer> {
   const printer = await openThermalPrinter(DUMMY_PRINTER_INTERFACE);
-  await appendRasterReceiptToPrinter(printer, receipt, viewOrigin);
+  const sections = await buildSessionReceiptRaster(receipt, viewOrigin);
+  appendRasterReceiptToPrinter(printer, sections);
   const buffer = printer.getBuffer();
   if (!buffer?.length) {
     throw new Error("Empty ESC/POS buffer");
@@ -59,7 +78,30 @@ export async function printSessionReceiptToInterfaceRaster(
   printerInterface: string,
   viewOrigin?: string,
 ): Promise<void> {
+  const sections = await buildSessionReceiptRaster(receipt, viewOrigin);
+
+  if (usesCupsPrinterDriver(printerInterface)) {
+    const printerName = parseCupsPrinterName(printerInterface);
+    const printer = await openThermalPrinter(DUMMY_PRINTER_INTERFACE);
+
+    appendRasterReceiptToPrinter(printer, sections);
+    const buffer = printer.getBuffer();
+    if (!buffer?.length) {
+      throw new Error("Empty ESC/POS buffer");
+    }
+    console.info(
+      `[print] CUPS raster → ${printerName} (1 job, ${buffer.length} bytes)`,
+    );
+    await printRawEscPosToCups(printerName, buffer);
+    return;
+  }
+
   const printer = await openThermalPrinter(printerInterface);
-  await appendRasterReceiptToPrinter(printer, receipt, viewOrigin);
+  appendRasterReceiptToPrinter(printer, sections);
+  const buffer = printer.getBuffer();
+  if (!buffer?.length) {
+    throw new Error("Empty ESC/POS buffer");
+  }
+  printer.setBuffer(buffer);
   await printer.execute();
 }

@@ -34,7 +34,7 @@ export function isIgnoredLanReceiptOrigin(
 ): boolean {
   const trimmed = configured?.trim();
   if (!trimmed) return false;
-  return !isReceiptOriginOverride(trimmed);
+  return !isReceiptOriginOverride(normalizeReceiptViewBaseUrl(trimmed));
 }
 
 export function isLocalReceiptOrigin(origin: string): boolean {
@@ -49,14 +49,32 @@ function stripTrailingSlash(url: string): string {
   return url.replace(/\/$/, "");
 }
 
+/** `processing.example.com` → `https://processing.example.com` */
+export function normalizeReceiptViewBaseUrl(url: string): string {
+  const trimmed = stripTrailingSlash(url.trim());
+  if (!trimmed) return trimmed;
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  return `https://${trimmed}`;
+}
+
+function configuredPublicReceiptViewOrigin(): string | undefined {
+  const raw = process.env.NEXT_PUBLIC_RECEIPT_VIEW_BASE_URL?.trim();
+  if (!raw) return undefined;
+  const normalized = normalizeReceiptViewBaseUrl(raw);
+  return isReceiptOriginOverride(normalized) ? normalized : undefined;
+}
+
 /**
  * Best-effort QR scan target. Priority:
- * 1. Browser origin when the kiosk is opened via LAN IP or hostname (not localhost)
- * 2. `NEXT_PUBLIC_RECEIPT_VIEW_BASE_URL` when the kiosk runs on localhost
+ * 1. `NEXT_PUBLIC_RECEIPT_VIEW_BASE_URL` when it is a public hostname (e.g. Vercel)
+ * 2. Browser origin when the kiosk is opened via LAN IP (no public override)
  * 3. `resolvedOrigin` from `/api/receipt-origin` (auto LAN IP on localhost)
  * 4. `window.location.origin` fallback
  */
 export function pickReceiptViewOrigin(resolvedOrigin?: string): string {
+  const configured = configuredPublicReceiptViewOrigin();
+  if (configured) return configured;
+
   if (typeof window !== "undefined") {
     const { hostname, origin } = window.location;
     if (!isLocalHostname(hostname)) {
@@ -65,7 +83,7 @@ export function pickReceiptViewOrigin(resolvedOrigin?: string): string {
   }
 
   const env = process.env.NEXT_PUBLIC_RECEIPT_VIEW_BASE_URL?.trim();
-  if (env) return stripTrailingSlash(env);
+  if (env) return normalizeReceiptViewBaseUrl(env);
 
   if (resolvedOrigin) return stripTrailingSlash(resolvedOrigin);
 
@@ -82,11 +100,11 @@ export async function fetchReceiptViewOrigin(): Promise<string> {
     .then(async (res) => {
       if (!res.ok) throw new Error("receipt-origin failed");
       const data = (await res.json()) as { origin?: string };
-      const origin =
+      const serverOrigin =
         typeof data.origin === "string" && data.origin.length > 0
           ? stripTrailingSlash(data.origin)
-          : pickReceiptViewOrigin();
-      return origin;
+          : undefined;
+      return pickReceiptViewOrigin(serverOrigin);
     })
     .catch(() => pickReceiptViewOrigin())
     .finally(() => {

@@ -3,7 +3,11 @@ import {
   padThermalLineLeft,
   thermalDividerLine,
 } from "@/lib/session-receipt/thermal-print/margins";
-import { createThermalPrinter } from "@/lib/session-receipt/thermal-print/thermal-printer-factory";
+import { createThermalPrinter, usesCupsPrinterDriver } from "@/lib/session-receipt/thermal-print/thermal-printer-factory";
+import {
+  parseCupsPrinterName,
+  printRawEscPosToCups,
+} from "@/lib/session-receipt/thermal-print/cups-lp-raw-print";
 
 /**
  * Minimal ESC/POS page to verify printer wiring without a full session receipt.
@@ -34,5 +38,15 @@ export async function printInstallationTestPage(
   printer.println(padThermalLineLeft("If you can read this,"));
   printer.println(padThermalLineLeft("the printer is configured."));
   printer.cut();
+
+  if (usesCupsPrinterDriver(printerInterface)) {
+    const buffer = printer.getBuffer();
+    if (!buffer?.length) {
+      throw new Error("Empty test print buffer");
+    }
+    await printRawEscPosToCups(parseCupsPrinterName(printerInterface), buffer);
+    return;
+  }
+
   await printer.execute();
 }

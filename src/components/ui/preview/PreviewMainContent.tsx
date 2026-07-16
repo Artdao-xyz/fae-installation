@@ -222,7 +222,7 @@ function ClampedPreviewPillsInner({
         tone={tone}
         selected={isSelected(label)}
         onPress={() => onPillPress(label)}
-        className="shrink-0"
+        className="max-w-full shrink break-words"
       />
     ),
     [isSelected, onPillPress, tone, variant],
@@ -267,7 +267,7 @@ function ClampedPreviewPillsInner({
             tone={tone}
             selected={false}
             onPress={() => setOverflowExpanded(true)}
-            className="shrink-0"
+            className="max-w-full shrink break-words"
             title={`Show ${overflow} more`}
           />
         ) : null}
@@ -313,9 +313,9 @@ function ClampedPreviewPills({
 
 function CategoryBlock({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className="flex min-h-0 gap-2.5">
+    <div className="flex min-h-0 min-w-0 gap-2.5 overflow-x-hidden">
       <p className={sectionLabelClass}>{label}</p>
-      <div className="flex min-h-0 min-w-0 flex-1 flex-wrap content-start gap-1.5 gap-y-1.5">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-wrap content-start gap-1.5 gap-y-1.5 overflow-x-hidden">
         {children}
       </div>
     </div>
@@ -414,7 +414,6 @@ export function PreviewMainContent({
   const hasBlocks =
     row.contentBlocks !== null && row.contentBlocks.length > 0;
   const hasBody = hasBlocks || paragraphs.length > 0;
-  const hasResources = row.resources.length > 0;
   const dateLine =
     row.yearLabel.trim().length > 0
       ? row.yearLabel
@@ -499,7 +498,7 @@ export function PreviewMainContent({
                   tone="artists"
                   selected={isArtistPillSelected(label)}
                   onPress={() => onArtistPillPress(label)}
-                  className="shrink-0"
+                  className="max-w-full shrink break-words"
                 />
               ))}
             </CategoryBlock>
@@ -531,54 +530,15 @@ export function PreviewMainContent({
     </div>
   );
 
-  const resourcesBlock = hasResources ? (
-    <div className="w-full min-w-0 shrink-0">
-      <Divider />
-      <div className="flex shrink-0 flex-col gap-2 pt-2.5 pb-2">
-        <p className="font-lust-text text-xs leading-none tracking-[-0.228px] text-ink-caption">
-          Sources
-        </p>
-        <ul className="flex list-none flex-col gap-1 p-0">
-          {row.resources.map((resource) => {
-            const label = resource.label.trim();
-            const linkText = label || resource.url;
-            return (
-              <li key={resource.url} className="leading-none">
-                <a
-                  href={resource.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  title={label ? resource.url : undefined}
-                  aria-label={label ? `${label} (${resource.url})` : undefined}
-                  className="inline-flex max-w-full items-center gap-1.5 rounded-sm bg-surface-canvas/90 py-0 pl-0 pr-0 font-fira-mono text-[10px] leading-[14px] text-ink-body underline decoration-solid [text-decoration-skip-ink:none] backdrop-blur-fae-md hover:bg-surface-hover/80"
-                >
-                  <span className="min-w-0 truncate">{linkText}</span>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src="/svg/blue-arrow.svg"
-                    alt=""
-                    className="h-[7px] w-[5px] shrink-0 object-contain"
-                    aria-hidden
-                  />
-                </a>
-              </li>
-            );
-          })}
-        </ul>
-      </div>
-    </div>
-  ) : null;
-
   const mainColumnClass = fullScreen
-    ? `${fullScreenContentInnerClass} fae-preview-cascade w-full min-w-0`
-    : "fae-preview-cascade w-full min-w-0 flex flex-col gap-5";
+    ? `${fullScreenContentInnerClass} fae-preview-cascade w-full min-w-0 overflow-x-hidden`
+    : "fae-preview-cascade w-full min-w-0 flex flex-col gap-5 overflow-x-hidden";
 
   return (
     <div key={row.id} className={mainColumnClass}>
       {heroBlock}
       {categoriesBlock}
       {mainBody}
-      {resourcesBlock}
     </div>
   );
 }

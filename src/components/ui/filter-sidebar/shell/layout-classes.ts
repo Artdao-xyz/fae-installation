@@ -81,11 +81,29 @@ export const MOBILE_OVERLAY_TOP_CLASS =
   "max-lg:top-[calc(env(safe-area-inset-top,0px)+3.25rem)]";
 
 /**
+ * Filter sheet top when the landing search stays fixed above it (kiosk).
+ * Header (`3.25rem`) + search strip (`py-4` + `min-h-[30px]` field = `3.875rem`).
+ */
+export const MOBILE_OVERLAY_TOP_BELOW_INSTALLATION_SEARCH_CLASS =
+  "max-lg:top-[calc(env(safe-area-inset-top,0px)+3.25rem+3.875rem)]";
+
+/**
+ * Filter sheet top when the landing search stays fixed above it (standard mobile).
+ * Header + popup (`6.5rem`) + search row (`h-13` = `3.25rem`).
+ */
+export const MOBILE_OVERLAY_TOP_BELOW_LANDING_SEARCH_CLASS =
+  "max-lg:top-[calc(env(safe-area-inset-top,0px)+6.5rem+3.25rem)]";
+
+/**
  * Stack above the Serpentine bar: `h-11` footer row + home indicator (`max-lg` matches other chrome strips).
  * While the filter sheet is open the “Filters” row is hidden, so this must not include that bar.
  */
 export const MOBILE_OVERLAY_BOTTOM_ABOVE_FOOTER_CLASS =
   "max-lg:bottom-[calc(env(safe-area-inset-bottom,0px)+2.75rem)]";
+
+/** Footer (`2.75rem`) + kiosk Complete Journey bar (`2.75rem`). */
+export const MOBILE_OVERLAY_BOTTOM_ABOVE_FOOTER_AND_COMPLETE_JOURNEY_CLASS =
+  "max-lg:bottom-[calc(env(safe-area-inset-bottom,0px)+2.75rem+2.75rem)]";
 
 export const MOBILE_OVERLAY_X_CLASS = "max-lg:left-0 max-lg:right-0";
 
@@ -103,18 +121,32 @@ export function mobileMainScrollInsetClassName(options: {
   filtersPanelOpen: boolean;
   hasActiveTaxonomyFilters: boolean;
   showMobileLatestUpdatesStrip: boolean;
+  /** Kiosk `Complete Journey` bar (`h-11`) above the Serpentine footer on `max-lg`. */
+  showInstallationCompleteJourney?: boolean;
 }): string {
+  const withCompleteJourney = options.showInstallationCompleteJourney === true;
+
   if (options.filtersPanelOpen) {
-    return "max-lg:pb-[calc(2.75rem+env(safe-area-inset-bottom,0px))]";
+    return withCompleteJourney
+      ? "max-lg:pb-[calc(2.75rem+2.75rem+env(safe-area-inset-bottom,0px))]"
+      : "max-lg:pb-[calc(2.75rem+env(safe-area-inset-bottom,0px))]";
   }
   if (options.showMobileLatestUpdatesStrip && options.hasActiveTaxonomyFilters) {
-    return "max-lg:pb-[calc(12.875rem+2.75rem+2.75rem+env(safe-area-inset-bottom,0px)+3rem)]";
+    return withCompleteJourney
+      ? "max-lg:pb-[calc(12.875rem+2.75rem+2.75rem+2.75rem+env(safe-area-inset-bottom,0px)+3rem)]"
+      : "max-lg:pb-[calc(12.875rem+2.75rem+2.75rem+env(safe-area-inset-bottom,0px)+3rem)]";
   }
   if (options.showMobileLatestUpdatesStrip && !options.hasActiveTaxonomyFilters) {
-    return "max-lg:pb-[calc(12.875rem+2.75rem+2.75rem+env(safe-area-inset-bottom,0px))]";
+    return withCompleteJourney
+      ? "max-lg:pb-[calc(12.875rem+2.75rem+2.75rem+2.75rem+env(safe-area-inset-bottom,0px))]"
+      : "max-lg:pb-[calc(12.875rem+2.75rem+2.75rem+env(safe-area-inset-bottom,0px))]";
   }
   if (!options.showMobileLatestUpdatesStrip && options.hasActiveTaxonomyFilters) {
-    return "max-lg:pb-[calc(2.75rem+2.75rem+env(safe-area-inset-bottom,0px))]";
+    return withCompleteJourney
+      ? "max-lg:pb-[calc(2.75rem+2.75rem+2.75rem+env(safe-area-inset-bottom,0px))]"
+      : "max-lg:pb-[calc(2.75rem+2.75rem+env(safe-area-inset-bottom,0px))]";
   }
-  return "max-lg:pb-[calc(2.75rem+2.75rem+env(safe-area-inset-bottom,0px))]";
+  return withCompleteJourney
+    ? "max-lg:pb-[calc(2.75rem+2.75rem+2.75rem+env(safe-area-inset-bottom,0px))]"
+    : "max-lg:pb-[calc(2.75rem+2.75rem+env(safe-area-inset-bottom,0px))]";
 }

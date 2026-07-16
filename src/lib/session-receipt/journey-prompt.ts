@@ -30,7 +30,7 @@ export function deriveTagFortune(
 export const deriveJourneyPrompt = deriveTagFortune;
 
 export function formatTagFortuneLine(fortune: string): string {
-  return `${TAG_FORTUNE_PREFIX}${fortune}`;
+  return fortune.trim();
 }
 
 /** @deprecated Use formatTagFortuneLine */

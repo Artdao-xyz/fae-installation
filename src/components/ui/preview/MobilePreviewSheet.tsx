@@ -3,10 +3,14 @@
 import type { ContentRow } from "@/data/content-types";
 import { OpenSvgIcon } from "@/components/ui/icons/OpenSvgIcon";
 import {
+  MOBILE_OVERLAY_BOTTOM_ABOVE_FOOTER_AND_COMPLETE_JOURNEY_CLASS,
   MOBILE_OVERLAY_BOTTOM_ABOVE_FOOTER_CLASS,
   MOBILE_OVERLAY_TOP_CLASS,
   MOBILE_OVERLAY_X_CLASS,
 } from "@/components/ui/filter-sidebar/shell/layout-classes";
+import { useIsMaxLg } from "@/components/ui/filter-sidebar/shell/useIsMaxLg";
+import { useSessionReceipt } from "@/components/session-receipt/SessionReceiptProvider";
+import { isInstallationMode } from "@/lib/installation-mode";
 import { PreviewMainContent } from "./PreviewMainContent";
 
 type MobilePreviewSheetProps = {
@@ -23,11 +27,32 @@ export function MobilePreviewSheet({
   zIndex,
   onClose,
 }: MobilePreviewSheetProps) {
+  const isMaxLg = useIsMaxLg();
+  const installation = isInstallationMode();
+  const {
+    enabled: sessionReceiptEnabled,
+    recording: sessionRecording,
+    previewOpen: sessionPreviewOpen,
+    screensaverActive,
+  } = useSessionReceipt();
+
+  const reserveCompleteJourney =
+    isMaxLg &&
+    installation &&
+    sessionReceiptEnabled &&
+    sessionRecording &&
+    !screensaverActive &&
+    !sessionPreviewOpen;
+
+  const bottomClass = reserveCompleteJourney
+    ? MOBILE_OVERLAY_BOTTOM_ABOVE_FOOTER_AND_COMPLETE_JOURNEY_CLASS
+    : MOBILE_OVERLAY_BOTTOM_ABOVE_FOOTER_CLASS;
+
   return (
     <div
       data-fae-content-preview
       onPointerDown={(e) => e.stopPropagation()}
-      className={`fixed flex h-auto min-h-0 min-w-0 flex-col overflow-hidden bg-surface-canvas lg:hidden ${MOBILE_OVERLAY_TOP_CLASS} ${MOBILE_OVERLAY_BOTTOM_ABOVE_FOOTER_CLASS} ${MOBILE_OVERLAY_X_CLASS}`}
+      className={`fixed flex h-auto min-h-0 min-w-0 flex-col overflow-hidden bg-surface-canvas lg:hidden ${MOBILE_OVERLAY_TOP_CLASS} ${bottomClass} ${MOBILE_OVERLAY_X_CLASS}`}
       style={{ zIndex }}
       role="dialog"
       aria-modal="true"

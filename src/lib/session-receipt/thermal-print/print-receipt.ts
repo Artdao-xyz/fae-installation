@@ -1,4 +1,4 @@
-import { buildReceiptViewUrl } from "../encode";
+import { buildReceiptPrintViewUrl } from "../encode";
 import {
   formatReceiptDate,
   formatSessionTranscript,
@@ -8,7 +8,6 @@ import { hasPathActivity } from "../path-grid";
 import {
   RECEIPT_ACTIVITY_HEADING,
   RECEIPT_ARTIFACT_TITLE,
-  RECEIPT_BRAND,
   type SessionReceipt,
 } from "../types";
 import {
@@ -27,18 +26,24 @@ import {
   buildEscPosRasterCommand,
   rasterizePathStars,
 } from "./star-raster";
-import { createThermalPrinter } from "./thermal-printer-factory";
+import { createThermalPrinter, usesCupsPrinterDriver } from "./thermal-printer-factory";
+import {
+  parseCupsPrinterName,
+  printRawEscPosToCups,
+} from "./cups-lp-raw-print";
 
 type ThermalPrinterInstance = {
   clear: () => void;
   newLine: () => void;
   alignLeft: () => void;
+  alignCenter: () => void;
   add: (buffer: Buffer) => void;
   bold: (enabled: boolean) => void;
   println: (text: string) => void;
   cut: () => void;
   execute: () => Promise<unknown>;
   getBuffer: () => Buffer | null;
+  setBuffer: (buffer: Buffer) => void;
 };
 
 const DUMMY_PRINTER_INTERFACE =
@@ -74,15 +79,14 @@ async function appendSessionReceiptToPrinter(
     printer.newLine();
   }
 
-  printer.bold(true);
-  printer.println(padThermalLineLeft(RECEIPT_BRAND));
-  printer.bold(false);
-  printer.println(padThermalLineLeft(RECEIPT_ARTIFACT_TITLE));
-  printer.println(padThermalLineLeft(formatReceiptDate(receipt.sessionStart)));
-  printer.newLine();
+  printer.println(padThermalLineLeft(RECEIPT_ACTIVITY_HEADING));
   printer.newLine();
 
-  printer.println(padThermalLineLeft(RECEIPT_ACTIVITY_HEADING));
+  printer.bold(true);
+  printer.println(padThermalLineLeft(RECEIPT_ARTIFACT_TITLE));
+  printer.bold(false);
+  printer.println(padThermalLineLeft(formatReceiptDate(receipt.sessionStart)));
+  printer.newLine();
   printer.newLine();
 
   const transcript = formatSessionTranscript(receipt.events);
@@ -99,12 +103,11 @@ async function appendSessionReceiptToPrinter(
   printer.println(padThermalLineStart(formatTagFortuneLine(receipt.prompt)));
   printer.newLine();
 
-  const qrUrl = buildReceiptViewUrl(receipt, viewOrigin);
-  printer.add(
-    buildEscPosRasterCommand(
-      insetRasterHorizontally(rasterizeQrCode(qrUrl), THERMAL_HORIZONTAL_MARGIN_DOTS),
-    ),
-  );
+  const qrUrl = buildReceiptPrintViewUrl(receipt, viewOrigin);
+  printer.alignCenter();
+  printer.println("share");
+  printer.add(buildEscPosRasterCommand(rasterizeQrCode(qrUrl)));
+  printer.alignLeft();
 
   printer.newLine();
   const footer = await rasterizeReceiptFooter();
@@ -140,7 +143,18 @@ export async function printSessionReceiptToInterface(
   printerInterface: string,
   viewOrigin?: string,
 ): Promise<void> {
+  const buffer = await buildSessionReceiptEscPosBuffer(receipt, viewOrigin);
+
+  if (usesCupsPrinterDriver(printerInterface)) {
+    const printerName = parseCupsPrinterName(printerInterface);
+    console.info(
+      `[print] CUPS raw escpos-text → ${printerName} (${buffer.length} bytes)`,
+    );
+    await printRawEscPosToCups(printerName, buffer);
+    return;
+  }
+
   const printer = await openThermalPrinter(printerInterface);
-  await appendSessionReceiptToPrinter(printer, receipt, viewOrigin);
+  printer.setBuffer(buffer);
   await printer.execute();
 }

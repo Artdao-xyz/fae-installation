@@ -13,6 +13,7 @@ import {
   type SetStateAction,
 } from "react";
 import type { ContentProgramme, ContentRow } from "@/data/content-types";
+import { HIDDEN_FOCUS_AREA_LABELS } from "@/data/content-taxonomy";
 import {
   mergeCmsAndCatalogOptionLabels,
   uniqueSortedLabelsFromCatalog,
@@ -488,7 +489,7 @@ export function FilterSelectionProvider({ children }: { children: ReactNode }) {
       mergeCmsAndCatalogOptionLabels(
         taxonomyLabelsFromApi.focus,
         focusDerivedFromRows,
-      ),
+      ).filter((label) => !HIDDEN_FOCUS_AREA_LABELS.has(label)),
     [taxonomyLabelsFromApi.focus, focusDerivedFromRows],
   );
   const filterActivityOptionLabels = useMemo(

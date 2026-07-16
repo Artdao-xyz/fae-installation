@@ -2,7 +2,10 @@ import { NextResponse } from "next/server";
 import { decodeReceiptPayload } from "@/lib/session-receipt/encode";
 import { hasPathActivity } from "@/lib/session-receipt/path-grid";
 import { renderPathStarsSvg } from "@/lib/session-receipt/render-path-stars-svg";
-import { PATH_SVG_WIDTH } from "@/lib/session-receipt/path-stars";
+import {
+  receiptDigitalStarsWidthPx,
+  thermalContentWidthPx,
+} from "@/lib/session-receipt/thermal-spec";
 
 export const runtime = "nodejs";
 
@@ -19,8 +22,15 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "No path data" }, { status: 404 });
   }
 
-  const scale = Math.max(1, Number(searchParams.get("s")) || 1);
-  const widthPx = Math.round(PATH_SVG_WIDTH * 1.35 * scale);
+  const widthParam = Number(searchParams.get("w"));
+  const scaleParam = Math.max(1, Number(searchParams.get("s")) || 1);
+  const widthPx =
+    Number.isFinite(widthParam) && widthParam > 0
+      ? Math.round(widthParam)
+      : scaleParam > 1
+        ? receiptDigitalStarsWidthPx()
+        : Math.round(thermalContentWidthPx() * scaleParam);
+
   const svg = renderPathStarsSvg(path, widthPx);
 
   return new Response(svg, {

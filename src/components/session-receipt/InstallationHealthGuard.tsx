@@ -103,7 +103,7 @@ export function InstallationHealthGuard({ children }: { children: React.ReactNod
           aria-label="Installation unavailable"
         >
           <InstallationScreenContent>
-            <h1 className="font-lust-text text-left text-5xl leading-tight text-black-fae sm:text-6xl sm:leading-[65px]">
+            <h1 className="font-lust-text text-left text-4xl leading-tight text-black-fae sm:text-5xl sm:leading-tight lg:text-6xl lg:leading-[65px]">
               Temporarily unavailable
             </h1>
             <p className="text-left font-fira-mono text-sm font-medium leading-5 text-black-fae/50 sm:text-base">

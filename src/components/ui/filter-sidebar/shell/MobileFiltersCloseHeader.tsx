@@ -6,7 +6,7 @@ type MobileFiltersCloseHeaderProps = {
   onClose: () => void;
 };
 
-/** Fixed top strip below safe-area when the filter sheet is full-screen on `max-lg`. */
+/** Close strip at the bottom of the mobile filter sheet, directly above category rails / options. */
 export function MobileFiltersCloseHeader({ onClose }: MobileFiltersCloseHeaderProps) {
   return (
     <div

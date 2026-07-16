@@ -1,4 +1,4 @@
-import { THERMAL_CONTENT_DOTS } from "../thermal-spec";
+import { RECEIPT_PRINT_TEXT_SCALE, THERMAL_CONTENT_DOTS } from "../thermal-spec";
 
 /**
  * Typography for full-raster receipts — scaled from Figma ticket (208px content column).
@@ -11,25 +11,29 @@ function dots(px: number): number {
   return Math.round(px * SCALE);
 }
 
+function typeDots(px: number): number {
+  return dots(px * RECEIPT_PRINT_TEXT_SCALE);
+}
+
 export const RASTER_RECEIPT_WIDTH_DOTS = THERMAL_CONTENT_DOTS;
 
 export const RASTER_RECEIPT_TYPE = {
-  titleSize: dots(19.308),
-  titleLeading: dots(21.243),
-  bodySize: dots(8.275),
-  bodyLeading: dots(11.033),
-  transcriptLeading: dots(19.308),
-  quoteLeading: dots(16.55),
-  footerSize: dots(11.033),
-  footerLeading: dots(11.033),
-  sectionPadY: dots(6.896),
-  blockPadY: dots(11.033),
-  starsPadY: dots(27.583),
-  qrPadTop: dots(13.791),
-  qrPadBottom: dots(27.583),
-  transcriptColGap: dots(13.791),
-  footerGap: dots(6.896),
-  sectionGap: dots(6.896),
+  titleSize: typeDots(19.308),
+  titleLeading: typeDots(21.243),
+  bodySize: typeDots(8.275),
+  bodyLeading: typeDots(11.033),
+  transcriptLeading: typeDots(19.308),
+  quoteLeading: typeDots(19.308),
+  footerSize: typeDots(11.033),
+  footerLeading: typeDots(11.033),
+  sectionPadY: typeDots(6.896),
+  blockPadY: typeDots(11.033),
+  starsPadY: typeDots(27.583),
+  qrPadTop: typeDots(13.791),
+  qrPadBottom: typeDots(27.583),
+  transcriptColGap: typeDots(13.791),
+  footerGap: typeDots(6.896),
+  sectionGap: typeDots(6.896),
 } as const;
 
 export const RASTER_RECEIPT_INK = {

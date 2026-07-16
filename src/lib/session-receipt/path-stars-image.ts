@@ -4,7 +4,11 @@ import {
   rasterizePathStars,
   type StarRaster,
 } from "./rasterize-path-stars";
-import { thermalContentWidthPx } from "./thermal-spec";
+import {
+  RECEIPT_DIGITAL_SCALE,
+  receiptDigitalStarsWidthPx,
+  thermalContentWidthPx,
+} from "./thermal-spec";
 
 /** Expand 1-bit raster to JPEG data URL (browser only). */
 export function rasterToJpegDataUrl(
@@ -45,7 +49,10 @@ export function pathStarsDisplaySize(scale = 1): {
   heightPx: number;
   rasterWidthPx: number;
 } {
-  const widthPx = Math.round(thermalContentWidthPx() * scale);
+  const widthPx =
+    scale >= RECEIPT_DIGITAL_SCALE
+      ? receiptDigitalStarsWidthPx()
+      : Math.round(thermalContentWidthPx() * scale);
   const heightPx = Math.round((widthPx * PATH_SVG_HEIGHT) / PATH_SVG_WIDTH);
   return { widthPx, heightPx, rasterWidthPx: widthPx * 2 };
 }

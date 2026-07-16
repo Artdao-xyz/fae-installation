@@ -1,12 +1,12 @@
-import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import type { ReceiptArchiveRecord } from "./archive-receipt-shared";
 
-function r2Client(): S3Client | null {
+async function r2Client() {
   const accountId = process.env.R2_ACCOUNT_ID?.trim();
   const accessKeyId = process.env.R2_ACCESS_KEY_ID?.trim();
   const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY?.trim();
   if (!accountId || !accessKeyId || !secretAccessKey) return null;
 
+  const { S3Client } = await import("@aws-sdk/client-s3");
   return new S3Client({
     region: "auto",
     endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
@@ -25,20 +25,11 @@ function receiptArchiveObjectKey(
   return `${prefix}/${safeInstallation}/${safeTime}-${seed}.json`;
 }
 
-export function isR2ReceiptArchiveConfigured(): boolean {
-  return Boolean(
-    process.env.R2_BUCKET_NAME?.trim() &&
-      process.env.R2_ACCOUNT_ID?.trim() &&
-      process.env.R2_ACCESS_KEY_ID?.trim() &&
-      process.env.R2_SECRET_ACCESS_KEY?.trim(),
-  );
-}
-
 export async function putReceiptArchiveToR2(
   installationId: string,
   record: ReceiptArchiveRecord,
 ): Promise<string> {
-  const client = r2Client();
+  const client = await r2Client();
   const bucket = process.env.R2_BUCKET_NAME?.trim();
   if (!client || !bucket) {
     throw new Error("R2 receipt archive is not configured");
@@ -50,6 +41,7 @@ export async function putReceiptArchiveToR2(
     record.receipt.seed,
   );
 
+  const { PutObjectCommand } = await import("@aws-sdk/client-s3");
   await client.send(
     new PutObjectCommand({
       Bucket: bucket,

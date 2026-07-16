@@ -46,7 +46,7 @@ elif command -v node >/dev/null 2>&1; then
   NODE_BIN="$(command -v node)"
   echo "Using system Node ($("$NODE_BIN" -v))"
 else
-  fail "Node.js is not available. Use a release package with app/.node included, or run \"Install Node (optional).command\" — see HOW-TO-RUN.md"
+  fail "Node.js is not available. Use a release package with app/.node included — see HOW-TO-RUN.md"
 fi
 
 NODE_MAJOR="$("$NODE_BIN" -v | sed 's/^v//' | cut -d. -f1)"
@@ -93,7 +93,7 @@ if [[ ! -f .next/BUILD_ID ]]; then
     echo "No build found."
   fi
   echo "Building app — first run may take a few minutes..."
-  run_next build || fail "Build failed"
+  npm run build || fail "Build failed"
 fi
 
 if lsof -i ":${PORT}" -sTCP:LISTEN >/dev/null 2>&1; then
