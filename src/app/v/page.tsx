@@ -36,7 +36,7 @@ export default async function VPage({ searchParams }: VPageProps) {
   return (
     <Suspense
       fallback={
-        <main className="fae-standalone-scroll flex min-h-full items-center justify-center bg-[#e9e9e9] p-6">
+        <main className="fae-standalone-scroll flex min-h-full items-center justify-center bg-white p-6">
           <p className="font-mono text-sm text-black">processing...</p>
         </main>
       }

@@ -37,7 +37,7 @@ export function ReceiptDigitalView({
 
   return (
     <main
-      className="flex min-h-dvh w-full min-w-0 flex-col items-center overflow-x-hidden bg-[#e9e9e9]"
+      className="flex min-h-dvh w-full min-w-0 flex-col items-center overflow-x-hidden bg-white"
       style={receiptSafePadding}
     >
       <div className="w-full min-w-0 max-w-full">
@@ -64,7 +64,7 @@ export function ReceiptDigitalViewShell({
 
   return (
     <main
-      className="flex min-h-dvh items-center justify-center overflow-x-hidden bg-[#e9e9e9] p-6"
+      className="flex min-h-dvh items-center justify-center overflow-x-hidden bg-white p-6"
       style={receiptSafePadding}
     >
       {children}

@@ -19,6 +19,26 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+/**
+ * Parser-flush preamble prepended to every print: a run of NUL bytes, then ESC @
+ * (reset). A garbled print can leave the clone's parser mid-`GS v 0`, still owed
+ * pixel bytes — in that state it silently eats the next job's opening commands and
+ * garbles that print too (bad prints cluster). The NULs satisfy any leftover deficit
+ * (worst case one full 240-row band = ~17KB, printed as blank white rows), so the
+ * reset lands as a real command. On a clean parser NULs are ignored — no visible
+ * output. RECEIPT_PRINT_FLUSH_KB overrides the size; 0 disables.
+ */
+const DEFAULT_FLUSH_PREAMBLE_KB = 18;
+
+function flushPreambleBuffer(): Buffer {
+  const raw = process.env.RECEIPT_PRINT_FLUSH_KB?.trim();
+  const parsed = raw ? Number.parseInt(raw, 10) : Number.NaN;
+  const kb =
+    Number.isInteger(parsed) && parsed >= 0 ? parsed : DEFAULT_FLUSH_PREAMBLE_KB;
+  if (kb === 0) return Buffer.alloc(0);
+  return Buffer.concat([Buffer.alloc(kb * 1024, 0), Buffer.from([0x1b, 0x40])]);
+}
+
 async function runLpJob(printerName: string, data: Buffer): Promise<void> {
   const tmpPath = join(
     tmpdir(),
@@ -67,32 +87,81 @@ export async function printRawEscPosToCups(
   if (!data?.length) {
     throw new Error("Empty ESC/POS buffer");
   }
-  await runLpJob(printerName, data);
+  await waitForPrinterSettled(printerName);
+  const spoolStart = Date.now();
+  await runLpJob(printerName, Buffer.concat([flushPreambleBuffer(), data]));
+  const spoolMs = Date.now() - spoolStart;
+  const drainMs = await waitForQueueDrain(printerName);
+  console.info(
+    `[print] single job (${data.length}B): spooled ${spoolMs}ms, ` +
+      `drained ${drainMs < 0 ? "TIMEOUT" : `${drainMs}ms`}`,
+  );
+  recordJobSent(printerName);
 }
 
 /**
- * Send each buffer as its own CUPS job, pausing `delayMs` between jobs so the
- * printer's receive buffer fully drains before the next chunk arrives. A single `lp`
- * job streams start-to-finish with no gaps — which is how cheap ESC/POS-clone
- * controllers desync mid-raster and dump pixel bytes as text once a big image outruns
- * their buffer (see star-raster.ts). Separate, paced jobs remove that failure mode
- * regardless of how fast CUPS/USB would otherwise push the bytes, at the cost of a
- * slower print.
+ * The POS-80 clone can garble a job that arrives while it is still physically
+ * printing the previous one (its receive buffer is busiest then — back-to-back
+ * test prints reproduced this; spaced prints never did). CUPS marks a job done
+ * once bytes are handed to USB, before the paper stops moving, so queue-idle
+ * alone is not enough: also enforce a settle gap after the last job we sent.
  */
-export async function printRawEscPosJobsToCups(
-  printerName: string,
-  jobs: Buffer[],
-  delayMs: number,
-): Promise<void> {
-  const nonEmptyJobs = jobs.filter((job) => job.length > 0);
-  if (nonEmptyJobs.length === 0) {
-    throw new Error("Empty ESC/POS buffer");
+const PRINTER_SETTLE_MS = 8_000;
+const QUEUE_IDLE_TIMEOUT_MS = 30_000;
+const QUEUE_POLL_MS = 500;
+
+const lastJobSentAtByPrinter = new Map<string, number>();
+
+function recordJobSent(printerName: string): void {
+  lastJobSentAtByPrinter.set(printerName, Date.now());
+}
+
+function queueHasPendingJobs(printerName: string): Promise<boolean> {
+  return new Promise((resolve) => {
+    const proc = spawn("lpstat", ["-o", printerName], {
+      stdio: ["ignore", "pipe", "ignore"],
+    });
+    let stdout = "";
+    proc.stdout.on("data", (chunk: Buffer | string) => {
+      stdout += chunk.toString();
+    });
+    proc.on("error", () => resolve(false));
+    proc.on("close", () => resolve(stdout.trim().length > 0));
+  });
+}
+
+async function waitForPrinterSettled(printerName: string): Promise<void> {
+  const deadline = Date.now() + QUEUE_IDLE_TIMEOUT_MS;
+  while (await queueHasPendingJobs(printerName)) {
+    if (Date.now() >= deadline) {
+      console.warn(
+        `[print] CUPS queue for ${printerName} still busy after ${QUEUE_IDLE_TIMEOUT_MS}ms — printing anyway`,
+      );
+      return;
+    }
+    await sleep(QUEUE_POLL_MS);
   }
 
-  for (let i = 0; i < nonEmptyJobs.length; i++) {
-    await runLpJob(printerName, nonEmptyJobs[i]!);
-    if (i < nonEmptyJobs.length - 1 && delayMs > 0) {
-      await sleep(delayMs);
-    }
+  const lastSentAt = lastJobSentAtByPrinter.get(printerName);
+  if (lastSentAt === undefined) return;
+  const remaining = PRINTER_SETTLE_MS - (Date.now() - lastSentAt);
+  if (remaining > 0) {
+    console.info(`[print] settling ${remaining}ms before next job`);
+    await sleep(remaining);
   }
+}
+
+/**
+ * Wait until the CUPS queue is empty and report how long it took. Drain time is
+ * the USB hand-off: it stretches exactly when the printer's receive buffer is
+ * full and flow control stalls the transfer — a per-job pressure gauge for
+ * diagnosing the clone's drop-under-saturation bug. Returns -1 on timeout.
+ */
+async function waitForQueueDrain(printerName: string): Promise<number> {
+  const start = Date.now();
+  while (await queueHasPendingJobs(printerName)) {
+    if (Date.now() - start >= QUEUE_IDLE_TIMEOUT_MS) return -1;
+    await sleep(QUEUE_POLL_MS);
+  }
+  return Date.now() - start;
 }

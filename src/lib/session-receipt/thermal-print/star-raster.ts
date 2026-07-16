@@ -7,13 +7,13 @@ export type { StarRaster };
 export { rasterizePathStars };
 
 /**
- * Max rows per `GS v 0` command. Cheap ESC/POS-clone controllers (common on kiosk
- * printers) desync and dump raw pixel bytes as text once a single raster command's
- * declared byte count outgrows their receive buffer — sending one command for a
- * whole receipt (hundreds of KB on long sessions) reliably triggers this. Banding
- * keeps every command well under that limit regardless of total receipt height.
+ * Max rows per `GS v 0` command. Must stay BELOW 256 so the height high byte (yH)
+ * is always zero: the installation's POS-80 clone mishandles yH≠0 — a 256-row band
+ * (yL=0, yH=1) makes it read height 0, treat the pixel payload as text, and print
+ * garbage from that point on. Receipts whose sections all banded under 256 rows
+ * printed fine, which is why the bug tracked receipt length.
  */
-const MAX_RASTER_BAND_HEIGHT_DOTS = 256;
+const MAX_RASTER_BAND_HEIGHT_DOTS = 240;
 
 function buildRasterBandCommand(
   bytesPerRow: number,

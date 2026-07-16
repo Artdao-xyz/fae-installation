@@ -44,6 +44,7 @@ export function ViewReceiptClient({
       encoded={encoded}
       variant="digital"
       shareScanUrl={shareScanUrl}
+      showQr={false}
     />
   );
 }

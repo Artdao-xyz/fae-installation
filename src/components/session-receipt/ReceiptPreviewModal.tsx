@@ -87,17 +87,17 @@ function DigitalReceiptState({
         )}
 
         <div className="flex gap-[5px]">
-          {printFailed ? (
-            <button
-              type="button"
-              onClick={onRetryPrint}
-              aria-label="Try printing again"
-              className={installationActionButtonClass}
-            >
-              Try Again
-              <InstallationArrowIcon className="block size-[10px] shrink-0 object-contain" />
-            </button>
-          ) : null}
+          <button
+            type="button"
+            onClick={onRetryPrint}
+            aria-label={
+              printFailed ? "Try printing again" : "Print the receipt again"
+            }
+            className={installationActionButtonClass}
+          >
+            {printFailed ? "Try Again" : "Print Again"}
+            <InstallationArrowIcon className="block size-[10px] shrink-0 object-contain" />
+          </button>
           <button
             type="button"
             onClick={onStartNewJourney}

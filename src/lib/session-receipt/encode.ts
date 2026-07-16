@@ -3,8 +3,8 @@ import { encodePathField, decodePathField } from "./path-grid";
 import { normalizeSessionReceipt } from "./normalize-receipt";
 import { pickReceiptViewOrigin } from "./resolve-view-origin";
 import {
+  receiptUrlAcceptableForThermalPrint,
   receiptUrlFitsInQr,
-  receiptUrlFitsThermalPrintQr,
 } from "./qr-payload-fit";
 import {
   QR_SUMMARY_TIERS,
@@ -181,16 +181,21 @@ function fromBase64Url(encoded: string): string {
   return new TextDecoder().decode(bytes);
 }
 
+type EncodeReceiptPayloadOptions = {
+  events?: readonly SessionEvent[];
+  omittedInteractionCount?: number;
+  /** Star map is paper-only when false (frees QR space for transcript + fortune). */
+  includePath?: boolean;
+};
+
 /** Self-contained blob embedded in the QR code (`?d=`). */
 export function encodeReceiptPayload(
   receipt: SessionReceipt,
-  options?: {
-    events?: readonly SessionEvent[];
-    omittedInteractionCount?: number;
-  },
+  options?: EncodeReceiptPayloadOptions,
 ): string {
   const startMs = sessionStartMs(receipt.sessionStart);
   const events = options?.events ?? receipt.events;
+  const includePath = options?.includePath ?? true;
   const compact: CompactReceiptV2 = {
     v: PAYLOAD_VERSION,
     s: startMs,
@@ -204,12 +209,14 @@ export function encodeReceiptPayload(
   if (omitted > 0) {
     compact.om = omitted;
   }
-  const pathField = receipt.path ? encodePathField(receipt.path) : null;
-  if (pathField) {
-    compact.st = pathField.st;
-    compact.en = pathField.en;
-    if (pathField.m) compact.m = pathField.m;
-    if (pathField.pv) compact.pv = pathField.pv;
+  if (includePath) {
+    const pathField = receipt.path ? encodePathField(receipt.path) : null;
+    if (pathField) {
+      compact.st = pathField.st;
+      compact.en = pathField.en;
+      if (pathField.m) compact.m = pathField.m;
+      if (pathField.pv) compact.pv = pathField.pv;
+    }
   }
   return toBase64Url(JSON.stringify(compact));
 }
@@ -250,17 +257,52 @@ function encodeEmergencyReceiptPayload(
   return toBase64Url(JSON.stringify(compact));
 }
 
+type BuildReceiptQrPayloadOptions = {
+  includePath?: boolean;
+};
+
 function buildEmergencyQrPayload(
   receipt: SessionReceipt,
   fit: (url: string) => boolean,
   origin?: string,
+  options?: BuildReceiptQrPayloadOptions,
 ): ReceiptQrPayload {
-  const attempts: Array<() => string> = [
-    () => encodeEmergencyReceiptPayload(receipt, { includePath: true, promptMax: 150 }),
-    () => encodeEmergencyReceiptPayload(receipt, { includePath: true, promptMax: 80 }),
-    () => encodeEmergencyReceiptPayload(receipt, { includePath: false, promptMax: 80 }),
-    () => encodeEmergencyReceiptPayload(receipt, { includePath: false, promptMax: 40 }),
-  ];
+  const includePath = options?.includePath ?? true;
+  const attempts: Array<() => string> = includePath
+    ? [
+        () =>
+          encodeEmergencyReceiptPayload(receipt, {
+            includePath: true,
+            promptMax: 150,
+          }),
+        () =>
+          encodeEmergencyReceiptPayload(receipt, {
+            includePath: true,
+            promptMax: 80,
+          }),
+        () =>
+          encodeEmergencyReceiptPayload(receipt, {
+            includePath: false,
+            promptMax: 80,
+          }),
+        () =>
+          encodeEmergencyReceiptPayload(receipt, {
+            includePath: false,
+            promptMax: 40,
+          }),
+      ]
+    : [
+        () =>
+          encodeEmergencyReceiptPayload(receipt, {
+            includePath: false,
+            promptMax: 150,
+          }),
+        () =>
+          encodeEmergencyReceiptPayload(receipt, {
+            includePath: false,
+            promptMax: 80,
+          }),
+      ];
 
   for (const encode of attempts) {
     const encoded = encode();
@@ -288,12 +330,16 @@ function buildReceiptQrPayloadWithFit(
   receipt: SessionReceipt,
   fit: (url: string) => boolean,
   origin?: string,
+  options?: BuildReceiptQrPayloadOptions,
 ): ReceiptQrPayload {
+  const includePath = options?.includePath ?? true;
+
   for (const tier of QR_SUMMARY_TIERS) {
     const summary = summarizeEventsForQr(receipt.events, tier);
     const encoded = encodeReceiptPayload(receipt, {
       events: summary.events,
       omittedInteractionCount: summary.omittedCount,
+      includePath,
     });
     const url = buildReceiptViewUrlFromEncoded(encoded, origin);
     if (fit(url)) {
@@ -313,7 +359,7 @@ function buildReceiptQrPayloadWithFit(
     events: [],
     omittedCount: receipt.events.length,
   });
-  return buildEmergencyQrPayload(receipt, fit, origin);
+  return buildEmergencyQrPayload(receipt, fit, origin, options);
 }
 
 /**
@@ -327,19 +373,79 @@ export function buildReceiptQrPayload(
   return buildReceiptQrPayloadWithFit(receipt, receiptUrlFitsInQr, origin);
 }
 
+function tryReceiptQrPayloadWithFit(
+  receipt: SessionReceipt,
+  fit: (url: string) => boolean,
+  origin: string | undefined,
+  includePath: boolean,
+): ReceiptQrPayload | null {
+  for (const tier of QR_SUMMARY_TIERS) {
+    const summary = summarizeEventsForQr(receipt.events, tier);
+    const encoded = encodeReceiptPayload(receipt, {
+      events: summary.events,
+      omittedInteractionCount: summary.omittedCount,
+      includePath,
+    });
+    const url = buildReceiptViewUrlFromEncoded(encoded, origin);
+    if (!fit(url)) continue;
+
+    if (summary.omittedCount > 0 || tier > 0) {
+      logQrSummary(tier, receipt.events.length, summary);
+    }
+    return {
+      encoded,
+      omittedInteractionCount: summary.omittedCount,
+      qrEventCount: summary.events.length,
+      summaryTier: tier,
+    };
+  }
+  return null;
+}
+
 /**
- * Pick a QR payload that fits thermal print constraints (ECC M, min module dots).
- * May omit more interactions than {@link buildReceiptQrPayload} — digital stays on L.
+ * Pick a QR payload for thermal print. Keeps the star map when the matrix stays
+ * scannable; otherwise drops path and keeps the fullest transcript + fortune.
  */
 export function buildReceiptPrintQrPayload(
   receipt: SessionReceipt,
   origin?: string,
 ): ReceiptQrPayload {
-  return buildReceiptQrPayloadWithFit(
+  const acceptable = receiptUrlAcceptableForThermalPrint;
+  const fullEventCount = receipt.events.length;
+
+  const withPath = tryReceiptQrPayloadWithFit(
     receipt,
-    receiptUrlFitsThermalPrintQr,
+    acceptable,
     origin,
+    true,
   );
+  if (withPath && withPath.qrEventCount === fullEventCount) {
+    return withPath;
+  }
+
+  const withoutPath = tryReceiptQrPayloadWithFit(
+    receipt,
+    acceptable,
+    origin,
+    false,
+  );
+  if (withoutPath) {
+    return withoutPath;
+  }
+
+  const dense = tryReceiptQrPayloadWithFit(
+    receipt,
+    () => true,
+    origin,
+    false,
+  );
+  if (dense) {
+    return dense;
+  }
+
+  return buildEmergencyQrPayload(receipt, () => true, origin, {
+    includePath: false,
+  });
 }
 
 function logQrSummary(

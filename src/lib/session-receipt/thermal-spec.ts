@@ -1,11 +1,13 @@
 /**
  * 80mm thermal receipt printer.
- * 640 dots/line @ 8 dots/mm — preview and QR size follow the same proportions.
+ * 576 dots/line @ 8 dots/mm (72mm printable head on 80mm paper, per printer
+ * self-test) — preview and QR size follow the same proportions. Rasters wider
+ * than the head make clone controllers desync and print pixel bytes as text.
  */
 
 export const THERMAL_PAPER_WIDTH_MM = 80;
 export const THERMAL_DOTS_PER_MM = 8;
-export const THERMAL_LINE_DOTS = 640;
+export const THERMAL_LINE_DOTS = 576;
 
 /** ~2 mm side inset on 80 mm paper (8 dots/mm). Applied via ESC/POS on print. */
 export const THERMAL_HORIZONTAL_MARGIN_DOTS = 16;
@@ -18,8 +20,8 @@ export const THERMAL_HORIZONTAL_MARGIN_RATIO =
 export const THERMAL_CONTENT_DOTS =
   THERMAL_LINE_DOTS - THERMAL_HORIZONTAL_MARGIN_DOTS * 2;
 
-/** Monospace chars spanning full paper width (before side padding). */
-export const THERMAL_CHARS_AT_FULL_BLEED = 53;
+/** Monospace chars spanning the printable line (Font A 12-dot glyphs: 576/12). */
+export const THERMAL_CHARS_AT_FULL_BLEED = 48;
 
 /** Space chars per side — derived from dot inset (~2 mm → 2 chars). */
 export const THERMAL_MARGIN_CHARS = Math.max(

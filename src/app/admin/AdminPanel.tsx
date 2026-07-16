@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import {
   DEFAULT_RECEIPT_PRINT_MODE,
@@ -304,13 +305,21 @@ export function AdminPanel() {
             Printer setup, QR URL, and health checks.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={logout}
-          className="shrink-0 border border-solid border-border px-3 py-1.5 text-sm hover:bg-surface-hover"
-        >
-          Log out
-        </button>
+        <div className="flex shrink-0 gap-2">
+          <Link
+            href="/v/archive"
+            className="border border-solid border-border px-3 py-1.5 text-sm hover:bg-surface-hover"
+          >
+            Archive
+          </Link>
+          <button
+            type="button"
+            onClick={logout}
+            className="border border-solid border-border px-3 py-1.5 text-sm hover:bg-surface-hover"
+          >
+            Log out
+          </button>
+        </div>
       </div>
 
       {message ? <p className="mt-6 text-sm text-green-700">{message}</p> : null}

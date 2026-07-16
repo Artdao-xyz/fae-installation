@@ -53,6 +53,25 @@ export function receiptUrlFitsInQr(url: string): boolean {
 }
 
 /**
+ * Practical thermal-print density — phones tolerate denser codes than
+ * {@link receiptUrlFitsThermalPrintQr}. Used to decide when the star map can
+ * ride along in the print QR (~QR version 15–16).
+ */
+export const THERMAL_PRINT_QR_MAX_MODULES = 85;
+
+export function receiptUrlAcceptableForThermalPrint(url: string): boolean {
+  try {
+    const { moduleCount, widthDots } = thermalPrintQrLayout(url);
+    return (
+      moduleCount <= THERMAL_PRINT_QR_MAX_MODULES &&
+      widthDots <= THERMAL_CONTENT_DOTS
+    );
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Thermal print — ECC M, minimum module dots, and target width within content column.
  * Used to trim print URLs without affecting digital QR payloads.
  */
