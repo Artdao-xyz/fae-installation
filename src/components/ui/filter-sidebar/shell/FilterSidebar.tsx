@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useId, type ReactElement } from "react";
+import { useCallback, useId, useSyncExternalStore, type ReactElement } from "react";
+import { createPortal } from "react-dom";
 import { useFilterSelection } from "@/components/ui/filter-sidebar/FilterSelectionContext";
 import { SubscribeSubpanelColumn } from "../domains/subscribe/SubscribeSubpanelColumn";
 import { SubscribeMenu } from "../sections/SubscribeMenu";
@@ -26,6 +27,7 @@ import {
 } from "@/components/session-receipt/InstallationCompleteJourneyControl";
 import { useSessionReceipt } from "@/components/session-receipt/SessionReceiptProvider";
 import { isInstallationMode } from "@/lib/installation-mode";
+import { Z_INDEX } from "@/lib/z-index-scale";
 import { useIsMaxLg } from "./useIsMaxLg";
 
 export function FilterSidebar() {
@@ -52,6 +54,11 @@ export function FilterSidebar() {
   } = useFilterSelection();
   const panelId = useId();
   const isMaxLg = useIsMaxLg();
+  const portalReady = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
   const installation = isInstallationMode();
   const {
     enabled: sessionReceiptEnabled,
@@ -135,6 +142,48 @@ export function FilterSidebar() {
     : MOBILE_OVERLAY_BOTTOM_ABOVE_FOOTER_CLASS;
 
   const installationDesktopChrome = installation;
+
+  const mobileBottomDock = (
+    <div
+      className="fixed inset-x-0 bottom-0 flex flex-col pb-[env(safe-area-inset-bottom,0px)] lg:hidden"
+      style={{ zIndex: Z_INDEX.mobileBottomDock }}
+    >
+      {installation || filtersOpen || hasSelectedFilters ? null : (
+        <MobileLatestUpdatesStrip />
+      )}
+      <div className="flex w-full shrink-0 flex-col bg-surface-canvas">
+        {filtersOpen || contentPreviewRow != null ? null : (
+          <MobileFiltersBar onOpen={toggleFiltersOpen} />
+        )}
+        {!filtersOpen && showMobileSelectedFiltersChrome ? (
+          <button
+            type="button"
+            onClick={clearAllFilters}
+            className="flex h-13 w-full items-center justify-center gap-2 border-t-hairline border-solid border-border bg-surface-canvas px-3 font-lust-text text-sm leading-4 tracking-wide text-ink-body transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element -- local static icon asset */}
+            <img
+              src="/svg/delete.svg"
+              alt=""
+              width={16}
+              height={16}
+              className="size-4 shrink-0"
+              aria-hidden
+            />
+            Clear Filters
+          </button>
+        ) : null}
+        {showMobileCompleteJourney ? (
+          <InstallationCompleteJourneyMobileBar onClick={openPrintConfirm} />
+        ) : null}
+        <Footer
+          showYear={false}
+          mergeWithSubpanel={false}
+          className={showMobileCompleteJourney ? "max-lg:border-t-0" : ""}
+        />
+      </div>
+    </div>
+  );
 
   const filterChromeRow = (
     <>
@@ -296,45 +345,10 @@ export function FilterSidebar() {
       {subpanelsColumn ? (
         <div className="contents max-lg:hidden">{subpanelsColumn}</div>
       ) : null}
-      <div className="contents lg:hidden">
-        <div className="fixed inset-x-0 bottom-0 z-40 flex flex-col pb-[env(safe-area-inset-bottom,0px)] lg:hidden">
-          {installation || filtersOpen || hasSelectedFilters ? null : (
-            <MobileLatestUpdatesStrip />
-          )}
-          <div className="flex w-full shrink-0 flex-col bg-surface-canvas">
-            {filtersOpen || contentPreviewRow != null ? null : (
-              <MobileFiltersBar onOpen={toggleFiltersOpen} />
-            )}
-            {!filtersOpen && showMobileSelectedFiltersChrome ? (
-              <button
-                type="button"
-                onClick={clearAllFilters}
-                className="flex h-13 w-full items-center justify-center gap-2 border-t-hairline border-solid border-border bg-surface-canvas px-3 font-lust-text text-sm leading-4 tracking-wide text-ink-body transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary"
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element -- local static icon asset */}
-                <img
-                  src="/svg/delete.svg"
-                  alt=""
-                  width={16}
-                  height={16}
-                  className="size-4 shrink-0"
-                  aria-hidden
-                />
-                Clear Filters
-              </button>
-            ) : null}
-            {showMobileCompleteJourney ? (
-              <InstallationCompleteJourneyMobileBar onClick={openPrintConfirm} />
-            ) : null}
-            <Footer
-              showYear={false}
-              mergeWithSubpanel={false}
-              className={showMobileCompleteJourney ? "max-lg:border-t-0" : ""}
-            />
-          </div>
-        </div>
-      </div>
     </div>
+    {isMaxLg && portalReady
+      ? createPortal(mobileBottomDock, document.body)
+      : null}
     </>
   );
 }

@@ -28,6 +28,11 @@ export const Z_INDEX = {
   previewDocked: 47,
   fullscreen: 50,
   /**
+   * Mobile fixed bottom dock (footer, filters entry, Complete Journey).
+   * Above portaled preview / filter sheets (`fullscreen` = 50).
+   */
+  mobileBottomDock: 52,
+  /**
    * `MobileAboutSheet` — above mobile filter overlay (`z-50`), below site menu.
    */
   mobileAboutSheet: 199,
