@@ -37,4 +37,11 @@ export const Z_INDEX = {
   mobileSiteMenu: 200,
   /** `MobileGlossarySheet` when opened from the site menu (above the menu layer). */
   mobileGlossarySheet: 201,
+  /**
+   * Kiosk-only full-screen overlays (intro, confirm, receipt, about, health, idle warning).
+   * Above mobile chrome (≤201) and filter/preview sheets (`fullscreen` = 50).
+   */
+  installationOverlay: 310,
+  /** Kiosk screensaver — topmost installation surface. */
+  installationScreensaver: 320,
 } as const;

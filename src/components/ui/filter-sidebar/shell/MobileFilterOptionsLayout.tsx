@@ -7,8 +7,8 @@ import { NetworkDropdownPanel } from "../domains/network/NetworkDropdownPanel";
 import { FilterSidebarMobileRailButton } from "../primitives/FilterSidebarMobileRailButton";
 import { ActivityType } from "../sections/ActivityType";
 import { FocusAreas } from "../sections/FocusAreas";
-import { Search } from "../sections/Search";
 import { FilterTaxonomyEmptyHint } from "./FilterTaxonomyEmptyHint";
+import { MobileFiltersCloseHeader } from "./MobileFiltersCloseHeader";
 import { MobileFormatScrollRow } from "./MobileFormatScrollRow";
 import type { FilterSidebarCategoryTone } from "../config/filterSidebarTones";
 import { filterPillSelection } from "@/components/ui/filter-sidebar/primitives/filterFramedClasses";
@@ -48,7 +48,6 @@ export function MobileFilterOptionsLayout({
     clearAllFilters,
     setFiltersPanelOpen,
     filterSearchQuery,
-    setFilterSearchQuery,
   } = useFilterSelection();
 
   const searching = filterSearchQuery.trim().length > 0;
@@ -101,30 +100,18 @@ export function MobileFilterOptionsLayout({
   if (installation) {
     return (
       <aside
-        className={`flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden border-solid border-border ${filterChromeRightEdgeClass(false)}`}
+        className={`flex w-full min-w-0 shrink-0 flex-col overflow-hidden border-solid border-border ${filterChromeRightEdgeClass(false)}`}
         aria-label="Filters"
       >
+        {!searching ? <FilterTaxonomyEmptyHint /> : null}
+        <MobileFiltersCloseHeader onClose={() => setFiltersPanelOpen(false)} />
         <div
-          className={`flex min-h-0 flex-col overflow-hidden ${
-            searching ? "min-h-0 flex-1" : "flex-1 justify-end"
-          }`}
+          id={panelId}
+          className="scrollbar-hide flex max-h-[min(50dvh,24rem)] min-w-0 shrink-0 flex-col overflow-y-auto overflow-x-hidden bg-surface-canvas"
+          role="region"
+          aria-label="Filter options"
         >
-          {!searching ? <FilterTaxonomyEmptyHint /> : null}
-          <div
-            id={panelId}
-            className={`flex min-h-0 min-w-0 flex-col overflow-hidden bg-surface-canvas ${
-              searching ? "min-h-0 flex-1" : "shrink-0"
-            }`}
-            role="region"
-            aria-label="Filter options"
-          >
-            <Search
-              value={filterSearchQuery}
-              onChange={setFilterSearchQuery}
-              fieldId="filter-search-mobile-install"
-            />
-            {!searching ? <FocusAreas collapsed={false} chromeless /> : null}
-          </div>
+          {!searching ? <FocusAreas collapsed={false} chromeless /> : null}
         </div>
         <div
           className="flex shrink-0 flex-row items-stretch border-t-hairline border-solid border-border bg-surface-canvas px-3"
@@ -156,13 +143,14 @@ export function MobileFilterOptionsLayout({
 
   return (
     <aside
-      className={`flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden border-solid border-border bg-surface-canvas ${filterChromeRightEdgeClass(false)}`}
+      className={`flex w-full min-w-0 shrink-0 flex-col overflow-hidden border-solid border-border bg-surface-canvas ${filterChromeRightEdgeClass(false)}`}
       aria-label="Filters"
     >
       <FilterTaxonomyEmptyHint />
+      <MobileFiltersCloseHeader onClose={() => setFiltersPanelOpen(false)} />
       <div
         id={panelId}
-        className="flex min-h-0 min-w-0 flex-1 flex-row overflow-hidden"
+        className="flex max-h-[min(50dvh,24rem)] min-h-0 min-w-0 shrink-0 flex-row overflow-hidden"
         role="region"
         aria-label="Filter options"
       >

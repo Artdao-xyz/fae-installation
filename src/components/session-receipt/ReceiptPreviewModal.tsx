@@ -2,14 +2,17 @@
 
 import { useCallback } from "react";
 import { useFilterSelection } from "@/components/ui/filter-sidebar/FilterSelectionContext";
+import { useIsMaxLg } from "@/components/ui/filter-sidebar/shell/useIsMaxLg";
 import { PrintSvgIcon } from "@/components/ui/icons/PrintSvgIcon";
 import type { SessionReceipt } from "@/lib/session-receipt/types";
 import { InstallationArrowIcon } from "./InstallationArrowIcon";
 import { ReceiptDigitalCardFrame } from "./ReceiptDigitalCardFrame";
 import {
   installationActionButtonClass,
+  installationIntroButtonClass,
   installationModalOverlayClass,
   installationOverlayEnterClass,
+  installationScreenActionsRowClass,
   installationScreenStageClass,
 } from "./installation-screen-chrome";
 import type { PrintStatus } from "./print-status";
@@ -41,6 +44,38 @@ function PrintingState() {
   );
 }
 
+type MobileReceiptPreviewProps = {
+  receipt: SessionReceipt;
+  onStartNewJourney: () => void;
+};
+
+/** Kiosk mobile — no printer; receipt preview and actions only. */
+function MobileReceiptPreview({
+  receipt,
+  onStartNewJourney,
+}: MobileReceiptPreviewProps) {
+  return (
+    <div className="flex min-h-dvh w-full flex-col bg-surface-canvas">
+      <div className="scrollbar-hide min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-3">
+        <ReceiptDigitalCardFrame className="shadow-[0px_4px_10px_0px_rgba(0,0,0,0.05)]">
+          <ReceiptPaper receipt={receipt} variant="confirm" />
+        </ReceiptDigitalCardFrame>
+      </div>
+      <div className="flex shrink-0 border-t-hairline border-solid border-border bg-surface-canvas px-3 py-3">
+        <button
+          type="button"
+          onClick={onStartNewJourney}
+          aria-label="Start new journey"
+          className={installationIntroButtonClass}
+        >
+          Start New Journey
+          <InstallationArrowIcon className="block size-[10px] shrink-0 object-contain" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
 type DigitalReceiptStateProps = {
   receipt: SessionReceipt;
   printFailed: boolean;
@@ -57,7 +92,7 @@ function DigitalReceiptState({
   onStartNewJourney,
 }: DigitalReceiptStateProps) {
   return (
-    <div className="flex w-full max-w-[618px] flex-col items-center gap-10 px-4 py-6">
+    <div className="flex w-full max-w-[618px] flex-col items-center gap-10 px-4 py-6 sm:py-8">
       <div className="flex w-full shrink-0 flex-col gap-5">
         {printFailed ? (
           <div className="flex flex-col gap-2.5 text-center" role="alert">
@@ -86,7 +121,7 @@ function DigitalReceiptState({
           </div>
         )}
 
-        <div className="flex gap-[5px]">
+        <div className={installationScreenActionsRowClass}>
           <button
             type="button"
             onClick={onRetryPrint}
@@ -128,6 +163,7 @@ export function ReceiptPreviewModal({
 }: ReceiptPreviewModalProps) {
   const { clearSession } = useSessionReceipt();
   const { resetToIdle } = useFilterSelection();
+  const isMaxLg = useIsMaxLg();
   const { mounted, entered } = useInstallationOverlayTransition(open, {
     skipEnterTransition: true,
   });
@@ -137,10 +173,10 @@ export function ReceiptPreviewModal({
     resetToIdle();
   }, [clearSession, resetToIdle]);
 
-  const showPrinting = printStatus === "printing";
+  const showPrinting = !isMaxLg && printStatus === "printing";
   const printFailed = printStatus === "offline" || printStatus === "error";
   const showDigital =
-    !showPrinting && (printMessage !== null || printFailed);
+    isMaxLg || (!showPrinting && (printMessage !== null || printFailed));
 
   if (!mounted) return null;
 
@@ -148,7 +184,7 @@ export function ReceiptPreviewModal({
     <div
       className={`${installationModalOverlayClass} min-h-dvh overflow-y-auto overscroll-y-contain ${installationOverlayEnterClass} ${
         entered ? "opacity-100" : "opacity-0"
-      }`}
+      } ${isMaxLg ? "bg-surface-canvas" : ""}`}
       role="dialog"
       aria-modal="true"
       aria-label="Receipt"
@@ -159,6 +195,11 @@ export function ReceiptPreviewModal({
           <div className={`${installationScreenStageClass} min-h-dvh w-full`}>
             <PrintingState />
           </div>
+        ) : showDigital && isMaxLg ? (
+          <MobileReceiptPreview
+            receipt={receipt}
+            onStartNewJourney={startNewJourney}
+          />
         ) : showDigital ? (
           <div className={`${installationScreenStageClass} min-h-dvh w-full`}>
             <DigitalReceiptState

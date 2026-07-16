@@ -1,9 +1,12 @@
 "use client";
 
+import { useSyncExternalStore } from "react";
+import { createPortal } from "react-dom";
 import {
   installationIntroButtonClass,
   installationModalOverlayClass,
   installationOverlayEnterClass,
+  installationScreenActionsRowClass,
   installationScreenStageClass,
 } from "./installation-screen-chrome";
 import { InstallationArrowIcon } from "./InstallationArrowIcon";
@@ -23,11 +26,16 @@ export function InstallationRestartConfirmDialog({
   onCancel,
 }: InstallationRestartConfirmDialogProps) {
   const { mounted, entered } = useInstallationOverlayTransition(open);
+  const portalReady = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
   useBodyScrollLock(mounted);
 
-  if (!mounted) return null;
+  if (!mounted || !portalReady) return null;
 
-  return (
+  return createPortal(
     <div
       className={`${installationModalOverlayClass} ${installationScreenStageClass} ${installationOverlayEnterClass} ${
         entered ? "opacity-100" : "opacity-0"
@@ -37,14 +45,14 @@ export function InstallationRestartConfirmDialog({
       aria-label="Restart Journey"
     >
       <InstallationScreenContent>
-        <h2 className="font-lust-text text-left text-5xl leading-tight text-black-fae sm:text-6xl sm:leading-[65px]">
+        <h2 className="font-lust-text text-left text-4xl leading-tight text-black-fae sm:text-5xl sm:leading-tight lg:text-6xl lg:leading-[65px]">
           Restart Journey?
         </h2>
         <p className="text-left font-fira-mono text-sm font-medium leading-5 text-black-fae/50 sm:text-base">
           Your current journey will be lost and cannot be recovered.
         </p>
 
-        <div className="flex gap-[5px]">
+        <div className={installationScreenActionsRowClass}>
           <button
             type="button"
             onClick={onConfirm}
@@ -66,6 +74,7 @@ export function InstallationRestartConfirmDialog({
           </button>
         </div>
       </InstallationScreenContent>
-    </div>
+    </div>,
+    document.body,
   );
 }

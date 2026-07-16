@@ -8,6 +8,7 @@ import {
   installationIntroGlyphSrc,
   installationModalOverlayClass,
   installationOverlayEnterClass,
+  installationScreenActionsRowClass,
   installationScreenStageClass,
   installationScreenSubtitleClass,
   installationScreenTitleBlockClass,
@@ -55,7 +56,7 @@ export function InstallationIntroScreen({
             {FAE_LANDING_DESCRIPTION}
           </p>
         </div>
-        <div className="flex items-center gap-[5px]">
+        <div className={installationScreenActionsRowClass}>
           <button
             type="button"
             onClick={onStartJourney}

@@ -7,7 +7,7 @@ import {
 
 export function InstallationExhibitionAboutContent() {
   return (
-    <div className="flex w-full max-w-[645px] flex-col gap-5 font-suisseintl text-sm leading-[1.6] text-ink-primary">
+    <div className="mx-auto flex w-full max-w-[645px] flex-col gap-5 font-suisseintl text-sm leading-[1.6] text-ink-primary">
       <p className="m-0 text-center">{EXHIBITION_ABOUT_INTRO}</p>
 
       <p className="m-0 text-center">

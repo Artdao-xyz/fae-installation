@@ -2,12 +2,12 @@
 
 import { InstallationExhibitionAboutContent } from "./InstallationExhibitionAboutContent";
 import { OpenSvgIcon } from "@/components/ui/icons/OpenSvgIcon";
+import { fullScreenContentShellEnterTransitionClass } from "@/components/ui/preview/fullScreenContentChrome";
 import {
-  fullScreenContentScrollClass,
-  fullScreenContentShellClass,
-  fullScreenContentShellEnterTransitionClass,
-} from "@/components/ui/preview/fullScreenContentChrome";
-import { installationOverlayZClass } from "./installation-screen-chrome";
+  installationAboutContentStageClass,
+  installationAboutScrollClass,
+  installationAboutShellClass,
+} from "./installation-screen-chrome";
 import { useBodyScrollLock } from "./use-body-scroll-lock";
 import {
   FULL_SCREEN_SHELL_TRANSITION_MS,
@@ -29,7 +29,7 @@ export function InstallationAboutScreen({ open, onClose }: InstallationAboutScre
 
   return (
     <div
-      className={`${fullScreenContentShellClass} ${fullScreenContentShellEnterTransitionClass} ${installationOverlayZClass} ${
+      className={`${installationAboutShellClass} ${fullScreenContentShellEnterTransitionClass} ${
         entered ? "scale-100 opacity-100" : "scale-95 opacity-0"
       } motion-reduce:scale-100 motion-reduce:opacity-100`}
       role="dialog"
@@ -47,8 +47,8 @@ export function InstallationAboutScreen({ open, onClose }: InstallationAboutScre
           <span>Back</span>
         </button>
       </div>
-      <div className={fullScreenContentScrollClass}>
-        <div className="flex min-h-full w-full items-center justify-center">
+      <div className={installationAboutScrollClass}>
+        <div className={installationAboutContentStageClass}>
           <InstallationExhibitionAboutContent />
         </div>
       </div>

@@ -9,17 +9,22 @@ import { FilterSubpanelsColumn } from "./FilterSubpanelsColumn";
 import { Footer } from "./Footer";
 import { HomeBar } from "./HomeBar";
 import { MobileFiltersBar } from "./MobileFiltersBar";
-import { MobileFiltersCloseHeader } from "./MobileFiltersCloseHeader";
 import { MobileLatestUpdatesStrip } from "./MobileLatestUpdatesStrip";
 import {
   FILTER_OPTIONS_PANEL_CLIP_TRANSITION_CLASS,
   FILTER_SIDEBAR_COLUMN_CLASS,
   FILTER_SIDEBAR_COLUMN_COLLAPSED_CLASS,
   MOBILE_OVERLAY_BOTTOM_ABOVE_FOOTER_CLASS,
-  MOBILE_OVERLAY_TOP_CLASS,
+  MOBILE_OVERLAY_BOTTOM_ABOVE_FOOTER_AND_COMPLETE_JOURNEY_CLASS,
+  MOBILE_OVERLAY_TOP_BELOW_INSTALLATION_SEARCH_CLASS,
+  MOBILE_OVERLAY_TOP_BELOW_LANDING_SEARCH_CLASS,
   MOBILE_OVERLAY_X_CLASS,
 } from "./layout-classes";
 import { SideBar } from "./SideBar";
+import {
+  InstallationCompleteJourneyMobileBar,
+} from "@/components/session-receipt/InstallationCompleteJourneyControl";
+import { useSessionReceipt } from "@/components/session-receipt/SessionReceiptProvider";
 import { isInstallationMode } from "@/lib/installation-mode";
 import { useIsMaxLg } from "./useIsMaxLg";
 
@@ -48,6 +53,13 @@ export function FilterSidebar() {
   const panelId = useId();
   const isMaxLg = useIsMaxLg();
   const installation = isInstallationMode();
+  const {
+    enabled: sessionReceiptEnabled,
+    recording: sessionRecording,
+    openPrintConfirm,
+    previewOpen: sessionPreviewOpen,
+    screensaverActive,
+  } = useSessionReceipt();
   const installationDesktopSearching =
     installation &&
     !isMaxLg &&
@@ -105,6 +117,22 @@ export function FilterSidebar() {
     hasActiveTaxonomyFilters || selectedFaeBriefing != null;
   const showMobileSelectedFiltersChrome =
     hasSelectedFilters && contentPreviewRow == null;
+
+  const mobileFilterSheetTopClass = installation
+    ? MOBILE_OVERLAY_TOP_BELOW_INSTALLATION_SEARCH_CLASS
+    : MOBILE_OVERLAY_TOP_BELOW_LANDING_SEARCH_CLASS;
+
+  const showMobileCompleteJourney =
+    isMaxLg &&
+    installation &&
+    sessionReceiptEnabled &&
+    sessionRecording &&
+    !screensaverActive &&
+    !sessionPreviewOpen;
+
+  const mobileFilterSheetBottomClass = showMobileCompleteJourney
+    ? MOBILE_OVERLAY_BOTTOM_ABOVE_FOOTER_AND_COMPLETE_JOURNEY_CLASS
+    : MOBILE_OVERLAY_BOTTOM_ABOVE_FOOTER_CLASS;
 
   const installationDesktopChrome = installation;
 
@@ -191,13 +219,10 @@ export function FilterSidebar() {
         } ${
           filtersOpen
             ? /** `h-full` + `fixed` + `top`/`bottom` makes browsers ignore `bottom` (full viewport). */
-              `max-lg:fixed max-lg:z-50 max-lg:h-auto max-lg:min-h-0 max-lg:w-full max-lg:min-w-0 max-lg:max-w-none max-lg:shrink-0 max-lg:transition-none ${MOBILE_OVERLAY_TOP_CLASS} ${MOBILE_OVERLAY_BOTTOM_ABOVE_FOOTER_CLASS} ${MOBILE_OVERLAY_X_CLASS}`
+              `max-lg:fixed max-lg:z-50 max-lg:h-auto max-lg:min-h-0 max-lg:w-full max-lg:min-w-0 max-lg:max-w-none max-lg:shrink-0 max-lg:transition-none ${mobileFilterSheetTopClass} ${mobileFilterSheetBottomClass} ${MOBILE_OVERLAY_X_CLASS}`
             : "max-lg:hidden"
         }`}
       >
-        {isMaxLg && filtersOpen ? (
-          <MobileFiltersCloseHeader onClose={toggleFiltersOpen} />
-        ) : null}
         <HomeBar
           className={`max-lg:hidden ${FILTER_SIDEBAR_COLUMN_CLASS}`}
           mergeWithSubpanel={anySubpanelOpen}
@@ -208,9 +233,11 @@ export function FilterSidebar() {
               ? installationDesktopSearching
                 ? "flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
                 : "flex min-h-0 min-w-0 flex-1 flex-col justify-end overflow-visible"
-              : `flex min-h-0 min-w-0 flex-1 flex-row overflow-hidden transition-colors duration-500 ease-in-out motion-reduce:transition-none ${
-                  filtersOpen ? "bg-surface-canvas" : "bg-transparent"
-                }`
+              : isMaxLg && filtersOpen
+                ? "flex min-h-0 min-w-0 flex-1 flex-col justify-end overflow-hidden bg-surface-canvas"
+                : `flex min-h-0 min-w-0 flex-1 flex-row overflow-hidden transition-colors duration-500 ease-in-out motion-reduce:transition-none ${
+                    filtersOpen ? "bg-surface-canvas" : "bg-transparent"
+                  }`
           }
         >
           {installation ? (
@@ -296,7 +323,14 @@ export function FilterSidebar() {
                 Clear Filters
               </button>
             ) : null}
-            <Footer showYear={false} mergeWithSubpanel={false} />
+            {showMobileCompleteJourney ? (
+              <InstallationCompleteJourneyMobileBar onClick={openPrintConfirm} />
+            ) : null}
+            <Footer
+              showYear={false}
+              mergeWithSubpanel={false}
+              className={showMobileCompleteJourney ? "max-lg:border-t-0" : ""}
+            />
           </div>
         </div>
       </div>

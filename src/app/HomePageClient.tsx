@@ -34,7 +34,10 @@ import {
 import { InstallationHealthGuard } from "@/components/session-receipt/InstallationHealthGuard";
 import { InstallationIdleGuard } from "@/components/session-receipt/InstallationIdleGuard";
 import { InstallationLinkGuard } from "@/components/session-receipt/InstallationLinkGuard";
-import { SessionReceiptProvider } from "@/components/session-receipt/SessionReceiptProvider";
+import {
+  SessionReceiptProvider,
+  useSessionReceipt,
+} from "@/components/session-receipt/SessionReceiptProvider";
 import { isInstallationMode } from "@/lib/installation-mode";
 
 type Mode = "optimized" | "snappy";
@@ -143,15 +146,15 @@ function HomeContent({ initialPreviewSlug }: HomePageClientProps) {
     contentCatalogStatus,
   } = useFilterSelection();
   const { aboutView } = useFloatingPanelStack();
+  const { recording: installationRecording } = useSessionReceipt();
   const isMaxLg = useIsMaxLg();
   const searching = filterSearchQuery.trim().length > 0;
   const [mobileHeaderOverlayOpen, setMobileHeaderOverlayOpen] = useState(false);
   const [mobilePreviewFullScreen, setMobilePreviewFullScreen] = useState(false);
   const [mobileLandingSearchOpen, setMobileLandingSearchOpen] = useState(false);
   const mobileLandingSearchExpanded = mobileLandingSearchOpen || searching;
-  /** Mobile landing search sits under `MobileSiteHeader`; hide it while filter sheet, About, or menu/glossary is open. */
+  /** Hide landing search only for full-screen About or header menu — not when the filter sheet opens. */
   const hideMobileLandingSearch =
-    filtersPanelOpen ||
     aboutView === "full" ||
     mobileHeaderOverlayOpen;
 
@@ -166,11 +169,14 @@ function HomeContent({ initialPreviewSlug }: HomePageClientProps) {
     latestUpdatesStripRows.length > 0;
   const showMobileFilteredResults = isMaxLg && hasActiveTaxonomyFilters;
   const installation = isInstallationMode();
+  const showInstallationCompleteJourney =
+    installation && isMaxLg && installationRecording;
 
   const mobileScrollInsetClass = mobileMainScrollInsetClassName({
     filtersPanelOpen,
     hasActiveTaxonomyFilters,
     showMobileLatestUpdatesStrip,
+    showInstallationCompleteJourney,
   });
 
   return (
@@ -221,8 +227,9 @@ function HomeContent({ initialPreviewSlug }: HomePageClientProps) {
           className={[
             "min-w-0 w-full shrink-0 bg-surface-canvas lg:hidden",
             installation
-              ? "max-lg:sticky max-lg:top-[calc(env(safe-area-inset-top,0px)+3.25rem)] max-lg:z-45"
-              : "max-lg:sticky max-lg:top-[calc(env(safe-area-inset-top,0px)+6.5rem)] max-lg:z-45",
+              ? "max-lg:sticky max-lg:top-[calc(env(safe-area-inset-top,0px)+3.25rem)]"
+              : "max-lg:sticky max-lg:top-[calc(env(safe-area-inset-top,0px)+6.5rem)]",
+            filtersPanelOpen ? "max-lg:z-51" : "max-lg:z-45",
             hideMobileLandingSearch ? "hidden" : "",
             searching ? "flex flex-col" : "",
           ]

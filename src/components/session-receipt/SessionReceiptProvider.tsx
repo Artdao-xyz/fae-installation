@@ -31,6 +31,7 @@ import {
   type SessionPath,
 } from "@/lib/session-receipt/path-grid";
 import type { SessionEvent, SessionReceipt } from "@/lib/session-receipt/types";
+import { useIsMaxLg } from "@/components/ui/filter-sidebar/shell/useIsMaxLg";
 import { InstallationAboutScreen } from "./InstallationAboutScreen";
 import { InstallationIntroScreen } from "./InstallationIntroScreen";
 import { InstallationPrintConfirmDialog } from "./InstallationPrintConfirmDialog";
@@ -90,6 +91,7 @@ export function SessionReceiptProvider({ children }: { children: ReactNode }) {
   const previewClearTimerRef = useRef<number | null>(null);
   const pathRef = useRef<SessionPath>(createEmptyPath());
   const { origin: viewOrigin, ready: originReady } = useReceiptViewOrigin();
+  const isMaxLg = useIsMaxLg();
 
   const appendEvent = useCallback((event: SessionEvent) => {
     setEvents((prev) => {
@@ -243,15 +245,22 @@ export function SessionReceiptProvider({ children }: { children: ReactNode }) {
   const confirmEndJourney = useCallback(async () => {
     const receipt = buildReceipt();
     const origin = originReady ? viewOrigin : await fetchReceiptViewOrigin();
-    setPrintStatus("printing");
-    setPrintMessage(null);
     setPreviewReceipt(receipt);
     setPreviewOpen(true);
     setPrintConfirmOpen(false);
     setRecording(false);
     logReceiptQrUrl(buildReceiptViewUrl(receipt, origin));
+
+    if (isMaxLg) {
+      setPrintStatus("idle");
+      setPrintMessage(null);
+      return;
+    }
+
+    setPrintStatus("printing");
+    setPrintMessage(null);
     await printReceipt(receipt, origin);
-  }, [buildReceipt, viewOrigin, originReady, printReceipt]);
+  }, [buildReceipt, viewOrigin, originReady, printReceipt, isMaxLg]);
 
   const retryPrint = useCallback(async () => {
     if (!previewReceipt) return;

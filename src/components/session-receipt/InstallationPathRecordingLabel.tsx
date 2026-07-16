@@ -116,7 +116,7 @@ export function InstallationPathRecordingLabel() {
       className={[
         "pointer-events-none",
         marginGuideBottomStripCenterClass,
-        "max-lg:bottom-[calc(env(safe-area-inset-bottom,0px)+4.5rem)] max-lg:h-auto",
+        "max-lg:hidden",
       ].join(" ")}
       style={{ zIndex: Z_INDEX.guiFloatingDock }}
       role="status"
