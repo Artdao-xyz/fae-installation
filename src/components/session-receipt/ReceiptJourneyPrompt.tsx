@@ -10,8 +10,10 @@ export function ReceiptJourneyPrompt({
   className = "",
 }: ReceiptJourneyPromptProps) {
   return (
-    <p className={`text-[10px] leading-[13px] ${className}`.trim()}>
-      {formatTagFortuneLine(prompt)}
-    </p>
+    <div
+      className={`border-y border-solid border-black py-3 ${className}`.trim()}
+    >
+      <p className="m-0">{formatTagFortuneLine(prompt)}</p>
+    </div>
   );
 }

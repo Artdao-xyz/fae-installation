@@ -34,7 +34,7 @@ export async function GET(request: Request) {
     const png = await QRCode.toBuffer(scanUrl, {
       type: "png",
       width: size,
-      margin: 1,
+      margin: 2,
       errorCorrectionLevel: "L",
     });
 

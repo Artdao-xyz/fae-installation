@@ -12,7 +12,7 @@ export function InstallationIdleWarning({
   return (
     <div
       className="pointer-events-none fixed inset-x-0 bottom-6 flex justify-center px-6"
-      style={{ zIndex: Z_INDEX.guiFloatingDock }}
+      style={{ zIndex: Z_INDEX.installationOverlay }}
       role="status"
       aria-live="assertive"
       aria-atomic="true"

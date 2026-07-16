@@ -8,11 +8,13 @@ import {
   installationIntroGlyphSrc,
   installationModalOverlayClass,
   installationOverlayEnterClass,
+  installationScreenActionsRowClass,
   installationScreenStageClass,
   installationScreenSubtitleClass,
   installationScreenTitleBlockClass,
   installationScreenTitleClass,
 } from "./installation-screen-chrome";
+import { FAE_LANDING_DESCRIPTION } from "@/lib/site-copy";
 import { useBodyScrollLock } from "./use-body-scroll-lock";
 import { useInstallationOverlayTransition } from "./use-installation-overlay-enter";
 
@@ -24,6 +26,7 @@ type InstallationIntroScreenProps = {
 
 export function InstallationIntroScreen({
   open,
+  onReadAbout,
   onStartJourney,
 }: InstallationIntroScreenProps) {
   const { mounted, entered } = useInstallationOverlayTransition(open);
@@ -49,11 +52,11 @@ export function InstallationIntroScreen({
         />
         <div className={installationScreenTitleBlockClass}>
           <div className={installationScreenTitleClass}>Future Art Ecosystems</div>
-          <p className={installationScreenSubtitleClass}>
-            Art and Advanced Technologies Research
+          <p className={`${installationScreenSubtitleClass} max-w-full whitespace-normal`}>
+            {FAE_LANDING_DESCRIPTION}
           </p>
         </div>
-        <div className="flex items-center gap-[5px]">
+        <div className={installationScreenActionsRowClass}>
           <button
             type="button"
             onClick={onStartJourney}
@@ -65,10 +68,9 @@ export function InstallationIntroScreen({
           </button>
           <button
             type="button"
-            disabled
+            onClick={onReadAbout}
             aria-label="Read about exhibition"
-            aria-disabled="true"
-            className={`${installationIntroButtonClass} disabled:cursor-not-allowed disabled:opacity-40`}
+            className={installationIntroButtonClass}
           >
             Read About Exhibition
             <InstallationArrowIcon className="block size-[10px] shrink-0 object-contain" />

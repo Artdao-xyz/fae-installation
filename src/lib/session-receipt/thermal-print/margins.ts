@@ -2,7 +2,6 @@ import type { StarRaster } from "../rasterize-path-stars";
 import {
   THERMAL_CHARS_AT_FULL_BLEED,
   THERMAL_CHARS_PER_LINE,
-  THERMAL_CONTENT_DOTS,
   THERMAL_HORIZONTAL_MARGIN_DOTS,
   THERMAL_LINE_DOTS,
   THERMAL_MARGIN_CHARS,
@@ -19,14 +18,6 @@ export function padThermalLineLeft(text: string): string {
 /** Left-pad without truncating — use when the printer should word-wrap. */
 export function padThermalLineStart(text: string): string {
   return `${MARGIN_SPACES}${text}`;
-}
-
-/** Center within the inset content column, then pad to full paper width. */
-export function padThermalLineCenter(text: string): string {
-  const trimmed = text.slice(0, THERMAL_CHARS_PER_LINE);
-  const innerPad = Math.max(0, Math.floor((THERMAL_CHARS_PER_LINE - trimmed.length) / 2));
-  const line = `${MARGIN_SPACES}${" ".repeat(innerPad)}${trimmed}`;
-  return line.slice(0, THERMAL_CHARS_AT_FULL_BLEED);
 }
 
 /** Horizontal rule matching preview dividers, inset from paper edges. */
@@ -53,6 +44,7 @@ export function insetRasterHorizontally(
       const srcBit = 7 - (x % 8);
       if (((data[srcByteIdx] ?? 0) >> srcBit) & 1) {
         const destX = x + leftMarginDots;
+        if (destX < 0 || destX >= fullWidthDots) continue;
         const destByteIdx = y * bytesPerRow + Math.floor(destX / 8);
         const destBit = 7 - (destX % 8);
         out[destByteIdx] = (out[destByteIdx] ?? 0) | (1 << destBit);
@@ -61,12 +53,4 @@ export function insetRasterHorizontally(
   }
 
   return { widthDots: fullWidthDots, heightDots, bytesPerRow, data: out };
-}
-
-/** Center a raster within the inset content column on full paper width. */
-export function centerRasterOnPaper(raster: StarRaster): StarRaster {
-  const left =
-    THERMAL_HORIZONTAL_MARGIN_DOTS +
-    Math.max(0, Math.floor((THERMAL_CONTENT_DOTS - raster.widthDots) / 2));
-  return insetRasterHorizontally(raster, left, THERMAL_LINE_DOTS);
 }

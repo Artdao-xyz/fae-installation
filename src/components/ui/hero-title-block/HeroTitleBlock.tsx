@@ -78,17 +78,17 @@ export function HeroTitleBlock({ title, subtitle, className = "" }: Props) {
 
   const hiddenUntilFade = !heroTextEnter;
   const mobileTitleParts = title.match(/^(.*\bArt)\s+(.*)$/);
-  const mobileSubtitleParts = subtitle.match(/^(.*\bAdvanced)\s+(.*)$/);
+  const mobileSubtitleParts = subtitle.match(/^(.*\badvanced)\s+(.*)$/i);
 
   return (
     <div
-      className={`z-20 flex flex-col items-start justify-center whitespace-nowrap [transition:opacity_300ms_ease-out] max-lg:items-center max-lg:gap-2 max-lg:text-center lg:[transition:left_500ms_ease-in-out,opacity_300ms_ease-out] motion-reduce:transition-none ${positionClass} ${
+      className={`z-20 flex max-w-[min(42rem,calc(100vw-2*var(--inset-margin-guide)))] flex-col items-start justify-center max-lg:items-center max-lg:gap-2 max-lg:text-center lg:[transition:left_500ms_ease-in-out,opacity_300ms_ease-out] motion-reduce:transition-none [transition:opacity_300ms_ease-out] ${positionClass} ${
         hideHero ? "pointer-events-none opacity-0" : "opacity-100"
       } ${className}`}
       aria-hidden={hideHero}
     >
       <div
-        className={`font-lust-text justify-start text-6xl leading-[65px] text-black-fae max-lg:text-center max-lg:text-5xl max-lg:leading-13 ${
+        className={`font-lust-text justify-start whitespace-nowrap text-6xl leading-[65px] text-black-fae max-lg:text-center max-lg:text-5xl max-lg:leading-13 ${
           heroTextEnter ? "fae-hero-title-line" : ""
         }`}
         style={
@@ -111,7 +111,7 @@ export function HeroTitleBlock({ title, subtitle, className = "" }: Props) {
         </span>
       </div>
       <div
-        className={`font-fira-mono justify-start text-sm font-medium leading-4 text-black-fae/50 max-lg:text-center max-lg:text-base max-lg:leading-5 ${
+        className={`font-fira-mono justify-start text-sm font-medium leading-5 text-black-fae/50 max-lg:text-center max-lg:text-base max-lg:leading-6 ${
           heroTextEnter ? "fae-hero-subtitle-line" : ""
         }`}
         style={

@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useId, type ReactElement } from "react";
+import { useCallback, useId, useSyncExternalStore, type ReactElement } from "react";
+import { createPortal } from "react-dom";
 import { useFilterSelection } from "@/components/ui/filter-sidebar/FilterSelectionContext";
 import { SubscribeSubpanelColumn } from "../domains/subscribe/SubscribeSubpanelColumn";
 import { SubscribeMenu } from "../sections/SubscribeMenu";
@@ -9,18 +10,24 @@ import { FilterSubpanelsColumn } from "./FilterSubpanelsColumn";
 import { Footer } from "./Footer";
 import { HomeBar } from "./HomeBar";
 import { MobileFiltersBar } from "./MobileFiltersBar";
-import { MobileFiltersCloseHeader } from "./MobileFiltersCloseHeader";
 import { MobileLatestUpdatesStrip } from "./MobileLatestUpdatesStrip";
 import {
   FILTER_OPTIONS_PANEL_CLIP_TRANSITION_CLASS,
   FILTER_SIDEBAR_COLUMN_CLASS,
   FILTER_SIDEBAR_COLUMN_COLLAPSED_CLASS,
   MOBILE_OVERLAY_BOTTOM_ABOVE_FOOTER_CLASS,
-  MOBILE_OVERLAY_TOP_CLASS,
+  MOBILE_OVERLAY_BOTTOM_ABOVE_FOOTER_AND_COMPLETE_JOURNEY_CLASS,
+  MOBILE_OVERLAY_TOP_BELOW_INSTALLATION_SEARCH_CLASS,
+  MOBILE_OVERLAY_TOP_BELOW_LANDING_SEARCH_CLASS,
   MOBILE_OVERLAY_X_CLASS,
 } from "./layout-classes";
 import { SideBar } from "./SideBar";
+import {
+  InstallationCompleteJourneyMobileBar,
+} from "@/components/session-receipt/InstallationCompleteJourneyControl";
+import { useSessionReceipt } from "@/components/session-receipt/SessionReceiptProvider";
 import { isInstallationMode } from "@/lib/installation-mode";
+import { Z_INDEX } from "@/lib/z-index-scale";
 import { useIsMaxLg } from "./useIsMaxLg";
 
 export function FilterSidebar() {
@@ -47,7 +54,19 @@ export function FilterSidebar() {
   } = useFilterSelection();
   const panelId = useId();
   const isMaxLg = useIsMaxLg();
+  const portalReady = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
   const installation = isInstallationMode();
+  const {
+    enabled: sessionReceiptEnabled,
+    recording: sessionRecording,
+    openPrintConfirm,
+    previewOpen: sessionPreviewOpen,
+    screensaverActive,
+  } = useSessionReceipt();
   const installationDesktopSearching =
     installation &&
     !isMaxLg &&
@@ -106,7 +125,65 @@ export function FilterSidebar() {
   const showMobileSelectedFiltersChrome =
     hasSelectedFilters && contentPreviewRow == null;
 
+  const mobileFilterSheetTopClass = installation
+    ? MOBILE_OVERLAY_TOP_BELOW_INSTALLATION_SEARCH_CLASS
+    : MOBILE_OVERLAY_TOP_BELOW_LANDING_SEARCH_CLASS;
+
+  const showMobileCompleteJourney =
+    isMaxLg &&
+    installation &&
+    sessionReceiptEnabled &&
+    sessionRecording &&
+    !screensaverActive &&
+    !sessionPreviewOpen;
+
+  const mobileFilterSheetBottomClass = showMobileCompleteJourney
+    ? MOBILE_OVERLAY_BOTTOM_ABOVE_FOOTER_AND_COMPLETE_JOURNEY_CLASS
+    : MOBILE_OVERLAY_BOTTOM_ABOVE_FOOTER_CLASS;
+
   const installationDesktopChrome = installation;
+
+  const mobileBottomDock = (
+    <div
+      className="fixed inset-x-0 bottom-0 flex flex-col pb-[env(safe-area-inset-bottom,0px)] lg:hidden"
+      style={{ zIndex: Z_INDEX.mobileBottomDock }}
+    >
+      {installation || filtersOpen || hasSelectedFilters ? null : (
+        <MobileLatestUpdatesStrip />
+      )}
+      <div className="flex w-full shrink-0 flex-col bg-surface-canvas">
+        {filtersOpen || contentPreviewRow != null ? null : (
+          <MobileFiltersBar onOpen={toggleFiltersOpen} />
+        )}
+        {!filtersOpen && showMobileSelectedFiltersChrome ? (
+          <button
+            type="button"
+            onClick={clearAllFilters}
+            className="flex h-13 w-full items-center justify-center gap-2 border-t-hairline border-solid border-border bg-surface-canvas px-3 font-lust-text text-sm leading-4 tracking-wide text-ink-body transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element -- local static icon asset */}
+            <img
+              src="/svg/delete.svg"
+              alt=""
+              width={16}
+              height={16}
+              className="size-4 shrink-0"
+              aria-hidden
+            />
+            Clear Filters
+          </button>
+        ) : null}
+        {showMobileCompleteJourney ? (
+          <InstallationCompleteJourneyMobileBar onClick={openPrintConfirm} />
+        ) : null}
+        <Footer
+          showYear={false}
+          mergeWithSubpanel={false}
+          className={showMobileCompleteJourney ? "max-lg:border-t-0" : ""}
+        />
+      </div>
+    </div>
+  );
 
   const filterChromeRow = (
     <>
@@ -191,13 +268,10 @@ export function FilterSidebar() {
         } ${
           filtersOpen
             ? /** `h-full` + `fixed` + `top`/`bottom` makes browsers ignore `bottom` (full viewport). */
-              `max-lg:fixed max-lg:z-50 max-lg:h-auto max-lg:min-h-0 max-lg:w-full max-lg:min-w-0 max-lg:max-w-none max-lg:shrink-0 max-lg:transition-none ${MOBILE_OVERLAY_TOP_CLASS} ${MOBILE_OVERLAY_BOTTOM_ABOVE_FOOTER_CLASS} ${MOBILE_OVERLAY_X_CLASS}`
+              `max-lg:fixed max-lg:z-50 max-lg:h-auto max-lg:min-h-0 max-lg:w-full max-lg:min-w-0 max-lg:max-w-none max-lg:shrink-0 max-lg:transition-none ${mobileFilterSheetTopClass} ${mobileFilterSheetBottomClass} ${MOBILE_OVERLAY_X_CLASS}`
             : "max-lg:hidden"
         }`}
       >
-        {isMaxLg && filtersOpen ? (
-          <MobileFiltersCloseHeader onClose={toggleFiltersOpen} />
-        ) : null}
         <HomeBar
           className={`max-lg:hidden ${FILTER_SIDEBAR_COLUMN_CLASS}`}
           mergeWithSubpanel={anySubpanelOpen}
@@ -208,9 +282,11 @@ export function FilterSidebar() {
               ? installationDesktopSearching
                 ? "flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
                 : "flex min-h-0 min-w-0 flex-1 flex-col justify-end overflow-visible"
-              : `flex min-h-0 min-w-0 flex-1 flex-row overflow-hidden transition-colors duration-500 ease-in-out motion-reduce:transition-none ${
-                  filtersOpen ? "bg-surface-canvas" : "bg-transparent"
-                }`
+              : isMaxLg && filtersOpen
+                ? "flex min-h-0 min-w-0 flex-1 flex-col justify-end overflow-hidden bg-surface-canvas"
+                : `flex min-h-0 min-w-0 flex-1 flex-row overflow-hidden transition-colors duration-500 ease-in-out motion-reduce:transition-none ${
+                    filtersOpen ? "bg-surface-canvas" : "bg-transparent"
+                  }`
           }
         >
           {installation ? (
@@ -269,38 +345,10 @@ export function FilterSidebar() {
       {subpanelsColumn ? (
         <div className="contents max-lg:hidden">{subpanelsColumn}</div>
       ) : null}
-      <div className="contents lg:hidden">
-        <div className="fixed inset-x-0 bottom-0 z-40 flex flex-col pb-[env(safe-area-inset-bottom,0px)] lg:hidden">
-          {installation || filtersOpen || hasSelectedFilters ? null : (
-            <MobileLatestUpdatesStrip />
-          )}
-          <div className="flex w-full shrink-0 flex-col bg-surface-canvas">
-            {filtersOpen || contentPreviewRow != null ? null : (
-              <MobileFiltersBar onOpen={toggleFiltersOpen} />
-            )}
-            {!filtersOpen && showMobileSelectedFiltersChrome ? (
-              <button
-                type="button"
-                onClick={clearAllFilters}
-                className="flex h-13 w-full items-center justify-center gap-2 border-t-hairline border-solid border-border bg-surface-canvas px-3 font-lust-text text-sm leading-4 tracking-wide text-ink-body transition-colors hover:bg-surface-hover/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ink-primary"
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element -- local static icon asset */}
-                <img
-                  src="/svg/delete.svg"
-                  alt=""
-                  width={16}
-                  height={16}
-                  className="size-4 shrink-0"
-                  aria-hidden
-                />
-                Clear Filters
-              </button>
-            ) : null}
-            <Footer showYear={false} mergeWithSubpanel={false} />
-          </div>
-        </div>
-      </div>
     </div>
+    {isMaxLg && portalReady
+      ? createPortal(mobileBottomDock, document.body)
+      : null}
     </>
   );
 }

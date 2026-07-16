@@ -70,7 +70,7 @@ export function InstallationRecordingIndicator() {
         dockedPreviewOpen
           ? "right-[calc(var(--inset-margin-guide)+var(--width-preview-panel))]"
           : "",
-        "max-lg:top-[calc(env(safe-area-inset-top,0px)+3.25rem+0.625rem)] max-lg:right-5 max-lg:h-auto",
+        "max-lg:hidden",
       ].join(" ")}
       style={{ zIndex: Z_INDEX.guiFloatingDock }}
       role="status"

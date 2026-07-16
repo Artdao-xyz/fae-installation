@@ -28,6 +28,11 @@ export const Z_INDEX = {
   previewDocked: 47,
   fullscreen: 50,
   /**
+   * Mobile fixed bottom dock (footer, filters entry, Complete Journey).
+   * Above portaled preview / filter sheets (`fullscreen` = 50).
+   */
+  mobileBottomDock: 52,
+  /**
    * `MobileAboutSheet` — above mobile filter overlay (`z-50`), below site menu.
    */
   mobileAboutSheet: 199,
@@ -37,4 +42,11 @@ export const Z_INDEX = {
   mobileSiteMenu: 200,
   /** `MobileGlossarySheet` when opened from the site menu (above the menu layer). */
   mobileGlossarySheet: 201,
+  /**
+   * Kiosk-only full-screen overlays (intro, confirm, receipt, about, health, idle warning).
+   * Above mobile chrome (≤201) and filter/preview sheets (`fullscreen` = 50).
+   */
+  installationOverlay: 310,
+  /** Kiosk screensaver — topmost installation surface. */
+  installationScreensaver: 320,
 } as const;

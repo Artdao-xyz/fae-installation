@@ -1,21 +1,25 @@
-const RECEIPT_LOGO_HEIGHT_CLASS = "h-3";
+type ReceiptFooterProps = {
+  logoHeightPx?: number;
+  /** Scale logo with the digital receipt container (`cqw`). */
+  digital?: boolean;
+};
 
-/** FAE + Serpentine logos at the bottom of the receipt. */
-export function ReceiptFooter() {
+/** Serpentine logo at the bottom of the receipt. */
+export function ReceiptFooter({
+  logoHeightPx = 12,
+  digital = false,
+}: ReceiptFooterProps) {
   return (
     <footer className="mt-4">
-      <div className="flex w-full items-center justify-start gap-4">
-        {/* eslint-disable-next-line @next/next/no-img-element -- receipt wordmark (no subtitle) */}
-        <img
-          src="/title-wordmark.svg"
-          alt="Future Art Ecosystems"
-          className={`block w-auto shrink-0 object-contain ${RECEIPT_LOGO_HEIGHT_CLASS}`}
-        />
+      <div className="flex w-full items-center justify-center">
         {/* eslint-disable-next-line @next/next/no-img-element -- receipt partner logo */}
         <img
           src="/svg/serpentine.svg"
           alt="Serpentine"
-          className={`block w-auto shrink-0 object-contain ${RECEIPT_LOGO_HEIGHT_CLASS}`}
+          className={`block w-auto shrink-0 object-contain ${
+            digital ? "receipt-digital-logo" : ""
+          }`}
+          style={digital ? undefined : { height: logoHeightPx }}
         />
       </div>
     </footer>

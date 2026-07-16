@@ -7,6 +7,7 @@ import {
   installationOverlayEnterClass,
   installationScreenStageClass,
   installationScreensaverGlyphSrc,
+  installationScreensaverZClass,
 } from "./installation-screen-chrome";
 import { useBodyScrollLock } from "./use-body-scroll-lock";
 import { useDvdScreensaverMotion } from "./use-dvd-screensaver-motion";
@@ -43,7 +44,7 @@ export function InstallationScreensaver({
 
   return (
     <div
-      className={`fixed inset-0 z-300 cursor-default ${installationOverlayBackdropClass} ${
+      className={`fixed inset-0 ${installationScreensaverZClass} cursor-default ${installationOverlayBackdropClass} ${
         reducedMotion ? installationScreenStageClass : "overflow-hidden"
       } ${installationOverlayEnterClass} ${entered ? "opacity-100" : "opacity-0"}`}
       role="dialog"

@@ -1,11 +1,16 @@
 import type { ReceiptArchiveRecord } from "./archive-receipt-shared";
-import {
-  isR2ReceiptArchiveConfigured,
-  putReceiptArchiveToR2,
-} from "./r2-receipt-archive";
 import type { SessionReceipt } from "./types";
 
 const LOG_PREFIX = "[session-receipt-archive-cloud]";
+
+function isR2ReceiptArchiveConfigured(): boolean {
+  return Boolean(
+    process.env.R2_BUCKET_NAME?.trim() &&
+      process.env.R2_ACCOUNT_ID?.trim() &&
+      process.env.R2_ACCESS_KEY_ID?.trim() &&
+      process.env.R2_SECRET_ACCESS_KEY?.trim(),
+  );
+}
 
 function buildReceiptArchiveRecord(receipt: SessionReceipt): ReceiptArchiveRecord {
   return {
@@ -27,6 +32,7 @@ export function isReceiptCloudArchiveEnabled(): boolean {
 async function uploadReceiptArchiveRecord(
   record: ReceiptArchiveRecord,
 ): Promise<void> {
+  const { putReceiptArchiveToR2 } = await import("./r2-receipt-archive");
   const key = await putReceiptArchiveToR2(resolveInstallationId(), record);
   console.info(`${LOG_PREFIX} Uploaded to R2: ${key}`);
 }

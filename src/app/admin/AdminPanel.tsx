@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import {
   DEFAULT_RECEIPT_PRINT_MODE,
@@ -304,13 +305,21 @@ export function AdminPanel() {
             Printer setup, QR URL, and health checks.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={logout}
-          className="shrink-0 border border-solid border-border px-3 py-1.5 text-sm hover:bg-surface-hover"
-        >
-          Log out
-        </button>
+        <div className="flex shrink-0 gap-2">
+          <Link
+            href="/v/archive"
+            className="border border-solid border-border px-3 py-1.5 text-sm hover:bg-surface-hover"
+          >
+            Archive
+          </Link>
+          <button
+            type="button"
+            onClick={logout}
+            className="border border-solid border-border px-3 py-1.5 text-sm hover:bg-surface-hover"
+          >
+            Log out
+          </button>
+        </div>
       </div>
 
       {message ? <p className="mt-6 text-sm text-green-700">{message}</p> : null}
@@ -479,8 +488,9 @@ export function AdminPanel() {
       <section className="mt-6 border border-solid border-border bg-white p-4">
         <h2 className="text-sm font-medium text-ink-primary">QR code (receipt scans)</h2>
         <p className="mt-1 text-sm text-ink-caption">
-          Phones scan receipts to open the digital version. The LAN address is
-          detected automatically — no setup needed.
+          Phones scan receipts to open the digital version on the public web.
+          Set the override below so QR codes point to your Vercel deploy (not
+          localhost or LAN).
         </p>
         {statusData?.urls.receiptViewOrigin ? (
           <p className="mt-3 font-mono text-sm text-ink-body">
@@ -498,8 +508,9 @@ export function AdminPanel() {
             Custom hostname override (optional)
           </summary>
           <p className="mt-2 text-xs text-ink-caption">
-            Only needed for a fixed domain (e.g. https://fae.example.com). Leave
-            empty for automatic LAN detection.
+            Required for exhibition: your public Vercel URL, e.g.{" "}
+            <code className="font-mono">https://fae-processing.vercel.app</code>
+            . A custom domain can be added later on the same Vercel project.
           </p>
           <label className="mt-3 block text-sm text-ink-caption" htmlFor="qr-url">
             Override origin
@@ -509,7 +520,7 @@ export function AdminPanel() {
             type="url"
             value={receiptViewBaseUrl}
             onChange={(e) => setReceiptViewBaseUrl(e.target.value)}
-            placeholder="https://fae.example.com"
+            placeholder="https://fae-processing.vercel.app"
             className="mt-2 w-full border border-solid border-border bg-white px-3 py-2 font-mono text-sm"
           />
           <div className="mt-4 flex flex-wrap gap-2">

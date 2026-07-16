@@ -1,11 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  serverExternalPackages: ["node-thermal-printer"],
   async redirects() {
     return [{ source: "/view", destination: "/v", permanent: true }];
   },
-  allowedDevOrigins: ["192.168.1.60"],
+  // Allow phones on the same Wi‑Fi to load dev assets (hostname must match your LAN).
+  allowedDevOrigins: ["192.168.1.*"],
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "**.media.strapiapp.com" },

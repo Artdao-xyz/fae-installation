@@ -1,97 +1,103 @@
 import { FOCUS_AREA_LABELS } from "@/data/content-taxonomy";
 
 /**
- * Poetic tag fortunes — 1–2 per Focus tag, each <150 chars.
- * Horoscope-adjacent, emotionally honest, open to interpretation.
+ * Tag fortunes — 1–3 per Focus tag, each <150 chars (QR/thermal prompt budget).
+ * Producer-supplied set (Jul 2026); aphoristic, open to interpretation.
+ * Keys must match FOCUS_AREA_LABELS exactly or the fortune never fires.
  */
 export const TAG_FORTUNES: Record<string, readonly string[]> = {
   AI: [
-    "The machine learns you before you learn it—follow what feels uncanny, not what explains itself.",
-    "Your attention already trains the model; wander toward what you cannot quite trust.",
+    "Power is secured by those that can design and maintain its architecture.",
+    "The machine is not granted permission to be useful.",
+    "What may at first appear to be Roko’s basilisk is almost always an ouroboros.",
   ],
   Artists: [
-    "The work knows something you forgot—stay with the piece that refuses to perform for you.",
-    "Let the artist's doubt become your compass; credibility is overrated.",
+    "Allow skill and concept to conspire as allies.",
+    "Think twice before putting your trust in an artist who has never had a day job.",
   ],
   Blockchain: [
-    "Trust is a story told in public—look for the ledger that remembers what you'd rather forget.",
-    "Somewhere a chain holds a promise; follow the link that feels too permanent to ignore.",
+    "Be mindful - chains that support value today may break under the strain of tomorrow.",
+    "A busy Discord server is more powerful than an empty DAO.",
   ],
   "Creative R&D": [
     "The prototype is honest when the pitch is not—seek what still breaks beautifully.",
     "Experimentation is a form of hope; drift toward the unfinished.",
   ],
   "Cultural Strategy": [
-    "Culture moves before policy names it—notice what institutions are already rehearsing.",
-    "The future is negotiated in rooms you haven't entered yet; find the side door.",
+    "Unexpected insights serve as the most precious outputs.",
+    "Expand your cultural research practice beyond panel discussions and ChatGPT.",
   ],
   Data: [
-    "What gets counted gets cared for—and what escapes counting may matter more.",
-    "Follow the dataset that makes you slightly uncomfortable; it may be yours.",
+    "Ask not what the system eats, but who it was fed by.",
+    "Worry not of the paucity of data, but of the lack of compute.",
+    "Make Data Sexy Again.",
   ],
   Ecology: [
-    "The planet keeps score in slow motion—listen for what thrives without permission.",
-    "You are already inside the ecosystem you are looking for; look down.",
+    "We do not receive the earth from our ancestors; we borrow it from those not yet born.",
+    "Acknowledge the labourers, not just the land.",
   ],
   Economy: [
-    "Value hides in exchanges too small to graph—follow the informal, the gifted, the shared.",
-    "Money tells one story; follow what people protect when no one is buying.",
+    "When capital lifts away from its human substrate, does capitalism even need us anymore?",
+    "While centralised economies can weather markets, speculative economies are buffeted by them.",
   ],
   Gaming: [
-    "Every world has rules someone wrote—play until you find whose rules you are inside.",
-    "The quest is rarely the point; linger where the game forgets to win.",
+    "The games you play today shape the worlds others inhabit tomorrow.",
+    "Subcultures held in contempt may one day rule the contemptuous.",
   ],
   Governance: [
-    "Power whispers before it legislates—watch who speaks in the conditional tense.",
-    "Democracy is a habit, not a building; find where decisions are still being made.",
+    "Policy without imagination leaves the future to chance; imagination without policy limits the future to fiction.",
+    "Wet or wired, intelligence flourishes under thoughtful stewardship.",
   ],
   Infrastructure: [
-    "What holds everything up is rarely visible—look for the maintenance, the cable, the care.",
-    "The system works until it doesn't; explore the seams.",
+    "Complex tools are forged for patient hands.",
+    "The rhizome is not the only structure worth borrowing from nature.",
   ],
   Interoperability: [
-    "Translation is never neutral—seek the border where two systems misunderstand each other.",
-    "What connects also excludes; follow the handshake, not the handshake's logo.",
+    "Culture united under common standards will outlive any monopoly.",
+    "What’s the difference between ‘working together’ and ‘interoperability’? Start another session to find out!",
+    "Those who find clarity in division are often the most deluded.",
   ],
   Legal: [
-    "The law dreams in precedent—find the case that hasn't been argued yet.",
-    "Rights are stories with enforcement; look for who is still writing the footnotes.",
+    "The compression of the world’s knowledge does not necessitate the compression of the responsibility of the individual.",
+    "Just as new tools require new rules, new rules breathe life into old tools.",
   ],
   Ownership: [
-    "To hold is not always to have—ask what you are willing to steward instead of claim.",
-    "The deed is a fiction everyone agrees to; find the gift economy underneath.",
+    "Tools for all must be kept sharp by everyone.",
+    "I browsed the new FAE website and all I got was this lousy receipt.",
   ],
   Policy: [
-    "Policy is grief management at scale—notice what gets named too late.",
-    "The brief is never the whole story; read between the funding line.",
+    "Good policy excavates space for the unexpected.",
+    "Guard what is sacred before the architecture of the future makes it profane.",
   ],
   "Public Value": [
-    "The commons is whatever we defend together—find who is already defending it.",
-    "Public does not mean neutral; look for the argument about who counts as public.",
+    "What is precious for the market may have no value for the community.",
+    "Judge not the Serpentine on its ticket sales, but on the number of first dates facilitated by its exhibitions.",
+    "Is any of this making sense to you?",
   ],
   Robotics: [
     "The body of the machine is a question about yours—follow the gesture that almost looks human.",
     "Automation is a wish; find where the wish still needs a hand.",
   ],
   Simulation: [
-    "The model is not the territory—but sometimes it dreams the territory true.",
-    "Enter the world that knows it is a world; see what it wants from you.",
+    "Everything can be computer.",
+    "Making space for community play is as essential as public debate.",
   ],
   Stewardship: [
-    "Care outlasts ownership—find what someone has been tending without applause.",
-    "Stewardship begins where extraction ends; look for the long commit.",
+    "Care for what endures and those who are lost will find their way back to it.",
+    "Not all stewards wear lanyards.",
   ],
   Systems: [
-    "Every system optimises for something—discover what this one cannot help but optimise for.",
-    "The map is not the mess; walk the mess anyway.",
+    "Between opt-in and opt-out stretches a wasteland of choice.",
+    "Where artists use systems as raw materials, anything can happen.",
+    "The bravest act in any world is to imagine it otherwise.",
   ],
   "Virtual Environments": [
-    "Presence without a body is still presence—notice where you feel located.",
-    "The portal is open; step through the room that remembers your name differently.",
+    "Our future is not written in the stars, but in the frameworks we choose to challenge.",
+    "To locate new worlds, first map the one you find yourself in.",
   ],
   Worldbuilding: [
-    "Every world begins as a refusal of this one—find the fiction someone needs to be true.",
-    "Build nothing yet; walk the world that is already being built in conversation.",
+    "The medium is not only the message, but the world within which the message is received.",
+    "Attention and reflection are both acts of worldbuilding.",
   ],
 };
 

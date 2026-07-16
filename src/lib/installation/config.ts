@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { normalizeReceiptViewBaseUrl } from "@/lib/session-receipt/resolve-view-origin";
 import { type ReceiptPrintMode } from "./constants";
 
 export type { ReceiptPrintMode } from "./constants";
@@ -20,10 +21,6 @@ export type InstallationConfig = {
 };
 
 const CONFIG_FILENAME = "installation.local.json";
-
-function stripTrailingSlash(url: string): string {
-  return url.replace(/\/$/, "");
-}
 
 export function installationConfigPath(): string {
   return path.join(/* turbopackIgnore: true */ process.cwd(), CONFIG_FILENAME);
@@ -76,9 +73,9 @@ export function resolvePrinterUrl(): string | undefined {
 
 export function resolveReceiptViewBaseUrl(): string | undefined {
   const fromConfig = readInstallationConfig().receiptViewBaseUrl?.trim();
-  if (fromConfig) return stripTrailingSlash(fromConfig);
+  if (fromConfig) return normalizeReceiptViewBaseUrl(fromConfig);
   const fromEnv = process.env.NEXT_PUBLIC_RECEIPT_VIEW_BASE_URL?.trim();
-  if (fromEnv) return stripTrailingSlash(fromEnv);
+  if (fromEnv) return normalizeReceiptViewBaseUrl(fromEnv);
   return undefined;
 }
 
