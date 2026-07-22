@@ -16,6 +16,7 @@ import {
   type FilterPillVariant,
 } from "@/components/ui/filter-sidebar/primitives/FilterPill";
 import { useFilterSelection } from "@/components/ui/filter-sidebar/FilterSelectionContext";
+import { isInstallationMode } from "@/lib/installation-mode";
 import { fullScreenContentInnerClass } from "./fullScreenContentChrome";
 import { PreviewBlocksBody } from "./PreviewBlocksBody";
 import { PreviewImageCarousel } from "./PreviewImageCarousel";
@@ -407,7 +408,7 @@ export function PreviewMainContent({
   );
 
   const hasFocus = row.focusAreas.length > 0;
-  const hasNetworks = row.networks.length > 0;
+  const hasNetworks = !isInstallationMode() && row.networks.length > 0;
   const hasArtists = row.artists.length > 0;
   const hasCategories =
     hasFocus || hasNetworks || hasArtists;

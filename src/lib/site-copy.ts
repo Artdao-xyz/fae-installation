@@ -1,6 +1,6 @@
 /** Landing / intro subtitle shown on the home hero and installation start screen. */
 export const FAE_LANDING_DESCRIPTION =
-  "Future Art Ecosystems is Serpentine\u2019s initiative to support organisational innovation in the arts, specifically around ecosystem design for art and advanced technologies.";
+  "Serpentine\u2019s initiative to support organisational innovation in the arts, which focuses on new cultural and institutional models for art and advanced technologies.";
 
 /** Exhibition about copy — installation “Read About Exhibition” screen. */
 export const EXHIBITION_ABOUT_INTRO =
